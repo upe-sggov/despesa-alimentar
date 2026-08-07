@@ -1370,13 +1370,17 @@ with aba3:
             <div class="nota">
               <div class="tt">Precedente: o «cabaz zero» de 2023-24</div>
               Entre abril de 2023 e janeiro de 2024 vigorou em Portugal a isenção de IVA
-              sobre uma lista taxativa de bens alimentares essenciais. A medição do seu
-              efeito <strong>divergiu consoante quem media</strong> — a ASAE apurou uma
-              medições feitas por entidades diferentes chegaram a resultados substancialmente
-              distintos para a mesma medida — numa delas, mais do dobro da outra. A diferença
-              não estava nos factos, estava na metodologia: listas de produtos diferentes,
-              períodos diferentes, critérios de recolha diferentes. É exatamente o tipo de
-              divergência que o cursor de repercussão permite explorar aqui.
+              sobre uma lista taxativa de 46 bens alimentares essenciais (Lei n.º 17/2023,
+              de 14 de abril). Duas lições ficam desse precedente. Primeira: a medição
+              <strong>depende de quem mede</strong> — a ASAE apurou −10,14 % entre 18.04 e
+              04.09.2023; a DECO, sobre os 41 produtos do seu cabaz abrangidos pela isenção,
+              apurou −8,45 % ao fim de três meses. Listas, períodos e critérios de recolha
+              diferentes dão resultados diferentes para a mesma medida. Segunda, e mais
+              relevante: no balanço final do período (18.04.2023 a 04.01.2024) esse cabaz de
+              41 produtos tinha <strong>subido 4,71 %</strong> (de 136,83 € para 143,28 €) —
+              o efeito da isenção foi sendo erodido pela subida dos preços de base até ser
+              superado. Uma descida de IVA desloca o nível de preços uma vez; não trava a
+              tendência. É este tipo de leitura que o cursor de repercussão permite explorar.
             </div>
             """, unsafe_allow_html=True)
 
