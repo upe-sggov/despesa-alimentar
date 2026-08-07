@@ -16,13 +16,14 @@ import streamlit as st
 from pathlib import Path
 
 from src import eurostat
-from src.calculos import (ESCALAS, decompor, despesa_do_agregado, intervalo_agregado,
-                          resumo_decomposicao, resumo_iva, simular_iva,
-                          unidades_equivalentes)
+from src.calculos import (ESCALAS, cabaz_quintis, comparar_ponderadores,
+                          composicao_quintis, decompor, despesa_do_agregado,
+                          intervalo_agregado, resumo_decomposicao, resumo_iva,
+                          simular_iva, unidades_equivalentes)
 from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         BASE_POR_DEFEITO, BASES_ANCORA, COD_AGREGADOS,
                         DIMENSAO_RECUO, DIMENSAO_RECUO_FONTE,
-                        IDF_ALIMENTAR_ANUAL, IDF_ANO_BASE, IDF_FONTE,
+                        IDF_ALIMENTAR_ANUAL, IDF_ANO_BASE, IDF_FONTE, IDF_QUINTIS,
                         AZUL, CLASSES, CODIGOS, COICOP_ALIMENTAR, DOURADO,
                         PAISES, PAISES_POR_DEFEITO, POR_CODIGO, RODAPE,
                         UNIDADE, VERDE, VERMELHO, euro, mes_pt, percentagem)
@@ -440,7 +441,8 @@ def csv_com_fonte(df: pd.DataFrame, titulo: str, dados: dict, extra=None) -> byt
         "# Conjuntos: prc_hicp_midx, prc_hicp_manr, prc_hicp_inw, nama_10_co3_p3, ilc_lvph01",
         f"# Ultimo mes disponivel: {dados.get('mes_variacoes') or '-'}",
         f"# Ponderadores de: {dados.get('ano_pesos') or '-'}",
-        f"# Ancora de despesa: Contas Nacionais {dados.get('despesa_ano') or '-'}",
+        f"# Ancora das Contas Nacionais: {dados.get('despesa_ano') or '-'} "
+        f"(a app usa duas bases - ver a linha 'Base de calculo' quando presente)",
         f"# Extraido em: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
     ]
     for chave, valor in (extra or []):
@@ -905,6 +907,140 @@ with aba1:
                                   xaxis_title="Euros", plot_bgcolor="#fff")
                 fig.update_xaxes(gridcolor="#eef1f4", zerolinecolor="#cbd5e1")
                 st.plotly_chart(fig, use_container_width=True)
+
+        # ---- cabaz por quintil de rendimento ----
+        st.divider()
+        st.markdown("#### Quem está mais exposto — por quintil de rendimento")
+        st.caption(
+            "Ponderação do **IDF 2022/2023**, não do IHPC. Os quadros Q.2.11 do INE dão a "
+            "despesa alimentar por quintil de rendimento equivalente, ao nível da classe "
+            "COICOP e em euros. É a única fonte aberta que mede agregados residentes "
+            "— os ponderadores do IHPC incluem a despesa de turistas."
+        )
+
+        df_quintis = cabaz_quintis(dados["variacoes_classe"])
+        df_comp_q = composicao_quintis()
+
+        tab_q = pd.DataFrame([{
+            "Quintil": r.nome,
+            "Despesa alimentar": euro(r.despesa_mensal, 0) + "/mês",
+            "Despesa total": euro(r.despesa_total_mensal, 0) + "/mês",
+            "Peso no orçamento": f"{r.peso_orcamento:.1f} %".replace(".", ","),
+            "Inflação 12m": percentagem(r.inflacao, sinal=False) if r.inflacao is not None else "—",
+            "Agravamento": euro(r.agravamento) + "/mês" if r.agravamento is not None else "—",
+            "Agravamento / orçamento": (
+                f"{r.agravamento_orcamento:.2f} %".replace(".", ",")
+                if r.agravamento_orcamento is not None else "—"),
+        } for r in df_quintis.itertuples()])
+        st.dataframe(tab_q, use_container_width=True, hide_index=True)
+
+        _q1 = df_quintis[df_quintis["quintil"] == "q1"].iloc[0]
+        _q5 = df_quintis[df_quintis["quintil"] == "q5"].iloc[0]
+        _amplitude = None
+        _infs = df_quintis[df_quintis["quintil"] != "total"]["inflacao"].dropna()
+        if not _infs.empty:
+            _amplitude = float(_infs.max() - _infs.min())
+
+        def _num(valor, casas=1):
+            """Número com vírgula decimal, sem tocar no resto do texto."""
+            return f"{valor:.{casas}f}".replace(".", ",")
+
+        _racio = _q1.peso_orcamento / _q5.peso_orcamento
+        _frase_taxa = ""
+        if _amplitude is not None:
+            _mais_alto = _infs.idxmax()
+            _nome_alto = df_quintis.loc[_mais_alto, "nome"]
+            _frase_taxa = (
+                f"A <em>taxa</em> de inflação, essa, quase não difere entre quintis: a amplitude "
+                f"é de <strong>{_num(_amplitude, 2)} p.p.</strong>, e o valor mais alto está no "
+                f"<strong>{_nome_alto}</strong>. "
+            )
+
+        _frase_esforco = ""
+        if _q1.agravamento_orcamento is not None and _q5.agravamento_orcamento is not None:
+            _frase_esforco = (
+                f"Repare-se no que acontece se se olhar só para os euros: o agravamento dos "
+                f"últimos 12 meses é <em>maior</em> no quintil mais rico "
+                f"(<strong>{euro(_q5.agravamento)}</strong> contra "
+                f"<strong>{euro(_q1.agravamento)}</strong>), simplesmente porque gasta mais em "
+                f"comida. Medido contra o orçamento de cada um, inverte-se: "
+                f"<strong>{_num(_q1.agravamento_orcamento, 2)} %</strong> do orçamento do "
+                f"1.º quintil contra <strong>{_num(_q5.agravamento_orcamento, 2)} %</strong> "
+                f"do 5.º. "
+            )
+
+        st.markdown(f"""
+        <div class="nota">
+          <div class="tt">O efeito regressivo está na exposição, não na taxa</div>
+          A alimentação absorve <strong>{_num(_q1.peso_orcamento)} %</strong> do orçamento do
+          quintil mais pobre e <strong>{_num(_q5.peso_orcamento)} %</strong> do mais rico — um
+          rácio de <strong>{_num(_racio, 2)}</strong>. {_frase_taxa}Concluir daí que a inflação
+          alimentar é distributivamente neutra seria um erro de leitura: o mesmo aumento
+          percentual incide sobre uma fatia do orçamento <strong>{_num(_racio, 1)} vezes
+          maior</strong> em baixo da distribuição, e sobre um orçamento total que é menos de
+          metade.<br><br>{_frase_esforco}É por isto que nenhuma destas colunas deve ser lida
+          isoladamente: a taxa sozinha sugere neutralidade, os euros sozinhos sugerem o
+          contrário do que se passa.
+        </div>
+        """, unsafe_allow_html=True)
+
+        cq1, cq2 = st.columns([3, 2])
+        with cq1:
+            st.markdown("**A composição muda, não só o nível**")
+            st.caption("Fração da despesa alimentar de cada quintil que vai para cada grupo.")
+            chaves_q = [k for k in IDF_QUINTIS if k != "total"]
+            figq = go.Figure()
+            for classe in CLASSES:
+                sub = df_comp_q[df_comp_q["codigo"] == classe["cod"]].set_index("quintil")
+                figq.add_trace(go.Bar(
+                    name=f"{classe['emoji']} {classe['nome']}",
+                    x=[IDF_QUINTIS[k] for k in chaves_q],
+                    y=[sub.loc[k, "quota"] * 100 for k in chaves_q],
+                    marker_color=classe["cor"],
+                    hovertemplate="%{x}<br>" + classe["nome"] + ": %{y:.1f} %<extra></extra>",
+                ))
+            figq.update_layout(barmode="stack", height=420,
+                               margin=dict(t=10, b=30, l=10, r=10),
+                               yaxis_title="% da despesa alimentar", plot_bgcolor="#fff",
+                               legend=dict(font=dict(size=10)))
+            figq.update_yaxes(gridcolor="#eef1f4", range=[0, 100])
+            st.plotly_chart(figq, use_container_width=True)
+        with cq2:
+            st.markdown("**Onde a diferença é maior**")
+            st.caption("Variação da quota entre o 1.º e o 5.º quintil, em pontos percentuais.")
+            larguras = []
+            for classe in CLASSES:
+                sub = df_comp_q[df_comp_q["codigo"] == classe["cod"]].set_index("quintil")
+                larguras.append({
+                    "classe": f"{classe['emoji']} {classe['nome']}",
+                    "delta": (sub.loc["q5", "quota"] - sub.loc["q1", "quota"]) * 100,
+                })
+            df_delta = pd.DataFrame(larguras).sort_values("delta")
+            figd = go.Figure(go.Bar(
+                y=df_delta["classe"], x=df_delta["delta"], orientation="h",
+                marker_color=[AZUL if v > 0 else DOURADO for v in df_delta["delta"]],
+                hovertemplate="%{y}<br>%{x:+.1f} p.p.<extra></extra>",
+            ))
+            figd.update_layout(height=420, margin=dict(t=10, b=30, l=10, r=10),
+                               xaxis_title="p.p. (Q5 − Q1)", plot_bgcolor="#fff")
+            figd.update_xaxes(gridcolor="#eef1f4", zerolinecolor="#cbd5e1")
+            st.plotly_chart(figd, use_container_width=True)
+
+        st.caption(
+            "**Níveis do IDF tal como medidos** — não são reescalados para a base de cálculo "
+            "escolhida na barra lateral. Reescalá-los exigiria assumir que o sub-reporte do "
+            "inquérito é uniforme entre quintis, e nada o sustenta. Os quintis são de "
+            "rendimento equivalente (escala OCDE modificada), definidos pelo INE."
+        )
+        st.download_button(
+            "⬇️ Descarregar cabaz por quintil (CSV)",
+            csv_com_fonte(df_quintis, "Cabaz alimentar por quintil de rendimento", dados,
+                          extra=[
+                              ("Niveis e ponderacao", "INE, IDF 2022/2023, quadros Q.2.11.a e Q.2.11.b"),
+                              ("Variacoes de preco", "Eurostat, prc_hicp_manr (IHPC)"),
+                              ("Nota", "Niveis do IDF tal como medidos, sem reescalamento"),
+                          ]),
+            file_name="cabaz_por_quintil.csv", mime="text/csv")
 
         # ---- esforço do agregado escolhido ----
         st.divider()
@@ -2012,9 +2148,15 @@ with aba5:
             st.latex(r"\pi(m) = \left[ \frac{I(m,y)}{I(m,y-1)} - 1 \right] \times 100")
 
         with st.expander("🔢 Os quatro passos desta ferramenta"):
-            st.markdown("**1 · Âncora: quanto gasta o país em alimentação**")
-            st.latex(r"\text{despesa mensal do agregado médio} = \frac{D(y)}{H \times 12}")
-            st.caption("D(y) = despesa alimentar nacional anual (Contas Nacionais) · H = número de agregados")
+            st.markdown("**1 · Âncora: quanto gasta o agregado médio em alimentação**")
+            st.latex(r"\text{Contas Nacionais:}\quad \frac{D(y)}{H \times 12}"
+                     r"\qquad\qquad \text{IDF:}\quad \frac{A(y)}{12}")
+            st.caption(
+                "D(y) = despesa alimentar nacional anual (Contas Nacionais) · H = número de "
+                "agregados · A(y) = despesa alimentar anual por agregado, medida diretamente "
+                "pelo IDF. As duas bases divergem por um fator próximo de 2 — a aplicação "
+                "apresenta o intervalo e deixa a base à escolha."
+            )
 
             st.markdown("**2 · Atualização ao mês corrente**")
             st.latex(r"\text{valor atual} = \text{valor do ano-base} \times \frac{I(m)}{\bar{I}(y)}")
@@ -2034,6 +2176,75 @@ with aba5:
                 "A soma dos contributos iguala exatamente a variação do total — a decomposição é "
                 "**aditiva**, propriedade verificada por teste automático."
             )
+
+        with st.expander("🧭 Duas bases de ponderação — qual serve para quê"):
+            st.markdown("""
+    A aplicação usa **duas** estruturas de ponderação, e não é indiferente qual se aplica a quê.
+    A regra é simples:
+
+    | | Ponderador | Responde a |
+    |---|---|---|
+    | **Estrutura e distribuição** | IDF 2022/2023, por quintil | Quem gasta o quê, e que parte do orçamento leva |
+    | **Movimento dos preços** | IHPC, revisto anualmente | Quanto subiu cada grupo, e quanto contribuiu |
+
+    A razão é conceptual, não de conveniência. O Documento Metodológico do IPC afirma que **o IHPC
+    inclui a despesa de não residentes** no território económico. Para medir preços isso é
+    irrelevante — um quilo de pão sobe o mesmo para quem lá vive e para quem está de passagem.
+    Para medir a *estrutura de consumo das famílias portuguesas*, não é: mistura dois universos.
+
+    O IDF não tem esse problema — mede agregados residentes, por inquérito direto — e é a única
+    fonte aberta que desce ao quintil de rendimento. Em contrapartida é **quinquenal**, pelo que a
+    sua estrutura envelhece entre vagas. É o IHPC, revisto todos os anos, que garante que o
+    movimento dos preços acompanha a substituição de produtos.
+            """)
+
+            _cmp = comparar_ponderadores(dados["pesos"], dados["variacoes_classe"])
+            if _cmp["inflacao_idf"] is not None and _cmp["inflacao_ihpc"] is not None:
+                st.markdown("**O que a escolha muda, medido**")
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Inflação alimentar, ponderação IHPC",
+                          percentagem(_cmp["inflacao_ihpc"], sinal=False))
+                m2.metric("Inflação alimentar, ponderação IDF",
+                          percentagem(_cmp["inflacao_idf"], sinal=False))
+                m3.metric("Diferença atribuível à ponderação",
+                          f"{_cmp['diferenca']:+.2f} p.p.".replace(".", ","))
+
+                _dv = _cmp["desvios"].copy()
+                _dv["Grupo"] = _dv["emoji"] + " " + _dv["classe"]
+                _dv = _dv[["Grupo", "quota_ihpc", "quota_idf", "desvio"]]
+                _dv.columns = ["Grupo", "Quota IHPC (%)", "Quota IDF (%)", "Desvio (p.p.)"]
+                st.dataframe(
+                    _dv.sort_values("Desvio (p.p.)", key=abs, ascending=False),
+                    use_container_width=True, hide_index=True,
+                    column_config={
+                        "Quota IHPC (%)": st.column_config.NumberColumn(format="%.1f"),
+                        "Quota IDF (%)": st.column_config.NumberColumn(format="%.1f"),
+                        "Desvio (p.p.)": st.column_config.NumberColumn(format="%+.2f"),
+                    })
+                st.caption(
+                    f"Desvio médio absoluto entre as duas estruturas: "
+                    f"**{('%.2f' % _cmp['desvio_medio']).replace('.', ',')} p.p.** · "
+                    f"máximo: **{('%.2f' % _cmp['desvio_maximo']).replace('.', ',')} p.p.** "
+                    "As quotas são calculadas dentro da alimentação, sobre a soma dos nove grupos."
+                )
+                st.caption(
+                    "Parte deste desvio é a inclusão de turistas no IHPC, parte é a diferença de "
+                    "anos de referência entre as duas fontes. Os dados abertos disponíveis não "
+                    "permitem separar as duas causas — não existe exercício nacional de "
+                    "conciliação entre inquérito e Contas Nacionais."
+                )
+
+            st.info("""
+    **Uma terceira base foi ponderada e rejeitada.** Estudou-se acrescentar um instrumento que
+    lesse a evolução dos ponderadores do IHPC deflacionados pelo índice de preços de cada grupo,
+    para isolar mudanças de *quantidade* consumida das mudanças de preço. Não avançou: o
+    Documento Metodológico do IPC estabelece que «a amostra e estrutura de ponderação referem-se
+    sempre a dezembro do ano n−1» e que os ponderadores **já incorporam** a variação de preços
+    até esse momento. Deflacioná-los pela média anual do índice desconta duas vezes uma parte do
+    efeito-preço e nenhuma vez outra parte. A direção do resultado pode manter-se; a magnitude
+    não é defensável. Medir alterações de quantidade exigiria dados de volume que nenhuma destas
+    fontes publica.
+            """)
 
         with st.expander("⚖️ Escalas de equivalência"):
             st.markdown(
@@ -2423,10 +2634,19 @@ Chamar-lhe cabaz seria prometer o que não entrega.
     e a sua dispersão entre operadores e territórios.
             """)
             st.warning("""
-    **Ressalva a confirmar nos metadados.** Os ponderadores do IHPC referem-se ao consumo *no
-    território* (inclui despesa de não residentes), enquanto a despesa das Contas Nacionais usada
-    como âncora pode estar em conceito nacional (residentes). Em Portugal, dado o peso do turismo,
-    a diferença não é trivial. Não afeta as variações, mas afeta o **nível** da âncora.
+    **Os ponderadores do IHPC incluem turistas — confirmado em fonte primária.** O Documento
+    Metodológico do IPC (INE, 2023) é explícito: «O IHPC inclui a despesa realizada pelos não
+    residentes ("turistas") no território económico e exclui a despesa dos residentes no exterior,
+    originando uma estrutura de ponderação diferente da utilizada no IPC.»
+
+    Em Portugal, dado o peso do turismo, a diferença não é trivial. **Não afeta as variações de
+    preço** — essas medem o mesmo movimento independentemente de quem compra — mas afeta qualquer
+    leitura de **estrutura de consumo** feita sobre eles, e afeta o nível de qualquer valor obtido
+    por repartição.
+
+    É por isso que a aplicação separa as duas funções: o **IHPC** dá o movimento dos preços, o
+    **IDF** dá a estrutura e a distribuição. O INE publica ponderadores do IPC em conceito
+    nacional, mas apenas em ine.pt; o Eurostat só difunde os do IHPC.
             """)
 
         with st.expander("📖 Base legal e documentação"):

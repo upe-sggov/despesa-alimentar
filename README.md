@@ -284,6 +284,76 @@ Existe também um modo **«valor externo»**, para quem queira testar o que uma
 recolha de terceiros implicaria. Esse valor é assinalado na interface como não
 oficial e não deve ser apresentado como número da Secretaria-Geral.
 
+### As duas bases de ponderação
+
+A aplicação usa **duas** estruturas de ponderação, com uma divisão de trabalho
+explícita:
+
+| | Ponderador | Responde a |
+|---|---|---|
+| **Estrutura e distribuição** | INE, IDF 2022/2023, por quintil | Quem gasta o quê, e que parte do orçamento leva |
+| **Movimento dos preços** | Eurostat, `prc_hicp_inw` (IHPC), revisto anualmente | Quanto subiu cada grupo, e quanto contribuiu |
+
+A razão é conceptual. O Documento Metodológico do IPC (INE, 2023) afirma que
+«o IHPC inclui a despesa realizada pelos não residentes ("turistas") no
+território económico e exclui a despesa dos residentes no exterior, originando
+uma estrutura de ponderação diferente da utilizada no IPC». Para medir preços
+isso é irrelevante — um quilo de pão sobe o mesmo para quem lá vive e para quem
+está de passagem. Para medir a *estrutura de consumo das famílias portuguesas*,
+não é: mistura dois universos. É a mesma contaminação que levou a aplicação a
+abandonar as Contas Nacionais como âncora única.
+
+O INE publica ponderadores do IPC em conceito nacional, mas apenas em `ine.pt`;
+o Eurostat só difunde os do IHPC. O IDF é, entre as fontes abertas, a única via
+para uma estrutura de agregados residentes — e a única que desce ao quintil.
+
+As duas estruturas divergem: **desvio médio absoluto de 1,9 p.p.** dentro da
+alimentação, máximo de 4,9 p.p. (pão e cereais — 19,6 % no IHPC contra 14,6 % no
+IDF). Na inflação alimentar nacional a escolha vale cerca de **0,3 p.p.**
+(dezembro de 2025: 3,87 % com ponderação IDF, 3,56 % com IHPC). O separador de
+metodologia quantifica isto em direto.
+
+**Contrapartida a declarar.** O IDF é quinquenal, pelo que a sua estrutura
+envelhece entre vagas e reintroduz, ao nível da classe, o viés de substituição
+que se critica nos cabazes de composição fixa. É o IHPC, revisto todos os anos,
+que serve de contrapeso. A próxima vaga do IDF é de 2026 e a atualização de
+`src/config.py` terá de ser manual.
+
+**Uma terceira base foi ponderada e rejeitada.** Estudou-se ler a evolução dos
+ponderadores do IHPC deflacionados pelo índice de cada grupo, para isolar
+alterações de quantidade consumida. Não avançou: o Documento Metodológico
+estabelece que «a amostra e estrutura de ponderação referem-se sempre a dezembro
+do ano n−1» e que os ponderadores **já incorporam** a variação de preços até esse
+momento. Deflacioná-los pela média anual do índice desconta duas vezes parte do
+efeito-preço e nenhuma vez outra parte. A direção pode manter-se; a magnitude não
+é defensável.
+
+### Cabaz por quintil de rendimento
+
+O separador «Despesa e composição» apresenta a despesa alimentar por quintil de
+rendimento equivalente, a partir dos quadros **Q.2.11.a** (euros) e **Q.2.11.b**
+(estrutura) do IDF 2022/2023.
+
+Os níveis são apresentados **tal como medidos pelo IDF** — não são reescalados
+para a base de cálculo escolhida na barra lateral. Reescalá-los exigiria assumir
+que o sub-reporte do inquérito é uniforme entre quintis, e nada o sustenta.
+
+**Regra de apresentação, deliberada.** A taxa de inflação por quintil nunca
+aparece sem a exposição orçamental ao lado, e ambas nunca aparecem sem o
+agravamento em fração do orçamento. As três colunas dizem coisas diferentes e
+qualquer uma, lida sozinha, engana:
+
+| Leitura isolada | O que sugere | Porque é falso |
+|---|---|---|
+| Taxa de inflação por quintil | Neutralidade — a amplitude é de 0,18 p.p. e o valor mais alto está no 5.º quintil | A taxa não mede impacto; mede movimento de preços sobre cabazes diferentes |
+| Agravamento em euros | Que o quintil mais rico é o mais afetado (9,67 € contra 6,91 €) | Gasta mais em comida em termos absolutos; diz-se pouco sobre esforço |
+| Agravamento sobre o orçamento | — | É esta que mede esforço: 0,51 % no 1.º quintil contra 0,33 % no 5.º |
+
+O efeito regressivo está na **exposição** — a alimentação absorve 14,8 % do
+orçamento do 1.º quintil e 9,1 % do 5.º, um rácio de 1,63 — e não numa inflação
+diferenciada. Esta distinção corrige a formulação da nota de enquadramento de
+21.07.2026.
+
 ### Composição do agregado
 
 A despesa média por agregado esconde uma diferença que importa para política: um

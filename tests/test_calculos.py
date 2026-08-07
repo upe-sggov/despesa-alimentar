@@ -192,3 +192,75 @@ def test_vies_do_agregado_medio_e_sistematico():
         racios.append(b / a)
     assert max(racios) - min(racios) < 1e-9      # viés proporcional
     assert racios[0] > 1.0                        # e no sentido de subestimação
+
+
+# ------------------------------------------------- cabaz por quintil (IDF)
+def test_quintis_reproduzem_o_quadro_do_ine():
+    """Os niveis vem do Q.2.11.a; nao sao derivados nem reescalados."""
+    from src.calculos import cabaz_quintis
+    from src.config import IDF_ALIMENTAR_QUINTIL
+
+    df = cabaz_quintis({c: 5.0 for c in CODIGOS}).set_index("quintil")
+    for chave, anual in IDF_ALIMENTAR_QUINTIL.items():
+        assert df.loc[chave, "despesa_mensal"] == pytest.approx(anual / 12)
+
+
+def test_quintis_classes_somam_o_total_publicado():
+    """A soma das nove classes tem de fechar com o total 01.1, a menos do
+    arredondamento do proprio quadro do INE (1 EUR/ano)."""
+    from src.config import CLASSES, IDF_ALIMENTAR_QUINTIL, IDF_CLASSES_QUINTIL
+
+    for chave, total in IDF_ALIMENTAR_QUINTIL.items():
+        soma = sum(IDF_CLASSES_QUINTIL[c["cod"]][chave] for c in CLASSES)
+        assert abs(soma - total) <= 1, chave
+
+
+def test_quintis_inflacao_uniforme_e_igual_em_todos():
+    """Se todas as classes variam o mesmo, a estrutura de consumo e irrelevante:
+    todos os quintis tem de dar a mesma taxa."""
+    from src.calculos import cabaz_quintis
+
+    df = cabaz_quintis({c: 4.0 for c in CODIGOS})
+    assert df["inflacao"].round(10).nunique() == 1
+    assert df["inflacao"].iloc[0] == pytest.approx(4.0)
+
+
+def test_quintis_esforco_e_agravamento_sobre_orcamento():
+    from src.calculos import cabaz_quintis
+
+    df = cabaz_quintis({c: 4.0 for c in CODIGOS})
+    for r in df.itertuples():
+        assert r.agravamento_orcamento == pytest.approx(
+            r.agravamento / r.despesa_total_mensal * 100)
+
+
+def test_quintis_variacoes_em_falta_nao_quebram():
+    from src.calculos import cabaz_quintis
+
+    df = cabaz_quintis({})
+    assert df["inflacao"].isna().all()
+    assert df["despesa_mensal"].gt(0).all()
+
+
+def test_composicao_quintis_quotas_somam_um():
+    from src.calculos import composicao_quintis
+
+    quotas = composicao_quintis().groupby("quintil")["quota"].sum()
+    assert quotas.between(0.999, 1.001).all()
+
+
+def test_comparar_ponderadores_identifica_a_diferenca():
+    """Com ponderadores IHPC iguais aos do IDF, a diferenca tem de ser nula."""
+    from src.calculos import comparar_ponderadores
+    from src.config import CLASSES, IDF_CLASSES_QUINTIL
+
+    pesos_iguais = {c["cod"]: float(IDF_CLASSES_QUINTIL[c["cod"]]["total"]) for c in CLASSES}
+    r = comparar_ponderadores(pesos_iguais, {c: 3.0 for c in CODIGOS})
+    assert r["diferenca"] == pytest.approx(0.0)
+    assert r["desvio_maximo"] == pytest.approx(0.0)
+
+    pesos_torcidos = dict(pesos_iguais)
+    pesos_torcidos["CP0111"] *= 3
+    r2 = comparar_ponderadores(pesos_torcidos, {**{c: 3.0 for c in CODIGOS}, "CP0111": 20.0})
+    assert r2["inflacao_ihpc"] > r2["inflacao_idf"]
+    assert r2["desvio_maximo"] > 5.0

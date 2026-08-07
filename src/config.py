@@ -138,6 +138,69 @@ BASES_ANCORA = {
 BASE_POR_DEFEITO = "idf"
 
 # --------------------------------------------------------------------------
+# IDF 2022/2023 por quintil de rendimento — a base estrutural
+# --------------------------------------------------------------------------
+# Divisão de trabalho entre as duas fontes de ponderação, decidida em 08.08.2026:
+#
+#   IDF   → estrutura e distribuição (quem gasta o quê, e que parte do orçamento)
+#   IHPC  → movimento dos preços (como variou cada classe)
+#
+# A razão não é de conveniência. O Documento Metodológico do IPC (INE, 2023) é
+# explícito: «O IHPC inclui a despesa realizada pelos não residentes ("turistas")
+# no território económico e exclui a despesa dos residentes no exterior,
+# originando uma estrutura de ponderação diferente da utilizada no IPC.» Os
+# ponderadores do IHPC — os únicos que o Eurostat difunde — medem, por
+# construção, um universo que inclui turistas. É a mesma contaminação que levou
+# a app a abandonar as Contas Nacionais como âncora única.
+#
+# O INE publica ponderadores do IPC (conceito nacional, sem turistas), mas apenas
+# em ine.pt. O IDF é, entre as fontes abertas, a única via para uma estrutura de
+# consumo de agregados residentes — e a única que desce ao quintil.
+#
+# Fonte: INE, IDF 2022/2023, quadros Q.2.11.a (euros/ano) e Q.2.11.b (estrutura %).
+# Quintis de rendimento *equivalente*. Atualização manual a cada vaga do IDF.
+IDF_QUINTIS = {
+    "total": "Média nacional",
+    "q1": "1.º quintil",
+    "q2": "2.º quintil",
+    "q3": "3.º quintil",
+    "q4": "4.º quintil",
+    "q5": "5.º quintil",
+}
+
+# Despesa total anual do agregado (todas as rubricas), € por ano
+IDF_DESPESA_TOTAL = {
+    "total": 23_900, "q1": 16_294, "q2": 18_269,
+    "q3": 22_188, "q4": 26_188, "q5": 34_994,
+}
+
+# Despesa alimentar anual (COICOP 01.1), € por ano
+IDF_ALIMENTAR_QUINTIL = {
+    "total": 2872, "q1": 2412, "q2": 2573,
+    "q3": 3022, "q4": 3139, "q5": 3192,
+}
+
+# Peso da alimentação no orçamento total (Q.2.11.b), %
+IDF_PESO_ALIMENTAR = {
+    "total": 12.0, "q1": 14.8, "q2": 14.1,
+    "q3": 13.6, "q4": 12.0, "q5": 9.1,
+}
+
+# Despesa anual por classe COICOP e quintil, € por ano. A soma de cada coluna
+# reproduz IDF_ALIMENTAR_QUINTIL a menos de arredondamento do próprio quadro.
+IDF_CLASSES_QUINTIL = {
+    "CP0111": {"total": 420, "q1": 380, "q2": 404, "q3": 447, "q4": 443, "q5": 426},
+    "CP0112": {"total": 670, "q1": 575, "q2": 633, "q3": 767, "q4": 740, "q5": 650},
+    "CP0113": {"total": 403, "q1": 313, "q2": 342, "q3": 415, "q4": 463, "q5": 476},
+    "CP0114": {"total": 369, "q1": 312, "q2": 324, "q3": 376, "q4": 405, "q5": 420},
+    "CP0115": {"total": 119, "q1": 102, "q2": 119, "q3": 131, "q4": 138, "q5": 108},
+    "CP0116": {"total": 299, "q1": 231, "q2": 246, "q3": 275, "q4": 320, "q5": 407},
+    "CP0117": {"total": 324, "q1": 294, "q2": 290, "q3": 336, "q4": 344, "q5": 354},
+    "CP0118": {"total": 119, "q1": 75,  "q2": 87,  "q3": 136, "q4": 121, "q5": 169},
+    "CP0119": {"total": 149, "q1": 130, "q2": 127, "q3": 139, "q4": 165, "q5": 181},
+}
+
+# --------------------------------------------------------------------------
 # Metadados institucionais
 # --------------------------------------------------------------------------
 ORGANISMO = "Secretaria-Geral do Governo"

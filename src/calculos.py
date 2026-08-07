@@ -23,7 +23,11 @@ from __future__ import annotations
 
 import pandas as pd
 
-from .config import CLASSES, POR_CODIGO
+from .config import (
+    CLASSES, POR_CODIGO,
+    IDF_ALIMENTAR_QUINTIL, IDF_CLASSES_QUINTIL, IDF_DESPESA_TOTAL,
+    IDF_PESO_ALIMENTAR, IDF_QUINTIS,
+)
 
 
 # --------------------------------------------------------------------------
@@ -252,4 +256,145 @@ def intervalo_agregado(despesa_media_agregado: float, dimensao_media: float,
         "minimo": min(valores.values()),
         "maximo": max(valores.values()),
         "por_escala": valores,
+    }
+
+
+# --------------------------------------------------------------------------
+# Cabaz por quintil de rendimento — ponderação IDF
+# --------------------------------------------------------------------------
+# Aqui os ponderadores são do IDF, não do IHPC. São coisas diferentes e a
+# escolha não é indiferente: entre as duas estruturas o desvio médio absoluto
+# dentro da alimentação é de 1,9 p.p. e o máximo de 4,9 p.p. (pão e cereais).
+# Ver a nota em `config.py` sobre a inclusão de turistas no IHPC.
+#
+# Regra de apresentação, deliberada: a taxa de inflação por quintil **nunca**
+# deve aparecer sem a exposição orçamental ao lado. A amplitude entre quintis é
+# de cerca de 0,2 p.p. — lida isolada, sugere que a inflação alimentar é
+# distributivamente neutra. Não é: o efeito regressivo está na exposição
+# (14,8 % do orçamento no 1.º quintil contra 9,1 % no 5.º), não na taxa. Por
+# isso as duas colunas saem da mesma função e devem ser mostradas juntas.
+
+def cabaz_quintis(variacoes: dict[str, float]) -> pd.DataFrame:
+    """
+    Uma linha por quintil de rendimento, com o nível da despesa alimentar, a
+    exposição orçamental e a inflação que resulta da estrutura de consumo desse
+    quintil.
+
+    Os níveis são os do IDF 2022/2023 tal como medidos — não são reescalados
+    para a âncora escolhida na aplicação. Reescalar exigiria assumir que o
+    sub-reporte do inquérito é uniforme entre quintis, e nada o sustenta.
+    """
+    linhas = []
+    for chave, nome in IDF_QUINTIS.items():
+        alimentar_ano = float(IDF_ALIMENTAR_QUINTIL[chave])
+        mensal = alimentar_ano / 12
+
+        soma_pesos, soma_ponderada, agravamento = 0.0, 0.0, 0.0
+        for classe in CLASSES:
+            cod = classe["cod"]
+            peso = float(IDF_CLASSES_QUINTIL[cod][chave])
+            var = variacoes.get(cod)
+            if var is None or pd.isna(var):
+                continue
+            soma_pesos += peso
+            soma_ponderada += peso * float(var)
+            valor_classe = mensal * peso / alimentar_ano if alimentar_ano else 0.0
+            if (1 + var / 100) != 0:
+                agravamento += valor_classe * (var / 100) / (1 + var / 100)
+
+        inflacao = soma_ponderada / soma_pesos if soma_pesos > 0 else None
+        total_mensal = float(IDF_DESPESA_TOTAL[chave]) / 12
+
+        # O agravamento em euros é *maior* nos quintis de cima — gastam mais em
+        # alimentação, logo o mesmo aumento percentual dá mais euros. Lido só
+        # assim, inverte a leitura correta. O que mede o esforço é o agravamento
+        # em fração do orçamento total, e é essa a coluna que fecha o argumento.
+        esforco = (agravamento / total_mensal * 100
+                   if (soma_pesos > 0 and total_mensal > 0) else None)
+
+        linhas.append({
+            "quintil": chave,
+            "nome": nome,
+            "despesa_mensal": mensal,
+            "despesa_total_mensal": total_mensal,
+            "peso_orcamento": float(IDF_PESO_ALIMENTAR[chave]),
+            "inflacao": inflacao,
+            "agravamento": agravamento if soma_pesos > 0 else None,
+            "agravamento_orcamento": esforco,
+        })
+
+    return pd.DataFrame(linhas)
+
+
+def composicao_quintis() -> pd.DataFrame:
+    """
+    Uma linha por classe COICOP e quintil, em euros por mês e em quota da
+    despesa alimentar desse quintil. É o que mostra que a composição muda, e
+    não apenas o nível.
+    """
+    linhas = []
+    for classe in CLASSES:
+        cod = classe["cod"]
+        for chave, nome in IDF_QUINTIS.items():
+            total = float(IDF_ALIMENTAR_QUINTIL[chave])
+            valor = float(IDF_CLASSES_QUINTIL[cod][chave])
+            linhas.append({
+                "codigo": cod,
+                "classe": classe["nome"],
+                "emoji": classe["emoji"],
+                "cor": classe["cor"],
+                "quintil": chave,
+                "quintil_nome": nome,
+                "mensal": valor / 12,
+                "quota": valor / total if total else 0.0,
+            })
+
+    return pd.DataFrame(linhas)
+
+
+def comparar_ponderadores(pesos_ihpc: dict[str, float],
+                          variacoes: dict[str, float]) -> dict:
+    """
+    Confronta as duas estruturas de ponderação na única grandeza em que a
+    escolha é observável: a inflação alimentar nacional que cada uma produz.
+
+    Serve de diagnóstico no separador de metodologia — quantifica o que se
+    ganha e o que se perde ao trocar de base, em vez de o deixar como
+    afirmação.
+    """
+    def _agregar(pesos: dict[str, float]) -> tuple:
+        soma_pesos, soma_ponderada = 0.0, 0.0
+        for classe in CLASSES:
+            cod = classe["cod"]
+            peso = float(pesos.get(cod) or 0.0)
+            var = variacoes.get(cod)
+            if peso <= 0 or var is None or pd.isna(var):
+                continue
+            soma_pesos += peso
+            soma_ponderada += peso * float(var)
+        if soma_pesos <= 0:
+            return None, {}
+        quotas = {c["cod"]: float(pesos.get(c["cod"]) or 0.0) / soma_pesos * 100
+                  for c in CLASSES}
+        return soma_ponderada / soma_pesos, quotas
+
+    inf_ihpc, quota_ihpc = _agregar(pesos_ihpc)
+    pesos_idf = {c["cod"]: float(IDF_CLASSES_QUINTIL[c["cod"]]["total"]) for c in CLASSES}
+    inf_idf, quota_idf = _agregar(pesos_idf)
+
+    desvios = [
+        {"codigo": c["cod"], "classe": c["nome"], "emoji": c["emoji"],
+         "quota_ihpc": quota_ihpc.get(c["cod"]), "quota_idf": quota_idf.get(c["cod"]),
+         "desvio": (quota_ihpc.get(c["cod"], 0.0) - quota_idf.get(c["cod"], 0.0))}
+        for c in CLASSES if quota_ihpc and quota_idf
+    ]
+    df = pd.DataFrame(desvios)
+
+    return {
+        "inflacao_ihpc": inf_ihpc,
+        "inflacao_idf": inf_idf,
+        "diferenca": (inf_idf - inf_ihpc) if (inf_idf is not None and inf_ihpc is not None) else None,
+        "desvios": df,
+        "desvio_medio": float(df["desvio"].abs().mean()) if not df.empty else None,
+        "desvio_maximo": float(df["desvio"].abs().max()) if not df.empty else None,
     }
