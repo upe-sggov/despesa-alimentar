@@ -23,6 +23,10 @@ em 07.08.2026 — chamadas à API do Eurostat e parsing dos ficheiros do INE. N�
   (239–549 €/mês para 2022), com o ponto central assinalado como não determinado.
 - **Âmbito das fontes:** o trabalho usa **exclusivamente dados abertos**. Fontes que exijam pedido
   formal, protocolo ou acesso reservado ficam fora de âmbito — o que encerra B1 (Mapa do Comércio).
+- **Arquitetura de ponderação (08.08.2026):** aprovadas **duas** bases, com divisão de trabalho
+  explícita — **IDF** para estrutura e distribuição, **IHPC** para movimento dos preços. Uma
+  terceira base («padrões de consumo», ponderadores do IHPC deflacionados) foi **rejeitada** por
+  não ser calculável de forma defensável. Ver §2.16.
 
 ---
 
@@ -45,7 +49,7 @@ em 07.08.2026 — chamadas à API do Eurostat e parsing dos ficheiros do INE. N�
 | # | Produto | Prioridade | Estado |
 |---|---|---|---|
 | 1 | Nota metodológica «O que é (e o que não é) o cabaz» | Alta | 🟡 Em prosa no README; ausente da interface |
-| 2 | Cabaz ponderado por decil de rendimento | Alta | 🟢 **Dados completos** — ver §2.1 |
+| 2 | Cabaz ponderado por decil de rendimento | Alta | ✅ **Implementado** em 08.08.2026 (aba 1) — ver §2.1 e §2.16 |
 | 3 | Desagregação territorial do preço alimentar | Média | 🟡 Procura sim, oferta não |
 | 4 | Benchmarking europeu da inflação alimentar | Média | ✅ Já feito (aba 4) |
 
@@ -616,6 +620,92 @@ extra +55,7 %. Descidas: curgete −36,5 %, alface 4.ª gama −28,9 %, espargue
 > comparável entre produtos. Algumas séries de produção terminam antes de 2026 — cebola e brócolo
 > em 2023, leite e arroz em 2025.
 
+### 2.16 Arquitetura de ponderação — IDF e IHPC ★ decisão de 08.08.2026
+
+**A pergunta.** A aplicação usava um único ponderador — o do IHPC (`prc_hicp_inw`) — tanto para
+repartir a despesa pelas classes como para calcular a inflação alimentar. Com o IDF disponível,
+punha-se a questão de qual usar para quê.
+
+**O facto decisivo, em fonte primária.** O Documento Metodológico do IPC (INE, 2023, `DMet_IPC_2023_v2-0.pdf`):
+
+> «O IHPC inclui a despesa realizada pelos não residentes ("turistas") no território económico e
+> exclui a despesa dos residentes no exterior, originando uma **estrutura de ponderação diferente
+> da utilizada no IPC**.»
+
+Os ponderadores que a aplicação usava incluem, por construção, despesa de turistas. É a mesma
+contaminação de conceito que levou a abandonar as Contas Nacionais como âncora única (§2.10) — e
+não tinha sido detetada. O INE publica ponderadores do IPC em conceito nacional, mas apenas em
+`ine.pt`; o Eurostat só difunde os do IHPC. **O IDF é a única via aberta para uma estrutura de
+agregados residentes.**
+
+**Decisão.** Duas bases, com divisão de trabalho explícita:
+
+| | Ponderador | Responde a | Onde |
+|---|---|---|---|
+| Estrutura e distribuição | IDF 2022/2023, por quintil | Quem gasta o quê, e que parte do orçamento leva | Aba 1, secção «Quem está mais exposto» |
+| Movimento dos preços | IHPC, revisto anualmente | Quanto subiu cada grupo, e quanto contribuiu | Cartões de classe, aba 2, simulador de IVA |
+
+**Quanto vale a escolha, medido** (dezembro de 2025, ponderadores de 2025):
+
+| | Ponderação IHPC | Ponderação IDF | Diferença |
+|---|---|---|---|
+| Inflação alimentar nacional | 3,56 % | 3,87 % | **+0,32 p.p.** |
+
+Desvio médio absoluto entre as duas estruturas: **1,89 p.p.**; máximo **4,93 p.p.**
+
+| Classe | Quota IHPC | Quota IDF | Desvio |
+|---|---|---|---|
+| Pão e cereais | 19,6 % | 14,6 % | **+4,93** |
+| Carne | 19,4 % | 23,3 % | **−3,89** |
+| Legumes e hortícolas | 9,0 % | 11,3 % | −2,25 |
+| Peixe e marisco | 15,5 % | 14,0 % | +1,51 |
+| Óleos e gorduras | 5,4 % | 4,1 % | +1,28 |
+| Fruta | 9,4 % | 10,4 % | −1,04 |
+| Leite, queijo e ovos | 12,1 % | 12,9 % | −0,80 |
+| Açúcar e doces | 4,9 % | 4,1 % | +0,80 |
+| Outros alimentos | 4,7 % | 5,2 % | −0,53 |
+
+O sinal do maior desvio é o esperado se for efeito de turismo — pão, pastelaria e produtos de
+padaria pesam mais no consumo de quem está de passagem. **Não é demonstração:** parte do desvio é
+a diferença de anos de referência (IHPC 2025, IDF 2022/2023), e os dados abertos não permitem
+separar as duas causas, precisamente porque não existe exercício nacional de conciliação (A8).
+
+**Terceira base, rejeitada.** Estudou-se um instrumento que lesse os ponderadores do IHPC
+deflacionados pelo índice de preços de cada classe, para isolar mudanças de *quantidade*
+consumida. Foi rejeitado. O mesmo Documento Metodológico estabelece que «a amostra e estrutura de
+ponderação referem-se sempre a **dezembro do ano n−1**» e que os ponderadores resultam das Contas
+Nacionais, Censos e IDF, **já atualizados pela variação de preços** até esse momento. Deflacionar
+um ponderador do ano *n* pela média anual do índice de *n* desconta duas vezes parte do
+efeito-preço e nenhuma vez outra parte.
+
+> **Correção a registar.** Numa versão anterior desta análise foram apresentados resultados dessa
+> deflação — designadamente que a quota real da carne teria caído 1,4 p.p. entre 2020 e 2025,
+> «o dobro» da queda nominal. **Esses valores não são defensáveis** e não devem ser usados. A
+> direção pode manter-se; a magnitude não. Medir alteração de quantidade exigiria dados de volume
+> que nenhuma destas fontes publica.
+
+**Regra de apresentação, deliberada.** As três grandezas do cabaz por quintil nunca são
+apresentadas isoladamente, porque qualquer uma engana sozinha:
+
+| Leitura isolada | O que sugere | Porque é falso |
+|---|---|---|
+| Taxa de inflação por quintil | Neutralidade distributiva — amplitude de **0,18 p.p.**, com o valor mais alto no 5.º quintil (3,97 %) | A taxa mede movimento de preços sobre cabazes diferentes, não impacto |
+| Agravamento em euros | Que o 5.º quintil é o mais afetado (**9,67 €** contra **6,91 €**) | Gasta mais em comida em absoluto; nada diz sobre esforço |
+| Agravamento sobre o orçamento total | — | É esta que mede esforço: **0,51 %** no 1.º quintil contra **0,33 %** no 5.º |
+
+**Consequência para a nota de enquadramento de 21.07.2026.** A nota descreve o impacto da inflação
+alimentar como regressivo por via de uma inflação diferenciada entre escalões. Os dados não o
+sustentam: a amplitude entre quintis é de 0,18 p.p. e o valor mais alto está no quintil mais rico.
+**O efeito regressivo é real, mas é de exposição** — a alimentação absorve 14,8 % do orçamento do
+1.º quintil e 9,1 % do 5.º, um rácio de 1,63, sobre um orçamento total que é menos de metade. A
+formulação deve ser corrigida em conformidade; o argumento sai reforçado, não enfraquecido, porque
+a exposição é uma medida mais robusta e menos dependente do mês de referência.
+
+**Contrapartida a declarar.** O IDF é quinquenal. A sua estrutura envelhece entre vagas e
+reintroduz, ao nível da classe, o viés de substituição que a nota critica nos cabazes de composição
+fixa. O contrapeso é o IHPC, revisto anualmente. A próxima vaga é o IDF 2026 e a atualização de
+`src/config.py` terá de ser manual.
+
 ---
 
 ## 3. Acessibilidade das fontes a partir de ambiente automatizado
@@ -752,12 +842,11 @@ que privilegia o que é ao mesmo tempo comunicável e automatizável.
 **A recolha está encerrada e a âncora está decidida** (opção 3, o intervalo). Tudo o que segue é
 implementação — nada depende já de dados externos.
 
-1. **Âncora em intervalo** (§2.10): substituir o valor único por 239–549 €/mês a preços de 2022,
-   com o ponto central assinalado como não determinado. É a alteração mais invasiva — muda o número
-   de topo e propaga-se ao simulador de IVA e à extrapolação agregada.
-2. **Cabaz por quintil** com o Q.2.11 — entrega a linha #2 (Alta) na versão plena que a nota pedia.
-   O Q.2.11 fornece simultaneamente o nível e a repartição por classe e por quintil, pelo que se
-   articula naturalmente com o ponto 1.
+1. ~~**Âncora em intervalo** (§2.10)~~ — ✅ **feito em 07.08.2026** (commit `da58135`). Seletor de
+   base na barra lateral, intervalo no topo da aba 1, sensibilidade no simulador de IVA.
+2. ~~**Cabaz por quintil** com o Q.2.11~~ — ✅ **feito em 08.08.2026**. Entrega a linha #2 (Alta).
+   Implementado com ponderação IDF, segundo a arquitetura de §2.16, e com a regra de apresentação
+   das três grandezas em conjunto. Inclui a comparação IDF/IHPC na aba de metodologia.
 3. **Quadro dos seis instrumentos** na aba «Metodologia e fontes» — zero dependências, entrega a
    linha #1 (Alta), diretamente ao serviço do uso (a).
 4. **Afinar a limitação 8** com o critério do documento metodológico (§2.7) — correção de rigor,
@@ -785,6 +874,26 @@ implementação — nada depende já de dados externos.
 | 6 | Criado este documento | ✅ |
 
 **Verificação:** 15 testes passam; `app.py` sem erros de sintaxe.
+
+---
+
+## 8. Alterações ao repositório em 08.08.2026
+
+| # | Alteração | Estado |
+|---|---|---|
+| 1 | `src/config.py`: acrescentados os quadros Q.2.11 do IDF por quintil — níveis, pesos no orçamento e despesa por classe | ✅ |
+| 2 | `src/calculos.py`: `cabaz_quintis()`, `composicao_quintis()` e `comparar_ponderadores()` | ✅ |
+| 3 | `app.py`, aba 1: secção «Quem está mais exposto — por quintil de rendimento», com tabela das três grandezas, composição por quintil, diferenças Q5−Q1 e exportação em CSV | ✅ |
+| 4 | `app.py`, aba 5: expansor «Duas bases de ponderação — qual serve para quê», com o diagnóstico quantificado em direto e o registo da terceira base rejeitada | ✅ |
+| 5 | `app.py`: substituída a «ressalva a confirmar» sobre turistas nos ponderadores do IHPC — está confirmada em fonte primária | ✅ |
+| 6 | `app.py`: corrigido o passo 1 do quadro de fórmulas, que ainda descrevia a âncora como sendo só das Contas Nacionais | ✅ |
+| 7 | `app.py`: corrigido o cabeçalho de proveniência dos CSV, que afirmava âncora única | ✅ |
+| 8 | `tests/test_calculos.py`: 7 testes novos sobre os quintis e a comparação de ponderadores | ✅ |
+| 9 | `README.md`: secções «As duas bases de ponderação» e «Cabaz por quintil de rendimento» | ✅ |
+
+**Verificação:** 22 testes passam; render completo da aplicação sem exceções nem erros de ecrã,
+nas duas bases de âncora; os valores do IDF fecham com os totais publicados a menos de 1 €/ano de
+arredondamento do próprio quadro do INE.
 
 **Nota sobre o ambiente:** o `.venv` do projeto está vazio. Para o tornar funcional:
 `.venv\Scripts\pip install -r requirements.txt`.
