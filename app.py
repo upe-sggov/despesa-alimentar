@@ -20,8 +20,9 @@ from src.calculos import (ESCALAS, decompor, despesa_do_agregado, intervalo_agre
                           resumo_decomposicao, resumo_iva, simular_iva,
                           unidades_equivalentes)
 from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
-                        COD_AGREGADOS,
+                        BASE_POR_DEFEITO, BASES_ANCORA, COD_AGREGADOS,
                         DIMENSAO_RECUO, DIMENSAO_RECUO_FONTE,
+                        IDF_ALIMENTAR_ANUAL, IDF_ANO_BASE, IDF_FONTE,
                         AZUL, CLASSES, CODIGOS, COICOP_ALIMENTAR, DOURADO,
                         PAISES, PAISES_POR_DEFEITO, POR_CODIGO, RODAPE,
                         UNIDADE, VERDE, VERMELHO, euro, mes_pt, percentagem)
@@ -360,44 +361,67 @@ def carregar_dados(anos_historico: int = 6):
     }
 
 
+def _atualizar_por_indice(mensal_base: float, ano_base: int, indice) -> tuple:
+    """
+    Atualiza um valor mensal do seu ano de referência para o mês mais recente
+    do índice de preços. Devolve (valor, mês, fator).
+    """
+    if indice.empty:
+        return mensal_base, None, 1.0
+    do_ano = indice[indice["time"].str.startswith(str(ano_base))]
+    if do_ano.empty:
+        return mensal_base, None, 1.0
+    media_base = float(do_ano["valor"].mean())
+    ultimo = indice.sort_values("time").iloc[-1]
+    fator = float(ultimo["valor"]) / media_base if media_base else 1.0
+    return mensal_base * fator, str(ultimo["time"]), fator
+
+
 def ancora_oficial(dados: dict, agregados: int) -> dict | None:
     """
-    Converte a despesa alimentar nacional das Contas Nacionais numa despesa
-    mensal por agregado e atualiza-a para o mês mais recente com o índice
-    oficial de preços.
+    Calcula a despesa alimentar mensal por agregado nas **duas bases oficiais
+    disponíveis**, cada uma atualizada para o mês mais recente pelo índice de
+    preços a partir do seu próprio ano de referência.
+
+    As duas não coincidem — para 2022 divergem por um fator de 2,3 — e não há
+    forma de arbitrar entre elas com fontes públicas. Por isso a aplicação
+    devolve ambas e apresenta o intervalo. Ver `src/config.py`, secção das
+    âncoras, e docs/2026-08-07_levantamento_lacunas.md, §2.10.
 
     Devolve None se os dados necessários não estiverem disponíveis.
     """
     if not dados.get("despesa_milhoes") or not agregados:
         return None
 
-    ano_base = dados["despesa_ano"]
-    mensal_base = dados["despesa_milhoes"] * 1e6 / agregados / 12
-
     indice = dados["indice_pt"]
-    if indice.empty:
-        return {"valor": mensal_base, "ano_base": ano_base, "plausivel": True,
-                "mes": None, "fator": 1.0, "base_mensal": mensal_base}
+    bases = {}
 
-    do_ano = indice[indice["time"].str.startswith(str(ano_base))]
-    if do_ano.empty:
-        return {"valor": mensal_base, "ano_base": ano_base, "plausivel": True,
-                "mes": None, "fator": 1.0, "base_mensal": mensal_base}
+    # --- Contas Nacionais: agregado macroeconómico ÷ agregados ÷ 12 ---
+    ano_cn = dados["despesa_ano"]
+    mensal_cn = dados["despesa_milhoes"] * 1e6 / agregados / 12
+    valor_cn, mes, fator_cn = _atualizar_por_indice(mensal_cn, ano_cn, indice)
+    bases["contas"] = {
+        "valor": valor_cn, "base_mensal": mensal_cn, "ano_base": ano_cn,
+        "fator": fator_cn, "plausivel": 50.0 <= valor_cn <= 3000.0,
+        **BASES_ANCORA["contas"],
+    }
 
-    media_base = float(do_ano["valor"].mean())
-    ultimo = indice.sort_values("time").iloc[-1]
-    fator = float(ultimo["valor"]) / media_base if media_base else 1.0
+    # --- IDF: medição direta, constante publicada ---
+    mensal_idf = IDF_ALIMENTAR_ANUAL / 12
+    valor_idf, mes_idf, fator_idf = _atualizar_por_indice(
+        mensal_idf, IDF_ANO_BASE, indice)
+    bases["idf"] = {
+        "valor": valor_idf, "base_mensal": mensal_idf, "ano_base": IDF_ANO_BASE,
+        "fator": fator_idf, "plausivel": 50.0 <= valor_idf <= 3000.0,
+        **BASES_ANCORA["idf"],
+    }
 
-    resultado_valor = mensal_base * fator
-    plausivel = 50.0 <= resultado_valor <= 3000.0
-
+    valores = [b["valor"] for b in bases.values()]
     return {
-        "plausivel": plausivel,
-        "valor": resultado_valor,
-        "base_mensal": mensal_base,
-        "ano_base": ano_base,
-        "mes": str(ultimo["time"]),
-        "fator": fator,
+        "bases": bases,
+        "mes": mes or mes_idf,
+        "minimo": min(valores),
+        "maximo": max(valores),
     }
 
 
@@ -595,11 +619,33 @@ with st.sidebar:
         )
         st.stop()
 
-    media_agregado = float(ancora["valor"])
+    # --- base de cálculo: as duas fontes oficiais não coincidem ---
+    st.caption("**Base de cálculo**")
+    base_chave = st.radio(
+        "Base de cálculo",
+        options=list(BASES_ANCORA.keys()),
+        index=list(BASES_ANCORA.keys()).index(BASE_POR_DEFEITO),
+        format_func=lambda k: BASES_ANCORA[k]["nome"],
+        label_visibility="collapsed",
+        help=("As duas fontes oficiais medem coisas diferentes e divergem por um fator "
+              "próximo de 2. Nenhuma é a resposta certa: o valor real está entre as duas. "
+              "Ver separador Metodologia."),
+    )
+    base_ancora = ancora["bases"][base_chave]
+    outra_chave = next(k for k in ancora["bases"] if k != base_chave)
+    outra_ancora = ancora["bases"][outra_chave]
+
+    media_agregado = float(base_ancora["valor"])
     valor_medio_agregado = media_agregado
     dim_media = dados.get("dimensao_media")
 
-    if not ancora.get("plausivel", True):
+    st.caption(
+        f"Intervalo entre as duas bases: **{euro(ancora['minimo'])} a "
+        f"{euro(ancora['maximo'])}** por mês, para o agregado médio. "
+        f"O ponto central não é determinável."
+    )
+
+    if not base_ancora.get("plausivel", True):
         st.error(
             "⚠️ **Valor fora do intervalo plausível.** Verifique o registo de ligações "
             "no separador Metodologia. **Não use estes números.**"
@@ -639,7 +685,7 @@ with st.sidebar:
         composicao = f"{adultos} pessoa{'s' if adultos > 1 else ''} com 14+ anos"
     pessoas = adultos + criancas
     ue = unidades_equivalentes(adultos, criancas, escala_chave)
-    origem = (f"Contas Nacionais {ancora['ano_base']} · {composicao} · "
+    origem = (f"{base_ancora['nome']} · {composicao} · "
               f"escala {ESCALAS[escala_chave]['nome']}")
     vezes_ano = 12
 
@@ -692,13 +738,28 @@ está **{'acima' if maior_que_media else 'abaixo'}** dela.
     _agr_txt = f"{agregados:,}".replace(",", "\u00a0")
     _mes_txt = mes_pt(ancora["mes"]) if ancora["mes"] else "—"
     with st.expander("De onde vem este valor"):
+        if base_chave == "contas":
+            _proveniencia = (
+                "Da **despesa alimentar de todas as famílias portuguesas** registada nas Contas "
+                f"Nacionais, dividida pelo número de agregados ({_agr_txt}), atualizada ao mês "
+                "corrente pelo índice oficial de preços e ajustada à composição indicada acima."
+            )
+        else:
+            _proveniencia = (
+                "Da **despesa alimentar declarada pelos agregados** no Inquérito às Despesas das "
+                "Famílias do INE, atualizada ao mês corrente pelo índice oficial de preços e "
+                "ajustada à composição indicada acima. Não passa por divisão de nenhum agregado "
+                "macroeconómico: é medição direta."
+            )
         st.markdown(
-            "Da **despesa alimentar de todas as famílias portuguesas** registada nas Contas "
-            f"Nacionais, dividida pelo número de agregados ({_agr_txt}), atualizada ao mês "
-            "corrente pelo índice oficial de preços e ajustada à composição indicada acima."
-            "\n\n"
+            _proveniencia + "\n\n"
             f"**N.º de agregados:** {agr_fonte}  \n"
-            f"**Base de despesa:** Contas Nacionais {ancora['ano_base']}, a preços de {_mes_txt}"
+            f"**Base de despesa:** {base_ancora['nome']} ({base_ancora['ano_base']}), "
+            f"a preços de {_mes_txt}  \n"
+            f"**Fonte:** {base_ancora['fonte']}\n\n"
+            f"*{base_ancora['porque']}*\n\n"
+            f"Na outra base — {outra_ancora['nome']} — o mesmo agregado médio daria "
+            f"**{euro(outra_ancora['valor'])}** por mês."
         )
 
     st.divider()
@@ -772,11 +833,26 @@ with aba1:
                                   percentagem(maior["variacao"]))
         colunas[4].metric("Equivalente anual", euro(despesa_mensal * vezes_ano))
 
+        st.markdown(f"""
+        <div class="nota">
+          <div class="tt">O valor exato não é determinável — use o intervalo</div>
+          As duas fontes oficiais que medem a despesa alimentar das famílias não coincidem.
+          Para o agregado médio, a despesa mensal situa-se entre
+          <strong>{euro(ancora['minimo'])}</strong> e <strong>{euro(ancora['maximo'])}</strong>,
+          consoante se use o inquérito às despesas ou as Contas Nacionais. O ponto central
+          <strong>não é determinável</strong>: o inquérito subestima e as Contas Nacionais
+          sobrestimam, e não existe exercício de conciliação que permita arbitrar.
+          Os valores acima usam a base <strong>{base_ancora['nome']}</strong>, escolhida na barra
+          lateral. Ver separador Metodologia.
+        </div>
+        """, unsafe_allow_html=True)
+
         dim_txt = ('%.1f' % dim_efetiva).replace('.', ',')
         r1, r2, r3 = st.columns([1, 1, 2])
         r1.metric(f"Agregado médio nacional ({dim_txt} pessoas)",
                   euro(valor_medio_agregado),
-                  help="Valor de referência antes de qualquer ajustamento de composição.")
+                  help=(f"Base {base_ancora['nome']}. Na outra base seria {euro(outra_ancora['valor'])}. "
+                        "Valor de referência antes de qualquer ajustamento de composição."))
         r2.metric("Equivalente anual", euro(valor_medio_agregado * 12))
         eng_pt = (dados.get("engel") or {}).get("PT")
         if eng_pt:
@@ -960,7 +1036,8 @@ with aba1:
             )
 
             with st.expander("⚠️ O que estes números assumem — leitura obrigatória"):
-                st.error("""
+                if base_chave == "contas":
+                    st.error("""
 **São limites superiores, não estimativas.** O **numerador** — a despesa alimentar — vem das
 **Contas Nacionais**; o **denominador** — o rendimento — vem do **EU-SILC**. São universos
 estatísticos diferentes: as Contas Nacionais incluem rendas imputadas, consumo de instituições
@@ -973,7 +1050,24 @@ rendimento do EU-SILC — rácio que implicaria taxa de poupança fortemente neg
 
 Leia as **diferenças entre composições** e a **direção** como informativas; o **nível** como
 majorante.
-                """)
+
+*Escolhendo a base **IDF** na barra lateral, esta incompatibilidade reduz-se substancialmente —
+o IDF e o EU-SILC são ambos inquéritos a agregados residentes.*
+                    """)
+                else:
+                    st.warning("""
+**Bases estatísticas próximas, mas não idênticas.** Com a base **IDF**, o **numerador** — a
+despesa alimentar — e o **denominador** — o rendimento do EU-SILC — vêm ambos de **inquéritos a
+agregados residentes**, o que elimina a maior parte da incompatibilidade que afeta a base das
+Contas Nacionais.
+
+Subsistem diferenças: são inquéritos distintos, com amostras, períodos de referência e critérios
+de imputação próprios, e ambos sub-reportam. O rácio continua a dever ler-se como **ordem de
+grandeza**, não como medição.
+
+Leia as **diferenças entre composições** e a **direção** como informativas; o **nível** com
+reserva.
+                    """)
                 st.markdown(f"""
     **1 · As crianças não auferem rendimento.** O número de salários multiplica-se pelos
     **adultos com rendimento** indicados acima, nunca pelo total de pessoas. Um casal com dois
@@ -1406,8 +1500,13 @@ with aba3:
     se mantiver entre 20 % e 60 %, é robusta. Se mudar de sinal, o resultado depende inteiramente
     de uma hipótese — e deve ser apresentado como intervalo, nunca como valor único.
 
-    Repare ainda num ponto que a simulação torna visível: **a receita que o Estado deixa de cobrar
-    é a mesma seja qual for a repercussão**. O que muda é apenas quem fica com o dinheiro.
+    Repare ainda num ponto que a simulação torna visível: **a repercussão decide sobretudo quem
+    fica com o dinheiro** — o consumidor ou a margem do operador — e só marginalmente quanto o
+    Estado deixa de cobrar. Numa isenção total a receita cessante é de facto independente da
+    repercussão; numa redução parcial não é, porque uma repercussão menor mantém o preço final
+    mais alto e, com ele, uma base tributável maior. No exemplo de 106 € com descida de 23 %
+    para 6 %, a receita cessante vai de **−13,82 €** (repercussão 0 %) a **−14,65 €**
+    (repercussão 100 %) — cerca de 6 % de amplitude.
             """)
 
         editor = pd.DataFrame({
@@ -1482,6 +1581,25 @@ with aba3:
                     f"{(1 - repercussao) * 100:.0f} % do efeito")
         c[4].metric("Receita de IVA por mês", euro(res["receita_mes"]),
                     help=f"{euro(res['iva_antes'])} → {euro(res['iva_depois'])}")
+
+        # --- sensibilidade à base de cálculo ---
+        _despesa_outra = despesa_do_agregado(
+            float(outra_ancora["valor"]), dim_efetiva, adultos, criancas, escala_chave)
+        _decomp_outra = decompor(_despesa_outra, dados["pesos"], dados["variacoes_classe"])
+        _sim_outra = simular_iva(_decomp_outra, taxas_atuais, taxas_cenario, repercussao)
+        _res_outra = resumo_iva(_sim_outra, _despesa_outra, vezes_ano, agregados)
+        def _milhoes(v):
+            return f"{v:,.1f}".replace(",", " ").replace(".", ",") + " M€"
+
+        st.caption(
+            f"**Sensibilidade à base de cálculo.** Estes valores usam a base "
+            f"**{base_ancora['nome']}**. Com **{outra_ancora['nome']}**, a poupança mensal seria "
+            f"{euro(_res_outra['poupanca_mes'])} em vez de {euro(res['poupanca_mes'])}, "
+            f"e a poupança agregada anual {_milhoes(_res_outra['poupanca_agregada_milhoes'])} "
+            f"em vez de {_milhoes(res['poupanca_agregada_milhoes'])}. "
+            "Todos os resultados do simulador escalam proporcionalmente com a âncora — "
+            "a repartição entre consumidor e margem não depende dela."
+        )
 
         fig_rep = grafico_reparticao(sim)
         if fig_rep is not None:

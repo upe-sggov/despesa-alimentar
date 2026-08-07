@@ -249,19 +249,36 @@ resultados deixam de ser reproduzíveis a partir de fontes oficiais.
 O índice de preços dá **variações, nunca níveis**: não permite dizer «isto
 custa X euros». É preciso uma âncora em euros.
 
-A aplicação usa uma âncora **oficial**: a despesa final das famílias em produtos
-alimentares (`nama_10_co3_p3`, Contas Nacionais, COICOP 01.1, preços correntes),
-dividida pelo número de agregados e por doze, e depois atualizada para o mês mais
-recente com o índice oficial de preços:
+**Há duas âncoras oficiais, e não coincidem.** Esta é a limitação mais importante
+da ferramenta, apurada na aferição de 7 de agosto de 2026.
+
+| Base | Como se obtém | Enviesamento |
+|---|---|---|
+| **Contas Nacionais** (`nama_10_co3_p3`, COICOP 01.1) | Agregado macroeconómico ÷ n.º de agregados ÷ 12 | **Sobrestima** — mede o consumo *no território*, incluindo o de não residentes |
+| **IDF 2022/2023** (INE, quadro Q.2.11.a) | Medição direta da despesa declarada pelos agregados residentes | **Subestima** — os inquéritos às despesas sub-reportam sistematicamente |
+
+Cada uma é atualizada para o mês corrente pelo índice de preços, a partir do seu
+próprio ano de referência:
 
 ```
-despesa_mensal_base = despesa_nacional_ano / n.º agregados / 12
-valor_atual         = despesa_mensal_base × (índice_mês / índice_médio_ano_base)
+valor_atual = despesa_mensal_base × (índice_mês / índice_médio_ano_base)
 ```
 
-Assim, **toda a cadeia é oficial e reproduzível**, sem dependência de séries
-privadas. As Contas Nacionais têm um desfasamento de cerca de dois anos, o que a
-atualização pelo índice resolve.
+**Para 2022 as duas divergem por um fator de 2,3** — 549 € contra 239 € por mês
+para o agregado médio. É muito acima do desvio geral entre inquérito e Contas
+Nacionais, que é de 1,7. A taxa de cobertura portuguesa da alimentação (44 %)
+fica **abaixo do mínimo europeu de 58 %**, e na categoria que o Eurostat
+identifica como a de menor disparidade entre países. Não existe exercício
+nacional de conciliação que permita arbitrar.
+
+**Por isso a aplicação não escolhe.** Apresenta o intervalo entre as duas bases,
+declara que o ponto central não é determinável, e deixa a base de trabalho à
+escolha na barra lateral — por defeito o IDF, por ser a medição direta da
+pergunta que a ferramenta faz. O separador do simulador de IVA mostra sempre o
+resultado na outra base, como sensibilidade.
+
+Análise completa em [`docs/2026-08-07_levantamento_lacunas.md`](docs/2026-08-07_levantamento_lacunas.md),
+secções 2.10 e 2.12.
 
 Existe também um modo **«valor externo»**, para quem queira testar o que uma
 recolha de terceiros implicaria. Esse valor é assinalado na interface como não
@@ -374,9 +391,11 @@ de IVA na alimentação e na restauração — nomeadamente as experiências fra
 preço. O valor por defeito é 40 %, que é um parâmetro de trabalho e não uma
 estimativa: convém sempre testar a sensibilidade do resultado movendo o cursor.
 
-Nota que a simulação torna visível: **a receita cessante é a mesma qualquer que
-seja a repercussão**. O que muda é quem fica com o dinheiro — o consumidor ou a
-margem do operador.
+Nota que a simulação torna visível: **a repercussão decide sobretudo quem fica com o
+dinheiro** — o consumidor ou a margem do operador — e só marginalmente a receita
+cessante. Numa isenção total esta é independente da repercussão; numa redução parcial
+não é, porque uma repercussão menor mantém o preço final mais alto e, com ele, uma base
+tributável maior (ver auditoria, ponto 2).
 
 ---
 

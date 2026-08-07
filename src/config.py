@@ -102,6 +102,42 @@ DIMENSAO_RECUO = 2.4
 DIMENSAO_RECUO_FONTE = "Eurostat, ilc_lvph01 (EU-SILC), 2025"
 
 # --------------------------------------------------------------------------
+# Âncoras da despesa alimentar — duas bases oficiais que não coincidem
+# --------------------------------------------------------------------------
+# As Contas Nacionais medem o consumo *no território*, incluindo o de não
+# residentes, e são obtidas em direto do Eurostat. O IDF mede a despesa
+# declarada pelos agregados *residentes*.
+#
+# Para 2022 as duas divergem por um fator de 2,3 na alimentação — muito acima
+# do desvio geral de 1,7 entre inquérito e Contas Nacionais. A taxa de
+# cobertura portuguesa da alimentação (44 %) fica abaixo do mínimo europeu
+# (58 %), e não existe exercício nacional de conciliação que permita arbitrar.
+#
+# Nenhuma das duas é «a» resposta: as Contas Nacionais sobrestimam (conceito
+# interno, possível sobre-atribuição), o inquérito subestima (sub-reporte).
+# A aplicação apresenta por isso o intervalo entre ambas e deixa o utilizador
+# escolher a base de trabalho. Ver docs/2026-08-07_levantamento_lacunas.md, §2.10.
+IDF_ALIMENTAR_ANUAL = 2872.0          # € por agregado e por ano, COICOP 01.1
+IDF_ANO_BASE = 2023                   # o IDF 2022/2023 é indexado a partir de 2023
+IDF_FONTE = "INE, IDF 2022/2023 (quadro Q.2.11.a)"
+
+BASES_ANCORA = {
+    "idf": {
+        "nome": "IDF 2022/2023",
+        "fonte": IDF_FONTE,
+        "porque": "Medição direta da despesa dos agregados residentes. Subestima, "
+                  "porque os inquéritos às despesas sub-reportam sistematicamente.",
+    },
+    "contas": {
+        "nome": "Contas Nacionais",
+        "fonte": "Eurostat, nama_10_co3_p3 (Contas Nacionais, compiladas pelo INE)",
+        "porque": "Agregado macroeconómico dividido pelo número de agregados. "
+                  "Sobrestima, porque mede o consumo no território e inclui não residentes.",
+    },
+}
+BASE_POR_DEFEITO = "idf"
+
+# --------------------------------------------------------------------------
 # Metadados institucionais
 # --------------------------------------------------------------------------
 ORGANISMO = "Secretaria-Geral do Governo"
