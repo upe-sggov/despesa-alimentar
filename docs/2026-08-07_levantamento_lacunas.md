@@ -1,16 +1,28 @@
 # Cabaz alimentar — levantamento de lacunas, dados verificados e recolha em falta
 
-**Data:** 7 de agosto de 2026
-**Autor:** UPE · DSSD · SGGov
+**Data:** 7 de agosto de 2026 · **Autor:** UPE · DSSD · SGGov
 **Estatuto:** documento de trabalho — base para validação. Não constitui posição oficial.
 
 **Objeto.** Confronto entre (a) a nota técnica de enquadramento de 21.07.2026, (b) o documento
-`cabaz_06082026.pdf` e (c) a aplicação *despesa-alimentar*. Identifica o que falta, verifica
-o que é exequível, e lista os dados que é preciso ir buscar.
+`cabaz_06082026.pdf`, (c) a aplicação *despesa-alimentar* e (d) as fontes primárias entretanto
+obtidas.
 
-**Nota sobre a verificação.** Todos os valores da secção 2 foram extraídos por chamada direta à
-API do Eurostat em 07.08.2026. Não são citações — são leituras. Os códigos de conjunto de dados
-estão indicados para reprodução.
+**Nota sobre a verificação.** Os valores da secção 2 foram extraídos por leitura direta das fontes
+em 07.08.2026 — chamadas à API do Eurostat e parsing dos ficheiros do INE. Não são citações.
+
+**Decisões do Gabinete registadas (07.08.2026):**
+- **Uso final:** (a) armar o Gabinete para o debate público e parlamentar **e** (c) construir um
+  instrumento de monitorização permanente. Implica que os produtos tenham de ser simultaneamente
+  comunicáveis e reprodutíveis — o que reforça a preferência por fontes automatizáveis.
+- **Divergência de valores:** prevalece o PDF de 06.08.2026 (+33,88 % desde jan/2022; +3,91 %
+  desde o início de 2026), por ser mais recente e ter fonte.
+- **Tensão custo/privação (§2.6):** resolvida em 07.08.2026 — **o indicador entra**, agora com o
+  terceiro nível de leitura que o SOFI 2026 fornece (§2.14). Deixa de haver o problema de
+  apresentar só o indicador mais benigno.
+- **Âncora (§2.10):** adotada a **opção 3** — apresentar o intervalo IDF–Contas Nacionais
+  (239–549 €/mês para 2022), com o ponto central assinalado como não determinado.
+- **Âmbito das fontes:** o trabalho usa **exclusivamente dados abertos**. Fontes que exijam pedido
+  formal, protocolo ou acesso reservado ficam fora de âmbito — o que encerra B1 (Mapa do Comércio).
 
 ---
 
@@ -20,276 +32,759 @@ estão indicados para reprodução.
 
 | # | Eixo | Estado | Via |
 |---|---|---|---|
-| 1 | Ponderar pela estrutura real de consumo (IDEF) | 🟡 Parcial | Híbrido IHPC + HBS; versão plena exige INE |
-| 2 | Desagregar por decil de rendimento | 🟢 **Viável já** | Eurostat `hbs_str_t223` |
-| 3 | Desagregar territorialmente | 🟡 Parcial | Grau de urbanização e NUTS 2 sim; concelho não |
-| 4 | Incorporar substituição efetiva (Fisher/Törnqvist) | 🟢 **Viável já** | Törnqvist ao nível das classes |
-| 5 | Indicador de acessibilidade alimentar | 🟢 Feito + reforço | Já existe; `ilc_mdes03` acrescenta muito |
-| 6 | Explorar *scanner data* | 🔴 Não é cálculo | Diligência junto do INE |
-| 7 | Validar contra e-fatura / AT | 🔴 Não é cálculo | Diligência, via INE |
+| 1 | Ponderar pela estrutura real de consumo (IDEF) | 🟢 **Resolvido** | IDF 2022/2023, Q.2.11 — COICOP 4 dígitos em euros |
+| 2 | Desagregar por decil de rendimento | 🟢 **Resolvido** | IDF Q.2.11 — quintis ≡ D1–D2 / D9–D10 |
+| 3 | Desagregar territorialmente | 🟡 Parcial | NUTS II × quintil e grau de urbanização sim; oferta retalhista não |
+| 4 | Incorporar substituição efetiva (Fisher/Törnqvist) | 🟢 Viável | Törnqvist ao nível das classes |
+| 5 | Indicador de acessibilidade alimentar | 🟢 **Feito, incluindo a variante «dieta saudável»** | Já existe; `ilc_mdes03` e o FAO SOFI 2026 (§2.14) acrescentam os dois limiares em falta |
+| 6 | Explorar *scanner data* | 🟢 **Respondido** | O IPC **não** usa; usa *web scraping* — ver §2.7 |
+| 7 | Validar contra e-fatura / AT | 🔴 Diligência | Via INE. Nota: a AT já alimenta o IPC, mas só em rendas |
 
 ### As quatro linhas de trabalho (nota §1.6)
 
 | # | Produto | Prioridade | Estado |
 |---|---|---|---|
-| 1 | Nota metodológica «O que é (e o que não é) o cabaz» | Alta | 🟡 Existe em prosa no README; ausente da interface |
-| 2 | Cabaz ponderado por decil de rendimento | Alta | 🟢 Dados disponíveis — ver §2.1 |
-| 3 | Desagregação territorial do preço alimentar | Média | 🟡 Só ao nível urbano/rural e NUTS 2 |
+| 1 | Nota metodológica «O que é (e o que não é) o cabaz» | Alta | 🟡 Em prosa no README; ausente da interface |
+| 2 | Cabaz ponderado por decil de rendimento | Alta | 🟢 **Dados completos** — ver §2.1 |
+| 3 | Desagregação territorial do preço alimentar | Média | 🟡 Procura sim, oferta não |
 | 4 | Benchmarking europeu da inflação alimentar | Média | ✅ Já feito (aba 4) |
-
-### Instrumentos que a app não cobre
-
-A app usa **um** dos seis instrumentos da nota §1.1: o IPC/IHPC. Ausentes: Observatório de Preços
-Agroalimentar (GPP), cabaz de apoio alimentar PO APMC/DGS. Ausentes por opção deliberada e bem
-fundamentada: DECO, ASAE.
 
 ---
 
 ## 2. Dados verificados e disponíveis
 
-### 2.1 Peso da alimentação por quintil de rendimento
+### 2.1 IDF 2022/2023 — despesa alimentar por quintil de rendimento ★ fonte primária
 
-**Conjunto:** `hbs_str_t223` · dims `[freq, quant_inc, coicop, unit, geo, time]` · unidade: por mil (‰)
-da despesa total do agregado · vagas 2010/2015/2020.
+**Fonte:** INE, IDF 2022/2023, quadros **Q.2.11.a** (euros) e **Q.2.11.b** (estrutura %).
+Quintis de rendimento **equivalente**. Unidade: € por agregado e por ano.
 
-O quintil mapeia exatamente o pedido da nota: **D1–D2 ≡ Q1**, **D9–D10 ≡ Q5**.
+Supersede o HBS/Eurostat (§2.5): é mais recente, está em euros, e desce ao 4.º dígito da COICOP.
 
-| Vaga | COICOP | Q1 | Q2 | Q3 | Q4 | Q5 | Rácio Q1/Q5 |
+| COICOP 2018 | Rubrica | Total | Q1 | Q2 | Q3 | Q4 | Q5 |
 |---|---|---|---|---|---|---|---|
-| 2015 | CP01 (alim. + bebidas n/alc.) | 183 | 168 | 156 | 144 | 116 | 1,58 |
-| 2015 | CP011 (alimentação) | 172 | 157 | 145 | 134 | 108 | 1,59 |
-| **2020** | **CP01** | **171** | 146 | 145 | 131 | **100** | **1,71** |
-| 2020 | CP011 | — não publicado para PT — | | | | | |
+| — | **Despesa total do agregado** | **23 900** | 16 294 | 18 269 | 22 188 | 26 188 | 34 994 |
+| 01 | Alimentares + bebidas n/alc. | 3 091 | 2 571 | 2 761 | 3 248 | 3 407 | 3 442 |
+| **01.1** | **Produtos alimentares** | **2 872** | **2 412** | 2 573 | 3 022 | 3 139 | **3 192** |
+| 01.1.1 | Cereais e derivados | 420 | 380 | 404 | 447 | 443 | 426 |
+| 01.1.2 | Carne | 670 | 575 | 633 | 767 | 740 | 650 |
+| 01.1.3 | Peixe e produtos do mar | 403 | 313 | 342 | 415 | 463 | 476 |
+| 01.1.4 | Leite, lácteos e ovos | 369 | 312 | 324 | 376 | 405 | 420 |
+| 01.1.5 | Óleos e gorduras | 119 | 102 | 119 | 131 | 138 | 108 |
+| 01.1.6 | Fruta e frutos de casca rija | 299 | 231 | 246 | 275 | 320 | 407 |
+| 01.1.7 | Hortícolas, tubérculos e leguminosas | 324 | 294 | 290 | 336 | 344 | 354 |
+| 01.1.8 | Açúcar, confeitaria e sobremesas | 119 | 75 | 87 | 136 | 121 | 169 |
+| 01.1.9 | Pré-preparados e outros | 149 | 130 | 127 | 139 | 165 | 181 |
 
-**Leitura.** O quintil mais pobre afeta 17,1 % do orçamento à alimentação; o mais rico, 10,0 %.
-O efeito regressivo que a nota afirma está aqui quantificado, em fonte oficial aberta. O rácio
-agravou-se entre 2015 e 2020 (1,58 → 1,71).
+**Peso da alimentação no orçamento (Q.2.11.b, %):**
 
-**Limitação crítica.** O detalhe COICOP a 4 dígitos (CP0111–CP0119) **não está preenchido para
-Portugal por quintil**. Existe a dimensão, não existem os valores. Consegue-se o agregado
-alimentar por quintil, não a repartição por classe dentro de cada quintil. → ver recolha **A1**.
+| | Total | Q1 | Q2 | Q3 | Q4 | Q5 | Rácio Q1/Q5 |
+|---|---|---|---|---|---|---|---|
+| 01 (alim. + bebidas) | 12,9 | 15,8 | 15,1 | 14,6 | 13,0 | 9,8 | 1,61 |
+| **01.1 (alimentação)** | **12,0** | **14,8** | 14,1 | 13,6 | 12,0 | **9,1** | **1,63** |
 
-### 2.2 Nível de despesa por quintil
+**Despesa alimentar mensal por agregado (01.1 ÷ 12):**
 
-**Conjunto:** `hbs_exp_t133` · PT, 2020 · **unidade: PPS, não euros**.
-
-| Unidade | TOTAL | Q1 | Q2 | Q3 | Q4 | Q5 |
-|---|---|---|---|---|---|---|
-| PPS por agregado | 24 499 | 12 612 | 17 414 | 21 967 | 28 070 | 42 456 |
-| PPS por adulto equivalente | 14 924 | 9 914 | 12 032 | 13 416 | 16 263 | 23 006 |
-
-**Uso.** Como não vem em euros, usa-se a *estrutura relativa* entre quintis e ancora-se no valor
-em euros que a app já calcula a partir das Contas Nacionais.
-
-### 2.3 Peso da alimentação por composição do agregado
-
-**Conjunto:** `hbs_str_t224` · dim `hhcomp` · PT, 2020 · CP01, ‰.
-
-| 1 adulto | 1 adulto c/ filhos | 2 adultos | 2 adultos c/ filhos | 3+ adultos | 3+ adultos c/ filhos |
+| Total | Q1 | Q2 | Q3 | Q4 | Q5 |
 |---|---|---|---|---|---|
-| 112 | 102 | 135 | 114 | 149 | **157** |
+| **239 €** | 201 € | 214 € | 252 € | 262 € | 266 € |
 
-**Leitura — com cautela.** A série 112 → 135 → 149 (1, 2, 3+ adultos) mostra o peso orçamental
-a subir com o número de adultos, o que é consistente com a ressalva metodológica da app: a
-alimentação tem economias de escala mais fracas do que o consumo total, e a escala OCDE
-modificada subestima agregados maiores.
+**Três leituras que a app hoje não consegue produzir:**
 
-**Mas não é prova.** Os agregados com filhos dependentes apresentam pesos *inferiores* aos
-equivalentes sem filhos (102 < 112; 114 < 135). A quota orçamental está confundida com o
-rendimento e com a estrutura das outras despesas. Serve para *testar* a ressalva, não para a
-confirmar. Uma verificação séria exige despesa alimentar em euros por tipo de agregado.
+1. **O efeito regressivo, quantificado.** O quintil mais pobre afeta 14,8 % do orçamento à
+   alimentação; o mais rico, 9,1 %.
+2. **A compressão em euros.** Q5 gasta apenas 32 % mais do que Q1 em alimentação (266 € vs 201 €),
+   apesar de ter 2,15× a despesa total. É a lei de Engel em estado puro.
+3. **A composição muda, não só o nível.** Q1 gasta *mais* em cereais que Q5 em termos relativos
+   (2,3 % vs 1,2 %) e *menos de metade* em fruta em euros (231 € vs 407 €). A substituição
+   nutricional que a nota descreve está visível nos próprios dados de despesa.
 
-### 2.4 Peso da alimentação por grau de urbanização
+**Correspondência com as classes da app** — um-para-um, sem ambiguidade:
 
-**Conjunto:** `hbs_str_t226` · dim `deg_urb` · PT, 2020 · CP01, ‰.
+| App (`src/config.py`) | IDF 2022/2023 |
+|---|---|
+| `CP0111` Pão e cereais | 01.1.1 Cereais e produtos à base de cereais |
+| `CP0112` Carne | 01.1.2 Animais vivos, carne e outras partes |
+| `CP0113` Peixe e marisco | 01.1.3 Peixe e outros produtos do mar |
+| `CP0114` Leite, queijo e ovos | 01.1.4 Leite, outros lácteos e ovos |
+| `CP0115` Óleos e gorduras | 01.1.5 Óleos e gorduras |
+| `CP0116` Fruta | 01.1.6 Fruta e frutos de casca rija |
+| `CP0117` Legumes e hortícolas | 01.1.7 Hortícolas, tubérculos e leguminosas |
+| `CP0118` Açúcar e doces | 01.1.8 Açúcar, confeitaria e sobremesas |
+| `CP0119` Outros alimentos | 01.1.9 Pré-preparados e outros n.e. |
 
-| Cidades | Vilas e subúrbios | Áreas rurais |
-|---|---|---|
-| 115 | 139 | **151** |
+> **Verificação da âncora da app — ver §2.10. O teste não passa.**
 
-Gradiente territorial claro, sem necessidade de dados concelhios. Responde parcialmente ao eixo 3.
+### 2.2 IDF — despesa alimentar por composição do agregado
 
-### 2.5 Privação alimentar — série anual até 2025
+**Fonte:** Q.2.6.a. Euros por ano. (O cabeçalho ocupa duas linhas; são 9 colunas de composição.)
 
-**Conjunto:** `ilc_mdes03` · dims `[freq, hhcomp, rskpovth, unit, geo, time]` · série 2003–2025 ·
-indicador: % que não consegue pagar uma refeição com carne, frango ou peixe de dois em dois dias.
+| Composição | Despesa total | Alimentação (01.1) | Peso |
+|---|---|---|---|
+| Total | 23 900 | 2 872 | 12,0 % |
+| 1 adulto não idoso | 17 105 | 1 594 | 9,3 % |
+| 1 adulto idoso | 14 783 | 1 704 | 11,5 % |
+| 2+ adultos não idosos | 25 690 | 3 051 | 11,9 % |
+| 2+ adultos, ≥1 idoso | 21 858 | 3 081 | 14,1 % |
+| 1 adulto c/ dependentes | 24 001 | 2 257 | 9,4 % |
+| 2+ adultos c/ 1 dependente | 29 658 | 3 424 | 11,5 % |
+| 2+ adultos c/ 2+ dependentes | 32 856 | 3 951 | 12,0 % |
+
+### 2.3 IDF — escalas de equivalência
+
+**Fonte:** Q.2.8. Confirma que o INE usa a **OCDE modificada**: dividindo despesa por agregado
+pela despesa por adulto equivalente obtêm-se 1,000 (1 adulto), 1,500 (2 adultos) e 2,144 (3+).
+
+| | Por agregado | Por adulto equivalente | Per capita |
+|---|---|---|---|
+| Total | 23 900 | 14 574 | 11 078 |
+| 1 adulto sem dependentes | 15 832 | 15 832 | 15 832 |
+| 2 adultos sem dependentes | 22 342 | 14 895 | 11 171 |
+| 3+ adultos sem dependentes | 27 267 | 12 721 | 8 346 |
+
+**Teste da ressalva da app — incompleto.** A app afirma que a OCDE modificada *subestima* o custo
+alimentar de agregados maiores. Para o testar é preciso despesa **alimentar** por adulto
+equivalente. Consegui-o só para os agregados de 1 adulto (1,0 adultos equivalentes): 1 594 €/ano
+para o não idoso, 1 704 € para o idoso, contra 1 751 € na média nacional. Para os agregados de 2+
+o Q.2.6.a agrupa «2 ou mais», enquanto o Q.2.8 separa «2» de «3 ou +» — as categorias não cruzam.
+→ ver recolha **A6**.
+
+### 2.4 IDF — território
+
+**Grau de urbanização (Q.2.3.a), € por ano:**
+
+| | Portugal | Predom. urbana | Mediamente urbana | Predom. rural |
+|---|---|---|---|---|
+| Despesa total | 23 900 | 24 960 | 22 713 | 18 690 |
+| Alimentação (01.1) | 2 872 | 2 833 | 3 177 | 2 756 |
+| **Peso** | **12,0 %** | **11,3 %** | **14,0 %** | **14,7 %** |
+
+Em euros, o rural gasta *menos* em alimentação; em peso orçamental, gasta *mais*. As duas leituras
+são verdadeiras e contam histórias opostas — atenção à que se escolhe comunicar.
+
+**NUTS II × quintil (Q.2.12.a/b/c).** Existe, com as sete NUTS II e os cinco quintis cruzados.
+Exemplo, despesa total do 1.º quintil: Portugal 16 294 · Norte 16 207 · Centro 14 629 ·
+A.M. Lisboa 18 309 · Alentejo 15 558 · Algarve 18 111 · Açores 13 725 · Madeira 15 977.
+
+### 2.5 Eurostat / HBS — fonte secundária
+
+Mantida como corroboração e para comparação europeia. Peso da alimentação (CP01, ‰), PT:
+
+| Vaga | Q1 | Q2 | Q3 | Q4 | Q5 |
+|---|---|---|---|---|---|
+| 2015 | 183 | 168 | 156 | 144 | 116 |
+| «2020» | 171 | 146 | 145 | 131 | 100 |
+
+> ⚠️ **A etiqueta «2020» é enganadora e a série não é uma evolução quinquenal.** Ver §2.12: a
+> metainformação do Eurostat lista Portugal como não participante na vaga de 2020, e tudo indica
+> que estes valores são o **IDF 2022/2023** disseminado sob aquela etiqueta. Não usar para leituras
+> de tendência 2015→2020.
+
+Conjuntos: `hbs_str_t223` (quintil), `hbs_str_t224` (composição), `hbs_str_t226` (urbanização),
+`hbs_exp_t133` (nível, em PPS). Detalhe COICOP a 4 dígitos **não publicado para PT** — razão pela
+qual o IDF passa a ser a fonte primária. O HBS continua útil para comparar Portugal com a UE.
+
+### 2.6 Privação alimentar — série anual até 2025
+
+**Conjunto:** `ilc_mdes03` · % que não consegue pagar uma refeição com carne, frango ou peixe de
+dois em dois dias.
 
 | Grupo | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 |
 |---|---|---|---|---|---|---|---|
-| Total da população | 2,3 | 2,5 | 2,4 | 3,0 | 2,3 | 2,5 | **1,9** |
+| Total | 2,3 | 2,5 | 2,4 | 3,0 | 2,3 | 2,5 | **1,9** |
 | Abaixo do limiar de pobreza | 5,7 | 7,2 | 5,9 | 7,2 | 5,9 | 5,1 | **5,5** |
-| Acima do limiar de pobreza | 1,6 | 1,6 | 1,6 | 2,2 | 1,6 | 2,0 | 1,3 |
+| Acima do limiar | 1,6 | 1,6 | 1,6 | 2,2 | 1,6 | 2,0 | 1,3 |
 
-Por composição do agregado (todos os níveis de rendimento):
+> ✅ **Decisão de 07.08.2026: o indicador entra**, mas **nunca sozinho** — sempre acompanhado do
+> indicador da FAO (§2.14), que mede um limiar muito mais exigente.
+>
+> A minha caracterização inicial desta secção — «custo em máximos, privação em mínimos» — estava
+> incompleta. Não era falsa, mas ficava-se pelo indicador mais benigno de todos: este mede
+> privação **severa**, e 1,9 % é o mínimo da série. O SOFI 2026 fornece o nível intermédio que
+> faltava: **14,4 % da população não consegue pagar uma dieta saudável**. Apresentar só o de 1,9 %
+> daria uma leitura indevidamente tranquilizadora.
+>
+> Mantém-se a cautela técnica: é auto-reportado, de inquérito por amostragem, e **sem intervalos de
+> confiança verificados**.
 
-| Composição | 2019 | 2021 | 2022 | 2023 | 2024 | 2025 |
-|---|---|---|---|---|---|---|
-| 1 adulto | 4,4 | 5,1 | 5,2 | 5,1 | 4,0 | 4,5 |
-| 1 adulto, 65+ anos | 4,2 | 5,9 | 6,0 | 5,3 | 4,4 | 4,7 |
-| 1 adulto c/ filhos dependentes | 4,2 | 4,8 | 5,2 | 2,8 | 2,3 | 3,4 |
-| 2 adultos | 3,0 | 3,3 | 3,1 | 2,4 | 2,5 | 2,3 |
-| 3+ adultos c/ filhos dependentes | 2,2 | 1,1 | 2,7 | 1,1 | 2,2 | 2,1 |
+### 2.7 Metodologia do IPC — resposta ao eixo 6
 
-**Porque é que isto importa.** É anual, vai até **2025** (o HBS pára em 2020), cruza com o seletor
-de composição que a app já tem, e traz a dimensão distributiva por limiar de pobreza. Custo de
-implementação baixíssimo: mesma API, mesmo padrão do código existente.
+**Fonte:** INE, *Documento Metodológico do IPC*, 2023, v2.0 (43 páginas).
 
-> ⚠️ **Ponto que exige arbitragem antes de entrar na app.** O indicador de *custo* está em máximos
-> históricos enquanto o de *privação alimentar* está no mínimo da série (1,9 % em 2025). Não são
-> contraditórios — medem coisas diferentes — mas a tensão é analiticamente relevante e
-> politicamente utilizável nos dois sentidos. A privação é auto-reportada, de inquérito por
-> amostragem, e **não verifiquei intervalos de confiança**. Validar com o INE antes de publicar.
+| Questão | Resposta |
+|---|---|
+| O IPC usa *scanner data*? | **Não.** Nenhuma referência em todo o documento. |
+| Que recolha automatizada usa? | ***Web scraping***, para «cadeias de lojas com implantação nacional». Permite mais variedades e maior representatividade; metodologia comparável à da recolha física. |
+| Base de amostragem | O **IDF**, quinquenal, com representatividade a NUTS II |
+| Cobertura territorial | **45 centros de recolha** (concelhos ou agrupamentos), seleção não probabilística |
+| Dados administrativos da AT | Já usados — mas só **RER** (rendas) e **IMI**. Nada em alimentação. |
+| Tratamento de descontos | Incluídos «desde que de **aplicação generalizada** aos consumidores» |
 
-### 2.6 Outros conjuntos que respondem
+**Duas consequências diretas:**
 
-| Conjunto | Conteúdo | Observações | Último período |
+1. **O eixo 6 fica respondido**, e negativamente. Se se quiser *scanner data*, é matéria a propor
+   ao INE, não a verificar.
+2. **A limitação 8 da app pode ser afinada com fonte.** Hoje diz que o IHPC não capta «integralmente»
+   descontos de cartão e talão. O critério real é mais preciso: descontos **de aplicação
+   generalizada** entram; os condicionais — cartão de fidelização, talão, cupão — não. A app pode
+   passar a citar o critério em vez de o aproximar.
+
+### 2.8 Número de agregados — confirmação do divisor
+
+**Fonte:** Censos 2021, quadro 4.02 (`Q402.xlsx`, 8 folhas: PT + 7 NUTS II).
+
+**Portugal: 4 149 096 agregados domésticos privados** — confirma exatamente a constante
+`AGREGADOS_CENSOS` em [`src/config.py`](../src/config.py). Nada a alterar.
+
+O ficheiro desce a detalhe sub-regional fino (77 581 linhas só no Norte), com tipologia de agregado
+e dimensão. **É o denominador territorial** para o eixo 3 — o que falta é o lado da oferta
+retalhista.
+
+### 2.9 API do INE — formato confirmado
+
+`indica.json` é uma resposta da API `json_indicador` do INE (indicador **0013519**, «Despesas de
+consumo médias anuais dos agregados domésticos privados por local de residência», atualizado
+2024-10-17, último período 2022/2023, 462 observações). Confirma que a API devolve dados
+estruturados e utilizáveis — o obstáculo é exclusivamente de rede, não de formato.
+
+### 2.10 ★ Aferição da âncora da app — o teste não passa
+
+**O que se testou.** A app deriva a despesa alimentar por agregado das Contas Nacionais
+(`nama_10_co3_p3`, CP011, preços correntes) ÷ n.º de agregados ÷ 12. O IDF mede a mesma coisa
+diretamente. Nunca tinham sido confrontadas com números — a auditoria de 27.07.2026 dava o teste
+como «plausível» sem valor de referência.
+
+**Resultado, ano de 2022 (último das Contas Nacionais):**
+
+| | Alimentação (CP011 / 01.1) | Despesa total do agregado |
+|---|---|---|
+| Contas Nacionais ÷ 4 149 096 ÷ 12 | **549 €/mês** | 3 351 €/mês |
+| IDF 2022/2023, medição direta | **239 €/mês** | 1 992 €/mês |
+| **Rácio** | **2,29×** | 1,68× |
+
+**A leitura.** O desvio geral de 1,68× é o gap conhecido entre Contas Nacionais e inquérito, e é
+coerente com o ~1,8× que a auditoria já registava. **Mas na alimentação o desvio é de 2,29× — muito
+pior do que o desvio geral.** Não é ruído: é sinal de que algo específico da alimentação está a
+inflacionar o numerador.
+
+**Decomposição da causa** (verificada em 07.08.2026, não inferida):
+
+**(i) Conceito interno — confirmado, mas menor do que se supôs.** O conjunto `nama_10_co3_p3` é
+publicado no **conceito interno**: mede o consumo no território, incluindo o de não residentes.
+Confronto com os agregados principais das Contas Nacionais, PT 2022:
+
+| Agregado | M€ |
+|---|---|
+| `P31_S14` — consumo das famílias, conceito **nacional** (residentes) | 151 318 |
+| `nama_10_co3_p3` TOTAL — conceito **interno** | 166 851 |
+| Diferença — turismo líquido | +15 533 (**+10,3 %**) |
+
+O efeito existe e vai no sentido esperado, **mas +10 % não explica um desvio de 129 %**. Foi um
+erro atribuir-lhe o papel principal.
+
+**(ii) Sub-cobertura do inquérito — este é o fator dominante.** É um fenómeno estrutural e
+documentado: os inquéritos às despesas captam sistematicamente menos do que as Contas Nacionais.
+
+| | IDF implícito | Contas Nacionais | Cobertura |
 |---|---|---|---|
-| `hbs_str_t211` | Estrutura de despesa por COICOP | 1 013 obs. | 2020 |
-| `nama_10r_2hhinc` | Rendimento das famílias, NUTS 2 | 112 065 obs. — permite Engel regional | 2024 |
-| `ilc_di01` | Distribuição do rendimento por quantil | 4 431 obs. | 2025 |
-| `ilc_di04` | Rendimento mediano por quantil | 2 652 obs. | 2025 |
-| `prc_hicp_midx` / `prc_hicp_inw` | Já usados pela app (controlo) | ✅ | 2025-12 / 2025 |
+| Despesa total | 99 163 M€ | 151 318 M€ (nacional) | **65,5 %** |
+| Alimentação | 11 916 M€ | 27 318 M€ (interno) | **43,6 %** |
 
-`apri_fo_cofrui` (preços agrícolas na produção) devolve **404** — código inválido ou descontinuado.
+A cobertura global de ~66 % é o valor típico deste tipo de inquérito. **O que é anómalo é a
+alimentação estar nos 44 %** — e essa anomalia está agora **quantificada contra uma referência
+europeia**: ver §2.12. Três explicações candidatas, que os dados disponíveis não permitem arbitrar:
+
+- o inquérito sub-reporta alimentação pior do que o resto — compras pequenas, frequentes e de baixo
+  valor unitário são as que mais escapam ao diário de despesas;
+- as Contas Nacionais sobre-atribuem à alimentação, por a estimativa assentar em volume de negócios
+  do retalho e em dados do lado da oferta;
+- o efeito do turismo é maior na alimentação do que a média de +10,3 % sugere. A média dilui-se por
+  todas as rubricas, mas a compra de bens alimentares em retalho por não residentes — alojamento
+  local, alojamento com cozinha — cresceu muito em Portugal e recai justamente em CP011. Não é
+  quantificável com os dados públicos.
+
+**Corroboração.** Três fontes dão três pesos diferentes para a alimentação no consumo:
+
+| Fonte | Peso de CP011 | Conceito |
+|---|---|---|
+| Ponderadores IHPC (`prc_hicp_inw`, 2025) | **20,0 %** | Território, e exclui rendas imputadas do denominador |
+| Contas Nacionais 2022 | **16,4 %** | Território |
+| IDF 2022/2023 | **12,0 %** | Agregados residentes |
+
+A escada é monotónica e explica-se pelo conceito e pelo denominador, não por erro de nenhuma das
+fontes.
+
+**Plausibilidade — nenhum dos dois extremos convence.** Para um agregado médio de 2,4 pessoas:
+
+| | Por agregado | Por pessoa | Por pessoa/dia |
+|---|---|---|---|
+| Contas Nacionais | 549 €/mês | 229 €/mês | ~7,5 € |
+| IDF | 239 €/mês | 100 €/mês | ~3,3 € |
+
+Excluindo restauração, 7,5 €/pessoa/dia é alto para Portugal em 2022; 3,3 €/pessoa/dia é
+baixo — dificilmente cobre uma alimentação normal. **O valor real estará entre os dois**, e cada
+fonte erra num sentido: as Contas Nacionais por excesso (conceito interno e possível
+sobre-atribuição), o IDF por defeito (sub-reporte do inquérito).
+
+**Conclusão.** O número principal da app está **muito provavelmente sobrestimado**, mas a
+magnitude da sobrestimação não é determinável com estas duas fontes — só se sabe que está entre
+0 % e 129 %. Não é um erro de cálculo: o código faz o que o README descreve. É uma questão de
+conceito, agravada pelo facto de a pergunta que a app diz responder («quanto uma família gasta em
+comida») não ter uma fonte única e não enviesada que lhe responda.
+
+**O que isto afeta e o que não afeta:**
+
+| Afetado | Não afetado |
+|---|---|
+| O valor em euros da despesa por agregado | A decomposição em % por classe |
+| Todos os outputs do simulador de IVA (escalam com a âncora) | As variações homólogas e o histórico |
+| A extrapolação «ordens de grandeza a nível agregado» | A comparação UE-27 |
+| O indicador de esforço (já declarado como limite superior — a sobrestimação é maior do que se supunha) | O coeficiente de Engel (é um rácio interno às Contas Nacionais) |
+
+**Três opções — decisão a tomar:**
+
+1. **Trocar a âncora para o IDF.** É a medição direta da pergunta que a app faz, e o
+   contra-argumento do README — «as Contas Nacionais são mais atuais» — já não se aplica: aquelas
+   param em 2022 e o IDF é de 2022/2023. Contra: substitui um enviesamento por excesso por um
+   enviesamento por defeito, e o segundo é tão pouco quantificado como o primeiro.
+2. **Manter as Contas Nacionais e declarar o desvio**, apresentando o IDF ao lado.
+3. **Apresentar o intervalo IDF–Contas Nacionais** (239–549 €/mês para 2022), com o ponto central
+   assinalado como não determinado.
+4. **Seguir o *benchmark procedure* do EGDNA** (§2.11): usar o IDF para a **forma** da distribuição
+   e as Contas Nacionais para o **nível**, depois de lhes ajustar o âmbito — passar do conceito
+   interno ao nacional e retirar os agregados não privados.
+   **Atenção ao que isto implica:** o EGDNA trata o total macro como autoritativo, pelo que o valor
+   médio continuaria próximo dos 549 €, não dos 239 €. O ajustamento de conceito interno→nacional
+   corrige apenas ~10 % (549 → ~498 €/mês), deixando por explicar a maior parte do desvio. É a via
+   metodologicamente ortodoxa, mas foi desenhada para o rendimento, onde as Contas Nacionais são
+   inquestionavelmente a referência — o que é menos evidente na despesa alimentar medida em
+   conceito interno num país de forte turismo.
+
+**Recomendação: a 3**, com a **4** como direção de médio prazo. A 3 é o idioma que a app já usa
+para as escalas de equivalência — «a direção é robusta, o valor exato é condicional» — e é a única
+que não afirma uma precisão que os dados não sustentam. A 1 seria preferível se o IDF fosse não
+enviesado; não é. A 4 é a via ortodoxa, mas exige trabalho de ajustamento de âmbito e, ainda assim,
+não fecha o desvio.
+
+> **Correção.** Na primeira versão deste documento recomendei a opção 1, com base na atribuição do
+> desvio ao conceito interno das Contas Nacionais. A verificação subsequente mostrou que esse
+> efeito vale ~10 %, não ~129 %, e que o fator dominante é a sub-cobertura do inquérito — que
+> penaliza o IDF, não as Contas Nacionais. A recomendação muda em conformidade.
+
+Não avanço sem decisão sua: muda o número que a ferramenta apresenta em primeiro lugar.
+
+### 2.11 Referências metodológicas sobre a conciliação micro-macro
+
+Dois documentos do Eurostat, verificados em 07.08.2026. **Resolvem o método, não o número.**
+
+**KS-RA-13-023-EN — *European household income by groups of households* (2013, 88 pp.)**
+
+Documenta o exercício «a-minima» do **EGDNA** (grupo de peritos conjunto OCDE-Eurostat sobre
+disparidades num quadro de Contas Nacionais) — a metodologia oficial europeia para repartir
+agregados das Contas Nacionais por grupos de agregados familiares, conciliando-os com dados de
+inquérito. Contributos utilizáveis:
+
+- Estabelece que o problema encontrado em §2.10 **é um problema reconhecido, com nome e método**,
+  e não uma fragilidade desta app. Isso é defensável perante o Gabinete.
+- §3.1 documenta um passo que a minha decomposição omitiu: **ajustamento do âmbito dos totais das
+  Contas Nacionais**, designadamente a remoção dos **agregados não privados** (população
+  institucional). É uma terceira componente do desvio, a somar ao conceito interno e à
+  sub-cobertura.
+- §3.4.3 descreve o *benchmark procedure*: usar a distribuição do inquérito e calibrá-la aos totais
+  das Contas Nacionais. **É a solução formal para o dilema de §2.10** — em vez de escolher entre as
+  duas fontes, usar o inquérito para a *forma* da distribuição e as Contas Nacionais para o *nível*.
+
+**Limite:** o exercício a-minima cobriu **rendimento**, não consumo. Não traz rácios de
+conciliação para a despesa alimentar, nem para Portugal. Os valores portugueses que contém
+(coberturas e *average gap indicator*) são de componentes de rendimento, em 2008.
+
+**KS-TC-16-026-EN-N — *Statistical matching of EU-SILC and the HBS* (2017, 35 pp.)**
+
+Método para cruzar rendimento (EU-SILC) com despesa (HBS) ao nível do agregado. Relevante para o
+ponto 1 da auditoria de 27.07.2026, que assinala a incompatibilidade de bases no indicador de
+esforço: este documento descreve a via formal para a resolver.
+
+Traz ainda uma advertência com consequência direta para a leitura de §2.1: a evidência sugere que
+**o rendimento é sub-reportado pelos agregados de menores recursos, enquanto a sua despesa é
+reportada com relativa exatidão; e que a despesa dos agregados de rendimentos mais altos tende a
+ser sub-reportada** (Meyer & Sullivan 2011; Brewer & O'Dea 2012; Sabelhaus et al. 2011).
+
+> **Implicação para o efeito regressivo.** Se a despesa do Q5 é sub-reportada e a sub-declaração se
+> concentra em rubricas discricionárias — não alimentares —, então o denominador do Q5 está
+> subestimado e o seu peso alimentar aparente (9,1 %) está **sobre**estimado. O rácio real Q1/Q5
+> seria então **superior** aos 1,63 medidos. A conclusão de regressividade é, nesse cenário,
+> conservadora. Não é demonstração — é uma direção de enviesamento a declarar.
+
+### 2.12 ★ A anomalia da alimentação, aferida contra referência europeia
+
+**Fonte:** Eurostat, *Concepts for household consumption — comparison between micro and macro
+approach* (Statistics Explained, dados de março de 2018, vaga HBS de 2010, estatística
+experimental) e *Consumption expenditure of private households (hbs)* — metainformação de
+referência ESMS, atualizada em 19.04.2024.
+
+Este é o exercício de conciliação que faltava: **compara HBS com Contas Nacionais por categoria
+COICOP** e usa exatamente a métrica que calculei — «*coverage rate*: dados agregados do HBS a
+dividir pelos agregados correspondentes das Contas Nacionais, em percentagem», sobre o mesmo
+conjunto `nama_10_co3_p3`.
+
+**Valores de referência para a UE (vaga de 2010):**
+
+| Indicador | Valor |
+|---|---|
+| Cobertura média, consumo total | **~73 %** (intervalo 50 %–97 %) |
+| *Data gap* médio, consumo total | 27 % |
+| Cobertura da **alimentação (01)** | **58 %–108 %** |
+| Cobertura de bebidas alcoólicas e tabaco (02) | 13 %–69 % (a pior) |
+| Cobertura de educação (10) | 6 %–119 % (a mais dispersa) |
+
+E a conclusão do artigo, textualmente: *«the smallest differences and disparities among the
+countries are for food and non-alcoholic beverages (01)»* — **a alimentação é normalmente a
+categoria mais bem comportada.**
+
+**Confronto com Portugal, 2022** (ambos os lados em conceito interno, para comparabilidade):
+
+| | IDF implícito | Contas Nacionais | Cobertura PT | Referência UE |
+|---|---|---|---|---|
+| Consumo total | 99 163 M€ | 166 851 M€ | **59,4 %** | 50–97 % ✅ dentro |
+| Alimentação (CP01) | 12 825 M€ | 28 916 M€ | **44,4 %** | 58–108 % ❌ **abaixo do mínimo** |
+
+**Duas conclusões.**
+
+1. **O consumo total português está normal.** O *data gap* de ~35 % que calculei para 2022 coincide
+   com o que a Figura 4 do artigo atribui a Portugal em 2010 (~34–35 %). Não houve degradação: é o
+   nível estrutural português, estável há mais de uma década.
+2. **A alimentação é que está fora do padrão.** 44,4 % fica abaixo do mínimo europeu de 58 %, e
+   fica-o precisamente na categoria que o Eurostat identifica como a de menores disparidades entre
+   países. **A anomalia é específica da alimentação e é real** — não é artefacto do meu método, que
+   é o mesmo do Eurostat.
+
+O artigo nomeia expressamente Portugal entre os países onde *«the differences between the data
+sources are considerable»* (com BG, HU, LT, RO e UK). Não é novidade para o Eurostat.
+
+**Razões documentadas para o desvio**, todas aplicáveis:
+
+| Razão | Sentido |
+|---|---|
+| População de referência: o HBS exclui agregados institucionais | HBS < CN |
+| Conceito interno vs nacional | HBS < CN |
+| Sub-cobertura dos agregados mais ricos | HBS < CN, mas o artigo nota que «é menos pronunciado no consumo do que no rendimento» |
+| FISIM, seguros e salários em espécie: nas CN, não no HBS | HBS < CN (afeta CP12, não alimentação) |
+| Bens em segunda mão e reparações: no HBS, não nas CN | HBS > CN |
+
+Nota do artigo com relevância direta: o ajustamento interno↔nacional *«é complexo e não foi
+efetuado, por o Eurostat não dispor do nível de detalhe necessário»*. E os Estados-Membros são
+**expressamente encorajados a repetir o exercício a nível nacional** — o que é precisamente o
+pedido a dirigir ao INE.
+
+**Caveat sobre a vaga do HBS.** A metainformação ESMS lista Portugal **sem participação na vaga de
+2020** (X em 1988–2015, em branco em 2020). Contudo o Eurostat dissemina dados PT para 2020, que
+verifiquei existirem. A explicação mais provável é que o **IDF 2022/2023 esteja disseminado sob a
+etiqueta «2020»** — a metainformação data de abril de 2024 e a publicação do IDF é de outubro de
+2024. Sustenta-o a proximidade dos valores: Q3, Q4 e Q5 do HBS «2020» (145, 131, 100 ‰) contra os
+do IDF (146, 130, 98 ‰). Q1 e Q2 divergem (171/146 contra 158/151), provavelmente por o IDF usar
+quintis de rendimento **equivalente** e o HBS outra definição.
+
+> **Consequência:** a série do §2.5 **não deve ser lida como evolução 2015→2020**. É 2015→2022/2023,
+> com sete a oito anos de intervalo e uma possível mudança de definição de quintil pelo meio.
+
+### 2.13 ★ A ressalva das escalas de equivalência — testada e confirmada
+
+**A6 está substancialmente resolvido.** O ficheiro `IDF20222023_a.xlsx` não são microdados — são os
+mesmos quadros publicados —, mas traz o **Q.1.3**, com o *número de agregados* por composição. Isso
+permite desagregar por resíduo o grupo «2 ou mais adultos» e completar o teste.
+
+**Método.** Combinando Q.1.3 (contagens), Q.2.6.a (alimentação 01.1) e Q.2.8 (despesa total e por
+adulto equivalente), restringido a **agregados sem crianças dependentes** — onde a escala é mais
+limpa, sem os pesos das crianças.
+
+Primeiro, a validação de que o Q.2.8 usa mesmo a OCDE modificada — dividindo despesa por agregado
+pela despesa por adulto equivalente: 1 adulto → **1,000**; 2 adultos → **1,500**; 3 ou + → **2,144**.
+Bate certo com a escala.
+
+Depois, o grupo «2 ou +» reparte-se por resíduo em **72 % com 2 adultos** e **28 % com 3 ou mais**,
+o que dá **1,68 adultos equivalentes**.
+
+**Resultado:**
+
+| Agregados sem crianças | Alimentação €/ano | Adultos equiv. | €/adulto equiv. |
+|---|---|---|---|
+| 1 adulto | 1 654 | 1,000 | **1 654** |
+| 2 ou + adultos | 3 066 | 1,679 | **1 827** |
+
+| | Rácio 2+/1 |
+|---|---|
+| Observado na alimentação | **1,854** |
+| Previsto pela escala OCDE modificada | 1,679 |
+| **A escala subestima em** | **≈ +10 %** |
+
+**O controlo é o que torna isto convincente.** Repetindo a mesma conta para a despesa **total** —
+para a qual a escala foi desenhada — o desvio inverte-se: rácio observado 1,498 contra 1,679 da
+escala, ou seja a escala **sobre**estima em −11 %.
+
+> **Conclusão.** A ressalva que a app declara está **confirmada e quantificada**: a escala OCDE
+> modificada, que funciona (ou até sobre-ajusta) para o consumo total, **subestima o custo
+> alimentar de agregados maiores em cerca de 10 %**. A alimentação tem de facto economias de escala
+> mais fracas do que o consumo total. A app pode passar de «é uma ressalva metodológica» para «está
+> medido, e é desta ordem».
+
+**Precisão.** As duas restrições disponíveis — contagens do Q.1.3 e sub-linhas do Q.2.8 — são
+ligeiramente inconsistentes entre si (adultos equivalentes médios reconstruídos: 1,435 contra 1,407
+publicados). Consoante a que se privilegie, a subestimação fica entre **+10 % e +13 %**. Robusta na
+direção e na ordem de grandeza; não no segundo decimal. Declarar como «cerca de 10 %».
+
+### 2.14 ★ Custo e acessibilidade de uma dieta saudável — FAO SOFI 2026
+
+**Fonte:** FAO/FIDA/UNICEF/PAM/OMS, *The State of Food Security and Nutrition in the World 2026*,
+anexos A1.5 e A1.6. A edição de 2026 é integralmente dedicada ao tema — subtítulo *«Understanding
+and addressing the high cost of a healthy diet»*.
+
+**Resolve o E3**, que eu tinha dado como inacessível: a API do FAOSTAT devolve 401, mas a série
+publicada existe, é oficial e cobre 2017–2025. **O eixo 5 na variante «custo de uma dieta saudável»
+deixa de ter de ser construído de raiz.**
+
+#### Custo de uma dieta saudável (PPP$ por pessoa e por dia)
+
+| | 2017 | 2019 | 2021 | 2022 | 2023 | 2024 | 2025 | Var. 17–25 |
+|---|---|---|---|---|---|---|---|---|
+| **Portugal** | 2,64 | 2,85 | 2,99 | 3,57 | 4,10 | 4,17 | **4,30** | **+62,9 %** |
+| Europa | 2,51 | 2,72 | 2,91 | 3,33 | 3,76 | 3,84 | 3,97 | +58,2 % |
+| Europa do Sul | 2,79 | 3,01 | 3,20 | 3,73 | 4,36 | 4,47 | 4,62 | +65,6 % |
+| Espanha | 2,53 | 2,70 | 2,94 | 3,45 | 4,13 | 4,22 | 4,33 | +71,1 % |
+| Eslovénia | 2,60 | 2,85 | 3,01 | 3,49 | 3,97 | 4,02 | 4,26 | +63,8 % |
+
+#### Incapacidade de pagar uma dieta saudável
+
+| Portugal | 2017 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 |
+|---|---|---|---|---|---|---|---|---|
+| % da população | 22,1 | 15,1 | 16,1 | 15,7 | **16,9** | 15,0 | 14,8 | **14,4** |
+| Milhões de pessoas | 2,3 | 1,6 | 1,7 | 1,6 | **1,8** | 1,6 | 1,5 | **1,5** |
+| *Espanha, %* | *12,6* | *11,3* | *11,7* | *10,2* | *9,5* | *9,9* | *9,6* | *9,3* |
+
+**Quatro leituras.**
+
+1. **O choque de 2022 está visível e é datável.** A proporção sobe de 15,7 % para 16,9 % — mais
+   200 mil pessoas — e recupera depois. É a única série que capta o efeito do pico inflacionário
+   sobre a *acessibilidade*, não sobre o preço.
+2. **Portugal está acima da média europeia no custo** (4,30 contra 3,97 PPP$) e a subir mais
+   depressa (+62,9 % contra +58,2 %), mas **abaixo da Europa do Sul** e de Espanha na velocidade.
+3. **O ponto mais afiado: Portugal e Espanha têm custo praticamente igual** (4,30 contra 4,33) **mas
+   Portugal tem 14,4 % de população incapaz de o pagar contra 9,3 % em Espanha.** A diferença não
+   está nos preços — está nos rendimentos e na sua distribuição. É exatamente o argumento que a nota
+   de enquadramento faz sobre o cabaz não ser indicador de acessibilidade, aqui com prova
+   internacional.
+4. **Dá o nível intermédio que faltava** entre o custo e a privação severa — ver §2.6.
+
+> ⚠️ **Não é uma âncora de despesa e não deve ser usado como tal.** O custo de uma dieta saudável é
+> um **mínimo normativo** — o preço da dieta mais barata que cumpre os requisitos nutricionais —,
+> não a despesa observada. Comparar com os 239–549 €/mês de §2.10 seria comparar objetos
+> diferentes. Acresce que vem em **PPP$**, não em euros: qualquer conversão exigiria a paridade de
+> poder de compra do consumo privado, e continuaria a não o tornar comparável com despesa efetiva.
+
+**Os três limiares, para uso conjunto:**
+
+| Indicador | Limiar | Portugal 2025 | Fonte |
+|---|---|---|---|
+| Privação alimentar severa | Refeição com carne ou peixe de 2 em 2 dias | **1,9 %** | Eurostat `ilc_mdes03` |
+| Incapacidade de dieta saudável | Cabaz nutricionalmente adequado ao menor custo | **14,4 %** (1,5 M) | FAO SOFI 2026 |
+| Peso da alimentação no orçamento | 1.º quintil de rendimento | **14,8 %** | INE, IDF 2022/2023 |
+
+### 2.15 Observatório de Preços Agroalimentar — onde na cadeia está o aumento
+
+**Fonte:** GPP, `observatorioagroalimentar.gov.pt`, extraído em 07.08.2026 via o *endpoint*
+`get_produto_graph` (`wp-admin/admin-ajax.php`), com parâmetros `fase` (1 produção, 2 consumo),
+`product`, `start_year`/`start_period`, `end_year`/`end_period`. **39 produtos × 58 períodos de
+quatro semanas desde 03.01.2022.** Automatizável — não exige *scraping* de PDF.
+
+Responde à pergunta que a nota §1.1 diz que nenhum outro instrumento toca. **Três padrões distintos,
+que a leitura agregada do cabaz esconde:**
+
+| Padrão | Produto | Produção | Consumo | Var. da diferença |
+|---|---|---|---|---|
+| Choque na origem, transmitido | Ovo M | +98,2 % | +101,3 % | +109,5 % |
+| Absorvido pela cadeia | Cenoura | +110,7 % | +66,2 % | +35,0 % |
+| **Divergência** | **Pescada** | **−22,8 %** | **+23,4 %** | **+106,5 %** |
+
+A pescada é o caso mais nítido: preço na produção **cai** 22,8 % enquanto o preço ao consumidor
+**sobe** 23,4 %, com a diferença a passar de 2,61 € para 5,39 €/kg.
+
+Maiores subidas ao consumidor desde P1 2022: ovo M +101,3 %, ovo L +98,8 %, batata +77,1 %,
+cenoura +66,2 %, leite UHT +61,8 %, brócolo +60,5 %, dourada +59,3 %, cebola +57,8 %, azeite virgem
+extra +55,7 %. Descidas: curgete −36,5 %, alface 4.ª gama −28,9 %, esparguete −6,5 %.
+
+> ⚠️ **A diferença consumo–produção não é margem de nenhum operador.** Inclui transporte,
+> transformação, embalagem, distribuição e IVA; e as duas fases podem referir-se a formas
+> diferentes do produto (peixe inteiro contra posta, animal vivo contra peça desmanchada). Não é
+> comparável entre produtos. Algumas séries de produção terminam antes de 2026 — cebola e brócolo
+> em 2023, leite e arroz em 2025.
 
 ---
 
 ## 3. Acessibilidade das fontes a partir de ambiente automatizado
 
-Testado em 07.08.2026. Confirma empiricamente o «Constrangimento de infraestrutura» da nota §1.6.
+Testado em 07.08.2026.
 
 | Fonte | Estado |
 |---|---|
 | Eurostat | ✅ responde |
-| `www.gpp.pt` | ✅ responde |
-| `observatorioagroalimentar.gov.pt` | ✅ responde |
-| `www.asae.gov.pt` | ✅ responde |
-| `www.ine.pt` | ❌ *timeout* de ligação |
-| `dados.gov.pt` | ❌ *timeout* de ligação |
+| `www.gpp.pt` · `observatorioagroalimentar.gov.pt` · `www.asae.gov.pt` | ✅ respondem |
+| `www.ine.pt` | ❌ *timeout* |
+| `dados.gov.pt` | ❌ *timeout* |
 | `www.dgeconomia.gov.pt` | ❌ erro de ligação |
 
 **Ação para a DSTD:** pedir desbloqueio de saída para `www.ine.pt`, `dados.gov.pt` e
-`www.dgeconomia.gov.pt`. Sem isto, qualquer monitorização contínua que dependa destas fontes é
-inviável e o INE — que a nota classifica como base primária — fica inacessível por via
-programática.
+`www.dgeconomia.gov.pt`. Dado que o uso pretendido inclui **monitorização permanente** (decisão
+D1), isto deixa de ser conveniência e passa a ser requisito: sem acesso programático ao INE, a
+atualização do IDF terá de ser manual a cada vaga.
 
 ---
 
-## 4. Métodos de cálculo propostos
+## 4. Métodos de cálculo
 
-### 4.1 Cabaz por quintil de rendimento (eixo 2 / linha #2)
+### 4.1 Cabaz por quintil (eixos 1 e 2 / linha #2)
+
+Com o IDF já não é preciso estimar — os valores são diretos:
 
 ```
-peso_q      = hbs_str_t223[CP01, quintil q, 2020] / 1000
-nivel_q     = hbs_exp_t133[PPS_HH, q] / hbs_exp_t133[PPS_HH, TOTAL]
-despesa_q   = despesa_alimentar_media_app × nivel_q × (peso_q / peso_TOTAL)
+despesa_alimentar_mensal[q]      = Q.2.11.a[01.1, q] / 12
+despesa_por_classe_mensal[c, q]  = Q.2.11.a[c, q] / 12
+peso_da_classe[c, q]             = Q.2.11.a[c, q] / Q.2.11.a[01.1, q]
 ```
 
-Depois aplica-se a cada quintil a variação homóloga por classe que a app já calcula.
+Aplica-se depois a cada classe a variação homóloga que a app já obtém do Eurostat:
 
-**A declarar:** a *composição* é de 2020; só os *preços* são correntes. É a mesma lógica que a app
-já usa para a âncora das Contas Nacionais, e deve ser declarada nos mesmos termos.
+```
+contributo[c, q] = despesa_por_classe_mensal[c, q] × g[c] / (1 + g[c])
+```
+
+**A declarar:** a *composição* é de 2022/2023; só os *preços* são correntes. Mesma lógica —
+e mesma redação — que a app já usa para a âncora das Contas Nacionais.
 
 ### 4.2 Índice de Törnqvist ao nível das classes (eixo 4)
 
-A app não pode construir um Fisher — não tem quantidades nem preços por produto. Mas o Törnqvist
-precisa de participações de despesa, não de quantidades, e essas a app já descarrega:
+A app não pode construir um Fisher — não tem quantidades. Mas o Törnqvist precisa de participações
+de despesa, não de quantidades:
 
 ```
 ln(T) = Σᵢ [(wᵢ,₀ + wᵢ,ₜ) / 2] × ln(Pᵢ,ₜ / Pᵢ,₀)
 ```
 
-com `wᵢ` de `prc_hicp_inw` (anual, atualizado) e `Pᵢ` de `prc_hicp_midx`.
+com `wᵢ` de `prc_hicp_inw` e `Pᵢ` de `prc_hicp_midx`. Corrige a substituição **entre** classes, não
+dentro delas. Posto ao lado de um Laspeyres de ponderadores congelados, torna o viés de
+substituição visível e quantificado em vez de apenas explicado em prosa.
 
-Corrige a substituição **entre** classes, não dentro delas. Posto ao lado de um Laspeyres de
-ponderadores congelados, torna o viés de substituição *visível e quantificado* em vez de apenas
-explicado em prosa. Melhor relação esforço/demonstração de toda a lista.
+### 4.3 Receita cessante e repercussão — verificado
 
-### 4.3 Correção da afirmação sobre receita cessante
-
-Verificado numericamente (106 €, de 23 % para 6 %):
+Exemplo de 106 €, descida de 23 % para 6 %:
 
 | Repercussão | Preço final | Base tributável | Receita nova | Δ Receita |
 |---|---|---|---|---|
 | 0 % | 106,00 € | 100,00 € | 6,00 € | **−13,82 €** |
 | 100 % | 91,35 € | 86,18 € | 5,17 € | **−14,65 €** |
 
-Amplitude ≈ 6 %. Confirma o ponto 2 da auditoria de 27.07.2026: a receita cessante **só** é
-independente da repercussão numa isenção total.
+Amplitude ≈ 6 %. Confirma o ponto 2 da auditoria: a receita cessante só é independente da
+repercussão numa isenção total. Corrigido na app e no README em 07.08.2026.
 
 ---
 
-## 5. Recolha em falta — o que é preciso ir buscar
+## 5. Recolha ainda em falta
 
-### 5.A Do INE — só por acesso manual (API bloqueada)
+### 5.A Do INE
 
-| # | O que | Onde | Formato ideal | Desbloqueia |
-|---|---|---|---|---|
-| **A1** | **IDEF 2022/2023 — coeficientes de despesa COICOP a 4 dígitos (CP0111–CP0119) por decil de rendimento** | ine.pt → Base de Dados → Despesas das Famílias; ou quadros anexos da publicação IDEF 2022/2023 | Excel/CSV; PDF serve | Eixos 1 e 2 na versão plena. **É o item mais importante da lista.** |
-| A2 | O mesmo, por NUTS II | idem | Excel/CSV | Eixo 3 ao nível regional |
-| A3 | Despesa alimentar média **em euros** por tipo de agregado | IDEF, quadros por composição | Excel/CSV | Valida (ou refuta) a ressalva das escalas de equivalência — ver §2.3 |
-| A4 | Documento metodológico do IPC — secção sobre fontes de preços | ine.pt → IPC → metainformação | PDF | Eixo 6: saber se o IPC já usa *scanner data* |
-| A5 | N.º de agregados domésticos privados, atualização pós-Censos 2021 | ine.pt | valor + fonte | Confirma o divisor da app (hoje 4 149 096) |
-
-> **Nota sobre A1.** A nota aponta o IDEF 2022/2023, que é mais recente e mais rico do que a vaga
-> HBS de 2020 que já tenho. O HBS permite avançar já; o IDEF é a versão que a nota pede. Se A1 vier,
-> substitui-se — não se acumula.
-
-### 5.B Da DGE — bloqueado por rede
-
-| # | O que | Onde | Formato ideal | Desbloqueia |
-|---|---|---|---|---|
-| B1 | Mapa do Comércio, Serviços e Restauração — estabelecimentos georreferenciados | dgeconomia.gov.pt (2025, Agenda Comércio e Serviços 2030) | Shapefile / GeoJSON / CSV com coordenadas | Denominador dos *food deserts* (eixo 3) |
-| B2 | Histórico oficial de monitorização do cabaz IVA Zero | DGE (ex-DGAE) | Excel/CSV | Retro-teste do simulador |
-
-### 5.C Da ASAE
-
-| # | O que | Onde | Desbloqueia |
+| # | O que | Porquê | Estado |
 |---|---|---|---|
-| C1 | Confirmação do universo de lojas monitorizadas (as «1 220 lojas» que não conseguiu confirmar) | asae.gov.pt ou contacto | Fecha uma nota de verificação em aberto |
-| C2 | Série de monitorização do cabaz próprio desde jan/2022 | idem | Contraponto público ao cabaz DECO |
+| ~~A1~~ | IDEF por decil, COICOP 4 dígitos | Eixos 1 e 2 | ✅ **Entregue** (Q.2.11) |
+| ~~A2~~ | O mesmo por NUTS II | Eixo 3 | ✅ **Entregue** (Q.2.12) |
+| ~~A3~~ | Despesa alimentar em euros por tipo de agregado | Escalas de equivalência | 🟡 Parcial (Q.2.6.a) — ver A6 |
+| ~~A4~~ | Metodologia do IPC / *scanner data* | Eixo 6 | ✅ **Entregue** — resposta é «não usa» |
+| ~~A5~~ | N.º de agregados | Divisor da app | ✅ **Entregue** — confirma 4 149 096 |
+| ~~A6~~ | Despesa alimentar por composição fina | Escalas de equivalência | ✅ **Resolvido por via aritmética** — ver §2.13. O Q.1.3 do `IDF20222023_a.xlsx` deu as contagens que faltavam. |
+| A7 | Existe versão por **decil** (não quintil) do Q.2.11? | Os quintis já respondem a D1–D2 / D9–D10 | ⚪ Dispensado |
+| ~~A8~~ | Exercício nacional de conciliação IDF ↔ Contas Nacionais | Fecharia §2.10 | 🔴 **Não existe** (confirmado 07.08.2026). O desvio da alimentação fica **por explicar em fonte oficial** — o que reforça a opção 3 para a âncora: não há como estreitar o intervalo. |
+| ~~A9~~ | Etiqueta da vaga HBS «2020» | Evitar leitura de tendência errada | ✅ **Resolvido** — ver nota abaixo |
 
-### 5.D Decisões suas — não são dados
+> **Sobre A9.** A «vaga 2020» é uma designação **harmonizada do Eurostat**, não um ano de referência
+> fixo: agrupa a ronda de recolha seguinte a 2015, com trabalho de campo entre 2018 e 2022 consoante
+> o país, ajustado a preços de 2020. Para Portugal corresponde ao **IDF 2022/2023** — o INE afirma
+> que o IDF se enquadra no projeto HBS, a vaga anterior foi alimentada pelo IDF 2015/2016 e não há
+> vaga intermédia.
+>
+> **O que fica por confirmar é a definição de quintil.** A convenção do Eurostat é rendimento
+> disponível **equivalizado** (OCDE modificada); o IDF nacional pode usar outra base. Não há
+> confirmação documental de qual o INE aplica na transmissão. **Há porém evidência empírica de que
+> diferem:** Q3, Q4 e Q5 batem quase certo entre as duas fontes (145/146, 131/130, 100/98) e Q1 e Q2
+> divergem claramente (171/158, 146/151) — que é exatamente o padrão esperado se a base de
+> equivalização mudar, porque é nos escalões baixos que os agregados grandes se deslocam.
+> Consequência prática: **usar o IDF para qualquer leitura por quintil**, e não o HBS.
 
-| # | Questão |
-|---|---|
-| D1 | Qual o uso final pretendido pelo Gabinete: (a) armar para o debate, (b) suportar desenho de medidas, (c) monitorização permanente? A nota diz que sem isto o risco é entregar trabalho sólido e desajustado. |
-| D2 | Arbitrar a divergência: nota diz +37 % desde jan/2022 e +6,05 % desde início de 2026; o PDF diz +33,88 % e +3,91 %. Presumo que prevaleça o PDF, mais recente e com fonte. |
-| D3 | O ponto de tensão da §2.5 (custo em máximos vs. privação em mínimos) entra na app, fica só na nota, ou fica de fora até validação com o INE? |
+### 5.B Da DGE — encerrado
 
-### 5.E O que eu próprio posso ir buscar — só precisa de autorização
+| # | O que | Estado |
+|---|---|---|
+| B1 | Mapa do Comércio — estabelecimentos georreferenciados | 🔴 **Encerrado.** O mapa é só de visualização e não exporta dados; a única via seria pedido formal à DGE/DCSR, **fora do âmbito de trabalho, que é exclusivamente de dados abertos**. Alternativa se o eixo 3 avançar: OpenStreetMap (`shop=supermarket`), aberto mas proxy imperfeito. O lado da procura fica servido pelo Q402. |
+| B2 | Histórico oficial de monitorização do cabaz IVA Zero | ⚪ **Dispensado.** O PDF de 06.08.2026 já dá os valores essenciais (ASAE −10,14 %; DECO −8,45 % / +4,71 %). |
 
-Estas fontes **respondem** a partir daqui; não precisa de as recolher.
+### 5.C Da ASAE — encerrado sem resultado
 
-| # | O que | Esforço | Nota |
-|---|---|---|---|
-| E1 | Boletins do Observatório de Preços Agroalimentar (26 produtos, margens ao longo da cadeia) | Médio | O portal é WordPress sem *endpoint* de dados abertos — implica *scraping* das páginas ou parsing dos PDF. Frágil a mudanças de layout. |
-| E2 | Cotações SIMA na produção (`regsima.gpp.pt`) | Médio | Complementa E1 no elo da produção |
-| E3 | Metadados metodológicos do IHPC para PT no Eurostat | Baixo | Pode responder ao A4 sem depender do INE |
-| E4 | FAO / Banco Mundial «Cost of a Healthy Diet» | Baixo | **Não testado** — não confirmo que tenha série para Portugal |
+| # | O que | Estado |
+|---|---|---|
+| C1 | Universo de lojas monitorizadas («1 220 lojas») | 🔴 **Não confirmável.** Sem informação oficial no sítio da ASAE. **Decisão: não fazer referência ao número.** O dado atual disponível é outro e não substituível — 22 242 operadores económicos fiscalizados em 2026, sem desagregação. |
+| C2 | Série de monitorização do cabaz próprio desde jan/2022 | 🔴 **Não existe publicamente.** Só notícias que remetem para o cabaz da DECO. A afirmação da nota §1.4 de que a ASAE mantém monitorização própria de um cabaz desde jan/2022 **não é sustentável em fonte pública** e deve ser retirada ou requalificada. |
+
+> **Consequência para a nota de enquadramento.** Duas afirmações do quadro de fontes caem: as
+> «1 220 lojas» e a série própria da ASAE. Mantém-se o que está documentado — a monitorização do
+> IVA Zero em 2023, cujos valores o PDF de 06.08.2026 confirma.
+
+### 5.D Recolha própria — concluída em 07.08.2026
+
+| # | O que | Estado |
+|---|---|---|
+| ~~E1~~ | Observatório de Preços Agroalimentar | ✅ **Concluído.** Encontrado o *endpoint* que serve os gráficos (`get_produto_graph` em `admin-ajax.php`): **39 produtos × 58 períodos de quatro semanas desde 03.01.2022**, com preço na produção e no consumo. Não foi preciso *scraping* de PDF. Ver §2.15. |
+| ~~E2~~ | Cotações SIMA na produção | ⚪ **Dispensado** — o SIMA é a fase «Produção» do Observatório e já vem incorporado no E1. |
+| ~~E3~~ | FAO «Cost of a Healthy Diet» | ✅ **Resolvido** — ver §2.14. A API do FAOSTAT devolve 401, mas a série publicada no **SOFI 2026** cobre Portugal de 2017 a 2025. Corrijo a minha conclusão anterior de que não haveria série para Portugal. |
+| ~~E3~~ | FAO «Cost of a Healthy Diet» | ✅ **Resolvido** — ver §2.14. A API do FAOSTAT devolve 401, mas a série publicada no **SOFI 2026** cobre Portugal de 2017 a 2025. Corrijo a minha conclusão anterior de que não haveria série para Portugal. |
 
 ---
 
 ## 6. Prioridade sugerida
 
-1. **Quadro dos seis instrumentos na aba «Metodologia e fontes»** — zero dependências de dados,
-   entrega a linha #1 (prioridade Alta) dentro da app.
-2. **`ilc_mdes03`** — baixo custo, alto valor, atual até 2025. Sujeito a D3.
-3. **Törnqvist ao nível das classes** — sem dados novos, demonstra o viés de substituição.
-4. **Cabaz por quintil com o HBS 2020** — entrega a linha #2 (Alta) na versão possível hoje.
-5. **A1 (IDEF por decil)** — quando chegar, faz a versão plena de 1 e 2.
-6. **E1 (Observatório)** — a única via para a pergunta das margens, mas a de maior esforço.
+Reordenada face à decisão D1 (usos **a** e **c** — debate público *e* monitorização permanente),
+que privilegia o que é ao mesmo tempo comunicável e automatizável.
+
+**A recolha está encerrada e a âncora está decidida** (opção 3, o intervalo). Tudo o que segue é
+implementação — nada depende já de dados externos.
+
+1. **Âncora em intervalo** (§2.10): substituir o valor único por 239–549 €/mês a preços de 2022,
+   com o ponto central assinalado como não determinado. É a alteração mais invasiva — muda o número
+   de topo e propaga-se ao simulador de IVA e à extrapolação agregada.
+2. **Cabaz por quintil** com o Q.2.11 — entrega a linha #2 (Alta) na versão plena que a nota pedia.
+   O Q.2.11 fornece simultaneamente o nível e a repartição por classe e por quintil, pelo que se
+   articula naturalmente com o ponto 1.
+3. **Quadro dos seis instrumentos** na aba «Metodologia e fontes» — zero dependências, entrega a
+   linha #1 (Alta), diretamente ao serviço do uso (a).
+4. **Afinar a limitação 8** com o critério do documento metodológico (§2.7) — correção de rigor,
+   custo nulo.
+5. **Törnqvist ao nível das classes** — sem dados novos, demonstra o viés de substituição.
+6. **Escalas de equivalência**: passar a ressalva de qualitativa a quantificada — a escala subestima
+   o custo alimentar em cerca de 10 % (§2.13).
+7. **Os três limiares de acessibilidade** (§2.14): privação severa 1,9 %, dieta saudável 14,4 %,
+   peso no orçamento do 1.º quintil 14,8 %. Decisão de 07.08.2026: entram, mas o de 1,9 % **nunca
+   sozinho**.
+8. **Observatório de Preços** (§2.15) — responde a «onde na cadeia está o aumento», que nenhum outro
+   instrumento toca. Dados já extraídos e automatizáveis.
 
 ---
 
-## 7. Correções aplicadas ao repositório em 07.08.2026
+## 7. Alterações ao repositório em 07.08.2026
 
-| # | Correção | Estado |
+| # | Alteração | Estado |
 |---|---|---|
 | 1 | Criado `.streamlit/config.toml` — a app corria sem o tema institucional | ✅ |
 | 2 | Criado `.gitignore` | ✅ |
 | 3 | Removidos 7 ficheiros órfãos da raiz com conteúdos trocados: `calculos.py`, `config.py`, `config.toml`, `download`, `eurostat.py`, `logo_b64.txt`, `test_calculos.py` | ✅ |
-| 4 | Corrigida a frase truncada em `app.py` sobre o precedente IVA Zero, com os valores confirmados do PDF | ✅ |
-| 5 | Afirmação incorreta sobre a receita cessante (`app.py` e `README.md`) | ⏳ redação proposta, a aguardar validação |
+| 4 | Corrigida a frase truncada em `app.py` sobre o precedente IVA Zero, com os valores confirmados do PDF (ASAE −10,14 %; DECO −8,45 % aos 3 meses; +4,71 % no balanço final) | ✅ |
+| 5 | Corrigida a afirmação incorreta sobre a receita cessante em `app.py` e `README.md` | ✅ |
+| 6 | Criado este documento | ✅ |
 
-Verificação: 15 testes passam; `app.py` sem erros de sintaxe.
+**Verificação:** 15 testes passam; `app.py` sem erros de sintaxe.
+
+**Nota sobre o ambiente:** o `.venv` do projeto está vazio. Para o tornar funcional:
+`.venv\Scripts\pip install -r requirements.txt`.
