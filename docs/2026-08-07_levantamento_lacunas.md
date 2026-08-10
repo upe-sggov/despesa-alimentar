@@ -534,6 +534,28 @@ escala, ou seja a escala **sobre**estima em −11 %.
 > mais fracas do que o consumo total. A app pode passar de «é uma ressalva metodológica» para «está
 > medido, e é desta ordem».
 
+**Implementado em 08.08.2026**, com um resultado adicional que o apuramento inicial não tinha
+extraído: comparando as **três** escalas contra o mesmo rácio observado, é possível eleger a que
+melhor reproduz a despesa alimentar.
+
+| Escala | Rácio previsto (2+/1) | Desvio na alimentação | Desvio na despesa total |
+|---|---|---|---|
+| Per capita | 2,361 | −21,5 % | −36,5 % |
+| **OCDE original** | **1,952** | **−5,0 %** | −23,3 % |
+| OCDE modificada (norma UE) | 1,680 | **+10,3 %** | −10,9 % |
+
+Rácio observado: **1,854** na alimentação, **1,498** na despesa total.
+
+Duas leituras:
+
+1. **O sinal inverte-se entre as duas colunas**, e com magnitude semelhante (+10,3 % contra
+   −10,9 % na modificada). É o que fecha o argumento: o problema não é da escala em abstrato, é da
+   aplicação de uma escala de consumo total à alimentação.
+2. **A OCDE original é a mais próxima** — erro de 5,0 % contra 10,3 % da norma da UE. A escolha
+   por defeito da aplicação deixa de assentar num argumento teórico e passa a assentar num teste.
+   Na app, o valor por defeito é agora **calculado** por `escala_mais_proxima()`, não fixado à mão:
+   se uma vaga futura do IDF mudar o rácio observado, o valor por defeito acompanha.
+
 **Precisão.** As duas restrições disponíveis — contagens do Q.1.3 e sub-linhas do Q.2.8 — são
 ligeiramente inconsistentes entre si (adultos equivalentes médios reconstruídos: 1,435 contra 1,407
 publicados). Consoante a que se privilegie, a subestimação fica entre **+10 % e +13 %**. Robusta na
@@ -908,8 +930,10 @@ implementação — nada depende já de dados externos.
 5. ~~**Törnqvist ao nível das classes**~~ — ✅ **feito em 08.08.2026**, na aba do histórico. Não
    demonstrou o que se esperava: o viés é de 0,12 p.p./ano, residual. O apuramento é útil na mesma,
    mas **muda o argumento** — ver §2.17 e a consequência para a nota, abaixo.
-6. **Escalas de equivalência**: passar a ressalva de qualitativa a quantificada — a escala subestima
-   o custo alimentar em cerca de 10 % (§2.13).
+6. ~~**Escalas de equivalência**: passar a ressalva de qualitativa a quantificada~~ — ✅ **feito em
+   08.08.2026**. O teste de §2.13 passou para a aba de metodologia, com o controlo na despesa total.
+   Rendeu mais do que se previa: a escala por defeito da app deixa de ser uma escolha teórica e
+   passa a ser a que o teste elege, calculada em tempo de execução.
 7. **Os três limiares de acessibilidade** (§2.14): privação severa 1,9 %, dieta saudável 14,4 %,
    peso no orçamento do 1.º quintil 14,8 %. Decisão de 07.08.2026: entram, mas o de 1,9 % **nunca
    sozinho**.
@@ -952,8 +976,11 @@ implementação — nada depende já de dados externos.
 | 13 | `src/calculos.py`: `indices_comparados()` e `_dezembros()` — cabaz fixo, Törnqvist e viés | ✅ |
 | 14 | `app.py`, aba 2: secção «Cabaz fixo contra cabaz que acompanha o consumo», com os três índices, o quadro de construção e a aproximação declarada | ✅ |
 | 15 | `tests/test_calculos.py`: 4 testes novos sobre o Törnqvist, incluindo o caso em que o ponderador migra para a classe barata e o cabaz fixo tem de sobrestimar | ✅ |
+| 16 | `src/config.py` e `src/calculos.py`: dados e funções do teste das escalas — `testar_escalas()` e `escala_mais_proxima()` | ✅ |
+| 17 | `app.py`, aba 5: ressalva das escalas passa de qualitativa a medida, com o controlo na despesa total; barra lateral assinala a escala apurada e avisa quando se escolhe outra | ✅ |
+| 18 | `tests/test_calculos.py`: 4 testes sobre as escalas, incluindo a inversão de sinal entre alimentação e despesa total | ✅ |
 
-**Verificação:** 26 testes passam; render completo da aplicação sem exceções nem erros de ecrã,
+**Verificação:** 30 testes passam; render completo da aplicação sem exceções nem erros de ecrã,
 nas duas bases de âncora; os valores do IDF fecham com os totais publicados a menos de 1 €/ano de
 arredondamento do próprio quadro do INE; o Törnqvist calculado fica a 0,12 pontos do IHPC oficial,
 apesar de construído por via independente.
@@ -969,9 +996,9 @@ que os dados não sustentam com esta granularidade, e passa a ser: **a composiç
 não se consegue medir** — marca, calibre, embalagem, insígnia. É um argumento mais honesto e, para
 o debate, mais sólido: não depende de uma magnitude que alguém pode ir verificar e desmentir.
 
-⚪ **Não alterado na nota.** Ao contrário das correções de §9, esta não é uma afirmação errada — é
-uma expectativa que o apuramento não confirmou. A redação do eixo 4 continua defensável. Fica
-assinalada para decisão do Gabinete.
+✅ **Alterado na nota em 08.08.2026** (correção 6 de §9). Decisão do Gabinete: *«se a expectativa
+não está confirmada então podemos seguir com a nota segura sobre o que sabemos»*. A recomendação do
+eixo 4 mantém-se; o que muda é o fundamento invocado, que passa a ser o que os dados sustentam.
 
 ---
 
@@ -987,6 +1014,8 @@ corrigir erros deste tipo assim que sejam detetados.
 | 2 | §1.1, quadro dos instrumentos | Observatório de Preços com **26 produtos** | **39 produtos**, com séries que recuam a janeiro de 2022 | §2.15 — extração direta do portal em 07.08.2026 |
 | 3 | §1.1 e §1.4, linhas da ASAE | Recolha em **«1 220 lojas, físicas e online»** | Referência **retirada**, sem substituição | §5.C — não confirmável em fonte pública; decisão do Gabinete de 08.08.2026 |
 | 4 | §1.4, linha da ASAE | **«Monitorização própria de um cabaz desde janeiro de 2022»** | Referência **retirada**; mantém-se a monitorização documentada do cabaz IVA zero de 2023–24 | §5.C — a série própria não tem suporte público |
+| 5 | §1.1, quadro do IVA Zero | «DECO: −5,8 % no período inicial» | Valores publicados, com o balanço final de **+4,71 %** e a nota de que a DECO mede 41 dos 63 produtos | Notas de verificação, p.3 do `cabaz_06082026.pdf` |
+| 6 | §1.5, eixo 4 | «Corrige o viés de substituição e aproxima o indicador do que o consumidor realmente paga» | Mantém a recomendação, mas com o viés medido (0,12 p.p./ano, residual) e o fundamento deslocado para o que **não** se consegue medir | §2.17 — decisão do Gabinete de 08.08.2026 |
 
 **Sobre a correção 1.** A conclusão da nota estava certa; o mecanismo invocado é que não estava.
 A distinção não é académica: se a regressividade viesse da composição do cabaz, uma medida dirigida

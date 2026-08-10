@@ -397,14 +397,40 @@ agregados de composição diferente:
 | OCDE original | 1,0 | 0,7 | 0,5 |
 | OCDE modificada (norma UE) | 1,0 | 0,5 | 0,3 |
 
-**Ressalva metodológica importante.** Estas escalas foram construídas para o
+**A ressalva metodológica, agora medida.** Estas escalas foram construídas para o
 consumo *total*, em que a partilha da habitação gera fortes economias de escala.
-Na alimentação essas economias são bem mais fracas — não se partilha uma refeição
-como se partilha um teto. A escala OCDE modificada, norma da UE para o rendimento,
-tende por isso a **subestimar** o custo alimentar de agregados maiores. Por essa
-razão a aplicação usa a OCDE original por defeito e apresenta **sempre um
-intervalo** entre a escala mais restritiva e a mais generosa, em vez de um valor
-único de falsa precisão.
+Na alimentação essas economias são mais fracas — não se partilha uma refeição
+como se partilha um teto. Até aqui isto era uma ressalva qualitativa; o IDF
+2022/2023 permite quantificá-la.
+
+O teste restringe-se a agregados **sem crianças dependentes**, onde a escala é
+mais limpa, e compara o rácio de despesa observado entre «2 ou mais adultos» e
+«1 adulto» com o que cada escala prevê para a mesma composição:
+
+| Escala | Rácio previsto | Desvio na alimentação | Desvio na despesa total |
+|---|---|---|---|
+| Per capita | 2,361 | −21,5 % | −36,5 % |
+| **OCDE original** | **1,952** | **−5,0 %** | −23,3 % |
+| OCDE modificada (norma UE) | 1,680 | **+10,3 %** | −10,9 % |
+
+Rácio observado: **1,854** na alimentação, **1,498** na despesa total.
+
+**O controlo é o que torna o teste convincente.** Na alimentação, a norma da UE
+subestima o custo dos agregados maiores em ~10 %; na despesa total, para a qual
+foi desenhada, o desvio **inverte-se** com magnitude semelhante. O problema não é
+da escala em abstrato — é de a aplicar a alimentação.
+
+A **OCDE original** é a mais próxima do observado, o que confirma empiricamente a
+escolha por defeito da aplicação. Esse valor por defeito é **calculado** por
+`escala_mais_proxima()`, não fixado à mão: se uma vaga futura do IDF alterar o
+rácio observado, o valor por defeito acompanha. Quando o utilizador escolhe outra
+escala, a barra lateral assinala-o.
+
+A aplicação continua a apresentar **sempre um intervalo** entre a escala mais
+restritiva e a mais generosa, em vez de um valor único de falsa precisão. O
+resultado do teste é robusto no sinal e na ordem de grandeza, não no algarismo:
+consoante a restrição do IDF que se privilegie, a subestimação fica entre 10 % e
+13 %.
 
 O separador inclui um comparador de composições típicas (pessoa só, casal,
 monoparental com filhos, casal com filhos), com o intervalo de cada uma.

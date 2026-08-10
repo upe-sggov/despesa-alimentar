@@ -26,6 +26,7 @@ import pandas as pd
 
 from .config import (
     CLASSES, POR_CODIGO,
+    ESCALAS_TESTE_COMPOSICAO, ESCALAS_TESTE_RACIO,
     IDF_ALIMENTAR_QUINTIL, IDF_CLASSES_QUINTIL, IDF_DESPESA_TOTAL,
     IDF_PESO_ALIMENTAR, IDF_QUINTIS,
 )
@@ -206,14 +207,56 @@ ESCALAS = {
     "ocde_original": {
         "nome": "OCDE original (1 / 0,7 / 0,5)",
         "primeiro": 1.0, "adulto": 0.7, "crianca": 0.5,
-        "nota": "Intermédia — a mais adequada para despesa alimentar.",
+        "nota": "A que fica mais perto da despesa alimentar observada no IDF 2022/2023.",
     },
     "ocde_modificada": {
         "nome": "OCDE modificada (1 / 0,5 / 0,3)",
         "primeiro": 1.0, "adulto": 0.5, "crianca": 0.3,
-        "nota": "Norma da UE para rendimento; subestima o custo alimentar.",
+        "nota": "Norma da UE para rendimento; subestima o custo alimentar em ~10 %.",
     },
 }
+
+
+def testar_escalas() -> pd.DataFrame:
+    """
+    Confronta o rácio de despesa que cada escala prevê com o observado no IDF,
+    para a alimentação e — como controlo — para a despesa total.
+
+    Uma linha por escala. `desvio_alimentar` positivo significa que a escala
+    **subestima** o custo alimentar de agregados maiores: o observado é maior do
+    que o previsto.
+    """
+    linhas = []
+    for chave, e in ESCALAS.items():
+        # Rácio previsto entre «2 ou +» e «1 adulto», para a composição do IDF.
+        previsto = sum(
+            fracao * (e["primeiro"] + e["adulto"] * (adultos - 1))
+            for adultos, fracao in ESCALAS_TESTE_COMPOSICAO
+        )
+        if previsto <= 0:
+            continue
+        linhas.append({
+            "escala": chave,
+            "nome": e["nome"],
+            "previsto": previsto,
+            "observado_alimentar": ESCALAS_TESTE_RACIO["alimentar"],
+            "desvio_alimentar": (ESCALAS_TESTE_RACIO["alimentar"] / previsto - 1) * 100,
+            "observado_total": ESCALAS_TESTE_RACIO["total"],
+            "desvio_total": (ESCALAS_TESTE_RACIO["total"] / previsto - 1) * 100,
+        })
+
+    df = pd.DataFrame(linhas)
+    if not df.empty:
+        df["erro_absoluto"] = df["desvio_alimentar"].abs()
+    return df
+
+
+def escala_mais_proxima() -> str | None:
+    """A escala cuja previsão fica mais perto do observado na alimentação."""
+    df = testar_escalas()
+    if df.empty:
+        return None
+    return str(df.loc[df["erro_absoluto"].idxmin(), "escala"])
 
 
 def unidades_equivalentes(adultos: int, criancas: int, escala: str) -> float:

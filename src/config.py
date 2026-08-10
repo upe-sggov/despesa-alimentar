@@ -201,6 +201,42 @@ IDF_CLASSES_QUINTIL = {
 }
 
 # --------------------------------------------------------------------------
+# Teste empírico das escalas de equivalência na alimentação
+# --------------------------------------------------------------------------
+# A aplicação sempre declarou que a escala OCDE modificada subestima o custo
+# alimentar de agregados maiores — mas como ressalva qualitativa. O IDF
+# 2022/2023 permite medi-la.
+#
+# Método: restringir a agregados **sem crianças dependentes**, onde a escala é
+# mais limpa, e comparar o rácio de despesa observado entre «2 ou mais adultos»
+# e «1 adulto» com o rácio que cada escala prevê para a mesma composição.
+#
+# O grupo «2 ou +» reparte-se por resíduo, a partir das contagens do Q.1.3, em
+# 72 % com dois adultos e 28 % com três ou mais. Os 3+ têm 2,144 adultos
+# equivalentes na escala OCDE modificada, o que implica 3,288 adultos em média.
+#
+# O controlo é o que torna o teste convincente: repetindo a conta para a despesa
+# **total** — para a qual as escalas foram desenhadas — o desvio inverte-se.
+# Ou seja, o problema não é da escala em geral: é da alimentação em particular,
+# onde as economias de escala são mais fracas do que na habitação.
+ESCALAS_TESTE_FONTE = "INE, IDF 2022/2023, quadros Q.1.3, Q.2.6.a e Q.2.8"
+
+# Composição do grupo «2 ou mais adultos»: (n.º de adultos, fração do grupo)
+ESCALAS_TESTE_COMPOSICAO = [(2.0, 0.72), (3.288, 0.28)]
+
+# Rácios observados de despesa entre «2 ou +» e «1 adulto», sem crianças
+ESCALAS_TESTE_RACIO = {
+    "alimentar": 1.854,   # 3 066 € / 1 654 € por ano, COICOP 01.1
+    "total": 1.498,       # a mesma conta sobre a despesa total
+}
+
+# As duas restrições disponíveis são ligeiramente inconsistentes entre si
+# (adultos equivalentes médios reconstruídos: 1,435 contra 1,407 publicados),
+# pelo que a subestimação fica entre +10 % e +13 %. Robusta no sinal e na ordem
+# de grandeza, não no algarismo.
+ESCALAS_TESTE_INTERVALO = (10, 13)
+
+# --------------------------------------------------------------------------
 # Metadados institucionais
 # --------------------------------------------------------------------------
 ORGANISMO = "Secretaria-Geral do Governo"

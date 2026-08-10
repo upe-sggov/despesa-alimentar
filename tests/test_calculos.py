@@ -351,3 +351,42 @@ def test_indices_comparados_sem_dados_devolve_vazio():
     idx = _serie_classes({2020: {c: 100.0 for c in CODIGOS}})
     pesos = _serie_pesos({2020: {c: 100.0 for c in CODIGOS}})
     assert indices_comparados(idx, pesos).empty          # um so ano: nao ha elo
+
+
+# ------------------------------------------- escalas de equivalencia (teste)
+def test_escala_modificada_subestima_alimentacao_e_sobrestima_o_total():
+    """O sinal tem de inverter-se entre alimentacao e despesa total. E esse
+    contraste que mostra que o problema e da alimentacao, nao da escala."""
+    from src.calculos import testar_escalas
+
+    df = testar_escalas().set_index("escala")
+    assert df.loc["ocde_modificada", "desvio_alimentar"] > 0
+    assert df.loc["ocde_modificada", "desvio_total"] < 0
+
+
+def test_escala_ordem_dos_racios_previstos():
+    """Coeficientes maiores tem de prever racios maiores, sem excecao."""
+    from src.calculos import testar_escalas
+
+    df = testar_escalas().set_index("escala")
+    assert (df.loc["per_capita", "previsto"]
+            > df.loc["ocde_original", "previsto"]
+            > df.loc["ocde_modificada", "previsto"])
+
+
+def test_escala_mais_proxima_e_a_ocde_original():
+    from src.calculos import escala_mais_proxima, testar_escalas
+
+    assert escala_mais_proxima() == "ocde_original"
+    df = testar_escalas().set_index("escala")
+    # e tem de o ser por margem folgada face a norma da UE
+    assert (df.loc["ocde_original", "erro_absoluto"]
+            < df.loc["ocde_modificada", "erro_absoluto"])
+
+
+def test_escala_desvio_bate_com_o_apuramento_documentado():
+    """O levantamento regista ~+10 % de subestimacao na alimentacao (2.13)."""
+    from src.calculos import testar_escalas
+
+    df = testar_escalas().set_index("escala")
+    assert df.loc["ocde_modificada", "desvio_alimentar"] == pytest.approx(10.3, abs=0.3)

@@ -18,12 +18,13 @@ from pathlib import Path
 from src import eurostat
 from src.calculos import (ESCALAS, cabaz_quintis, comparar_ponderadores,
                           composicao_quintis, decompor, despesa_do_agregado,
-                          indices_comparados, intervalo_agregado,
-                          resumo_decomposicao, resumo_iva, simular_iva,
-                          unidades_equivalentes)
+                          escala_mais_proxima, indices_comparados,
+                          intervalo_agregado, resumo_decomposicao, resumo_iva,
+                          simular_iva, testar_escalas, unidades_equivalentes)
 from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         BASE_POR_DEFEITO, BASES_ANCORA, COD_AGREGADOS,
                         DIMENSAO_RECUO, DIMENSAO_RECUO_FONTE,
+                        ESCALAS_TESTE_FONTE, ESCALAS_TESTE_INTERVALO, ESCALAS_TESTE_RACIO,
                         IDF_ALIMENTAR_ANUAL, IDF_ANO_BASE, IDF_FONTE, IDF_QUINTIS,
                         AZUL, CLASSES, CODIGOS, COICOP_ALIMENTAR, DOURADO,
                         PAISES, PAISES_POR_DEFEITO, POR_CODIGO, RODAPE,
@@ -680,11 +681,21 @@ with st.sidebar:
               "Ver separador Metodologia."))
 
     dim_efetiva = dim_media if dim_media else DIMENSAO_RECUO
+    _escala_apurada = escala_mais_proxima()
     escala_chave = st.selectbox(
-        "Escala de equivalência", options=list(ESCALAS.keys()), index=1,
-        format_func=lambda k: ESCALAS[k]["nome"],
-        help="Como se ajusta a despesa ao número de pessoas. Ver separador Metodologia.",
+        "Escala de equivalência", options=list(ESCALAS.keys()),
+        index=list(ESCALAS.keys()).index(_escala_apurada) if _escala_apurada else 1,
+        format_func=lambda k: (ESCALAS[k]["nome"] + (" ✓" if k == _escala_apurada else "")),
+        help=("Como se ajusta a despesa ao número de pessoas. A assinalada com ✓ é a que, "
+              "no teste contra o IDF 2022/2023, fica mais perto da despesa alimentar "
+              "observada. Ver separador Metodologia."),
     )
+    if _escala_apurada and escala_chave != _escala_apurada:
+        st.caption(
+            f"A escala escolhida não é a que melhor reproduz a despesa alimentar observada "
+            f"(**{ESCALAS[_escala_apurada]['nome'].split(' (')[0]}**). Ver o teste no "
+            f"separador Metodologia."
+        )
 
     despesa_mensal = despesa_do_agregado(
         media_agregado, dim_efetiva, adultos, criancas, escala_chave)
@@ -2458,13 +2469,68 @@ with aba5:
     produz. É também a razão pela qual a aplicação apresenta sempre um intervalo, e não um valor
     único.
             """)
-            st.warning("""
-    **Porque não se usa a norma da UE por defeito.** A escala OCDE modificada é a norma europeia
-    para o *rendimento*, e foi construída para o consumo total, em que a partilha da habitação gera
-    fortes economias de escala. Na alimentação essas economias são bem mais fracas — não se partilha
-    uma refeição como se partilha um teto. Aplicá-la ao consumo alimentar **subestimaria** o custo
-    dos agregados maiores, que são justamente o grupo politicamente sensível.
+            st.markdown("---")
+            st.markdown("**Porque não se usa a norma da UE por defeito — o teste**")
+            st.markdown(f"""
+    A escala OCDE modificada é a norma europeia para o *rendimento*, e foi construída para o
+    consumo total, em que a partilha da habitação gera fortes economias de escala. Na alimentação
+    essas economias são mais fracas — não se partilha uma refeição como se partilha um teto.
+
+    Isto era, até aqui, uma ressalva qualitativa. **O IDF 2022/2023 permite medi-la.** O teste
+    restringe-se a agregados **sem crianças dependentes**, onde a escala é mais limpa, e compara o
+    rácio de despesa observado entre «2 ou mais adultos» e «1 adulto» com o rácio que cada escala
+    prevê para essa mesma composição.
             """)
+
+            _te = testar_escalas()
+            if not _te.empty:
+                _tab_e = pd.DataFrame([{
+                    "Escala": r.nome.split(" (")[0],
+                    "Rácio previsto": round(r.previsto, 3),
+                    "Desvio na alimentação": r.desvio_alimentar,
+                    "Desvio na despesa total": r.desvio_total,
+                } for r in _te.itertuples()])
+                st.dataframe(
+                    _tab_e, use_container_width=True, hide_index=True,
+                    column_config={
+                        "Desvio na alimentação": st.column_config.NumberColumn(format="%+.1f %%"),
+                        "Desvio na despesa total": st.column_config.NumberColumn(format="%+.1f %%"),
+                    })
+                _r_al = f"{ESCALAS_TESTE_RACIO['alimentar']:.3f}".replace(".", ",")
+                _r_to = f"{ESCALAS_TESTE_RACIO['total']:.3f}".replace(".", ",")
+                st.caption(
+                    f"Rácio observado: **{_r_al}** na alimentação e **{_r_to}** na despesa total. "
+                    f"Desvio positivo = a escala **subestima** o custo dos agregados maiores. "
+                    f"Fonte: {ESCALAS_TESTE_FONTE}."
+                )
+
+                _mod = _te[_te["escala"] == "ocde_modificada"]
+                _org = _te[_te["escala"] == "ocde_original"]
+                if not _mod.empty and not _org.empty:
+                    _dm = float(_mod["desvio_alimentar"].iloc[0])
+                    _dmt = float(_mod["desvio_total"].iloc[0])
+                    _do = float(_org["desvio_alimentar"].iloc[0])
+                    st.success(f"""
+    **A ressalva confirma-se, e o controlo é o que torna o teste convincente.**
+
+    Na alimentação, a escala OCDE modificada **subestima** o custo dos agregados maiores em
+    **{('%+.1f' % _dm).replace('.', ',')} %**. Na despesa total — aquilo para que a escala foi
+    desenhada — o desvio **inverte-se**, para {('%+.1f' % _dmt).replace('.', ',')} %. O problema
+    não é da escala em geral: é da alimentação em particular.
+
+    Das três, a **OCDE original** é a que fica mais perto do observado
+    ({('%+.1f' % _do).replace('.', ',')} % contra {('%+.1f' % _dm).replace('.', ',')} %), o que
+    confirma empiricamente a escolha por defeito desta ferramenta — que até aqui se apoiava apenas
+    num argumento teórico.
+                    """)
+                    st.caption(
+                        f"**Precisão.** As duas restrições disponíveis nos quadros do IDF são "
+                        f"ligeiramente inconsistentes entre si (adultos equivalentes médios "
+                        f"reconstruídos: 1,435 contra 1,407 publicados). Consoante a que se "
+                        f"privilegie, a subestimação fica entre **{ESCALAS_TESTE_INTERVALO[0]} % e "
+                        f"{ESCALAS_TESTE_INTERVALO[1]} %**. O resultado é robusto no sinal e na "
+                        f"ordem de grandeza, não no algarismo."
+                    )
 
         with st.expander("💰 Rendimento e salários — o que é bruto, o que é líquido"):
             st.markdown("""
