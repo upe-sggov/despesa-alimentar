@@ -194,6 +194,38 @@ def test_vies_do_agregado_medio_e_sistematico():
     assert racios[0] > 1.0                        # e no sentido de subestimação
 
 
+def test_extrapolacao_nacional_nao_depende_da_composicao():
+    """
+    O total nacional tem de sair do agregado **médio**. Se sair da despesa já
+    ajustada a uma composição, o país inteiro passa a ser contado como se fosse
+    todo composto dessa maneira — e o número muda com um parâmetro de leitura.
+    Auditoria de 10.08.2026, A3.
+    """
+    from src.calculos import despesa_do_agregado
+
+    media, dim, agregados = 255.01, 2.4, 4_149_096
+    pesos = {c: 100.0 for c in CODIGOS}
+    variacoes = {c: 3.0 for c in CODIGOS}
+    atuais, cenario = {c: 6.0 for c in CODIGOS}, {c: 0.0 for c in CODIGOS}
+
+    def nacional(despesa_base):
+        sim = simular_iva(decompor(despesa_base, pesos, variacoes),
+                          atuais, cenario, 1.0)
+        return resumo_iva(sim, despesa_base, 12, agregados)["poupanca_agregada_milhoes"]
+
+    correto = nacional(media)
+
+    # a via correta: o agregado médio, seja qual for a composição no ecrã
+    for adultos, criancas in [(1, 0), (2, 0), (3, 2), (5, 0)]:
+        assert nacional(media) == pytest.approx(correto)
+
+    # e a via errada tem mesmo de divergir — senão o teste não prova nada
+    errados = [nacional(despesa_do_agregado(media, dim, a, c, "ocde_original"))
+               for a, c in [(2, 0), (5, 0)]]
+    assert min(errados) < correto * 0.95
+    assert max(errados) > correto * 1.5
+
+
 # ------------------------------------------------- cabaz por quintil (IDF)
 def test_quintis_reproduzem_o_quadro_do_ine():
     """Os niveis vem do Q.2.11.a; nao sao derivados nem reescalados."""

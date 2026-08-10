@@ -157,7 +157,18 @@ def simular_iva(df: pd.DataFrame,
 
 def resumo_iva(sim: pd.DataFrame, valor_total: float,
                vezes_ano: int, agregados: int) -> dict:
-    """Agrega o resultado da simulação e extrapola ordens de grandeza."""
+    """
+    Agrega o resultado da simulação e extrapola ordens de grandeza.
+
+    ⚠️ Os dois campos ``*_agregada_milhoes`` multiplicam o resultado por
+    `agregados`. **Só são válidos quando `sim` foi construída sobre a despesa do
+    agregado médio.** Se `sim` vier de uma despesa já ajustada a uma composição
+    concreta — dois adultos, cinco adultos —, a multiplicação conta o país
+    inteiro como se fosse todo composto dessa maneira, e o total nacional passa
+    a depender de um parâmetro de leitura. O erro mede-se: −14 % para dois
+    adultos, +92 % para cinco (auditoria de 10.08.2026, A3). Os restantes campos
+    são por agregado e não têm esta restrição.
+    """
     mecanico = float(sim["mecanico"].sum())
     efetivo = float(sim["efetivo"].sum())
     margem = float(sim["margem"].sum())

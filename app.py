@@ -236,7 +236,7 @@ def carregar_dados(anos_historico: int = 6):
         registo.append(("Salário médio líquido", via11, 0))
 
     rend_por_tipo = {}
-    for indic, nome_indic in [("MEI_E", "médio"), ("MED_E", "mediano")]:
+    for indic, nome_indic in eurostat.RENDIMENTO_INDICADORES.items():
         try:
             df_r, via_r = eurostat.rendimento(list(PAISES.keys()), ano - JANELA, indic)
             registo.append((f"Rendimento {nome_indic} equivalente", via_r, len(df_r)))
@@ -1084,7 +1084,8 @@ with aba1:
         rendimentos = dados.get("rendimento") or {}
         sm_pt = (dados.get("salario") or {}).get("PT")
         sme_pt = (dados.get("salario_medio") or {}).get("PT")
-        tem_rend = any(rendimentos.get(k, {}).get("PT") for k in ("MEI_E", "MED_E"))
+        tem_rend = any(rendimentos.get(k, {}).get("PT")
+                       for k in eurostat.RENDIMENTO_INDICADORES)
 
         if not tem_rend and not sm_pt and not sme_pt:
             st.info(
@@ -1136,14 +1137,14 @@ with aba1:
             refs = []
             indic_r = None
             if tem_rend:
-                disponiveis = [k for k in ("MEI_E", "MED_E")
+                disponiveis = [k for k in eurostat.RENDIMENTO_INDICADORES
                                if rendimentos.get(k, {}).get("PT")]
-                indic_r = "MEI_E" if "MEI_E" in disponiveis else disponiveis[0]
+                indic_r = "MEAN_EI" if "MEAN_EI" in disponiveis else disponiveis[0]
                 r = rendimentos[indic_r]["PT"]
                 ue_ocde = unidades_equivalentes(adultos, criancas, "ocde_modificada")
                 refs.append({
                     "ref": "Rendimento das famílias (EU-SILC)",
-                    "detalhe": (f"{'Médio' if indic_r == 'MEI_E' else 'Mediano'} equivalente "
+                    "detalhe": (f"{'Médio' if indic_r == 'MEAN_EI' else 'Mediano'} equivalente "
                                 f"{r['ano']} × {('%.2f' % ue_ocde).replace('.', ',')} unidades"),
                     "mensal": r["valor"] * ue_ocde / 12,
                     "natureza": "líquido",
@@ -1156,9 +1157,17 @@ with aba1:
                     "natureza": "bruto",
                 })
             if sm_pt:
+                # O Eurostat publica a RMMG em duodécimos de 14 mensalidades:
+                # o valor difundido é o legal × 14/12. Para a fatia mensal do
+                # orçamento é essa a base certa — distribui os subsídios pelos
+                # 12 meses. Mas não é o valor legal, e rotulá-lo como tal
+                # sobrestimava o rendimento em 16,7 % (auditoria, A2). A RMMG é
+                # fixada em euros inteiros, daí o arredondamento.
+                rmmg_legal = round(sm_pt["valor"] * 12 / 14)
                 refs.append({
                     "ref": f"{trabalhadores} × salário mínimo",
-                    "detalhe": f"Valor legal bruto, {sm_pt['periodo']}",
+                    "detalhe": (f"Média mensal bruta de 14 mensalidades, {sm_pt['periodo']} "
+                                f"— o valor legal da RMMG é de {rmmg_legal} €/mês"),
                     "mensal": sm_pt["valor"] * trabalhadores,
                     "natureza": "bruto",
                 })
@@ -2201,6 +2210,16 @@ with aba3:
         sim = simular_iva(df_decomp, taxas_atuais, taxas_cenario, repercussao)
         res = resumo_iva(sim, despesa_mensal, vezes_ano, agregados)
 
+        # Extrapolação nacional: parte do **agregado médio**, não da composição
+        # escolhida na barra lateral. Multiplicar uma despesa ajustada a «2
+        # adultos» pelos 4,1 milhões de agregados dava um total nacional que
+        # mudava com quem estava a olhar para o ecrã — de −14 % a +92 % conforme
+        # a composição (auditoria de 10.08.2026, A3).
+        _sim_nac = simular_iva(decompor(media_agregado, dados["pesos"],
+                                        dados["variacoes_classe"]),
+                               taxas_atuais, taxas_cenario, repercussao)
+        res_nac = resumo_iva(_sim_nac, media_agregado, vezes_ano, agregados)
+
         c = st.columns(5)
         c[0].metric("Nova despesa mensal", euro(res["novo_valor"]),
                     euro(res["efetivo"]) if abs(res["efetivo"]) > 0.005 else None)
@@ -2218,6 +2237,13 @@ with aba3:
         _decomp_outra = decompor(_despesa_outra, dados["pesos"], dados["variacoes_classe"])
         _sim_outra = simular_iva(_decomp_outra, taxas_atuais, taxas_cenario, repercussao)
         _res_outra = resumo_iva(_sim_outra, _despesa_outra, vezes_ano, agregados)
+        # O agregado nacional da outra âncora segue a mesma regra do da âncora
+        # ativa: parte do agregado médio, não da composição escolhida.
+        _media_outra = float(outra_ancora["valor"])
+        _res_outra_nac = resumo_iva(
+            simular_iva(decompor(_media_outra, dados["pesos"], dados["variacoes_classe"]),
+                        taxas_atuais, taxas_cenario, repercussao),
+            _media_outra, vezes_ano, agregados)
         def _milhoes(v):
             return f"{v:,.1f}".replace(",", " ").replace(".", ",") + " M€"
 
@@ -2225,8 +2251,8 @@ with aba3:
             f"**Sensibilidade à base de cálculo.** Estes valores usam a base "
             f"**{base_ancora['nome']}**. Com **{outra_ancora['nome']}**, a poupança mensal seria "
             f"{euro(_res_outra['poupanca_mes'])} em vez de {euro(res['poupanca_mes'])}, "
-            f"e a poupança agregada anual {_milhoes(_res_outra['poupanca_agregada_milhoes'])} "
-            f"em vez de {_milhoes(res['poupanca_agregada_milhoes'])}. "
+            f"e a poupança agregada anual {_milhoes(_res_outra_nac['poupanca_agregada_milhoes'])} "
+            f"em vez de {_milhoes(res_nac['poupanca_agregada_milhoes'])}. "
             "Todos os resultados do simulador escalam proporcionalmente com a âncora — "
             "a repartição entre consumidor e margem não depende dela."
         )
@@ -2241,13 +2267,18 @@ with aba3:
         st.markdown("#### Ordens de grandeza a nível agregado")
         st.caption(
             f"Extrapolação para **{agregados:,}".replace(",", "\u00a0")
-            + "** agregados — o mesmo valor usado em toda a aplicação (ver barra lateral)."
+            + "** agregados — o mesmo valor usado em toda a aplicação (ver barra lateral). "
+            + f"Parte do **agregado médio** ({euro(media_agregado)}/mês), não da composição "
+            + "escolhida na barra lateral: multiplicar uma despesa já ajustada a uma composição "
+            + "específica pelo total nacional contaria o país inteiro como se fosse todo "
+            + "composto dessa maneira. **Estes dois valores não mudam com a composição** — "
+            + "só com a âncora e com o cenário de taxas."
         )
         g1, g2 = st.columns(2)
         g1.metric("Poupança agregada anual",
-                  f"{res['poupanca_agregada_milhoes']:,.1f} M€".replace(",", " "))
+                  _milhoes(res_nac["poupanca_agregada_milhoes"]))
         g2.metric("Variação de receita implícita",
-                  f"{res['receita_agregada_milhoes']:,.1f} M€".replace(",", " "))
+                  _milhoes(res_nac["receita_agregada_milhoes"]))
 
         st.markdown("""
         <div class="nota perigo">
@@ -2885,7 +2916,7 @@ with aba5:
     |---|---|---|---|---|
     | Rendimento das famílias | [`ilc_di03`](https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table) | Rendimento monetário do agregado, todas as fontes | **Líquido** | Anual |
     | Salário médio | [`nama_10_a10`](https://ec.europa.eu/eurostat/databrowser/view/nama_10_a10/default/table) ÷ [`nama_10_a10_e`](https://ec.europa.eu/eurostat/databrowser/view/nama_10_a10_e/default/table) | Massa salarial ÷ trabalhadores por conta de outrem | **Bruto** | Anual |
-    | Salário mínimo | [`earn_mw_cur`](https://ec.europa.eu/eurostat/databrowser/view/earn_mw_cur/default/table) | Valor legal mensal | **Bruto** | Semestral (janeiro e julho) |
+    | Salário mínimo | [`earn_mw_cur`](https://ec.europa.eu/eurostat/databrowser/view/earn_mw_cur/default/table) | RMMG em duodécimos de 14 mensalidades | **Bruto** | Semestral (janeiro e julho) |
 
     **Rendimento das famílias.** Vem do EU-SILC e é o mais completo: inclui salários, pensões,
     prestações sociais, rendimentos de capital e transferências, deduzidos impostos e contribuições.
@@ -2905,10 +2936,21 @@ with aba5:
     de universos. Sendo bruto, é comparável com o salário mínimo, mas **não** com o rendimento
     líquido do EU-SILC.
 
-    **Salário mínimo.** É o **valor legal bruto**, tal como fixado por diploma. Não desconta a
-    contribuição do trabalhador para a Segurança Social nem o imposto retido, nem inclui prestações
-    familiares. O rendimento efetivamente disponível de quem aufere o mínimo é **inferior** ao valor
-    apresentado — logo, o esforço alimentar real é **superior** ao que este rácio indica.
+    **Salário mínimo.** O Eurostat **não** publica o valor legal. Publica a retribuição mínima
+    mensal garantida convertida em **duodécimos de 14 mensalidades** — o valor legal multiplicado
+    por 14/12 —, para que os países com 12, 13 ou 14 pagamentos anuais fiquem comparáveis. Em 2026, a título
+    de exemplo, o valor legal era de **920 €/mês** e o Eurostat difundiu **1 073 €**.
+
+    A aplicação usa o valor do Eurostat, e usa-o de propósito: a despesa alimentar é mensal e
+    recorrente, pelo que a base correta para a fatia do orçamento é a **média mensal do rendimento
+    anual**, com os subsídios distribuídos pelos 12 meses. Usar os 920 € atribuiria ao mês de
+    dezembro um esforço alimentar que na prática se dilui. O que estava errado era o rótulo, não
+    o número: a aplicação chamava-lhe «valor legal», e não é.
+
+    É **bruto**: não desconta a contribuição do trabalhador para a Segurança Social nem o imposto
+    retido, nem inclui prestações familiares. O rendimento efetivamente disponível de quem aufere o
+    mínimo é **inferior** ao valor apresentado — logo, o esforço alimentar real é **superior** ao
+    que este rácio indica.
 
     É por essa razão que a aplicação assinala as duas naturezas com cores distintas e adverte que
     não são diretamente comparáveis entre si.
@@ -2991,7 +3033,7 @@ with aba5:
     | Nível de preços comparado | [`prc_ppp_ind_1`](https://ec.europa.eu/eurostat/databrowser/view/prc_ppp_ind_1/default/table) | Quão caros são os alimentos (UE-27 = 100) | Anual |
     | Rendimento das famílias | [`ilc_di03`](https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table) | Rendimento líquido equivalente, médio e mediano | Anual |
     | Salário médio | [`nama_10_a10`](https://ec.europa.eu/eurostat/databrowser/view/nama_10_a10/default/table) ÷ `nama_10_a10_e` | Remuneração média **bruta** dos trabalhadores por conta de outrem | Anual |
-    | Salário mínimo | [`earn_mw_cur`](https://ec.europa.eu/eurostat/databrowser/view/earn_mw_cur/default/table) | Valor legal mensal, **bruto** | Semestral |
+    | Salário mínimo | [`earn_mw_cur`](https://ec.europa.eu/eurostat/databrowser/view/earn_mw_cur/default/table) | RMMG em duodécimos de 14 mensalidades, **bruta** | Semestral |
 
     **Parâmetros que não são dados oficiais**
 

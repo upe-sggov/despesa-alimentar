@@ -391,7 +391,16 @@ SM_CANDIDATOS = ["S1.EUR.MW", "S1.MW.EUR", "S1.EUR.NAT"]
 
 
 def salario_minimo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
-    """Salário mínimo nacional mensal, em euros (semestral)."""
+    """
+    Salário mínimo nacional mensal, em euros (semestral).
+
+    **Não é o valor legal.** O Eurostat converte o mínimo nacional em
+    duodécimos do total anual, para comparar países com número diferente de
+    mensalidades. Em Portugal, que paga 14, o valor difundido é o legal × 14/12
+    — confirmado em toda a série: 957 → 820 (2024), 1015 → 870 (2025),
+    1073 → 920 (2026). Quem precisar do valor legal divide por 14/12 e
+    arredonda ao euro (auditoria de 10.08.2026, A2).
+    """
     geos = list(geos)
     ultimo = None
     for chave in SM_CANDIDATOS:
@@ -410,13 +419,19 @@ def salario_minimo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     raise ErroEurostat(f"earn_mw_cur — nenhuma chave respondeu ({ultimo})")
 
 
-def rendimento(geos, desde_ano: int, indicador: str = "MEI_E") -> tuple[pd.DataFrame, str]:
+# Códigos da dimensão `statinfo` do ilc_di03. Não há chaves alternativas: uma
+# lista de candidatas fazia com que um código errado falhasse em silêncio e a
+# aplicação seguisse sem a série de rendimento (auditoria de 10.08.2026, A1).
+RENDIMENTO_INDICADORES = {"MEAN_EI": "médio", "MED_EI": "mediano"}
+
+
+def rendimento(geos, desde_ano: int, indicador: str = "MEAN_EI") -> tuple[pd.DataFrame, str]:
     """
     Rendimento monetário líquido **equivalente** das famílias, em euros (EU-SILC).
 
-    `indicador`:
-      - ``MEI_E`` — média (*mean equivalised net income*)
-      - ``MED_E`` — mediana
+    `indicador` (dimensão ``statinfo`` do ``ilc_di03``):
+      - ``MEAN_EI`` — média (*mean equivalised net income*)
+      - ``MED_EI`` — mediana
 
     «Equivalente» significa que já vem dividido pelas unidades de consumo do
     agregado, segundo a escala OCDE modificada. Multiplicando pelas unidades
@@ -428,28 +443,26 @@ def rendimento(geos, desde_ano: int, indicador: str = "MEI_E") -> tuple[pd.DataF
     mediano misturaria duas medidas de tendência central diferentes e inflaria
     o rácio, porque a mediana do rendimento é inferior à média.
 
-    A ordem das dimensões do conjunto varia entre versões, pelo que se tentam
-    várias chaves e se usa a primeira que responda.
+    A dimensão ``age`` é ``Y_GE16`` — a população com 16 ou mais anos, que é o
+    universo em que o EU-SILC publica o rendimento equivalente. Não é um
+    recorte etário da despesa: o rendimento equivalente é o mesmo para todos os
+    membros do agregado, por construção da escala.
+
+    Ordem das dimensões, verificada na API a 10.08.2026:
+    ``freq.age.sex.statinfo.unit.geo``.
     """
     geos = list(geos)
-    ultimo = None
-    for chave in [f"A.EUR.{indicador}.T.TOTAL",
-                  f"A.EUR.{indicador}.TOTAL.T",
-                  f"A.EUR.{indicador}.T.Y_GE16"]:
-        try:
-            df, via = obter(
-                "ilc_di03",
-                f"{chave}.{'+'.join(geos)}",
-                {"freq": "A", "unit": "EUR", "indic_il": indicador,
-                 "geo": geos, "sinceTimePeriod": str(desde_ano)},
-                inicio=str(desde_ano),
-            )
-            if not df.empty:
-                return df, via
-        except Exception as exc:                             # noqa: BLE001
-            ultimo = exc
-            continue
-    raise ErroEurostat(f"ilc_di03 ({indicador}) — nenhuma chave respondeu ({ultimo})")
+    if indicador not in RENDIMENTO_INDICADORES:
+        raise ErroEurostat(
+            f"ilc_di03 — indicador «{indicador}» não existe; "
+            f"os códigos válidos são {sorted(RENDIMENTO_INDICADORES)}")
+    return obter(
+        "ilc_di03",
+        f"A.Y_GE16.T.{indicador}.EUR.{'+'.join(geos)}",
+        {"freq": "A", "age": "Y_GE16", "sex": "T", "statinfo": indicador,
+         "unit": "EUR", "geo": geos, "sinceTimePeriod": str(desde_ano)},
+        inicio=str(desde_ano),
+    )
 
 
 # Casos-tipo do conjunto de remunerações líquidas anuais. O primeiro que

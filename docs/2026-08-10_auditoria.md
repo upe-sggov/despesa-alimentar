@@ -18,9 +18,15 @@ ligações de dados**, com confronto dos valores devolvidos contra a fonte.
 | 🟡 A corrigir | 6 | Rigor, rastreabilidade, robustez |
 | ⚪ A declarar | 4 | Pressupostos legítimos que devem estar explícitos |
 
+**Estado a 10.08.2026, fim do dia:** os três críticos — **A1, A2 e A3 — estão corrigidos e
+verificados em execução**. Ver «Registo de aplicação» no fim do documento. Os restantes catorze
+mantêm-se em aberto.
+
 ---
 
 ## 🔴 A1 · O rendimento do EU-SILC não está a ser obtido — a série está morta
+
+> ✅ **Corrigido a 10.08.2026.** Ver «Registo de aplicação», no fim.
 
 **Onde:** `src/eurostat.py`, função `rendimento()`, linha ~436.
 
@@ -66,6 +72,8 @@ linha ~217 e ~968, e no `format` dos rótulos).
 
 ## 🔴 A2 · O salário mínimo está rotulado como «valor legal» e não é
 
+> ✅ **Corrigido a 10.08.2026.** Ver «Registo de aplicação», no fim.
+
 **Onde:** `app.py`, linha ~1157 (`"Valor legal bruto, {sm_pt['periodo']}"`).
 
 **O que se passa.** A aplicação apresenta **1 073 €** como salário mínimo mensal de 2026. O valor
@@ -99,6 +107,8 @@ comparação entre países é afetada de forma desigual.
 ---
 
 ## 🔴 A3 · A extrapolação agregada do IVA multiplica o agregado errado
+
+> ✅ **Corrigido a 10.08.2026.** Ver «Registo de aplicação», no fim.
 
 **Onde:** `app.py`, linha ~2202 — `resumo_iva(sim, despesa_mensal, vezes_ano, agregados)`.
 
@@ -387,15 +397,78 @@ Para que o âmbito da garantia fique claro:
 
 | # | Item | Porquê primeiro |
 |---|---|---|
-| 1 | **A1** rendimento EU-SILC | Repõe um indicador em falta e corrige uma legenda falsa |
-| 2 | **A2** rótulo do salário mínimo | Erro factual, correção de texto, custo nulo |
-| 3 | **A3** extrapolação agregada | Número errado num ecrã que fala de milhões de euros |
+| 1 | ✅ **A1** rendimento EU-SILC | Repõe um indicador em falta e corrige uma legenda falsa |
+| 2 | ✅ **A2** rótulo do salário mínimo | Erro factual, correção de texto, custo nulo |
+| 3 | ✅ **A3** extrapolação agregada | Número errado num ecrã que fala de milhões de euros |
 | 4 | **B3** lista do nível de preços | Custo nulo, remove risco de inversão de conclusão |
 | 5 | **B1 + B2** agregados e emparelhamento de anos | Têm de ser feitos juntos |
 | 6 | **B4** dois coeficientes de Engel | Incoerência visível ao leitor |
 | 7 | **C1 … C6** | Rigor e robustez |
 | 8 | **D1** ano-base do IDF | Depende de resposta do INE |
 | 9 | **D2** mapeamento do IVA | Trabalho de fundo, sem dependência externa |
+
+---
+
+## Registo de aplicação
+
+### A1 · Rendimento do EU-SILC — 10.08.2026
+
+**O que estava errado.** Três coisas ao mesmo tempo: os códigos do indicador (`MEI_E`, `MED_E`)
+não existem, a ordem das dimensões estava trocada, e a lista de chaves alternativas fazia com que
+as três tentativas falhassem em silêncio.
+
+**O que foi feito.** `src/eurostat.py`, `rendimento()`: chave única e correta,
+`freq.age.sex.statinfo.unit.geo` → `A.Y_GE16.T.{MEAN_EI|MED_EI}.EUR.{geo}`. **A lista de chaves
+alternativas foi eliminada** — era ela que transformava um código errado numa série vazia sem
+ninguém dar por isso. Passa a haver validação prévia do indicador contra
+`RENDIMENTO_INDICADORES`, com erro explícito. `app.py` passa a iterar sobre essa constante em vez
+de repetir os códigos em quatro sítios.
+
+**Verificado em execução.** A linha «Rendimento das famílias (EU-SILC)» aparece na tabela de
+esforço: rendimento equivalente médio de **17 239 €** (2025) × 1,50 unidades = **2 154,88 €/mês**.
+A barra verde que a legenda descrevia passa a existir. Nas duas âncoras: 10,2 % de esforço com o
+IDF, 25,6 % com as Contas Nacionais.
+
+### A2 · Rótulo do salário mínimo — 10.08.2026
+
+**Confirmação da fonte.** Toda a série do `earn_mw_cur` foi confrontada com o valor legal:
+957 → 820 (2024), 1 015 → 870 (2025), 1 073 → 920 (2026). O fator 14/12 reproduz-se ao cêntimo em
+todos os anos. O Eurostat difunde a RMMG em duodécimos de 14 mensalidades, para comparar países
+com número diferente de pagamentos.
+
+**Decisão: corrigir o rótulo, não o valor.** A despesa alimentar é mensal e recorrente, pelo que a
+base certa para a fatia do orçamento é a média mensal do rendimento anual, com os subsídios
+diluídos pelos 12 meses. Usar os 920 € atribuiria a dezembro um esforço que na prática não existe.
+O que estava errado era chamar-lhe «valor legal».
+
+**O que foi feito.** O detalhe passa a ler «Média mensal bruta de 14 mensalidades, {período} — o
+valor legal da RMMG é de {X} €/mês», com o valor legal **derivado** (`× 12/14`, arredondado ao
+euro, porque a RMMG é fixada em euros inteiros) e não inscrito à mão. As duas tabelas de fontes na
+Metodologia foram corrigidas, e a nota sobre o salário mínimo passou a explicar a conversão.
+`salario_minimo()` ganhou a advertência na *docstring*.
+
+### A3 · Extrapolação agregada do IVA — 10.08.2026
+
+**O que foi feito.** Os dois cartões nacionais passam a correr uma segunda simulação sobre a
+**despesa do agregado médio** (`media_agregado`), não sobre a despesa ajustada à composição
+escolhida. A mesma regra foi aplicada à legenda de sensibilidade entre âncoras, que tinha o mesmo
+defeito. `resumo_iva()` ganhou uma advertência explícita: os campos `*_agregada_milhoes` só são
+válidos quando a simulação parte do agregado médio.
+
+**Verificado em execução.** Com 1, 2 e 5 adultos, a poupança agregada mantém-se em **351,0 M€** e
+a variação de receita em **−877,6 M€**, enquanto a poupança por agregado varia como deve
+(42,73 € → 72,64 € → 162,37 €). Antes, o total nacional variava de −14 % a +92 %.
+
+**Teste de regressão.** `test_extrapolacao_nacional_nao_depende_da_composicao` fixa a invariância
+e verifica também que a via errada **diverge** — sem isso o teste passaria mesmo que a correção
+fosse revertida.
+
+**Correção acessória.** Os dois cartões formatavam o separador decimal em inglês («351.0 M€»);
+passam a usar o mesmo auxiliar `_milhoes()` do resto do ecrã.
+
+### Estado da bateria de testes
+
+39 testes passam (38 anteriores + 1 novo). A aplicação renderiza sem exceções nas duas âncoras.
 
 ---
 
