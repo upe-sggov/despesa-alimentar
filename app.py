@@ -2665,12 +2665,25 @@ Chamar-lhe cabaz seria prometer o que não entrega.
     média; quem viva em zona de baixa densidade, acima. O índice capta bem a **variação**; o
     **nível** de cada família oscila em torno dele, e essa dispersão não é visível aqui.
 
-    **Preço de prateleira e preço pago.** Mesmo dentro do mesmo estabelecimento, descontos de
-    cartão de fidelização e de talão não são integralmente captados na recolha. O preço exposto
-    não é o preço efetivamente pago, e o desvio entre ambos varia no tempo e entre insígnias.
+    **Preço de prateleira e preço pago.** O critério do INE é preciso e vale a pena citá-lo em vez
+    de o aproximar. O Documento Metodológico do IPC (2023) determina que os descontos entram no
+    índice **«desde que de aplicação generalizada aos consumidores»**. Daqui decorre uma linha
+    divisória nítida:
+
+    | Tipo de desconto | Entra no índice? |
+    |---|---|
+    | Promoção aberta a qualquer cliente, campanha de folheto, redução de preço em loja | **Sim** |
+    | Cartão de fidelização, cupão, talão, desconto em cartão | **Não** — é condicional |
+
+    Não é, portanto, que a recolha falhe descontos ao acaso: exclui **por regra** os que dependem
+    de o consumidor aderir a um programa. O desvio entre preço registado e preço pago é o que
+    resulta desses descontos condicionais, e **tende a crescer** à medida que os programas de
+    fidelização se difundem — o que significa que o índice pode sobrestimar ligeiramente a
+    aceleração do preço efetivamente pago.
 
     Só dados de transação — e-fatura ou *scanner data* — permitiriam medir o preço realmente pago
-    e a sua dispersão entre operadores e territórios.
+    e a sua dispersão entre operadores e territórios. O IPC **não usa scanner data**: a recolha
+    automatizada é por *web scraping* em cadeias de implantação nacional.
             """)
             st.warning("""
     **Os ponderadores do IHPC incluem turistas — confirmado em fonte primária.** O Documento

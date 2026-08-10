@@ -722,9 +722,17 @@ deve fazer-se acompanhar destas ressalvas:
    conter produtos a taxas diferentes.
 7. **A repercussão é uma hipótese.** Qualquer resultado do simulador é condicional
    a esse parâmetro e deve ser apresentado como intervalo, nunca como valor único.
-8. **Preço de prateleira não é preço pago.** Nem estas séries nem o IHPC captam
-   integralmente descontos de cartão e de talão. Só dados de transação
-   (e-fatura, *scanner data*) o permitiriam.
+8. **Preço de prateleira não é preço pago — e o critério é preciso.** O Documento
+   Metodológico do IPC (INE, 2023) determina que os descontos entram no índice
+   **«desde que de aplicação generalizada aos consumidores»**. Uma promoção aberta
+   a qualquer cliente é captada; um desconto condicional — cartão de fidelização,
+   cupão, talão — é excluído **por regra**, não por falha de recolha. O desvio
+   entre preço registado e preço pago é o que resulta dos descontos condicionais e
+   tende a crescer com a difusão dos programas de fidelização, pelo que o índice
+   pode sobrestimar ligeiramente a aceleração do preço efetivamente pago. Só dados
+   de transação (e-fatura, *scanner data*) o mediriam — e o IPC **não usa scanner
+   data**: a recolha automatizada é por *web scraping* em cadeias de implantação
+   nacional.
 9. **A extrapolação agregada é ilustrativa.** A multiplicação pelo número de
    agregados serve para dimensionar ordens de grandeza. **Não é uma estimativa de
    custo orçamental** — essa exigiria a base tributável real por taxa, via Contas
