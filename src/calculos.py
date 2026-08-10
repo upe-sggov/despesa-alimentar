@@ -21,6 +21,7 @@ repercussão é explícita e ajustável, e o resultado é sempre condicional a e
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 from .config import (
@@ -350,6 +351,118 @@ def composicao_quintis() -> pd.DataFrame:
             })
 
     return pd.DataFrame(linhas)
+
+
+# --------------------------------------------------------------------------
+# Viés de substituição — Laspeyres de cabaz fixo contra Törnqvist
+# --------------------------------------------------------------------------
+# A crítica central da nota de enquadramento ao cabaz de composição fixa é que
+# ele não acompanha a substituição de consumo: se as famílias trocam novilho por
+# frango, um cabaz que continua a pesar o novilho como antes sobrestima o que
+# elas efetivamente pagam. Esta secção mede esse efeito em vez de o afirmar.
+#
+# Três índices, todos encadeados a partir do mesmo dezembro de base:
+#
+#   Laspeyres fixo   ponderadores congelados no ano-base. É a construção do
+#                    cabaz da DECO, transposta para as nove classes.
+#   IHPC oficial     encadeado com ponderadores revistos todos os anos. É o
+#                    índice publicado.
+#   Törnqvist        índice superlativo: cada elo usa a média dos ponderadores
+#                    dos dois extremos. É a referência teórica contra a qual se
+#                    mede o viés dos outros dois.
+#
+# **Aproximação a declarar.** O Törnqvist exige as quotas de despesa observadas
+# nos dois extremos de cada elo. O que existe em fonte aberta são os
+# ponderadores do IHPC, que o Documento Metodológico do IPC define como
+# referidos a dezembro do ano n−1 e já atualizados a preços desse momento. A
+# correspondência adotada é a que decorre dessa definição: o elo que vai de
+# dezembro de y−1 a dezembro de y usa a média dos ponderadores de y e de y+1,
+# por serem esses os que se reportam àqueles dois momentos. Não é o Törnqvist
+# exato — é a melhor aproximação possível sem microdados de despesa anuais.
+
+def _dezembros(indice_classes: pd.DataFrame) -> pd.DataFrame:
+    """Índice de dezembro de cada ano, por classe, numa base única."""
+    if indice_classes.empty:
+        return pd.DataFrame()
+
+    df = indice_classes.copy()
+    if "unit" in df.columns:
+        # A base do índice mudou ao longo do tempo (2015=100 → 2025=100).
+        # Misturar bases numa razão de índices produz lixo silencioso.
+        contagem = df["unit"].value_counts()
+        preferida = next((u for u in ("I25", "I15", "I05", "I96")
+                          if u in contagem.index), contagem.index[0])
+        df = df[df["unit"] == preferida]
+
+    df = df[df["time"].astype(str).str.endswith("-12")].copy()
+    df["ano"] = df["time"].astype(str).str[:4].astype(int)
+    return df.pivot_table(index="ano", columns="coicop", values="valor",
+                          aggfunc="last").sort_index()
+
+
+def indices_comparados(indice_classes: pd.DataFrame,
+                       pesos_por_ano: pd.DataFrame) -> pd.DataFrame:
+    """
+    Uma linha por dezembro, com os três índices em base 100 no primeiro ano
+    comum às duas fontes. Devolve DataFrame vazio se não houver anos que
+    cheguem — são precisos pelo menos dois elos para haver o que comparar.
+    """
+    dez = _dezembros(indice_classes)
+    if dez.empty or pesos_por_ano.empty:
+        return pd.DataFrame()
+
+    pesos = pesos_por_ano.copy()
+    pesos["ano"] = pesos["time"].astype(str).str[:4].astype(int)
+    w = pesos.pivot_table(index="ano", columns="coicop", values="valor",
+                          aggfunc="last").sort_index()
+
+    codigos = [c["cod"] for c in CLASSES
+               if c["cod"] in dez.columns and c["cod"] in w.columns]
+    if len(codigos) < 2:
+        return pd.DataFrame()
+
+    dez, w = dez[codigos].dropna(), w[codigos].dropna()
+    if dez.empty or w.empty:
+        return pd.DataFrame()
+
+    # Quotas normalizadas dentro da alimentação — os ponderadores do IHPC somam
+    # 1 000 sobre todo o cabaz do índice, não sobre as nove classes.
+    quotas = w.div(w.sum(axis=1), axis=0)
+
+    # Basta existir o ponderador do próprio ano. Para o último elo o ponderador
+    # de y+1 ainda não foi publicado — nesse caso repete-se o de y, o que
+    # equivale a assumir estrutura constante no último ano. É o único elo
+    # afetado e o efeito é de segunda ordem.
+    anos = [a for a in dez.index if a in quotas.index]
+    if len(anos) < 2:
+        return pd.DataFrame()
+
+    base = anos[0]
+    quotas_base = quotas.loc[base]
+
+    linhas = [{"ano": base, "laspeyres_fixo": 100.0, "tornqvist": 100.0}]
+    log_torn = 0.0
+    for anterior, corrente in zip(anos, anos[1:]):
+        relativos = dez.loc[corrente] / dez.loc[anterior]
+
+        # Törnqvist: média das quotas dos dois extremos do elo.
+        q_ini = quotas.loc[anterior + 1] if (anterior + 1) in quotas.index else quotas.loc[anterior]
+        q_fim = quotas.loc[corrente + 1] if (corrente + 1) in quotas.index else quotas.loc[corrente]
+        media = (q_ini + q_fim) / 2
+        log_torn += float((media * np.log(relativos)).sum())
+
+        # Laspeyres de cabaz fixo: sempre as quotas do ano-base, aplicadas ao
+        # relativo acumulado desde o ano-base.
+        acumulado = dez.loc[corrente] / dez.loc[base]
+        laspeyres = float((quotas_base * acumulado).sum()) * 100
+
+        linhas.append({"ano": corrente,
+                       "laspeyres_fixo": laspeyres,
+                       "tornqvist": float(np.exp(log_torn)) * 100})
+
+    df = pd.DataFrame(linhas)
+    df["vies"] = df["laspeyres_fixo"] - df["tornqvist"]
+    return df
 
 
 def comparar_ponderadores(pesos_ihpc: dict[str, float],

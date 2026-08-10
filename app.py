@@ -18,8 +18,9 @@ from pathlib import Path
 from src import eurostat
 from src.calculos import (ESCALAS, cabaz_quintis, comparar_ponderadores,
                           composicao_quintis, decompor, despesa_do_agregado,
-                          intervalo_agregado, resumo_decomposicao, resumo_iva,
-                          simular_iva, unidades_equivalentes)
+                          indices_comparados, intervalo_agregado,
+                          resumo_decomposicao, resumo_iva, simular_iva,
+                          unidades_equivalentes)
 from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         BASE_POR_DEFEITO, BASES_ANCORA, COD_AGREGADOS,
                         DIMENSAO_RECUO, DIMENSAO_RECUO_FONTE,
@@ -123,6 +124,15 @@ def carregar_dados(anos_historico: int = 6):
 
     indice_df, via2 = eurostat.indice_precos(COICOP_ALIMENTAR, desde_indice)
     registo.append(("Índice de preços", via2, len(indice_df)))
+
+    # Índice por classe — só serve o Törnqvist. Se falhar, a aplicação continua
+    # sem esse painel: não é dependência de mais nada.
+    try:
+        idx_classes_df, via13 = eurostat.indice_classes(CODIGOS, desde_indice)
+        registo.append(("Índice de preços por classe", via13, len(idx_classes_df)))
+    except Exception as exc:                                   # noqa: BLE001
+        idx_classes_df, via13 = pd.DataFrame(), f"indisponível ({exc})"
+        registo.append(("Índice de preços por classe", via13, 0))
 
     var_df, via3 = eurostat.variacoes(
         [COICOP_ALIMENTAR] + CODIGOS, list(PAISES.keys()), desde_variacao
@@ -349,6 +359,8 @@ def carregar_dados(anos_historico: int = 6):
         "despesa_ano": despesa_ano,
         "despesa_milhoes": despesa_valor,
         "pesos": pesos,
+        "pesos_por_ano": pesos_df,
+        "indice_classes": idx_classes_df,
         "ano_pesos": ano_pesos,
         "variacoes_classe": variacoes_classe,
         "mes_variacoes": mes_variacoes,
@@ -1529,6 +1541,134 @@ with aba2:
                                       "Decomposicao da inflacao alimentar", dados,
                                       extra=[("Mes de referencia", ult_esp)]),
                         f"despesa_alimentar_decomposicao_{date.today()}.csv", "text/csv")
+
+        # ---- viés de substituição: cabaz fixo contra Törnqvist ----
+        _cmp_idx = indices_comparados(dados.get("indice_classes", pd.DataFrame()),
+                                      dados.get("pesos_por_ano", pd.DataFrame()))
+        if not _cmp_idx.empty and len(_cmp_idx) >= 3:
+            st.divider()
+            st.markdown("#### Cabaz fixo contra cabaz que acompanha o consumo")
+            st.caption(
+                "A crítica central ao cabaz de composição fixa é que não acompanha a substituição "
+                "de consumo. Aqui essa crítica é medida, em vez de afirmada — comparando um índice "
+                "de ponderadores congelados com um índice superlativo de Törnqvist, que usa a "
+                "média dos ponderadores dos dois extremos de cada ano."
+            )
+
+            _ano_base = int(_cmp_idx["ano"].iloc[0])
+            _ult = _cmp_idx.iloc[-1]
+            _ano_fim = int(_ult["ano"])
+
+            # O índice oficial do agregado, rebaseado ao mesmo dezembro. A base
+            # do índice é irrelevante depois de rebasear: é um rácio interno.
+            _oficial = None
+            _ipt = dados["indice_pt"]
+            if not _ipt.empty:
+                _d = _ipt[_ipt["time"].astype(str).str.endswith("-12")].copy()
+                if not _d.empty:
+                    _d["ano"] = _d["time"].astype(str).str[:4].astype(int)
+                    _s = _d.groupby("ano")["valor"].last()
+                    if _ano_base in _s.index:
+                        _oficial = _s / _s.loc[_ano_base] * 100
+
+            _subida_fixo = _ult["laspeyres_fixo"] - 100
+            _subida_torn = _ult["tornqvist"] - 100
+            _vies = float(_ult["vies"])
+            _anos_decorridos = max(_ano_fim - _ano_base, 1)
+
+            k1, k2, k3 = st.columns(3)
+            k1.metric(f"Cabaz fixo — subida desde dez/{str(_ano_base)[2:]}",
+                      percentagem(_subida_fixo),
+                      help="Ponderadores congelados no ano-base, como num cabaz de "
+                           "composição fixa.")
+            k2.metric("Törnqvist — a mesma subida", percentagem(_subida_torn),
+                      help="Ponderadores revistos a cada ano, pela média dos dois extremos.")
+            k3.metric("Viés de substituição acumulado",
+                      f"{_vies:+.2f} pontos".replace(".", ","),
+                      f"{_vies / _anos_decorridos:+.2f} p.p./ano".replace(".", ","),
+                      delta_color="off",
+                      help="Quanto o cabaz fixo sobrestima a subida, face ao índice superlativo.")
+
+            figt = go.Figure()
+            figt.add_trace(go.Scatter(
+                x=_cmp_idx["ano"], y=_cmp_idx["laspeyres_fixo"], name="Cabaz fixo (Laspeyres)",
+                mode="lines+markers", line=dict(color=VERMELHO, width=2.6),
+                hovertemplate="%{x}<br>%{y:.2f}<extra></extra>"))
+            figt.add_trace(go.Scatter(
+                x=_cmp_idx["ano"], y=_cmp_idx["tornqvist"], name="Törnqvist (superlativo)",
+                mode="lines+markers", line=dict(color=VERDE, width=2.6),
+                hovertemplate="%{x}<br>%{y:.2f}<extra></extra>"))
+            if _oficial is not None:
+                _al = [a for a in _cmp_idx["ano"] if a in _oficial.index]
+                figt.add_trace(go.Scatter(
+                    x=_al, y=[_oficial.loc[a] for a in _al], name="IHPC oficial (publicado)",
+                    mode="lines", line=dict(color=AZUL, width=1.8, dash="dot"),
+                    hovertemplate="%{x}<br>%{y:.2f}<extra></extra>"))
+            figt.update_layout(height=380, margin=dict(t=10, b=30, l=10, r=10),
+                               yaxis_title=f"Índice (dez/{_ano_base} = 100)",
+                               plot_bgcolor="#fff", hovermode="x unified",
+                               legend=dict(orientation="h", y=-0.18))
+            figt.update_yaxes(gridcolor="#eef1f4")
+            figt.update_xaxes(gridcolor="#eef1f4", dtick=1)
+            st.plotly_chart(figt, use_container_width=True)
+
+            st.info(f"""
+    **O resultado não é o que a crítica ao cabaz fixo faria esperar — e isso importa.**
+
+    Em {_anos_decorridos} anos, congelar os ponderadores das nove classes sobrestima a subida em
+    **{('%+.2f' % _vies).replace('.', ',')} pontos de índice**, cerca de
+    **{('%+.2f' % (_vies / _anos_decorridos)).replace('.', ',')} p.p. por ano**. Sobre uma subida
+    acumulada de {percentagem(_subida_torn)}, é residual.
+
+    A razão é que **a substituição relevante acontece dentro das classes, não entre elas**. Trocar
+    novilho por frango não muda o peso da carne; trocar marca própria por marca de fabricante não
+    muda o peso de nada. Nove classes COICOP são uma grelha demasiado grossa para ver o que as
+    famílias efetivamente fazem.
+
+    **A conclusão prática tem dois lados.** Primeiro: quem atacar o índice oficial invocando viés
+    de substituição *entre grupos de alimentos* está a invocar um efeito que aqui se mede e é
+    pequeno. Segundo, e mais importante: isto **não absolve** o cabaz de composição fixa. O problema
+    de um cabaz de 63 produtos com quantidades fixas é de outra ordem — não capta a mudança de
+    marca, de calibre, de embalagem nem de insígnia, e nenhuma dessas é observável nestes dados.
+    O efeito que se mede aqui é o menor dos dois; o maior fica por medir.
+            """)
+
+            with st.expander("Como estes índices são construídos"):
+                st.markdown(f"""
+    Todos partem de dezembro de {_ano_base} = 100 e usam o índice mensal por classe
+    (`prc_hicp_midx`) e os ponderadores anuais (`prc_hicp_inw`), ambos do Eurostat.
+
+    **Cabaz fixo (Laspeyres de base fixa)** — as quotas do ano-base aplicadas ao relativo de preço
+    acumulado desde esse ano:
+                """)
+                st.latex(r"P_L(t) = \sum_i w_i(0)\,\frac{I_i(t)}{I_i(0)}")
+                st.markdown(
+                    "**Törnqvist** — média geométrica ponderada dos relativos de cada elo, com a "
+                    "média aritmética das quotas dos dois extremos:")
+                st.latex(r"\ln P_T(t\!-\!1 \to t) = \sum_i \frac{s_i(t\!-\!1)+s_i(t)}{2}"
+                         r"\,\ln\frac{I_i(t)}{I_i(t\!-\!1)}")
+                st.warning("""
+    **Aproximação a declarar.** O Törnqvist exige as quotas de despesa observadas nos dois extremos
+    de cada elo. O que existe em fonte aberta são os ponderadores do IHPC, que o Documento
+    Metodológico do IPC define como referidos a **dezembro do ano n−1** e já atualizados a preços
+    desse momento. A correspondência adotada decorre dessa definição: o elo de dezembro de y−1 a
+    dezembro de y usa a média dos ponderadores de y e de y+1. Para o último elo, o ponderador de
+    y+1 ainda não está publicado e repete-se o de y.
+
+    Não é o Törnqvist exato. É a melhor aproximação sem microdados de despesa anuais — e o facto de
+    a série resultante acompanhar de perto o IHPC oficial, que é construído por outra via, é
+    indício de que a aproximação se comporta.
+                """)
+
+            st.download_button(
+                "⬇️ Descarregar comparação de índices (CSV)",
+                csv_com_fonte(_cmp_idx, "Vies de substituicao - cabaz fixo contra Tornqvist", dados,
+                              extra=[
+                                  ("Base", f"dezembro de {_ano_base} = 100"),
+                                  ("Series", "prc_hicp_midx (indice por classe) e prc_hicp_inw"),
+                                  ("Nota", "Tornqvist aproximado - ver metodologia no separador"),
+                              ]),
+                file_name="vies_substituicao.csv", mime="text/csv")
 
         serie = dados["indice_pt"][["time", "valor"]].rename(
             columns={"time": "Período", "valor": f"Índice ({base})"})

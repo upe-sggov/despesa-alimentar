@@ -328,6 +328,32 @@ momento. Deflacioná-los pela média anual do índice desconta duas vezes parte 
 efeito-preço e nenhuma vez outra parte. A direção pode manter-se; a magnitude não
 é defensável.
 
+### O viés de substituição, medido
+
+O separador **Histórico** compara três índices sobre as mesmas nove classes, todos com base em
+dezembro de 2020 = 100: um **cabaz de composição fixa** (Laspeyres com ponderadores congelados),
+um **Törnqvist** (índice superlativo, média dos ponderadores dos dois extremos de cada elo) e o
+**IHPC oficial**.
+
+Em dezembro de 2025: cabaz fixo **135,35**, Törnqvist **134,76**, IHPC oficial **134,88**.
+
+**O viés de substituição existe, tem o sinal esperado e é residual** — 0,59 pontos em cinco anos,
+cerca de **0,12 p.p. por ano**, sobre uma subida acumulada de 34,8 %. A razão é que a substituição
+relevante acontece *dentro* das classes, não entre elas: trocar novilho por frango não altera o
+peso da carne.
+
+Duas leituras, de sentido oposto, e ambas necessárias:
+
+- Quem ataque o índice oficial invocando viés de substituição **entre grupos de alimentos** está a
+  invocar um efeito que está medido e é pequeno.
+- Isso **não absolve** o cabaz de composição fixa. Um cabaz de 63 produtos com quantidades fixas
+  falha na marca, no calibre, na embalagem e na insígnia — e nenhuma dessas dimensões é observável
+  nestes dados. O efeito medido é o menor dos dois.
+
+O Törnqvist aqui construído fica a 0,12 pontos do IHPC oficial, que é calculado por outra via —
+é o melhor indício disponível de que a aproximação de ponderadores (declarada na interface) se
+comporta.
+
 ### Cabaz por quintil de rendimento
 
 O separador «Despesa e composição» apresenta a despesa alimentar por quintil de

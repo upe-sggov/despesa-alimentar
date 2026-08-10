@@ -264,3 +264,90 @@ def test_comparar_ponderadores_identifica_a_diferenca():
     r2 = comparar_ponderadores(pesos_torcidos, {**{c: 3.0 for c in CODIGOS}, "CP0111": 20.0})
     assert r2["inflacao_ihpc"] > r2["inflacao_idf"]
     assert r2["desvio_maximo"] > 5.0
+
+
+# ------------------------------------------- vies de substituicao (Tornqvist)
+def _serie_classes(valores_por_ano, unit="I15"):
+    """indice_classes sintetico: {ano: {cod: valor}} -> DataFrame como o Eurostat."""
+    linhas = []
+    for ano, porcod in valores_por_ano.items():
+        for cod, v in porcod.items():
+            linhas.append({"unit": unit, "coicop": cod, "geo": "PT",
+                           "time": f"{ano}-12", "valor": float(v)})
+    return pd.DataFrame(linhas)
+
+
+def _serie_pesos(pesos_por_ano):
+    linhas = []
+    for ano, porcod in pesos_por_ano.items():
+        for cod, v in porcod.items():
+            linhas.append({"coicop": cod, "geo": "PT",
+                           "time": str(ano), "valor": float(v)})
+    return pd.DataFrame(linhas)
+
+
+def test_indices_iguais_quando_todos_os_precos_sobem_o_mesmo():
+    """Se todas as classes sobem na mesma proporcao nao ha substituicao possivel:
+    os dois indices tem de coincidir, quaisquer que sejam os ponderadores."""
+    from src.calculos import indices_comparados
+
+    idx = _serie_classes({
+        2020: {c: 100.0 for c in CODIGOS},
+        2021: {c: 110.0 for c in CODIGOS},
+        2022: {c: 121.0 for c in CODIGOS},
+    })
+    pesos = _serie_pesos({
+        2020: {c: 100.0 for c in CODIGOS},
+        2021: {c: (200.0 if c == "CP0111" else 50.0) for c in CODIGOS},
+        2022: {c: (10.0 if c == "CP0112" else 300.0) for c in CODIGOS},
+    })
+    r = indices_comparados(idx, pesos).set_index("ano")
+    assert r.loc[2022, "laspeyres_fixo"] == pytest.approx(121.0)
+    assert r.loc[2022, "tornqvist"] == pytest.approx(121.0)
+    assert r["vies"].abs().max() == pytest.approx(0.0, abs=1e-9)
+
+
+def test_cabaz_fixo_sobrestima_quando_o_peso_migra_para_o_barato():
+    """Substituicao a serio: o preco de uma classe dispara e o seu ponderador
+    cai. O cabaz fixo, que mantem o peso antigo, tem de dar mais alto."""
+    from src.calculos import indices_comparados
+
+    caro, barato = "CP0111", "CP0112"
+    idx = _serie_classes({
+        2020: {c: 100.0 for c in CODIGOS},
+        2021: {c: (200.0 if c == caro else 100.0) for c in CODIGOS},
+        2022: {c: (300.0 if c == caro else 100.0) for c in CODIGOS},
+    })
+    pesos = _serie_pesos({
+        2020: {c: (500.0 if c == caro else 10.0) for c in CODIGOS},
+        2021: {c: (500.0 if c == caro else 10.0) for c in CODIGOS},
+        2022: {c: (10.0 if c == caro else 500.0) for c in CODIGOS},
+        2023: {c: (10.0 if c == caro else 500.0) for c in CODIGOS},
+    })
+    r = indices_comparados(idx, pesos).set_index("ano")
+    assert r.loc[2022, "laspeyres_fixo"] > r.loc[2022, "tornqvist"]
+    assert r.loc[2022, "vies"] > 0
+    assert r.loc[2020, "laspeyres_fixo"] == pytest.approx(100.0)
+    assert r.loc[2020, "tornqvist"] == pytest.approx(100.0)
+
+
+def test_indices_nao_misturam_bases_do_indice():
+    """Duas unidades na mesma serie: usar as duas produziria racios sem sentido.
+    So uma pode sobreviver ao filtro."""
+    from src.calculos import _dezembros
+
+    a = _serie_classes({2020: {c: 100.0 for c in CODIGOS},
+                        2021: {c: 110.0 for c in CODIGOS}}, unit="I15")
+    b = _serie_classes({2020: {c: 80.0 for c in CODIGOS},
+                        2021: {c: 88.0 for c in CODIGOS}}, unit="I05")
+    dez = _dezembros(pd.concat([a, b], ignore_index=True))
+    assert dez.loc[2020, "CP0111"] == pytest.approx(100.0)   # ficou o I15
+
+
+def test_indices_comparados_sem_dados_devolve_vazio():
+    from src.calculos import indices_comparados
+
+    assert indices_comparados(pd.DataFrame(), pd.DataFrame()).empty
+    idx = _serie_classes({2020: {c: 100.0 for c in CODIGOS}})
+    pesos = _serie_pesos({2020: {c: 100.0 for c in CODIGOS}})
+    assert indices_comparados(idx, pesos).empty          # um so ano: nao ha elo

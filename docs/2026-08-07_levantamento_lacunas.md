@@ -39,7 +39,7 @@ em 07.08.2026 — chamadas à API do Eurostat e parsing dos ficheiros do INE. N�
 | 1 | Ponderar pela estrutura real de consumo (IDEF) | 🟢 **Resolvido** | IDF 2022/2023, Q.2.11 — COICOP 4 dígitos em euros |
 | 2 | Desagregar por decil de rendimento | 🟢 **Resolvido** | IDF Q.2.11 — quintis ≡ D1–D2 / D9–D10 |
 | 3 | Desagregar territorialmente | 🟡 Parcial | NUTS II × quintil e grau de urbanização sim; oferta retalhista não |
-| 4 | Incorporar substituição efetiva (Fisher/Törnqvist) | 🟢 Viável | Törnqvist ao nível das classes |
+| 4 | Incorporar substituição efetiva (Fisher/Törnqvist) | ✅ **Feito — e o resultado surpreende** | Törnqvist ao nível das classes: o viés é de 0,12 p.p./ano, residual. Ver §2.17 |
 | 5 | Indicador de acessibilidade alimentar | 🟢 **Feito, incluindo a variante «dieta saudável»** | Já existe; `ilc_mdes03` e o FAO SOFI 2026 (§2.14) acrescentam os dois limiares em falta |
 | 6 | Explorar *scanner data* | 🟢 **Respondido** | O IPC **não** usa; usa *web scraping* — ver §2.7 |
 | 7 | Validar contra e-fatura / AT | 🔴 Diligência | Via INE. Nota: a AT já alimenta o IPC, mas só em rendas |
@@ -710,6 +710,55 @@ reintroduz, ao nível da classe, o viés de substituição que a nota critica no
 fixa. O contrapeso é o IHPC, revisto anualmente. A próxima vaga é o IDF 2026 e a atualização de
 `src/config.py` terá de ser manual.
 
+### 2.17 Viés de substituição — medido, e menor do que se supunha ★ apuramento de 08.08.2026
+
+**Fontes:** Eurostat, `prc_hicp_midx` (índice mensal por classe) e `prc_hicp_inw` (ponderadores
+anuais). Base: dezembro de 2020 = 100. Só ponderação IHPC — o IDF tem uma vaga, não dá série.
+
+Três índices sobre as mesmas nove classes, para isolar o efeito da regra de ponderação:
+
+| Dezembro | Cabaz fixo (Laspeyres) | Törnqvist | IHPC oficial | Viés (fixo − Törnqvist) |
+|---|---|---|---|---|
+| 2020 | 100,00 | 100,00 | 100,00 | — |
+| 2021 | 103,17 | 103,00 | 103,05 | +0,16 |
+| 2022 | 124,33 | 124,06 | 124,10 | +0,27 |
+| 2023 | 126,01 | 125,89 | 125,89 | +0,12 |
+| 2024 | 130,67 | 130,29 | 130,24 | +0,38 |
+| **2025** | **135,35** | **134,76** | **134,88** | **+0,59** |
+
+**O viés existe, tem o sinal esperado — e é residual.** Congelar os ponderadores sobrestima a
+subida em **0,59 pontos de índice em cinco anos**, cerca de **0,12 p.p. por ano**, sobre uma
+subida acumulada de 34,8 %. Em proporção, **1,7 % do aumento medido**.
+
+**Validação da construção.** O Törnqvist aqui calculado fica a 0,12 pontos do IHPC oficial, que é
+construído por outra via e por outra entidade. Duas cadeias de cálculo independentes que convergem
+é o melhor indício disponível de que a aproximação de ponderadores (§ abaixo) se comporta.
+
+**Porque é tão pequeno — e porque isso não absolve o cabaz fixo.** A substituição relevante ocorre
+**dentro** das classes, não entre elas: trocar novilho por frango não altera o peso da carne;
+trocar marca de fabricante por marca própria não altera peso nenhum. Nove classes COICOP são uma
+grelha demasiado grossa para ver o que as famílias fazem.
+
+Daqui saem duas conclusões de sentido oposto, e ambas devem ser ditas:
+
+1. **Contra quem ataque o índice oficial** invocando viés de substituição entre grupos de
+   alimentos: o efeito está medido e é de 0,12 p.p./ano. Não sustenta a acusação.
+2. **Contra quem defenda o cabaz de composição fixa** com base neste resultado: não serve. O
+   problema de um cabaz de 63 produtos com quantidades fixas é de outra ordem — marca, calibre,
+   embalagem, insígnia — e **nenhuma dessas dimensões é observável nestes dados**. O efeito medido
+   aqui é o menor dos dois; o maior fica por medir, e mediria-se com dados de transação.
+
+**Aproximação a declarar.** O Törnqvist exige as quotas de despesa observadas nos dois extremos de
+cada elo. Em fonte aberta existem os ponderadores do IHPC, que o DMet_IPC define como referidos a
+**dezembro do ano n−1** e já atualizados a preços desse momento. A correspondência adotada decorre
+dessa definição: o elo de dezembro de y−1 a dezembro de y usa a média dos ponderadores de y e de
+y+1. No último elo, o ponderador de y+1 ainda não está publicado e repete-se o de y — assume
+estrutura constante no último ano e afeta apenas esse elo.
+
+> É a mesma armadilha que fez cair a terceira base de ponderação (§2.16): os ponderadores do IHPC
+> não são quotas de despesa de um ano civil. Aqui a aproximação é aceitável porque o índice
+> resultante é validável contra o IHPC oficial; lá não era, porque não havia contra o que validar.
+
 ---
 
 ## 3. Acessibilidade das fontes a partir de ambiente automatizado
@@ -856,7 +905,9 @@ implementação — nada depende já de dados externos.
    sétimo cabaz, e o aviso de leitura pública sobre o número da DECO.
 4. ~~**Afinar a limitação 8** com o critério do documento metodológico (§2.7)~~ — ✅ **feito em
    08.08.2026**, na app e no README, com o sentido do enviesamento explicitado.
-5. **Törnqvist ao nível das classes** — sem dados novos, demonstra o viés de substituição.
+5. ~~**Törnqvist ao nível das classes**~~ — ✅ **feito em 08.08.2026**, na aba do histórico. Não
+   demonstrou o que se esperava: o viés é de 0,12 p.p./ano, residual. O apuramento é útil na mesma,
+   mas **muda o argumento** — ver §2.17 e a consequência para a nota, abaixo.
 6. **Escalas de equivalência**: passar a ressalva de qualitativa a quantificada — a escala subestima
    o custo alimentar em cerca de 10 % (§2.13).
 7. **Os três limiares de acessibilidade** (§2.14): privação severa 1,9 %, dieta saudável 14,4 %,
@@ -897,10 +948,30 @@ implementação — nada depende já de dados externos.
 | 9 | `README.md`: secções «As duas bases de ponderação» e «Cabaz por quintil de rendimento» | ✅ |
 | 10 | `app.py`, aba 5: quadro dos seis instrumentos «O que é — e o que não é — o cabaz», aberto por defeito, com o posicionamento da própria ferramenta e o aviso de leitura pública | ✅ |
 | 11 | `app.py` e `README.md`: limitação sobre preço de prateleira reescrita com o critério citado do DMet_IPC e o sentido do enviesamento (§2.7) | ✅ |
+| 12 | `src/eurostat.py`: `indice_classes()` — índice mensal por classe, matéria-prima do Törnqvist | ✅ |
+| 13 | `src/calculos.py`: `indices_comparados()` e `_dezembros()` — cabaz fixo, Törnqvist e viés | ✅ |
+| 14 | `app.py`, aba 2: secção «Cabaz fixo contra cabaz que acompanha o consumo», com os três índices, o quadro de construção e a aproximação declarada | ✅ |
+| 15 | `tests/test_calculos.py`: 4 testes novos sobre o Törnqvist, incluindo o caso em que o ponderador migra para a classe barata e o cabaz fixo tem de sobrestimar | ✅ |
 
-**Verificação:** 22 testes passam; render completo da aplicação sem exceções nem erros de ecrã,
+**Verificação:** 26 testes passam; render completo da aplicação sem exceções nem erros de ecrã,
 nas duas bases de âncora; os valores do IDF fecham com os totais publicados a menos de 1 €/ano de
-arredondamento do próprio quadro do INE.
+arredondamento do próprio quadro do INE; o Törnqvist calculado fica a 0,12 pontos do IHPC oficial,
+apesar de construído por via independente.
+
+### Consequência de §2.17 para a nota de enquadramento
+
+O eixo 4 da nota propõe o Törnqvist para «corrigir o viés de substituição e aproximar o indicador
+do que o consumidor realmente paga». O apuramento mostra que, **ao nível das nove classes, quase
+não há o que corrigir** — 0,12 p.p./ano.
+
+A recomendação não cai, mas muda de fundamento. Deixa de ser «o cabaz fixo sobrestima a inflação»,
+que os dados não sustentam com esta granularidade, e passa a ser: **a composição fixa falha onde
+não se consegue medir** — marca, calibre, embalagem, insígnia. É um argumento mais honesto e, para
+o debate, mais sólido: não depende de uma magnitude que alguém pode ir verificar e desmentir.
+
+⚪ **Não alterado na nota.** Ao contrário das correções de §9, esta não é uma afirmação errada — é
+uma expectativa que o apuramento não confirmou. A redação do eixo 4 continua defensável. Fica
+assinalada para decisão do Gabinete.
 
 ---
 

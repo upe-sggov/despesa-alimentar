@@ -183,6 +183,23 @@ def indice_precos(coicop: str, desde: str) -> tuple[pd.DataFrame, str]:
     )
 
 
+def indice_classes(codigos: Iterable[str], desde: str) -> tuple[pd.DataFrame, str]:
+    """
+    Índice de preços mensal por classe COICOP — a matéria-prima do Törnqvist.
+
+    Difere de `indice_precos` apenas por pedir várias classes de uma vez, em vez
+    do agregado. É preciso o índice em nível, e não a variação homóloga, porque
+    um índice superlativo encadeia relativos de preço entre dois momentos.
+    """
+    codigos = list(codigos)
+    return obter(
+        "prc_hicp_midx",
+        f"M..{'+'.join(codigos)}.PT",
+        {"freq": "M", "coicop": codigos, "geo": "PT", "sinceTimePeriod": desde},
+        inicio=desde,
+    )
+
+
 def variacoes(coicops: Iterable[str], geos: Iterable[str],
               desde: str) -> tuple[pd.DataFrame, str]:
     """Variação homóloga mensal (%), por classe e por país."""
