@@ -194,6 +194,32 @@ def test_vies_do_agregado_medio_e_sistematico():
     assert racios[0] > 1.0                        # e no sentido de subestimação
 
 
+def test_mapa_do_iva_cobre_as_nove_classes_e_e_coerente():
+    """
+    O levantamento das Listas I e II tem de cobrir todas as classes e as taxas
+    citadas têm de existir no Código do IVA. Auditoria de 10.08.2026, D2.
+    """
+    from src.config import CODIGOS, IVA_MAPA, POR_CODIGO
+
+    assert set(IVA_MAPA) == set(CODIGOS)
+    legais = {0, 6, 13, 23}
+    for cod, mapa in IVA_MAPA.items():
+        taxas = mapa["taxas"]
+        assert len(taxas) >= 2, f"{cod}: classe declarada homogénea — nenhuma é"
+        vistas = []
+        for taxa, texto in taxas:
+            assert taxa in legais, f"{cod}: taxa {taxa} não existe no CIVA"
+            assert texto.strip()
+            vistas.append(taxa)
+        assert vistas == sorted(vistas), f"{cod}: taxas fora de ordem"
+        assert len(vistas) == len(set(vistas)), f"{cod}: taxa repetida"
+        # a predefinida de `CLASSES` tem de constar do levantamento, senão as
+        # duas fontes de verdade podem divergir sem ninguém dar por isso
+        assert POR_CODIGO[cod]["iva"] in vistas, (
+            f"{cod}: a taxa predefinida ({POR_CODIGO[cod]['iva']} %) não consta "
+            "do levantamento das Listas")
+
+
 def test_engel_e_um_intervalo_ancorado_no_valor_do_ine():
     """
     O extremo inferior tem de ser **a constante publicada pelo INE**, a mesma

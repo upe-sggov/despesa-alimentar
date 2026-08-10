@@ -27,7 +27,9 @@ from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         BASE_POR_DEFEITO, BASES_ANCORA, COD_AGREGADOS,
                         DIMENSAO_RECUO, DIMENSAO_RECUO_FONTE,
                         ESCALAS_TESTE_FONTE, ESCALAS_TESTE_INTERVALO, ESCALAS_TESTE_RACIO,
-                        IDF_ALIMENTAR_ANUAL, IDF_ANO_BASE, IDF_FONTE,
+                        IVA_MAPA, IVA_MAPA_FONTE,
+                        IDF_ALIMENTAR_ANUAL, IDF_FONTE,
+                        IDF_JANELA_FONTE, IDF_JANELA_RECOLHA,
                         IDF_PESO_ALIMENTAR, IDF_QUINTIS,
                         SOFI_CUSTO, SOFI_FONTE, SOFI_INCAPACIDADE, SOFI_MILHOES,
                         AZUL, CINZENTO, CLASSES, CODIGOS, COICOP_ALIMENTAR, DOURADO,
@@ -409,15 +411,29 @@ def carregar_dados(anos_historico: int = 6):
 
 def _atualizar_por_indice(mensal_base: float, ano_base: int, indice) -> tuple:
     """
-    Atualiza um valor mensal do seu ano de referência para o mês mais recente
-    do índice de preços. Devolve (valor, mês, fator).
+    Atualiza um valor mensal do seu período de referência para o mês mais
+    recente do índice de preços. Devolve (valor, mês, fator).
+
+    `ano_base` pode ser um ano — `2022`, e usam-se os doze meses desse ano — ou
+    um par `("2022-02", "2023-01")` delimitando a janela efetiva de referência.
+    A segunda forma existe porque o IDF não é um instantâneo anual: a recolha
+    decorreu em 26 quinzenas seguidas, de fevereiro de 2022 a fevereiro de
+    2023, e o INE não corrige os valores para uma data comum. Indexar a partir
+    de um ano civil, qualquer que fosse, era um pressuposto não confirmado
+    (auditoria de 10.08.2026, D1).
     """
     if indice.empty:
         return mensal_base, None, 1.0
-    do_ano = indice[indice["time"].str.startswith(str(ano_base))]
-    if do_ano.empty:
+
+    if isinstance(ano_base, (tuple, list)) and len(ano_base) == 2:
+        inicio, fim = str(ano_base[0]), str(ano_base[1])
+        do_periodo = indice[(indice["time"] >= inicio) & (indice["time"] <= fim)]
+    else:
+        do_periodo = indice[indice["time"].str.startswith(str(ano_base))]
+
+    if do_periodo.empty:
         return mensal_base, None, 1.0
-    media_base = float(do_ano["valor"].mean())
+    media_base = float(do_periodo["valor"].mean())
     ultimo = indice.sort_values("time").iloc[-1]
     fator = float(ultimo["valor"]) / media_base if media_base else 1.0
     return mensal_base * fator, str(ultimo["time"]), fator
@@ -453,17 +469,22 @@ def ancora_oficial(dados: dict, agregados: int) -> dict | None:
     valor_cn, mes, fator_cn = _atualizar_por_indice(mensal_cn, ano_cn, indice)
     bases["contas"] = {
         "valor": valor_cn, "base_mensal": mensal_cn, "ano_base": ano_cn,
+        "ano_fim": int(str(ano_cn)[:4]),
         "fator": fator_cn, "plausivel": 50.0 <= valor_cn <= 3000.0,
         "denominador": denominador,
         **BASES_ANCORA["contas"],
     }
 
     # --- IDF: medição direta, constante publicada ---
+    # Indexado a partir da **janela de recolha**, não de um ano civil: ver
+    # `IDF_JANELA_RECOLHA` em config.py.
     mensal_idf = IDF_ALIMENTAR_ANUAL / 12
     valor_idf, mes_idf, fator_idf = _atualizar_por_indice(
-        mensal_idf, IDF_ANO_BASE, indice)
+        mensal_idf, IDF_JANELA_RECOLHA, indice)
     bases["idf"] = {
-        "valor": valor_idf, "base_mensal": mensal_idf, "ano_base": IDF_ANO_BASE,
+        "valor": valor_idf, "base_mensal": mensal_idf,
+        "ano_base": "2022/2023", "janela": IDF_JANELA_RECOLHA,
+        "ano_fim": int(IDF_JANELA_RECOLHA[1][:4]),
         "fator": fator_idf, "plausivel": 50.0 <= valor_idf <= 3000.0,
         **BASES_ANCORA["idf"],
     }
@@ -705,7 +726,7 @@ with st.sidebar:
     # A idade da base tem de estar à vista, não só no registo de ligações: a
     # despesa é atualizada por preços, mas a estrutura de consumo é a do ano de
     # referência (auditoria de 10.08.2026, B2).
-    _idade_base = date.today().year - int(base_ancora["ano_base"])
+    _idade_base = date.today().year - int(base_ancora["ano_fim"])
     if _idade_base >= 2:
         st.caption(
             f"⏳ Base de **{base_ancora['ano_base']}** — {_idade_base} anos de atraso. "
@@ -1281,10 +1302,24 @@ with aba1:
 
             st.info(
                 "**Sobre o cenário do salário mínimo.** Não é o agregado típico — é o **limiar "
-                "inferior** da distribuição. Mas não é caso raro: cerca de um quarto dos "
-                "trabalhadores portugueses aufere a remuneração mínima, e é precisamente aí "
-                "que a pressão alimentar mais aperta. Serve para dimensionar o pior caso "
-                "plausível, não para caracterizar a generalidade das famílias."
+                "inferior** da distribuição. Mas está longe de ser um caso extremo: em 2025 a "
+                "RMMG equivalia a **91 % do salário mediano** do setor privado (índice de "
+                "Kaitz), contra 87 % em 2019, e o rácio entre a mediana e o percentil 10 da "
+                "distribuição salarial era de apenas **1,1**. A concentração é tal que, nos "
+                "microdados da Segurança Social, **o segundo decil da distribuição salarial não "
+                "chega a ter observações distintas**. Serve para dimensionar o limiar inferior, "
+                "não para caracterizar a generalidade das famílias — mas esse limiar está muito "
+                "mais perto do meio da distribuição do que se supõe."
+            )
+            st.caption(
+                "Fonte: Banco de Portugal, *Boletim Económico* de junho de 2026, Caixa 5 — "
+                "«A distribuição dos salários dos trabalhadores por conta de outrem», com base "
+                "em microdados da Segurança Social. Abrange o **setor privado** (exclui a "
+                "Administração Pública) e considera vínculos a tempo completo com 30 dias "
+                "declarados e remuneração igual ou superior a 80 % da RMMG. Pelo *Structure of "
+                "Earnings Survey* do Eurostat, que só inquire empresas com 10 ou mais "
+                "trabalhadores, o índice de Kaitz português era de 69 % em 2024 — ainda assim o "
+                "**mais elevado da área do euro**."
             )
             st.caption(
                 "**Verde:** rendimento **líquido** — depois de impostos e contribuições. "
@@ -2310,6 +2345,37 @@ with aba3:
         c[4].metric("Receita de IVA por mês", euro(res["receita_mes"]),
                     help=f"{euro(res['iva_antes'])} → {euro(res['iva_depois'])}")
 
+        with st.expander("⚖️ O que o Código do IVA diz sobre cada grupo — e o que fica de fora"):
+            st.markdown(
+                "O Código do IVA classifica **por produto**, nas Listas I (6 %) e II (13 %); a "
+                "aplicação classifica **por grupo COICOP**, porque não existe despesa aberta ao "
+                "nível do produto. Nenhum dos nove grupos é homogéneo: a taxa predefinida é a "
+                "**predominante**, nunca a única. O quadro seguinte diz, para cada grupo, o que "
+                "está na taxa reduzida e o que segue taxa diferente da predefinida."
+            )
+            for _cl in CLASSES:
+                _mapa = IVA_MAPA.get(_cl["cod"])
+                if not _mapa:
+                    continue
+                st.markdown(
+                    f"**{_cl['emoji']} {_cl['nome']}** — predefinida a "
+                    f"**{_cl['iva']} %**"
+                )
+                _linhas = []
+                for _t, _txt in _mapa["taxas"]:
+                    _marca = " ← predefinida" if _t == _cl["iva"] else ""
+                    _linhas.append(f"- **{_t} %**{_marca} · {_txt}")
+                if _mapa.get("nota"):
+                    _linhas.append(f"- *{_mapa['nota']}*")
+                st.markdown("\n".join(_linhas))
+            st.warning(
+                "**As parcelas não são quantificáveis com dados abertos.** Nenhuma fonte pública "
+                "reparte a despesa de cada grupo COICOP pelas taxas legais. Por isso a simulação "
+                "não pode ponderar as taxas dentro do grupo — e por isso os seus resultados são "
+                "ordens de grandeza condicionais à taxa que escolher, não estimativas de receita."
+            )
+            st.caption(f"Fonte: {IVA_MAPA_FONTE}. Levantamento de 10.08.2026.")
+
         # --- sensibilidade à base de cálculo ---
         _despesa_outra = despesa_do_agregado(
             float(outra_ancora["valor"]), dim_efetiva, adultos, criancas, escala_chave)
@@ -2835,8 +2901,17 @@ with aba5:
             )
 
             st.markdown("**2 · Atualização ao mês corrente**")
-            st.latex(r"\text{valor atual} = \text{valor do ano-base} \times \frac{I(m)}{\bar{I}(y)}")
-            st.caption("I(m) = índice do mês · Ī(y) = média anual do índice no ano-base")
+            st.latex(r"\text{valor atual} = \text{valor da base} \times "
+                     r"\frac{I(m)}{\bar{I}(R)}")
+            st.caption(
+                "I(m) = índice do mês · Ī(R) = média do índice no **período de referência** da "
+                "base. Nas Contas Nacionais esse período é o ano civil da despesa. No IDF **não "
+                "é um ano civil**: a recolha decorreu em 26 quinzenas seguidas, de fevereiro de "
+                "2022 a fevereiro de 2023, e o INE não corrige os valores para uma data comum "
+                "(Metainformação do IDF, V.6.1.1 e V.7.4). A média é por isso calculada sobre a "
+                "janela **fevereiro de 2022 a janeiro de 2023**. Indexar a partir do ano civil "
+                "de 2023 subestimava o valor atual em 21,05 €/mês — 8,3 %."
+            )
 
             st.markdown("**3 · Ajustamento à composição do agregado**")
             st.latex(r"\text{despesa do agregado} = \text{valor atual} \times \frac{eq(A,C)}{eq(\bar{s})}")
@@ -2872,6 +2947,16 @@ with aba5:
     fonte aberta que desce ao quintil de rendimento. Em contrapartida é **quinquenal**, pelo que a
     sua estrutura envelhece entre vagas. É o IHPC, revisto todos os anos, que garante que o
     movimento dos preços acompanha a substituição de produtos.
+
+    **O período de referência do IDF não é um ano civil.** A recolha decorreu entre **3 de
+    fevereiro de 2022 e 5 de fevereiro de 2023, em 26 quinzenas seguidas**, com cada agregado
+    inquirido ao longo de 14 dias; e o INE **não corrige os valores para uma data comum**
+    (Metainformação do IDF, V.6.1.1 e V.7.4 — «Ajustamentos dos dados: não aplicável»). Os valores
+    publicados são, portanto, uma média aos preços desses doze meses.
+
+    Por isso a atualização ao mês corrente parte da média do índice na janela **fevereiro de 2022
+    a janeiro de 2023**, e não de um ano civil. Não é um detalhe: indexar a partir de 2023
+    subestimava o valor atual em **21,05 €/mês**, cerca de 8,3 %.
             """)
 
             _cmp = comparar_ponderadores(dados["pesos"], dados["variacoes_classe"])
@@ -3151,7 +3236,7 @@ with aba5:
 
     | Parâmetro | Origem | Nota |
     |---|---|---|
-    | Taxas de IVA | Predefinidas, editáveis | Limitadas às do Código do IVA; correspondência ao grupo COICOP é aproximada |
+    | Taxas de IVA | Predefinidas, editáveis | Limitadas às do Código do IVA. A predefinida é a **predominante** do grupo, não a única: o levantamento das Listas I e II está no separador do IVA |
     | Adultos com rendimento | Parâmetro do utilizador | Multiplicador dos salários; as crianças não entram |
     | Repercussão | Parâmetro do utilizador | Hipótese de trabalho, não estimativa |
 

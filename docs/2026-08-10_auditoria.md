@@ -18,9 +18,15 @@ ligações de dados**, com confronto dos valores devolvidos contra a fonte.
 | 🟡 A corrigir | 6 | Rigor, rastreabilidade, robustez |
 | ⚪ A declarar | 4 | Pressupostos legítimos que devem estar explícitos |
 
-**Estado a 10.08.2026, fim do dia:** os três críticos — **A1, A2 e A3** — e os quatro importantes
-— **B1, B2, B3 e B4** — estão corrigidos e verificados em execução. Ver «Registo de aplicação» no
-fim do documento. Ficam em aberto os **dez itens 🟡/⚪**.
+**Estado a 10.08.2026, fim do dia:** corrigidos e verificados em execução os três críticos
+(**A1, A2, A3**), os quatro importantes (**B1, B2, B3, B4**), o **C1** e os pressupostos **D1** e
+**D2**. Ver «Registo de aplicação» no fim do documento. **Dez de dezassete fechados**; ficam
+**C2 … C6** e **D3, D4**.
+
+Os dois itens que dependiam de fontes externas — **C1** e **D1** — foram resolvidos com documentos
+fornecidos pela Inês: o *Boletim Económico* do Banco de Portugal de junho de 2026 e o documento
+metodológico do IDF. O **D1**, em particular, deixou de ser um pressuposto por confirmar e passou a
+ser um facto documentado, com efeito material no valor de topo da aplicação.
 
 ---
 
@@ -248,6 +254,8 @@ limpa: mostrar o de 12,0 % no cartão e reservar o das Contas Nacionais para o s
 
 ## 🟡 C1 · Afirmação sem fonte sobre o salário mínimo
 
+> ✅ **Corrigido a 10.08.2026.** Ver «Registo de aplicação», no fim.
+
 **Onde:** `app.py`, linha ~1196.
 
 > «cerca de **um quarto** dos trabalhadores portugueses aufere a remuneração mínima»
@@ -327,6 +335,9 @@ da linha.
 
 ## ⚪ D1 · O ano-base do IDF vale 25 €/mês e não está resolvido
 
+> ✅ **Resolvido a 10.08.2026**, com o documento metodológico do INE. Ver
+> «Registo de aplicação», no fim.
+
 `IDF_ANO_BASE = 2023`. O inquérito é o **IDF 2022/2023** e cobre os dois anos.
 
 | Ano-base | Índice médio | Fator | Âncora hoje |
@@ -347,6 +358,8 @@ Até lá, **declarar a sensibilidade na interface**.
 ---
 
 ## ⚪ D2 · O mapeamento IVA ↔ COICOP é o parâmetro menos verificado da aplicação
+
+> ✅ **Levantado e declarado a 10.08.2026.** Ver «Registo de aplicação», no fim.
 
 `src/config.py` atribui 6 % a sete classes e 23 % a «Açúcar e doces» e «Outros alimentos». O próprio
 comentário reconhece que «o Código do IVA classifica por produto (Lista I), não por classe COICOP:
@@ -411,9 +424,9 @@ Para que o âmbito da garantia fique claro:
 | 4 | ✅ **B3** lista do nível de preços | Custo nulo, remove risco de inversão de conclusão |
 | 5 | ✅ **B1 + B2** agregados e emparelhamento de anos | Têm de ser feitos juntos |
 | 6 | ✅ **B4** dois coeficientes de Engel | Incoerência visível ao leitor |
-| 7 | **C1 … C6** | Rigor e robustez |
-| 8 | **D1** ano-base do IDF | Depende de resposta do INE |
-| 9 | **D2** mapeamento do IVA | Trabalho de fundo, sem dependência externa |
+| 7 | ✅ **C1** · **C2 … C6** por fazer | Rigor e robustez |
+| 8 | ✅ **D1** ano-base do IDF | Resolvido com o documento metodológico do INE |
+| 9 | ✅ **D2** mapeamento do IVA | Trabalho de fundo, sem dependência externa |
 
 ---
 
@@ -613,9 +626,108 @@ entre países é válida porque todos entram pela mesma via.
 na constante do INE, cobre a ausência das Contas Nacionais (o intervalo colapsa num ponto) e
 verifica que a ordem dos extremos não é assumida.
 
+### C1 · Afirmação sobre o salário mínimo — 10.08.2026
+
+**Fonte fornecida:** Banco de Portugal, *Boletim Económico* de junho de 2026, **Caixa 5 — «A
+distribuição dos salários dos trabalhadores por conta de outrem»**, com base em microdados da
+Segurança Social.
+
+**Veredito: não confirma «um quarto dos trabalhadores».** A Caixa 5 não publica essa fração, e o
+próprio Boletim remete para outro documento quando se trata dos trabalhadores abrangidos pela RMMG
+(nota de rodapé 27: *Políticas em análise «A retribuição mínima mensal garantida em Portugal»*,
+Boletim de março de 2025). A frase foi **retirada**.
+
+**O que o documento dá em troca — e é mais forte.** Três factos citáveis, todos na Caixa 5:
+
+- **Índice de Kaitz de 91 % em 2025** (87 % em 2019): a RMMG equivale a 91 % do salário mediano do
+  setor privado;
+- **P50/P10 = 1,1**: a mediana está apenas 10 % acima do percentil 10;
+- **o segundo decil da distribuição salarial não tem observações distintas** em 2019, 2023 e 2025,
+  «refletindo a elevada concentração de trabalhadores em níveis salariais próximos do salário
+  mínimo nacional».
+
+Isto sustenta melhor o argumento do que a fração original: o cenário do salário mínimo não é um
+caso extremo, é um caso quase mediano. Acrescentou-se também o contraponto internacional — pelo
+*Structure of Earnings Survey*, o Kaitz português era de 69 % em 2024, **o mais elevado da área do
+euro**.
+
+**Ressalvas registadas na interface**, porque o universo não é o da aplicação: setor privado
+apenas (exclui a Administração Pública), vínculos a tempo completo com 30 dias declarados e
+remuneração igual ou superior a 80 % da RMMG.
+
+### D1 · Período de referência do IDF — 10.08.2026
+
+**Resolvido na fonte.** O documento metodológico do INE (Metainformação do IDF 2022/2023), que só
+existe em imagem e teve de ser lido página a página, responde em dois pontos:
+
+- **V.6.1.1, Períodos de recolha:** «O período de recolha decorrerá entre **3 de fevereiro de 2022
+  e 5 de fevereiro de 2023**, correspondendo a **26 quinzenas**. Os dados de cada agregado são
+  recolhidos ao longo de 14 dias.»
+- **V.7.4, Ajustamentos dos dados: «Não aplicável.»**
+
+O segundo ponto é o decisivo: o INE **não corrige os valores para uma data comum**. Os valores
+publicados são uma média aos preços dos doze meses de recolha — não de um ano civil, e muito menos
+de 2023.
+
+**Consequência, medida:**
+
+| Base de indexação | Valor mensal | |
+|---|---|---|
+| Ano civil de 2023 — o que a aplicação usava | 255,01 € | — |
+| Ano civil de 2022 | 280,46 € | +25,45 € |
+| **Janela de recolha, fev/2022 – jan/2023** | **276,06 €** | **+21,05 € (+8,3 %)** |
+
+A aplicação subestimava o valor de topo em **21,05 €/mês**. Nem 2022 nem 2023 eram a resposta
+certa: a resposta é a janela.
+
+**O que foi feito.** `IDF_ANO_BASE = 2023` foi substituído por `IDF_JANELA_RECOLHA =
+("2022-02", "2023-01")`, com a citação do documento metodológico em `config.py`.
+`_atualizar_por_indice` passa a aceitar um par de meses além de um ano, e a base do IDF passa a
+indexar pela média do índice nessa janela. A Metodologia explica a diferença e quantifica-a.
+
+O intervalo da âncora passa de «255,01 € a 650,25 €» para **«276,06 € a 650,25 €»**.
+
+### D2 · Correspondência IVA ↔ COICOP — 10.08.2026
+
+**Fonte fornecida:** texto integral da **Lista I** (taxa reduzida, 6 %) e da **Lista II** (taxa
+intermédia, 13 %) do Código do IVA.
+
+**O que o levantamento revelou.** Nenhuma das nove classes é homogénea, e há divergências concretas
+que a predefinição escondia:
+
+- **Óleos e gorduras** — a mais material. A classe está predefinida a 6 %, mas os **óleos vegetais
+  diretamente comestíveis** estão na Lista II a **13 %** (verba 1.5.3). É uma subcategoria inteira
+  à taxa intermédia.
+- **Peixe e marisco** — a Lista I refere «peixes e **moluscos**»; **não** refere crustáceos. Camarão,
+  lagosta e sapateira ficam a 23 %. E as **conservas de moluscos** estão na Lista II, a 13 %,
+  ao contrário dos moluscos frescos.
+- **Carne** — as **alheiras** têm verba própria na Lista II (13 %); a restante charcutaria fica a
+  23 %, porque a Lista I só cobre carne fresca ou congelada.
+- **Pão e cereais** — bolos, bolachas e massas recheadas ficam fora da Lista I; os flocos prensados
+  simples estão na Lista II.
+- **Açúcar e doces** — a verba do açúcar (1.10 da Lista I) está **revogada**; o mel mantém-se a 6 %.
+- **Outros alimentos** — a mais heterogénea: sal, produtos sem glúten e alimentos para lactentes a
+  6 %; refeições prontas a 13 %; molhos e especiarias a 23 %.
+
+**Decisão: declarar, não alterar as taxas.** As predefinições mantêm-se como taxa **predominante**
+de cada classe, porque é o que a decomposição permite — não existe despesa aberta ao nível do
+produto, e **nenhuma fonte pública reparte a despesa de cada classe pelas taxas legais**. Ponderar
+as taxas dentro da classe exigiria inventar essas parcelas.
+
+**O que foi feito.** Novo `IVA_MAPA` em `config.py`, com todas as taxas presentes em cada classe e
+a verba da Lista que as sustenta. Novo painel no separador do IVA que mostra o levantamento
+completo, assinala qual é a predefinida, e avisa que as parcelas não são quantificáveis. A tabela
+de parâmetros deixou de dizer apenas «a correspondência é aproximada».
+
+**Teste de regressão.** `test_mapa_do_iva_cobre_as_nove_classes_e_e_coerente` exige cobertura das
+nove classes, taxas que existam no Código do IVA, ordenação e ausência de repetições, e — o mais
+útil — que a taxa predefinida em `CLASSES` **conste** do levantamento. Sem isso, as duas fontes de
+verdade podiam divergir em silêncio. Este teste já apanhou uma incoerência na primeira versão da
+estrutura, que tratava como «exceção» aquilo que era o caso geral nas classes predefinidas a 23 %.
+
 ### Estado da bateria de testes
 
-42 testes passam (38 anteriores + 4 novos), em cerca de um segundo. `agregados_do_ano` foi colocada
+43 testes passam (38 anteriores + 5 novos), em cerca de um segundo. `agregados_do_ano` foi colocada
 em `src/calculos.py`, e não em `app.py`, para que o teste não tenha de importar a aplicação — o que
 disparava a recolha de dados e punha a bateria dependente da rede.
 

@@ -19,9 +19,10 @@ CINZENTO = "#171715"
 # --------------------------------------------------------------------------
 # Classes de produtos alimentares (COICOP 01.1)
 # --------------------------------------------------------------------------
-# `iva` é a taxa predefinida, editável na aplicação. O Código do IVA classifica
-# por produto (Lista I), não por classe COICOP: a correspondência é aproximada
-# e deve ser afinada antes de qualquer uso em decisão.
+# `iva` é a taxa **predominante** predefinida, editável na aplicação. O Código
+# do IVA classifica por produto — Listas I (6 %) e II (13 %) —, não por classe
+# COICOP. **Nenhuma das nove classes é homogénea**: ver `IVA_MAPA`, que assinala
+# o que dentro de cada uma segue taxa diferente da predefinida.
 CLASSES = [
     {"cod": "CP0111", "nome": "Pão e cereais",        "emoji": "🍞", "cor": "#C98B3A", "iva": 6},
     {"cod": "CP0112", "nome": "Carne",                "emoji": "🥩", "cor": "#C0392B", "iva": 6},
@@ -36,6 +37,121 @@ CLASSES = [
 
 CODIGOS = [c["cod"] for c in CLASSES]
 POR_CODIGO = {c["cod"]: c for c in CLASSES}
+
+# --------------------------------------------------------------------------
+# Correspondência COICOP ↔ Código do IVA
+# --------------------------------------------------------------------------
+# Levantamento feito sobre o texto das Listas I (taxa reduzida, 6 %) e II (taxa
+# intermédia, 13 %) do Código do IVA. Fecha a lacuna D2 da auditoria de
+# 10.08.2026: até aqui a aplicação limitava-se a dizer que a correspondência era
+# «aproximada», sem dizer em quê.
+#
+# A conclusão é que **a taxa predefinida é a predominante, nunca a única**.
+# O simulador continua a aplicar uma taxa por classe — é o que a decomposição
+# permite, porque não há despesa aberta ao nível do produto — mas quem o usa
+# tem de saber o que fica de fora. As parcelas não são quantificáveis com dados
+# abertos: nenhuma fonte pública reparte a despesa da classe por taxa legal.
+#
+# `taxas` enumera **todas** as taxas presentes na classe, com o que cai em cada
+# uma. A predefinida é assinalada pela aplicação a partir de `CLASSES`, e não
+# repetida aqui — repeti-la abria a porta a que as duas divergissem em silêncio.
+IVA_MAPA_FONTE = ("Código do IVA, Lista I (taxa reduzida) e Lista II "
+                  "(taxa intermédia)")
+
+IVA_MAPA = {
+    "CP0111": {
+        "taxas": [
+            (6, "Cereais, arroz, farinhas, massas não recheadas, pão; seitan, "
+                "tofu, tempeh e soja texturizada (Lista I, 1.1)"),
+            (13, "Flocos prensados simples de cereais e leguminosas sem adição "
+                 "de açúcar (Lista II, 1.12)"),
+            (23, "Bolos, bolachas, biscoitos e pastelaria; massas recheadas, "
+                 "expressamente excluídas da Lista I"),
+        ],
+    },
+    "CP0112": {
+        "taxas": [
+            (6, "Carnes e miudezas comestíveis, frescas ou congeladas, das "
+                "espécies bovina, suína, ovina, caprina, equídea, aves de "
+                "capoeira, coelho e caça (Lista I, 1.2)"),
+            (13, "Alheiras (Lista II, 1.3.3)"),
+            (23, "Restante charcutaria e enchidos — fiambre, presunto, "
+                 "chouriço, salsicha —, que a Lista I não abrange"),
+        ],
+    },
+    "CP0113": {
+        "taxas": [
+            (6, "Peixe fresco, refrigerado, congelado, seco ou salgado; "
+                "moluscos; conservas de peixe e molusco com teor superior a "
+                "50 % (Lista I, 1.3)"),
+            (13, "Conservas de moluscos (Lista II, 1.2.1)"),
+            (23, "**Crustáceos** — camarão, lagosta, sapateira: a Lista I "
+                 "refere «peixes e moluscos», não crustáceos. Também peixe "
+                 "fumado, espadarte, esturjão e salmão secos, salgados ou em "
+                 "conserva, caviar e pastas de atum, cavala e sardinha"),
+        ],
+    },
+    "CP0114": {
+        "taxas": [
+            (6, "Leite e lacticínios, queijos, iogurtes, ovos; bebidas e "
+                "iogurtes de base vegetal e substitutos de queijo à base de "
+                "frutos secos, cereais, frutas ou hortícolas (Lista I, 1.4)"),
+            (23, "Sobremesas lácteas e preparados que a Lista I não enumera"),
+        ],
+    },
+    "CP0115": {
+        "taxas": [
+            (6, "Azeite; banha e outras gorduras de porco (Lista I, 1.5). "
+                "Manteiga, margarina e creme vegetal para barrar "
+                "(Lista I, 1.4.3)"),
+            (13, "**Óleos vegetais diretamente comestíveis e suas misturas** — "
+                 "os óleos alimentares correntes (Lista II, 1.5.3)"),
+        ],
+        "nota": "É a divergência mais material das nove classes: uma "
+                "subcategoria inteira à taxa intermédia, numa classe "
+                "predefinida a 6 %.",
+    },
+    "CP0116": {
+        "taxas": [
+            (6, "Frutas no estado natural ou desidratadas, castanhas e frutos "
+                "vermelhos congelados (Lista I, 1.6.4)"),
+            (23, "Fruta em calda ou conserva; fruta congelada que não seja "
+                 "frutos vermelhos"),
+        ],
+    },
+    "CP0117": {
+        "taxas": [
+            (6, "Legumes e produtos hortícolas frescos, refrigerados, secos, "
+                "desidratados ou congelados, ainda que previamente cozidos; "
+                "leguminosas secas; algas (Lista I, 1.6)"),
+            (23, "Hortícolas transformados — batata frita de pacote e "
+                 "preparados similares"),
+        ],
+    },
+    "CP0118": {
+        "taxas": [
+            (6, "Mel de abelhas e mel de cana tradicional (Lista I, 1.8)"),
+            (23, "Açúcar — a verba 1.10 da Lista I foi **revogada** —, "
+                 "chocolate, confeitaria, compotas e gelados"),
+        ],
+        "nota": "Ao contrário das anteriores, esta classe está predefinida a "
+                "23 %: aqui a exceção é o mel.",
+    },
+    "CP0119": {
+        "taxas": [
+            (6, "Sal (Lista I, 1.9); produtos dietéticos para nutrição "
+                "entérica e produtos sem glúten para doentes celíacos "
+                "(Lista I, 1.12); alimentos para lactentes e crianças de pouca "
+                "idade, fins medicinais específicos e substitutos integrais da "
+                "dieta (Lista I, 1.14)"),
+            (13, "Refeições prontas a consumir, em pronto a comer e levar ou "
+                 "com entrega ao domicílio (Lista II, 1.8)"),
+            (23, "Molhos, especiarias, caldos, sopas e preparados vários"),
+        ],
+        "nota": "É a classe mais heterogénea das nove: tem produtos nas três "
+                "taxas. Predefinida a 23 %, a das especiarias e molhos.",
+    },
+}
 
 # Agregado alimentar (soma das nove classes)
 COICOP_ALIMENTAR = "CP011"
@@ -118,8 +234,31 @@ DIMENSAO_RECUO_FONTE = "Eurostat, ilc_lvph01 (EU-SILC), 2025"
 # A aplicação apresenta por isso o intervalo entre ambas e deixa o utilizador
 # escolher a base de trabalho. Ver docs/2026-08-07_levantamento_lacunas.md, §2.10.
 IDF_ALIMENTAR_ANUAL = 2872.0          # € por agregado e por ano, COICOP 01.1
-IDF_ANO_BASE = 2023                   # o IDF 2022/2023 é indexado a partir de 2023
 IDF_FONTE = "INE, IDF 2022/2023 (quadro Q.2.11.a)"
+
+# Período de referência do IDF 2022/2023, confirmado no documento metodológico
+# do INE (Metainformação IDF, V.6.1.1): «O período de recolha decorrerá entre
+# 3 de fevereiro de 2022 e 5 de fevereiro de 2023, correspondendo a 26
+# quinzenas. Os dados de cada agregado são recolhidos ao longo de 14 dias».
+#
+# Duas consequências, e ambas importam:
+#
+# 1. A recolha é **uniforme ao longo de doze meses** — 26 quinzenas seguidas —,
+#    não um instantâneo. O valor publicado é uma média desse período.
+# 2. O INE **não corrige os valores para uma data comum**: V.7.4, «Ajustamentos
+#    dos dados: Não aplicável». Ficam aos preços do momento em que cada
+#    agregado foi inquirido.
+#
+# Logo, a base de indexação não é um ano civil — é a janela de recolha. A
+# aplicação usava `IDF_ANO_BASE = 2023`, um pressuposto que ninguém tinha
+# confirmado e que subestimava o valor atual em 21,05 €/mês, 8,3 %
+# (auditoria de 10.08.2026, D1).
+#
+# Fevereiro de 2022 é o primeiro mês inteiro de recolha e janeiro de 2023 o
+# último: doze meses, que é exatamente a duração das 26 quinzenas.
+IDF_JANELA_RECOLHA = ("2022-02", "2023-01")
+IDF_JANELA_FONTE = ("INE, Metainformação do IDF 2022/2023, V.6.1.1 (período de "
+                    "recolha) e V.7.4 (sem ajustamento dos dados)")
 
 BASES_ANCORA = {
     "idf": {
