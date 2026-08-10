@@ -2094,6 +2094,45 @@ with aba5:
             "desenvolve estes pontos com as referências legais."
         )
 
+        with st.expander("🧭 O que é — e o que não é — «o cabaz»", expanded=True):
+            st.markdown("""
+    **Não existe um cabaz alimentar oficial em Portugal.** Existem pelo menos seis instrumentos,
+    com naturezas e finalidades diferentes, que o debate público tende a fundir num só. A primeira
+    utilidade desta ferramenta é não os confundir.
+            """)
+            st.markdown("""
+    | Instrumento | Entidade | Natureza | O que mede | Limitação crítica |
+    |---|---|---|---|---|
+    | **Cabaz essencial** (63 produtos) | DECO PROteste | Privado | Preço absoluto em euros de um cabaz de **composição fixa**, recolha semanal nas principais cadeias. Série desde 05.01.2022 | Composição fixa — não acompanha substituição; sem ponderação pelo consumo real; não abrange comércio tradicional; metodologia não plenamente pública |
+    | **IPC / IHPC**, classe COICOP 01 | INE / Eurostat | Oficial | **Variação** de preços, ponderada pela estrutura de despesa das famílias. Mensal | É índice, não nível: não responde a «quanto custa alimentar uma família». Média nacional |
+    | **Índice de supermercados online** | DECO PROteste | Privado | Índice **relativo** entre insígnias (base 100 = a mais barata), ~250 produtos, por concelho | Mede *dispersão entre insígnias*, não nível nem evolução. Só canal online. Ponderadores de 2015/2016 |
+    | **Observatório de Preços Agroalimentar** | GPP | Oficial | Preços de **39 produtos ao longo da cadeia** — da produção ao consumo — com margens por fileira | Cobertura limitada a 39 produtos e fileiras selecionadas; não mede o custo de um cabaz de consumo |
+    | **Cabaz de apoio alimentar** | PO APMC / DGS | Social | Composição definida por **critério nutricional** (Roda dos Alimentos), para distribuição em espécie | Não é instrumento de preços. É a única definição pública de cabaz com critério nutricional |
+    | **Cabaz «IVA zero»** (2023–24) | Governo / AT / ASAE | Administrativo | Lista taxativa de 46 tipologias com isenção temporária de IVA | Vigência encerrada. Critério nutricional/social, não estatístico. Ver o separador do simulador de IVA |
+            """)
+
+            st.markdown("**Onde se situa esta ferramenta**")
+            st.markdown("""
+    Esta aplicação **não é um sétimo cabaz** — não recolhe preços nem define uma lista de produtos.
+    É um **instrumento de repartição e enquadramento**: parte de uma âncora oficial de despesa
+    (IDF ou Contas Nacionais), reparte-a pelas nove classes COICOP e aplica a cada uma a variação
+    oficial do índice. Responde a «quanto pesa a alimentação no orçamento de quem, e quanto disso é
+    aumento de preço» — não a «quanto custa este cabaz hoje».
+
+    Daí decorre o que **não** pode fazer: não dá o preço de nenhum produto, não compara insígnias,
+    e não substitui a recolha da DECO como sinalizador semanal de preços no retalho.
+            """)
+
+            st.warning("""
+    **Ponto central para leitura pública.** O número que domina o noticiário — «o cabaz custa X
+    euros e atingiu novo máximo» — é o da DECO. É um indicador legítimo e útil enquanto
+    *sinalizador de tendência de preços no retalho alimentar*, mas **não é um indicador de custo de
+    vida nem de acessibilidade alimentar**. Um cabaz que sobe de preço não implica que as famílias
+    estejam a gastar mais em alimentação: podem estar a substituir produtos, a mudar de insígnia ou
+    a reduzir quantidades. Essa substituição é, ela própria, uma perda de bem-estar — e é
+    justamente o que um cabaz de composição fixa não consegue ver.
+            """)
+
         with st.expander("📘 O que é o IHPC — e porque não é o mesmo que o IPC"):
             st.markdown("""
     O **IHPC — Índice Harmonizado de Preços no Consumidor** é o índice de inflação construído

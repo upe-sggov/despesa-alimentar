@@ -643,6 +643,22 @@ mede; «cabaz» aparece só quando se fala dos cabazes **de outros**.
 A aplicação **não tem cabaz nenhum**: não conhece quantidades, não observa preços de produtos,
 não tem lista de artigos.
 
+### Os seis instrumentos, na interface
+
+Não existe um cabaz alimentar oficial em Portugal. Existem pelo menos **seis** instrumentos com
+naturezas diferentes — o cabaz de 63 produtos da DECO, o IPC/IHPC, o índice de supermercados
+online da DECO, o Observatório de Preços Agroalimentar do GPP, o cabaz de apoio alimentar do
+PO APMC e o cabaz «IVA zero» de 2023–24 — que o debate público tende a fundir num só.
+
+O quadro que os distingue está no separador **«Metodologia e fontes»**, aberto por defeito, e
+inclui o posicionamento explícito desta ferramenta: não é um sétimo cabaz, é um instrumento de
+repartição e enquadramento. Responde a «quanto pesa a alimentação no orçamento de quem, e quanto
+disso é aumento de preço» — não a «quanto custa este cabaz hoje».
+
+Entrega a linha de trabalho #1 da nota de enquadramento («O que é (e o que não é) o cabaz»), que
+até aqui existia apenas em prosa neste ficheiro e estava ausente da interface — onde faz falta,
+porque é a interface que vai ao Gabinete.
+
 ### Coerência do nome do repositório
 
 A aplicação chama-se **despesa alimentar**. Se o repositório e o endereço público ainda
