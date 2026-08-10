@@ -27,9 +27,45 @@ import pandas as pd
 from .config import (
     CLASSES, POR_CODIGO,
     ESCALAS_TESTE_COMPOSICAO, ESCALAS_TESTE_RACIO,
+    AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
     IDF_ALIMENTAR_QUINTIL, IDF_CLASSES_QUINTIL, IDF_DESPESA_TOTAL,
     IDF_PESO_ALIMENTAR, IDF_QUINTIS,
 )
+
+
+# --------------------------------------------------------------------------
+# Denominador da âncora
+# --------------------------------------------------------------------------
+def agregados_do_ano(serie: dict, ano) -> dict:
+    """
+    Número de agregados familiares a usar como denominador para um dado ano.
+
+    O denominador tem de ser do **mesmo ano do numerador**. A despesa das Contas
+    Nacionais é de 2022; dividi-la pelos agregados de 2025 dá um valor 9,1 %
+    mais baixo por razão nenhuma — a população de agregados cresceu, a despesa
+    não a acompanhou porque é de outro ano (auditoria de 10.08.2026, B2).
+
+    `serie` é um dicionário ano (texto) → número de agregados. Prefere o ano
+    pedido; se não existir, o mais próximo, declarando o desfasamento. Sem série
+    disponível, recorre aos Censos.
+
+    Devolve `{valor, ano, fonte, desfasamento}` — `desfasamento` em anos, para
+    que a interface o possa mostrar.
+    """
+    alvo = str(ano) if ano is not None else None
+
+    if serie and alvo:
+        fonte = "Eurostat / Inquérito ao Emprego (EU-LFS)"
+        if alvo in serie:
+            return {"valor": serie[alvo], "ano": alvo, "fonte": fonte,
+                    "desfasamento": 0}
+        proximo = min(serie, key=lambda a: abs(int(a) - int(alvo)))
+        return {"valor": serie[proximo], "ano": proximo, "fonte": fonte,
+                "desfasamento": abs(int(proximo) - int(alvo))}
+
+    desfasamento = abs(AGREGADOS_ANO - int(alvo)) if alvo else None
+    return {"valor": AGREGADOS_CENSOS, "ano": str(AGREGADOS_ANO),
+            "fonte": AGREGADOS_FONTE, "desfasamento": desfasamento}
 
 
 # --------------------------------------------------------------------------

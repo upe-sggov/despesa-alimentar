@@ -270,11 +270,25 @@ def numero_agregados(desde_ano: int) -> tuple[pd.DataFrame, str]:
 
     Complementa o valor censitário: é anual, ao passo que os Censos são decenais.
     Se não estiver disponível, a aplicação recorre ao valor dos Censos.
+
+    Dimensões: ``freq.agechild.n_child.phhcomp.unit.geo``, unidade ``THS_HH``
+    (milhares de agregados). A chave anterior — ``A.THS.TOTAL.TOTAL.PT`` — não
+    correspondia a esta estrutura: a via SDMX falhava e a alternativa devolvia
+    uma fatia arbitrária de 443,5 mil agregados, um décimo do valor real. Só
+    não contaminou a aplicação porque a verificação de plausibilidade em
+    `app.py` a rejeitava — o que, por sua vez, tornava esta função inútil
+    (auditoria de 10.08.2026, B1).
+
+    **Não é o mesmo universo dos Censos.** O EU-LFS é um inquérito por amostra e
+    exclui os alojamentos coletivos; lê sistematicamente abaixo do recenseamento
+    exaustivo. Em 2021, ano em que ambos existem: 3 939,9 mil contra 4 149 096
+    dos Censos, menos 5,0 %. Trocar de fonte muda o nível, mesmo no mesmo ano.
     """
     return obter(
         "lfst_hhnhtych",
-        "A.THS.TOTAL.TOTAL.PT",
-        {"freq": "A", "geo": "PT", "sinceTimePeriod": str(desde_ano)},
+        "A.TOTAL.TOTAL.TOTAL.THS_HH.PT",
+        {"freq": "A", "agechild": "TOTAL", "n_child": "TOTAL", "phhcomp": "TOTAL",
+         "unit": "THS_HH", "geo": "PT", "sinceTimePeriod": str(desde_ano)},
         inicio=str(desde_ano),
     )
 

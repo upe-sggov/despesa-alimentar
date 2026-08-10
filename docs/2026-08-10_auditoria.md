@@ -18,9 +18,9 @@ ligações de dados**, com confronto dos valores devolvidos contra a fonte.
 | 🟡 A corrigir | 6 | Rigor, rastreabilidade, robustez |
 | ⚪ A declarar | 4 | Pressupostos legítimos que devem estar explícitos |
 
-**Estado a 10.08.2026, fim do dia:** os três críticos — **A1, A2 e A3** — e o **B3** estão
-corrigidos e verificados em execução. Ver «Registo de aplicação» no fim do documento. Os restantes
-treze mantêm-se em aberto.
+**Estado a 10.08.2026, fim do dia:** os três críticos — **A1, A2 e A3** — e os importantes **B1,
+B2 e B3** estão corrigidos e verificados em execução. Ver «Registo de aplicação» no fim do
+documento. Ficam em aberto **B4** e os onze itens 🟡/⚪.
 
 ---
 
@@ -148,6 +148,8 @@ não desta.
 
 ## 🟠 B1 · O número de agregados vem de uma série errada (salvo por uma guarda)
 
+> ✅ **Corrigido a 10.08.2026, em conjunto com B2.** Ver «Registo de aplicação», no fim.
+
 **Onde:** `src/eurostat.py`, `numero_agregados()`, linha ~255.
 
 **O que se passa.** A chave `A.THS.TOTAL.TOTAL.PT` não corresponde à estrutura do conjunto
@@ -172,6 +174,8 @@ Censos.
 ---
 
 ## 🟠 B2 · Numerador e denominador da âncora são de anos diferentes
+
+> ✅ **Corrigido a 10.08.2026, em conjunto com B1.** Ver «Registo de aplicação», no fim.
 
 **Onde:** `app.py`, `ancora_oficial()`.
 
@@ -403,7 +407,7 @@ Para que o âmbito da garantia fique claro:
 | 2 | ✅ **A2** rótulo do salário mínimo | Erro factual, correção de texto, custo nulo |
 | 3 | ✅ **A3** extrapolação agregada | Número errado num ecrã que fala de milhões de euros |
 | 4 | ✅ **B3** lista do nível de preços | Custo nulo, remove risco de inversão de conclusão |
-| 5 | **B1 + B2** agregados e emparelhamento de anos | Têm de ser feitos juntos |
+| 5 | ✅ **B1 + B2** agregados e emparelhamento de anos | Têm de ser feitos juntos |
 | 6 | **B4** dois coeficientes de Engel | Incoerência visível ao leitor |
 | 7 | **C1 … C6** | Rigor e robustez |
 | 8 | **D1** ano-base do IDF | Depende de resposta do INE |
@@ -503,10 +507,72 @@ hortícolas, açúcar, outros), que correspondem quase um a um às nove classes 
 aplicação. Abre a possibilidade de comparar o nível de preços **por classe** entre países, e não
 só o agregado alimentar. Fica registado como hipótese de trabalho — não foi implementado.
 
+### B1 + B2 · Agregados e emparelhamento de anos — 10.08.2026
+
+**Confirmação da fonte.** Dimensões reais do `lfst_hhnhtych`:
+`freq.agechild.n_child.phhcomp.unit.geo`, unidade `THS_HH`. A chave corrigida devolve a série
+completa:
+
+| Ano | Agregados | | Ano | Agregados |
+|---|---|---|---|---|
+| 2018 | 4 182 600 | | 2022 | 4 102 600 |
+| 2019 | 4 200 200 | | 2023 | 4 382 000 |
+| 2020 | 4 122 200 | | 2024 | 4 473 300 |
+| 2021 | 3 939 900 | | 2025 | 4 562 100 |
+
+**Descoberta que muda a leitura do B1.** O EU-LFS **não mede o mesmo universo dos Censos**. É um
+inquérito por amostra e exclui alojamentos coletivos. Em 2021, ano em que ambos existem:
+**3 939 900** contra **4 149 096** — menos **5,0 %**. Trocar de fonte muda o nível mesmo no mesmo
+ano; não é só uma questão de atualidade. Fica declarado na Metodologia.
+
+**A razão de B1 e B2 andarem juntos, medida.** Com a despesa das Contas Nacionais de 2022
+(27 318 M€):
+
+| Denominador | Valor mensal | Efeito |
+|---|---|---|
+| Censos 2021 (o que estava) | 548,68 € | referência |
+| **EU-LFS 2022 (emparelhado)** | **554,90 €** | **+1,1 %** |
+| EU-LFS 2025 (só B1, sem B2) | 499,01 € | **−9,1 %** ⚠️ |
+
+Corrigir B1 sozinho teria baixado a âncora 9,1 % **por razão nenhuma** — os agregados cresceram,
+a despesa não os acompanhou porque é de outro ano. Teria parecido uma melhoria de rigor.
+
+**A causa de fundo: um número a servir dois usos.** Havia um único valor de agregados, e os dois
+usos pedem anos diferentes:
+
+- **Denominador da âncora** → o ano da despesa (2022), porque numerador e denominador têm de ser
+  contemporâneos;
+- **Extrapolação nacional do simulador de IVA** → o ano mais recente (2025), porque o que se
+  extrapola é o efeito de uma medida sobre o país de hoje.
+
+**O que foi feito.** `numero_agregados()` com a chave e os filtros certos. `carregar_dados` guarda
+a **série inteira** (`agregados_serie`), com a verificação de plausibilidade aplicada observação a
+observação em vez de só à última. Nova função pura `calculos.agregados_do_ano(serie, ano)`, que
+prefere o ano pedido, recorre ao mais próximo declarando o desfasamento, e cai nos Censos se não
+houver série. `ancora_oficial()` usa-a para a base das Contas Nacionais e devolve a proveniência do
+denominador, que a interface passa a mostrar.
+
+**Efeito no que se vê.** Âncora das Contas Nacionais: 650,25 €/mês (antes 642,98 €). Poupança
+agregada do simulador nessa base: 984,2 M€ (antes 885,1 M€) — a subida vem do multiplicador
+correto, 4 562 100 em vez de 4 149 096. A base IDF não é afetada: não passa por divisão nenhuma.
+
+**Declarações acrescentadas à interface.** A idade da base ficou visível na barra lateral («Base de
+2022 — 4 anos de atraso; os preços estão atualizados, a estrutura de consumo não»), o denominador
+e o seu ano aparecem em «De onde vem este valor», e a legenda da extrapolação explica porque usa um
+número de agregados diferente do da âncora. Antes, a idade da base só constava do registo de
+ligações.
+
+**Teste de regressão.** `test_denominador_da_ancora_emparelha_o_ano_da_despesa` cobre os três
+caminhos — ano presente, ano ausente com desfasamento declarado, ausência de série — e verifica que
+o emparelhamento **importa**, exigindo mais de 8 % de diferença entre as duas escolhas.
+
 ### Estado da bateria de testes
 
-40 testes passam (38 anteriores + 2 novos). A aplicação renderiza sem exceções nas duas âncoras e
-nos dois caminhos do nível de preços.
+41 testes passam (38 anteriores + 3 novos), em cerca de um segundo. `agregados_do_ano` foi colocada
+em `src/calculos.py`, e não em `app.py`, para que o teste não tenha de importar a aplicação — o que
+disparava a recolha de dados e punha a bateria dependente da rede.
+
+A aplicação renderiza sem exceções nas duas âncoras e nos dois caminhos do nível de preços.
 
 ---
 

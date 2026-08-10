@@ -16,12 +16,13 @@ import streamlit as st
 from pathlib import Path
 
 from src import eurostat, observatorio
-from src.calculos import (ESCALAS, cabaz_quintis, comparar_ponderadores,
+from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
+                          comparar_ponderadores,
                           composicao_quintis, decompor, despesa_do_agregado,
                           escala_mais_proxima, indices_comparados,
                           intervalo_agregado, resumo_decomposicao, resumo_iva,
                           simular_iva, testar_escalas, unidades_equivalentes)
-from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
+from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         BASE_POR_DEFEITO, BASES_ANCORA, COD_AGREGADOS,
                         DIMENSAO_RECUO, DIMENSAO_RECUO_FONTE,
                         ESCALAS_TESTE_FONTE, ESCALAS_TESTE_INTERVALO, ESCALAS_TESTE_RACIO,
@@ -289,23 +290,38 @@ def carregar_dados(anos_historico: int = 6):
         recente = desp_df.sort_values("time").iloc[-1]
         despesa_ano, despesa_valor = str(recente["time"]), float(recente["valor"])
 
-    # --- número de agregados: preferir o valor anual do Eurostat ---
-    agregados_valor, agregados_ano, agregados_fonte = None, None, None
+    # --- número de agregados: preferir os valores anuais do Eurostat ---
+    # Guarda-se a **série inteira**, não só o ano mais recente, porque os dois
+    # usos do número de agregados pedem anos diferentes: o denominador da âncora
+    # das Contas Nacionais tem de ser do ano da despesa (2022), e a extrapolação
+    # nacional do simulador de IVA tem de ser do ano mais recente. Antes havia
+    # um único valor a servir os dois (auditoria de 10.08.2026, B2).
+    #
+    # Verificação de plausibilidade, aplicada observação a observação: um valor
+    # fora deste intervalo indica que o conjunto devolvido não é o esperado
+    # (dimensão errada, unidade errada, série trocada). Nesse caso recorre-se ao
+    # valor censitário, que é seguro.
+    agregados_serie: dict[str, int] = {}
+    rejeitados = []
     if not agr_df.empty:
-        rec_a = agr_df.sort_values("time").iloc[-1]
-        candidato = int(round(float(rec_a["valor"]) * 1000))          # vem em milhares
-        # Verificação de plausibilidade: um valor fora deste intervalo indica que
-        # o conjunto devolvido não é o esperado (dimensão errada, unidade errada,
-        # série trocada). Nesse caso recorre-se ao valor censitário, que é seguro.
-        if 3_000_000 <= candidato <= 6_500_000:
-            agregados_valor = candidato
-            agregados_ano = str(rec_a["time"])
-            agregados_fonte = "Eurostat / Inquérito ao Emprego (EU-LFS)"
-        else:
-            registo.append(
-                ("N.º de agregados — verificação",
-                 f"valor implausível ({candidato:,}); usado o dos Censos".replace(",", " "), 0)
-            )
+        for _, linha in agr_df.sort_values("time").iterrows():
+            candidato = int(round(float(linha["valor"]) * 1000))      # vem em milhares
+            if 3_000_000 <= candidato <= 6_500_000:
+                agregados_serie[str(linha["time"])] = candidato
+            else:
+                rejeitados.append(candidato)
+    if rejeitados:
+        registo.append(
+            ("N.º de agregados — verificação",
+             f"{len(rejeitados)} valor(es) implausível(eis), o primeiro "
+             f"{rejeitados[0]:,}; ignorados".replace(",", " "), 0)
+        )
+
+    agregados_valor, agregados_ano, agregados_fonte = None, None, None
+    if agregados_serie:
+        agregados_ano = max(agregados_serie)
+        agregados_valor = agregados_serie[agregados_ano]
+        agregados_fonte = "Eurostat / Inquérito ao Emprego (EU-LFS)"
 
     dimensao_media, dimensao_ano = None, None
     if not dim_df.empty:
@@ -367,6 +383,7 @@ def carregar_dados(anos_historico: int = 6):
         "agregados_valor": agregados_valor,
         "agregados_ano": agregados_ano,
         "agregados_fonte": agregados_fonte,
+        "agregados_serie": agregados_serie,
         "base_indice": (base_indice if not indice_df.empty else None),
         "dimensao_media": dimensao_media,
         "dimensao_ano": dimensao_ano,
@@ -425,12 +442,18 @@ def ancora_oficial(dados: dict, agregados: int) -> dict | None:
     bases = {}
 
     # --- Contas Nacionais: agregado macroeconómico ÷ agregados ÷ 12 ---
+    # O denominador é o do **ano da despesa**, não o mais recente: ver
+    # `agregados_do_ano`. O `agregados` recebido serve os outros usos da
+    # aplicação — a extrapolação nacional do simulador —, que pedem o ano
+    # corrente e não este.
     ano_cn = dados["despesa_ano"]
-    mensal_cn = dados["despesa_milhoes"] * 1e6 / agregados / 12
+    denominador = agregados_do_ano(dados.get("agregados_serie") or {}, ano_cn)
+    mensal_cn = dados["despesa_milhoes"] * 1e6 / denominador["valor"] / 12
     valor_cn, mes, fator_cn = _atualizar_por_indice(mensal_cn, ano_cn, indice)
     bases["contas"] = {
         "valor": valor_cn, "base_mensal": mensal_cn, "ano_base": ano_cn,
         "fator": fator_cn, "plausivel": 50.0 <= valor_cn <= 3000.0,
+        "denominador": denominador,
         **BASES_ANCORA["contas"],
     }
 
@@ -632,7 +655,11 @@ ultimo_mes = dados["mes_variacoes"] or (
 with st.sidebar:
     st.markdown("### 🛒 Parâmetros")
 
-    # --- número de agregados: sempre o valor oficial ---
+    # --- número de agregados: sempre o valor oficial, no ano mais recente ---
+    # Este é o valor usado para **extrapolar para o país** (simulador de IVA):
+    # aí interessa quantos agregados existem hoje. O denominador da âncora das
+    # Contas Nacionais é outro — o do ano da despesa —, calculado em
+    # `agregados_do_ano` (auditoria de 10.08.2026, B2).
     if dados.get("agregados_valor"):
         agregados = int(dados["agregados_valor"])
         agr_fonte = f"{dados['agregados_fonte']}, {dados['agregados_ano']}"
@@ -673,6 +700,17 @@ with st.sidebar:
         f"{euro(ancora['maximo'])}** por mês, para o agregado médio. "
         f"O ponto central não é determinável."
     )
+
+    # A idade da base tem de estar à vista, não só no registo de ligações: a
+    # despesa é atualizada por preços, mas a estrutura de consumo é a do ano de
+    # referência (auditoria de 10.08.2026, B2).
+    _idade_base = date.today().year - int(base_ancora["ano_base"])
+    if _idade_base >= 2:
+        st.caption(
+            f"⏳ Base de **{base_ancora['ano_base']}** — {_idade_base} anos de atraso. "
+            "Os preços estão atualizados ao mês corrente; a **estrutura de consumo** "
+            f"é a de {base_ancora['ano_base']}."
+        )
 
     if not base_ancora.get("plausivel", True):
         st.error(
@@ -776,12 +814,15 @@ está **{'acima' if maior_que_media else 'abaixo'}** dela.
 
     _agr_txt = f"{agregados:,}".replace(",", "\u00a0")
     _mes_txt = mes_pt(ancora["mes"]) if ancora["mes"] else "—"
+    _den = base_ancora.get("denominador")
     with st.expander("De onde vem este valor"):
         if base_chave == "contas":
+            _den_txt = f"{_den['valor']:,}".replace(",", " ") if _den else _agr_txt
             _proveniencia = (
                 "Da **despesa alimentar de todas as famílias portuguesas** registada nas Contas "
-                f"Nacionais, dividida pelo número de agregados ({_agr_txt}), atualizada ao mês "
-                "corrente pelo índice oficial de preços e ajustada à composição indicada acima."
+                f"Nacionais, dividida pelo número de agregados desse mesmo ano ({_den_txt} em "
+                f"{_den['ano'] if _den else '—'}), atualizada ao mês corrente pelo índice oficial "
+                "de preços e ajustada à composição indicada acima."
             )
         else:
             _proveniencia = (
@@ -790,10 +831,19 @@ está **{'acima' if maior_que_media else 'abaixo'}** dela.
                 "ajustada à composição indicada acima. Não passa por divisão de nenhum agregado "
                 "macroeconómico: é medição direta."
             )
+        if base_chave == "contas" and _den:
+            _linha_agr = (f"**Denominador:** {_den['fonte']}, {_den['ano']} — "
+                          "o mesmo ano da despesa")
+            if _den["desfasamento"]:
+                _linha_agr = (f"**Denominador:** {_den['fonte']}, {_den['ano']} — "
+                              f"⚠️ **{_den['desfasamento']} ano(s) de desfasamento** face à "
+                              f"despesa, que é de {base_ancora['ano_base']}")
+        else:
+            _linha_agr = f"**N.º de agregados:** {agr_fonte}"
         st.markdown(
             _proveniencia + "\n\n"
-            f"**N.º de agregados:** {agr_fonte}  \n"
-            f"**Base de despesa:** {base_ancora['nome']} ({base_ancora['ano_base']}), "
+            + _linha_agr + "  \n"
+            + f"**Base de despesa:** {base_ancora['nome']} ({base_ancora['ano_base']}), "
             f"a preços de {_mes_txt}  \n"
             f"**Fonte:** {base_ancora['fonte']}\n\n"
             f"*{base_ancora['porque']}*\n\n"
@@ -1517,7 +1567,7 @@ que não há nada a descontar nem a acrescentar.
         with e1.expander("🧮 Como é calculado"):
             st.markdown("""
     **1 ·** Das Contas Nacionais vem a despesa anual de todas as famílias em produtos
-    alimentares. Divide-se pelo número de agregados e por doze.
+    alimentares. Divide-se pelo número de agregados **desse mesmo ano** e por doze.
 
     **2 ·** O valor é trazido ao mês corrente pelo índice oficial de preços.
 
@@ -2269,7 +2319,10 @@ with aba3:
         st.markdown("#### Ordens de grandeza a nível agregado")
         st.caption(
             f"Extrapolação para **{agregados:,}".replace(",", "\u00a0")
-            + "** agregados — o mesmo valor usado em toda a aplicação (ver barra lateral). "
+            + f"** agregados — o total mais recente ({dados.get('agregados_ano') or '—'}), "
+            + "porque o que se extrapola é o efeito de uma medida sobre o país de hoje. "
+            + "É por isso um número diferente do denominador da âncora das Contas Nacionais, "
+            + "que tem de ser o do ano da despesa. "
             + f"Parte do **agregado médio** ({euro(media_agregado)}/mês), não da composição "
             + "escolhida na barra lateral: multiplicar uma despesa já ajustada a uma composição "
             + "específica pelo total nacional contaria o país inteiro como se fosse todo "
@@ -3048,7 +3101,7 @@ with aba5:
     | Variação homóloga | [`prc_hicp_manr`](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_manr/default/table) | Subida face ao mesmo mês do ano anterior (%) | Mensal |
     | Despesa alimentar (âncora) | [`nama_10_co3_p3`](https://ec.europa.eu/eurostat/databrowser/view/nama_10_co3_p3/default/table) | Despesa efetiva em euros (Contas Nacionais) | Anual |
     | Dimensão do agregado | [`ilc_lvph01`](https://ec.europa.eu/eurostat/databrowser/view/ilc_lvph01/default/table) | N.º médio de pessoas por agregado | Anual |
-    | N.º de agregados | [`lfst_hhnhtych`](https://ec.europa.eu/eurostat/databrowser/view/lfst_hhnhtych/default/table) | Total de agregados familiares (milhares) | Anual |
+    | N.º de agregados | [`lfst_hhnhtych`](https://ec.europa.eu/eurostat/databrowser/view/lfst_hhnhtych/default/table) | Total de agregados familiares (milhares), série anual | Anual |
     | Nível de preços comparado | [`prc_ppp_ind_1`](https://ec.europa.eu/eurostat/databrowser/view/prc_ppp_ind_1/default/table) | Quão caros são os alimentos, categoria `A010101` (UE-27 = 100) | Anual |
     | Rendimento das famílias | [`ilc_di03`](https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table) | Rendimento líquido equivalente, médio e mediano | Anual |
     | Salário médio | [`nama_10_a10`](https://ec.europa.eu/eurostat/databrowser/view/nama_10_a10/default/table) ÷ `nama_10_a10_e` | Remuneração média **bruta** dos trabalhadores por conta de outrem | Anual |
@@ -3062,9 +3115,20 @@ with aba5:
     | Adultos com rendimento | Parâmetro do utilizador | Multiplicador dos salários; as crianças não entram |
     | Repercussão | Parâmetro do utilizador | Hipótese de trabalho, não estimativa |
 
+    **Dois números de agregados, para dois usos diferentes.** O denominador da âncora das Contas
+    Nacionais é o número de agregados **do ano da despesa** — hoje 2022. A extrapolação nacional do
+    simulador de IVA usa o **ano mais recente**, porque o que se extrapola é o efeito de uma medida
+    sobre o país de hoje. Dividir uma despesa de 2022 pelos agregados de 2025 baixaria a âncora
+    9,1 % por razão nenhuma: os agregados cresceram, a despesa não os acompanhou porque é de outro
+    ano.
+
     **Recuo do n.º de agregados:** se o conjunto anual do Eurostat não estiver disponível ou
     devolver um valor implausível, a aplicação usa o valor censitário — **4 149 096** agregados
     domésticos privados ([INE, Censos 2021](https://www.ine.pt)).
+
+    As duas fontes não medem o mesmo universo: o Inquérito ao Emprego é uma amostra e exclui
+    alojamentos coletivos, pelo que lê sistematicamente abaixo do recenseamento exaustivo. Em 2021,
+    ano em que ambos existem, **3 939 900** contra **4 149 096** — menos 5,0 %.
             """)
             st.info(
                 "**Sobre os ponderadores.** Somam 1 000 ‰ sobre **todo** o cabaz do índice — não "

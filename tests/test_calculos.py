@@ -194,6 +194,42 @@ def test_vies_do_agregado_medio_e_sistematico():
     assert racios[0] > 1.0                        # e no sentido de subestimação
 
 
+def test_denominador_da_ancora_emparelha_o_ano_da_despesa():
+    """
+    A despesa das Contas Nacionais é de 2022. Dividi-la pelos agregados de 2025
+    dá um valor 9,1 % mais baixo por razão nenhuma: a população de agregados
+    cresceu, a despesa não a acompanhou porque é de outro ano. O denominador
+    tem de ser do ano do numerador. Auditoria de 10.08.2026, B2.
+    """
+    from src.calculos import agregados_do_ano
+    from src.config import AGREGADOS_CENSOS
+
+    serie = {"2021": 3_939_900, "2022": 4_102_600,
+             "2024": 4_473_300, "2025": 4_562_100}
+
+    # ano presente na série: usa-o, sem desfasamento
+    r = agregados_do_ano(serie, "2022")
+    assert r["valor"] == 4_102_600
+    assert r["desfasamento"] == 0
+    assert r["ano"] == "2022"
+
+    # ano ausente: o mais próximo, com o desfasamento declarado
+    r = agregados_do_ano(serie, "2023")
+    assert r["desfasamento"] == 1
+    assert r["valor"] in (4_102_600, 4_473_300)
+
+    # sem série: recorre aos Censos e continua a declarar o desfasamento
+    r = agregados_do_ano({}, "2022")
+    assert r["valor"] == AGREGADOS_CENSOS
+    assert r["desfasamento"] == 1
+
+    # e o emparelhamento tem mesmo de importar — senão o teste não prova nada
+    milhoes = 27_318.0
+    emparelhado = milhoes * 1e6 / serie["2022"] / 12
+    mais_recente = milhoes * 1e6 / serie["2025"] / 12
+    assert abs(mais_recente / emparelhado - 1) > 0.08
+
+
 def test_candidatas_do_nivel_de_precos_sao_todas_alimentares():
     """
     A aplicação usa a primeira categoria que responda. Se uma reserva não
