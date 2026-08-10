@@ -227,10 +227,14 @@ dois em dois dias.
 
 1. **O eixo 6 fica respondido**, e negativamente. Se se quiser *scanner data*, é matéria a propor
    ao INE, não a verificar.
-2. **A limitação 8 da app pode ser afinada com fonte.** Hoje diz que o IHPC não capta «integralmente»
-   descontos de cartão e talão. O critério real é mais preciso: descontos **de aplicação
-   generalizada** entram; os condicionais — cartão de fidelização, talão, cupão — não. A app pode
-   passar a citar o critério em vez de o aproximar.
+2. ~~**A limitação 8 da app pode ser afinada com fonte.**~~ ✅ **Feito em 08.08.2026.** Dizia que o
+   IHPC não capta «integralmente» descontos de cartão e talão — formulação que sugere falha de
+   recolha. O critério real é uma **regra**: descontos **de aplicação generalizada** entram; os
+   condicionais — cartão de fidelização, talão, cupão — são excluídos por definição. A app e o
+   README passam a citar o critério, com a consequência que dele decorre e que não estava dita:
+   como a difusão dos programas de fidelização aumenta ao longo do tempo, **o índice tende a
+   sobrestimar ligeiramente a aceleração do preço efetivamente pago**. O sentido do enviesamento é
+   conhecido; a magnitude não é mensurável sem dados de transação.
 
 ### 2.8 Número de agregados — confirmação do divisor
 
@@ -850,8 +854,8 @@ implementação — nada depende já de dados externos.
 3. ~~**Quadro dos seis instrumentos** na aba «Metodologia e fontes»~~ — ✅ **feito em 08.08.2026**.
    Entrega a linha #1 (Alta). Inclui o posicionamento explícito da própria ferramenta, que não é um
    sétimo cabaz, e o aviso de leitura pública sobre o número da DECO.
-4. **Afinar a limitação 8** com o critério do documento metodológico (§2.7) — correção de rigor,
-   custo nulo.
+4. ~~**Afinar a limitação 8** com o critério do documento metodológico (§2.7)~~ — ✅ **feito em
+   08.08.2026**, na app e no README, com o sentido do enviesamento explicitado.
 5. **Törnqvist ao nível das classes** — sem dados novos, demonstra o viés de substituição.
 6. **Escalas de equivalência**: passar a ressalva de qualitativa a quantificada — a escala subestima
    o custo alimentar em cerca de 10 % (§2.13).
@@ -892,6 +896,7 @@ implementação — nada depende já de dados externos.
 | 8 | `tests/test_calculos.py`: 7 testes novos sobre os quintis e a comparação de ponderadores | ✅ |
 | 9 | `README.md`: secções «As duas bases de ponderação» e «Cabaz por quintil de rendimento» | ✅ |
 | 10 | `app.py`, aba 5: quadro dos seis instrumentos «O que é — e o que não é — o cabaz», aberto por defeito, com o posicionamento da própria ferramenta e o aviso de leitura pública | ✅ |
+| 11 | `app.py` e `README.md`: limitação sobre preço de prateleira reescrita com o critério citado do DMet_IPC e o sentido do enviesamento (§2.7) | ✅ |
 
 **Verificação:** 22 testes passam; render completo da aplicação sem exceções nem erros de ecrã,
 nas duas bases de âncora; os valores do IDF fecham com os totais publicados a menos de 1 €/ano de
@@ -909,6 +914,8 @@ corrigir erros deste tipo assim que sejam detetados.
 |---|---|---|---|---|
 | 1 | §1.3, cartão «Onde está a pressão» | Que o impacto regressivo decorre de a subida se concentrar em bens com maior peso na base da distribuição | Que o impacto **é regressivo por via da exposição orçamental** (14,8 % contra 9,1 %), e não de uma inflação mais alta na base | §2.16 — a inflação por quintil varia 0,18 p.p. e é mais alta no quintil mais rico |
 | 2 | §1.1, quadro dos instrumentos | Observatório de Preços com **26 produtos** | **39 produtos**, com séries que recuam a janeiro de 2022 | §2.15 — extração direta do portal em 07.08.2026 |
+| 3 | §1.1 e §1.4, linhas da ASAE | Recolha em **«1 220 lojas, físicas e online»** | Referência **retirada**, sem substituição | §5.C — não confirmável em fonte pública; decisão do Gabinete de 08.08.2026 |
+| 4 | §1.4, linha da ASAE | **«Monitorização própria de um cabaz desde janeiro de 2022»** | Referência **retirada**; mantém-se a monitorização documentada do cabaz IVA zero de 2023–24 | §5.C — a série própria não tem suporte público |
 
 **Sobre a correção 1.** A conclusão da nota estava certa; o mecanismo invocado é que não estava.
 A distinção não é académica: se a regressividade viesse da composição do cabaz, uma medida dirigida
@@ -921,10 +928,21 @@ O argumento da nota sobre elasticidade e renúncia na base da distribuição foi
 reposicionado: é uma perda de bem-estar que o índice de preços não capta, não uma explicação para
 uma inflação medida mais alta. São coisas diferentes e a nota fundia-as.
 
-**Fica por resolver.** Duas afirmações identificadas em §5.C — as «1 220 lojas» da ASAE e a série
-própria de monitorização da ASAE — continuam na nota. Não são corrigíveis por substituição, porque
-não há valor alternativo em fonte pública: exigem supressão ou reformulação com o Gabinete. Ver
-§5.C.
+**Sobre as correções 3 e 4.** Foram supressões, não substituições — não existe valor alternativo em
+fonte pública. O único dado de dimensão que a ASAE publica é de outra natureza e não é
+substituível: 22 242 operadores económicos fiscalizados em 2026, sem desagregação por tipo de
+estabelecimento nem ligação ao cabaz. Decisão do Gabinete em 08.08.2026: *«eliminamos a referência
+ao número de lojas porque não consegui confirmar»*.
+
+A caixa inserida na nota regista ainda um dado que o quadro original não continha e que é o mais
+relevante para avaliar o precedente do IVA Zero: o balanço final de **+4,71 %**. O quadro
+apresentava apenas as descidas iniciais, o que dava do episódio uma leitura mais favorável do que
+os dados sustentam.
+
+**Fica por verificar.** O quadro da nota indica «DECO: −5,8 % no período inicial», enquanto o
+documento de 06.08.2026 dá −8,45 % aos três meses. São períodos de referência diferentes e não são
+necessariamente contraditórios, mas o −5,8 % não foi reverificado em fonte primária. Assinalado na
+própria nota; não foi alterado.
 
 **Nota sobre o ambiente:** o `.venv` do projeto está vazio. Para o tornar funcional:
 `.venv\Scripts\pip install -r requirements.txt`.
