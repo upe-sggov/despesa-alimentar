@@ -617,6 +617,22 @@ deixa de ter de ser construído de raiz.**
 | Incapacidade de dieta saudável | Cabaz nutricionalmente adequado ao menor custo | **14,4 %** (1,5 M) | FAO SOFI 2026 |
 | Peso da alimentação no orçamento | 1.º quintil de rendimento | **14,8 %** | INE, IDF 2022/2023 |
 
+**Implementado em 08.08.2026**, na aba 1. Notas da implementação:
+
+- O `ilc_mdes03` é obtido **em direto**, e os valores devolvidos reproduzem exatamente os desta
+  secção (2025: total 1,9 %, em risco de pobreza 5,5 %, acima do limiar 1,3 %). O SOFI é
+  publicado apenas em PDF e ficou **inscrito em `src/config.py`** — é o único conjunto da
+  aplicação que não vem de API e que exige atualização manual a cada edição.
+- A regra de «nunca sozinho» ficou **garantida por construção**, não por disciplina de quem
+  escreve: os três indicadores partilham o mesmo bloco, a mesma nota de leitura e as mesmas
+  ressalvas. Não há caminho na interface que mostre o de 1,9 % isolado.
+- Foi preciso alterar `src/eurostat.py`. O descodificador normalizava tudo para
+  `unit/coicop/geo/time/valor` e **descartava dimensões próprias do conjunto** — as três séries do
+  `ilc_mdes03` vinham empilhadas e indistinguíveis, sem erro nem aviso. `obter()` passa a aceitar
+  `extra`, e recusa-se a prosseguir se a dimensão pedida não existir na resposta. É um defeito
+  latente que só apareceu por este conjunto ter dimensão própria; qualquer conjunto futuro nas
+  mesmas condições estaria sujeito ao mesmo problema silencioso.
+
 ### 2.15 Observatório de Preços Agroalimentar — onde na cadeia está o aumento
 
 **Fonte:** GPP, `observatorioagroalimentar.gov.pt`, extraído em 07.08.2026 via o *endpoint*
@@ -934,9 +950,9 @@ implementação — nada depende já de dados externos.
    08.08.2026**. O teste de §2.13 passou para a aba de metodologia, com o controlo na despesa total.
    Rendeu mais do que se previa: a escala por defeito da app deixa de ser uma escolha teórica e
    passa a ser a que o teste elege, calculada em tempo de execução.
-7. **Os três limiares de acessibilidade** (§2.14): privação severa 1,9 %, dieta saudável 14,4 %,
-   peso no orçamento do 1.º quintil 14,8 %. Decisão de 07.08.2026: entram, mas o de 1,9 % **nunca
-   sozinho**.
+7. ~~**Os três limiares de acessibilidade** (§2.14)~~ — ✅ **feito em 08.08.2026**, na aba 1. Os
+   três saem sempre juntos, com o confronto Portugal–Espanha. A regra de «nunca sozinho» está
+   garantida por construção: os três indicadores partilham o mesmo bloco e a mesma nota de leitura.
 8. **Observatório de Preços** (§2.15) — responde a «onde na cadeia está o aumento», que nenhum outro
    instrumento toca. Dados já extraídos e automatizáveis.
 
@@ -979,8 +995,14 @@ implementação — nada depende já de dados externos.
 | 16 | `src/config.py` e `src/calculos.py`: dados e funções do teste das escalas — `testar_escalas()` e `escala_mais_proxima()` | ✅ |
 | 17 | `app.py`, aba 5: ressalva das escalas passa de qualitativa a medida, com o controlo na despesa total; barra lateral assinala a escala apurada e avisa quando se escolhe outra | ✅ |
 | 18 | `tests/test_calculos.py`: 4 testes sobre as escalas, incluindo a inversão de sinal entre alimentação e despesa total | ✅ |
+| 19 | `src/eurostat.py`: `obter()` ganha o parâmetro `extra`, que preserva uma dimensão própria do conjunto — sem ele, as três séries de `ilc_mdes03` vinham empilhadas e indistinguíveis | ✅ |
+| 20 | `src/eurostat.py`: `privacao_alimentar()` e `PRIVACAO_NIVEIS` | ✅ |
+| 21 | `src/config.py`: séries do FAO SOFI 2026 — custo, incapacidade e população afetada | ✅ |
+| 22 | `app.py`, aba 1: secção «Acessibilidade alimentar — três limiares, três respostas», com o confronto Portugal–Espanha e as ressalvas de uso | ✅ |
+| 23 | `app.py`: corrigida a afirmação de que uma medida por escalão de rendimento «exigiria o IDEF/INE ou microdados» — passou a existir na própria página | ✅ |
+| 24 | `tests/test_calculos.py`: 3 testes sobre a preservação de dimensões, incluindo a recusa de uma dimensão inexistente | ✅ |
 
-**Verificação:** 30 testes passam; render completo da aplicação sem exceções nem erros de ecrã,
+**Verificação:** 33 testes passam; render completo da aplicação sem exceções nem erros de ecrã,
 nas duas bases de âncora; os valores do IDF fecham com os totais publicados a menos de 1 €/ano de
 arredondamento do próprio quadro do INE; o Törnqvist calculado fica a 0,12 pontos do IHPC oficial,
 apesar de construído por via independente.

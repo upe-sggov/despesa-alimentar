@@ -25,8 +25,10 @@ from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FO
                         BASE_POR_DEFEITO, BASES_ANCORA, COD_AGREGADOS,
                         DIMENSAO_RECUO, DIMENSAO_RECUO_FONTE,
                         ESCALAS_TESTE_FONTE, ESCALAS_TESTE_INTERVALO, ESCALAS_TESTE_RACIO,
-                        IDF_ALIMENTAR_ANUAL, IDF_ANO_BASE, IDF_FONTE, IDF_QUINTIS,
-                        AZUL, CLASSES, CODIGOS, COICOP_ALIMENTAR, DOURADO,
+                        IDF_ALIMENTAR_ANUAL, IDF_ANO_BASE, IDF_FONTE,
+                        IDF_PESO_ALIMENTAR, IDF_QUINTIS,
+                        SOFI_CUSTO, SOFI_FONTE, SOFI_INCAPACIDADE, SOFI_MILHOES,
+                        AZUL, CINZENTO, CLASSES, CODIGOS, COICOP_ALIMENTAR, DOURADO,
                         PAISES, PAISES_POR_DEFEITO, POR_CODIGO, RODAPE,
                         UNIDADE, VERDE, VERMELHO, euro, mes_pt, percentagem)
 
@@ -157,6 +159,15 @@ def carregar_dados(anos_historico: int = 6):
     except Exception as exc:                                   # noqa: BLE001
         desp_df, via4 = pd.DataFrame(), f"indisponível ({exc})"
         registo.append(("Despesa alimentar (Contas Nacionais)", via4, 0))
+
+    # Privação alimentar severa — o mais baixo dos três limiares de
+    # acessibilidade. Nunca é apresentado sozinho: ver a nota em config.py.
+    try:
+        priv_df, via14 = eurostat.privacao_alimentar(["PT", "ES", "EU27_2020"], ano - 10)
+        registo.append(("Privação alimentar (EU-SILC)", via14, len(priv_df)))
+    except Exception as exc:                                   # noqa: BLE001
+        priv_df, via14 = pd.DataFrame(), f"indisponível ({exc})"
+        registo.append(("Privação alimentar (EU-SILC)", via14, 0))
 
     try:
         dim_df, via5 = eurostat.dimensao_agregado(ano - JANELA)
@@ -359,6 +370,7 @@ def carregar_dados(anos_historico: int = 6):
         "dimensao_ano": dimensao_ano,
         "despesa_ano": despesa_ano,
         "despesa_milhoes": despesa_valor,
+        "privacao": priv_df,
         "pesos": pesos,
         "pesos_por_ano": pesos_df,
         "indice_classes": idx_classes_df,
@@ -1241,7 +1253,8 @@ reserva.
 
     **3 · O agregado está num valor central da distribuição.** Agregados abaixo dele têm esforço
     **superior** ao apresentado — e é justamente aí que a pressão alimentar mais se faz sentir.
-    Uma medida por escalão de rendimento exigiria o IDEF/INE ou microdados do EU-SILC.
+    A medida por escalão de rendimento está na secção **«Quem está mais exposto»**, mais acima
+    nesta página, a partir dos quadros Q.2.11 do IDF 2022/2023.
 
     **4 · As três escalas cruzam-se na dimensão média — e é isso que explica o resultado
     contraintuitivo.** Ver o gráfico logo abaixo deste bloco.
@@ -1328,6 +1341,164 @@ média; desconto fraco **amplifica-as**. O cruzamento está sempre na dimensão 
 que não há nada a descontar nem a acrescentar.
                 """)
 
+
+        # ---- acessibilidade alimentar: os três limiares, sempre juntos ----
+        st.divider()
+        st.markdown("#### Acessibilidade alimentar — três limiares, três respostas")
+        st.caption(
+            "«Conseguir pagar a comida» não é uma grandeza única. Consoante o limiar que se "
+            "escolha, Portugal parece estar muito bem ou bastante mal — com dados oficiais em "
+            "ambos os casos. Por isso os três aparecem sempre em conjunto."
+        )
+
+        _priv = dados.get("privacao", pd.DataFrame())
+        _priv_pt = pd.DataFrame()
+        if not _priv.empty:
+            _priv_pt = _priv[(_priv["geo"] == "PT")].sort_values("time")
+
+        _ano_sofi = max(SOFI_INCAPACIDADE["Portugal"])
+        _sofi_pt = SOFI_INCAPACIDADE["Portugal"][_ano_sofi]
+        _sofi_es = SOFI_INCAPACIDADE["Espanha"][_ano_sofi]
+        _milhoes = SOFI_MILHOES.get(_ano_sofi)
+
+        _sev, _ano_sev, _sev_pobres = None, None, None
+        if not _priv_pt.empty:
+            _tot = _priv_pt[_priv_pt["rskpovth"] == "TOTAL"]
+            if not _tot.empty:
+                _sev = float(_tot.iloc[-1]["valor"])
+                _ano_sev = str(_tot.iloc[-1]["time"])
+                _pob = _priv_pt[(_priv_pt["rskpovth"] == "B_60")
+                                & (_priv_pt["time"] == _ano_sev)]
+                if not _pob.empty:
+                    _sev_pobres = float(_pob.iloc[0]["valor"])
+
+        t1, t2, t3 = st.columns(3)
+        t1.metric(
+            "Privação severa" + (f" ({_ano_sev})" if _ano_sev else ""),
+            f"{_sev:.1f} %".replace(".", ",") if _sev is not None else "—",
+            help=("Não conseguir pagar uma refeição com carne, frango ou peixe — ou equivalente "
+                  "vegetariano — de dois em dois dias. Eurostat, ilc_mdes03."))
+        t2.metric(
+            f"Não paga uma dieta saudável ({_ano_sofi})",
+            f"{_sofi_pt:.1f} %".replace(".", ","),
+            help=("Custo da dieta mais barata que cumpre os requisitos nutricionais. "
+                  "FAO, SOFI 2026."))
+        t3.metric(
+            "Peso no orçamento do 1.º quintil",
+            f"{IDF_PESO_ALIMENTAR['q1']:.1f} %".replace(".", ","),
+            help="INE, IDF 2022/2023. Não é privação — é exposição.")
+
+        _texto_sev = (f"**{('%.1f' % _sev).replace('.', ',')} %**" if _sev is not None
+                      else "o indicador de privação severa")
+        _texto_milhoes = (f", cerca de **{('%.1f' % _milhoes).replace('.', ',')} milhões de "
+                          f"pessoas**" if _milhoes else "")
+        st.markdown(f"""
+        <div class="nota">
+          <div class="tt">Porque é que estes três números não se substituem uns aos outros</div>
+          Medem exigências muito diferentes. O primeiro — {_texto_sev} — é um limiar
+          <strong>muito baixo</strong>: mede algo próximo da fome, e está em mínimo de série.
+          O segundo é o nível intermédio, e é onde está o problema real:
+          <strong>{('%.1f' % _sofi_pt).replace('.', ',')} %</strong> da população não consegue
+          pagar uma dieta nutricionalmente adequada{_texto_milhoes}. O terceiro não é privação
+          nenhuma — é <strong>exposição</strong>: quanto do orçamento dos 20 % mais pobres vai
+          para comida.<br><br>
+          Apresentar apenas o primeiro daria uma leitura indevidamente tranquilizadora: sugeriria
+          um problema de 2 % da população, quando por um limiar nutricionalmente defensável são
+          14 %. <strong>A fome severa recuou; a impossibilidade de comer bem não.</strong>
+        </div>
+        """, unsafe_allow_html=True)
+
+        ca1, ca2 = st.columns(2)
+        with ca1:
+            st.markdown("**Privação severa — e quem a sofre**")
+            st.caption("A média nacional esconde a diferença entre quem está e não está em "
+                       "risco de pobreza.")
+            if _priv_pt.empty:
+                st.info("Série indisponível nesta sessão. Ver o registo de ligações "
+                        "no separador Metodologia.")
+            else:
+                figp = go.Figure()
+                _cores_p = {"TOTAL": CINZENTO, "B_60": VERMELHO, "A_60": AZUL}
+                for nivel, rotulo in eurostat.PRIVACAO_NIVEIS.items():
+                    sub = _priv_pt[_priv_pt["rskpovth"] == nivel]
+                    if sub.empty:
+                        continue
+                    figp.add_trace(go.Scatter(
+                        x=sub["time"], y=sub["valor"], name=rotulo, mode="lines+markers",
+                        line=dict(color=_cores_p.get(nivel, CINZENTO),
+                                  width=2.8 if nivel == "TOTAL" else 2),
+                        hovertemplate="%{x}<br>%{y:.1f} %<extra>" + rotulo + "</extra>"))
+                figp.update_layout(height=340, margin=dict(t=10, b=30, l=10, r=10),
+                                   yaxis_title="% da população", plot_bgcolor="#fff",
+                                   hovermode="x unified",
+                                   legend=dict(orientation="h", y=-0.2))
+                figp.update_yaxes(gridcolor="#eef1f4", rangemode="tozero")
+                figp.update_xaxes(gridcolor="#eef1f4")
+                st.plotly_chart(figp, use_container_width=True)
+                if _sev_pobres is not None and _sev:
+                    st.caption(
+                        f"Em {_ano_sev}, **{('%.1f' % _sev_pobres).replace('.', ',')} %** entre "
+                        f"quem está em risco de pobreza, contra "
+                        f"**{('%.1f' % _sev).replace('.', ',')} %** no total — "
+                        f"**{_sev_pobres / _sev:.1f}×**".replace(".", ",") + " mais."
+                    )
+
+        with ca2:
+            st.markdown("**Custo de uma dieta saudável**")
+            st.caption("PPP$ por pessoa e por dia. Mínimo normativo, não despesa observada.")
+            figc = go.Figure()
+            _cores_c = {"Portugal": VERDE, "Europa": AZUL,
+                        "Europa do Sul": DOURADO, "Espanha": "#7a5ea8"}
+            for regiao, serie in SOFI_CUSTO.items():
+                anos_c = sorted(serie)
+                figc.add_trace(go.Scatter(
+                    x=anos_c, y=[serie[a] for a in anos_c], name=regiao,
+                    mode="lines+markers",
+                    line=dict(color=_cores_c.get(regiao, CINZENTO),
+                              width=2.8 if regiao == "Portugal" else 1.8,
+                              dash=None if regiao == "Portugal" else "dot"),
+                    hovertemplate="%{x}<br>%{y:.2f} PPP$<extra>" + regiao + "</extra>"))
+            figc.update_layout(height=340, margin=dict(t=10, b=30, l=10, r=10),
+                               yaxis_title="PPP$ por pessoa e por dia", plot_bgcolor="#fff",
+                               hovermode="x unified",
+                               legend=dict(orientation="h", y=-0.2))
+            figc.update_yaxes(gridcolor="#eef1f4")
+            figc.update_xaxes(gridcolor="#eef1f4", dtick=1)
+            st.plotly_chart(figc, use_container_width=True)
+
+        _custo_pt = SOFI_CUSTO["Portugal"][_ano_sofi]
+        _custo_es = SOFI_CUSTO["Espanha"][_ano_sofi]
+        st.success(f"""
+    **O confronto com Espanha é o dado mais forte deste bloco.**
+
+    Portugal e Espanha têm custo de uma dieta saudável praticamente igual —
+    **{('%.2f' % _custo_pt).replace('.', ',')}** contra
+    **{('%.2f' % _custo_es).replace('.', ',')} PPP$** por pessoa e por dia. Mas
+    **{('%.1f' % _sofi_pt).replace('.', ',')} %** da população portuguesa não consegue pagá-la,
+    contra **{('%.1f' % _sofi_es).replace('.', ',')} %** da espanhola.
+
+    Com o mesmo preço e resultados tão diferentes, **a diferença não está nos preços — está nos
+    rendimentos e na sua distribuição**. É a demonstração mais limpa de que um indicador de preços
+    não é um indicador de acessibilidade, e vem com um par comparável em vez de uma afirmação.
+        """)
+
+        st.warning("""
+    **O que estes indicadores não são.**
+
+    **O custo da dieta saudável não é uma âncora de despesa.** É um **mínimo normativo** — o preço
+    da dieta mais barata que cumpre os requisitos nutricionais —, não o que as famílias gastam.
+    Compará-lo com a despesa alimentar apresentada no topo desta página seria confrontar objetos
+    diferentes. Acresce que vem em **PPP$**, não em euros: converter exigiria a paridade de poder
+    de compra do consumo privado, e mesmo assim não o tornaria comparável com despesa efetiva.
+
+    **A privação severa é auto-reportada**, de inquérito por amostragem, e o Eurostat não publica
+    intervalos de confiança para esta série. Variações de duas ou três décimas entre anos não
+    devem ser lidas como tendência.
+
+    **O SOFI é publicado em PDF, não em API** — ao contrário de tudo o resto nesta ferramenta, os
+    seus valores estão inscritos no código e têm de ser atualizados à mão a cada edição anual.
+        """)
+        st.caption(f"Fontes: Eurostat `ilc_mdes03` · {SOFI_FONTE} · INE, IDF 2022/2023 (Q.2.11.b).")
 
         # ------- blocos recolhíveis lado a lado, para reduzir o deslocamento -------
         e1, e2, e3 = st.columns(3)

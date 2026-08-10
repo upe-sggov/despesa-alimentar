@@ -237,6 +237,50 @@ ESCALAS_TESTE_RACIO = {
 ESCALAS_TESTE_INTERVALO = (10, 13)
 
 # --------------------------------------------------------------------------
+# Acessibilidade alimentar — três limiares que medem coisas diferentes
+# --------------------------------------------------------------------------
+# «Acessibilidade alimentar» não é uma grandeza única. Consoante o limiar,
+# Portugal parece estar muito bem ou bastante mal, com dados oficiais em ambos
+# os casos. Daí a regra de apresentação: os três aparecem **sempre juntos**.
+#
+#   1,9 %   privação severa — não pagar uma refeição com carne ou peixe de dois
+#           em dois dias. Limiar muito baixo: mede quase fome. Em mínimo de série.
+#   14,4 %  não conseguir pagar uma dieta nutricionalmente adequada ao menor
+#           custo. É o nível intermédio, e é onde está o problema real.
+#   14,8 %  peso da alimentação no orçamento do 1.º quintil — não é privação,
+#           é exposição. Vem de IDF_PESO_ALIMENTAR, acima.
+#
+# Apresentar só o de 1,9 % dá uma leitura indevidamente tranquilizadora: sugere
+# um problema de 2 % da população, quando por um limiar nutricionalmente
+# defensável são 14 %.
+#
+# O SOFI é publicado em PDF, não em API — os valores abaixo são transcritos dos
+# anexos A1.5 e A1.6 e têm de ser atualizados à mão a cada edição.
+SOFI_FONTE = ("FAO/FIDA/UNICEF/PAM/OMS, The State of Food Security and Nutrition "
+              "in the World 2026, anexos A1.5 e A1.6")
+SOFI_EDICAO = 2026
+
+# Custo de uma dieta saudável, PPP$ por pessoa e por dia
+SOFI_CUSTO = {
+    "Portugal":      {2017: 2.64, 2019: 2.85, 2021: 2.99, 2022: 3.57, 2023: 4.10, 2024: 4.17, 2025: 4.30},
+    "Europa":        {2017: 2.51, 2019: 2.72, 2021: 2.91, 2022: 3.33, 2023: 3.76, 2024: 3.84, 2025: 3.97},
+    "Europa do Sul": {2017: 2.79, 2019: 3.01, 2021: 3.20, 2022: 3.73, 2023: 4.36, 2024: 4.47, 2025: 4.62},
+    "Espanha":       {2017: 2.53, 2019: 2.70, 2021: 2.94, 2022: 3.45, 2023: 4.13, 2024: 4.22, 2025: 4.33},
+}
+
+# Incapacidade de pagar uma dieta saudável, % da população
+SOFI_INCAPACIDADE = {
+    "Portugal": {2017: 22.1, 2019: 15.1, 2020: 16.1, 2021: 15.7,
+                 2022: 16.9, 2023: 15.0, 2024: 14.8, 2025: 14.4},
+    "Espanha":  {2017: 12.6, 2019: 11.3, 2020: 11.7, 2021: 10.2,
+                 2022: 9.5,  2023: 9.9,  2024: 9.6,  2025: 9.3},
+}
+
+# Pessoas, em milhões — Portugal
+SOFI_MILHOES = {2017: 2.3, 2019: 1.6, 2020: 1.7, 2021: 1.6,
+                2022: 1.8, 2023: 1.6, 2024: 1.5, 2025: 1.5}
+
+# --------------------------------------------------------------------------
 # Metadados institucionais
 # --------------------------------------------------------------------------
 ORGANISMO = "Secretaria-Geral do Governo"

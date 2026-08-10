@@ -390,3 +390,60 @@ def test_escala_desvio_bate_com_o_apuramento_documentado():
 
     df = testar_escalas().set_index("escala")
     assert df.loc["ocde_modificada", "desvio_alimentar"] == pytest.approx(10.3, abs=0.3)
+
+
+# ------------------------------------- preservacao de dimensoes (eurostat)
+def test_jsonstat_preserva_a_dimensao_extra():
+    """Sem `extra`, tres niveis de pobreza colapsariam numa serie so, sem forma
+    de os distinguir. E um erro silencioso — por isso tem teste."""
+    from src.eurostat import _descodifica_jsonstat
+
+    js = {
+        "id": ["rskpovth", "geo", "time"],
+        "size": [2, 1, 2],
+        "dimension": {
+            "rskpovth": {"category": {"index": {"TOTAL": 0, "B_60": 1}}},
+            "geo": {"category": {"index": {"PT": 0}}},
+            "time": {"category": {"index": {"2024": 0, "2025": 1}}},
+        },
+        # ordem row-major: (TOTAL,2024) (TOTAL,2025) (B_60,2024) (B_60,2025)
+        "value": [2.5, 1.9, 5.1, 5.5],
+    }
+    df = _descodifica_jsonstat(js, extra="rskpovth")
+    assert "rskpovth" in df.columns
+    p = df.pivot_table(index="time", columns="rskpovth", values="valor")
+    assert p.loc["2025", "TOTAL"] == pytest.approx(1.9)
+    assert p.loc["2025", "B_60"] == pytest.approx(5.5)
+    assert p.loc["2024", "B_60"] == pytest.approx(5.1)
+
+
+def test_jsonstat_sem_extra_mantem_as_colunas_de_sempre():
+    from src.eurostat import COLUNAS, _descodifica_jsonstat
+
+    js = {
+        "id": ["geo", "time"],
+        "size": [1, 1],
+        "dimension": {
+            "geo": {"category": {"index": {"PT": 0}}},
+            "time": {"category": {"index": {"2025": 0}}},
+        },
+        "value": [1.9],
+    }
+    assert list(_descodifica_jsonstat(js).columns) == COLUNAS
+
+
+def test_jsonstat_recusa_dimensao_extra_inexistente():
+    """Melhor falhar do que devolver series empilhadas em silencio."""
+    from src.eurostat import ErroEurostat, _descodifica_jsonstat
+
+    js = {
+        "id": ["geo", "time"],
+        "size": [1, 1],
+        "dimension": {
+            "geo": {"category": {"index": {"PT": 0}}},
+            "time": {"category": {"index": {"2025": 0}}},
+        },
+        "value": [1.9],
+    }
+    with pytest.raises(ErroEurostat):
+        _descodifica_jsonstat(js, extra="rskpovth")

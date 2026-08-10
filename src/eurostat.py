@@ -47,7 +47,8 @@ class ErroEurostat(RuntimeError):
 ENDERECOS: list[tuple[str, str]] = []
 
 
-def _via_sdmx(dataset: str, chave: str, inicio: str | None = None) -> pd.DataFrame:
+def _via_sdmx(dataset: str, chave: str, inicio: str | None = None,
+              extra: str | None = None) -> pd.DataFrame:
     url = f"{SDMX}{dataset}/{chave}"
     params = {"format": "SDMX-CSV"}
     if inicio:
@@ -69,13 +70,21 @@ def _via_sdmx(dataset: str, chave: str, inicio: str | None = None) -> pd.DataFra
         "time": bruto["TIME_PERIOD"].astype(str),
         "valor": pd.to_numeric(bruto["OBS_VALUE"], errors="coerce"),
     })
+    if extra:
+        if extra not in bruto.columns:
+            # Sem esta guarda, várias séries colapsavam numa só coluna, sem
+            # forma de as distinguir — erro silencioso e difícil de detetar.
+            raise ErroEurostat(
+                f"{dataset}: dimensão «{extra}» ausente da resposta SDMX "
+                f"(colunas: {', '.join(bruto.columns)}).")
+        df[extra] = bruto[extra]
     return df.dropna(subset=["valor"]).reset_index(drop=True)
 
 
 # --------------------------------------------------------------------------
 # Via 2 — API Statistics (JSON-stat)
 # --------------------------------------------------------------------------
-def _descodifica_jsonstat(js: dict) -> pd.DataFrame:
+def _descodifica_jsonstat(js: dict, extra: str | None = None) -> pd.DataFrame:
     """
     JSON-stat 2.0 guarda os valores num vetor achatado. O índice de cada
     observação decompõe-se nas coordenadas das dimensões em ordem *row-major*
@@ -107,18 +116,23 @@ def _descodifica_jsonstat(js: dict) -> pd.DataFrame:
         coords["valor"] = valor
         linhas.append(coords)
 
+    colunas = COLUNAS + ([extra] if extra else [])
     if not linhas:
-        return pd.DataFrame(columns=COLUNAS)
+        return pd.DataFrame(columns=colunas)
 
     df = pd.DataFrame(linhas)
     for col in ("unit", "coicop", "geo"):
         if col not in df.columns:
             df[col] = ""
     df["time"] = df.get("time", "").astype(str)
-    return df[COLUNAS]
+    if extra and extra not in df.columns:
+        raise ErroEurostat(
+            f"dimensão «{extra}» ausente da resposta JSON-stat "
+            f"(dimensões: {', '.join(ids)}).")
+    return df[colunas]
 
 
-def _via_stats(dataset: str, filtros: dict) -> pd.DataFrame:
+def _via_stats(dataset: str, filtros: dict, extra: str | None = None) -> pd.DataFrame:
     params: list[tuple[str, str]] = [("format", "JSON"), ("lang", "EN")]
     for chave, valor in filtros.items():
         if valor is None:
@@ -131,21 +145,26 @@ def _via_stats(dataset: str, filtros: dict) -> pd.DataFrame:
     resp = requests.get(STATS + dataset, params=params,
                         timeout=TEMPO_LIMITE, headers=CABECALHOS)
     resp.raise_for_status()
-    return _descodifica_jsonstat(resp.json())
+    return _descodifica_jsonstat(resp.json(), extra)
 
 
 # --------------------------------------------------------------------------
 # Interface pública
 # --------------------------------------------------------------------------
 def obter(dataset: str, chave: str, filtros: dict,
-          inicio: str | None = None) -> tuple[pd.DataFrame, str]:
+          inicio: str | None = None,
+          extra: str | None = None) -> tuple[pd.DataFrame, str]:
     """
     Devolve (dados, via_utilizada). Tenta SDMX; se falhar, a API Statistics.
     Levanta ErroEurostat se ambas falharem.
+
+    `extra` preserva uma dimensão adicional para lá de `unit`, `coicop` e `geo`.
+    Sem isso, um conjunto com uma dimensão própria — como o nível de pobreza em
+    `ilc_mdes03` — devolveria várias séries empilhadas e indistinguíveis.
     """
     erros = []
     try:
-        df = _via_sdmx(dataset, chave, inicio)
+        df = _via_sdmx(dataset, chave, inicio, extra)
         if not df.empty:
             return df, "SDMX 2.1"
         erros.append("SDMX devolveu resposta vazia")
@@ -153,7 +172,7 @@ def obter(dataset: str, chave: str, filtros: dict,
         erros.append(f"SDMX: {exc}")
 
     try:
-        df = _via_stats(dataset, filtros)
+        df = _via_stats(dataset, filtros, extra)
         if not df.empty:
             return df, "API Statistics"
         erros.append("API Statistics devolveu resposta vazia")
@@ -258,6 +277,39 @@ def numero_agregados(desde_ano: int) -> tuple[pd.DataFrame, str]:
         {"freq": "A", "geo": "PT", "sinceTimePeriod": str(desde_ano)},
         inicio=str(desde_ano),
     )
+
+
+def privacao_alimentar(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
+    """
+    Percentagem que não consegue pagar uma refeição com carne, frango ou peixe
+    (ou equivalente vegetariano) de dois em dois dias — EU-SILC, `ilc_mdes03`.
+
+    É o limiar mais baixo dos três indicadores de acessibilidade da aplicação:
+    mede privação **severa**, quase fome. Nunca deve ser apresentado sozinho —
+    ver a nota em `config.py`.
+
+    Devolve as três populações: total, abaixo e acima do limiar de pobreza.
+    """
+    geos = list(geos)
+    # Dimensões: freq.hhcomp.rskpovth.unit.geo.time — `rskpovth` é o risco de
+    # pobreza (limiar dos 60 % da mediana), não o grupo de rendimento.
+    niveis = ["TOTAL", "B_60", "A_60"]
+    return obter(
+        "ilc_mdes03",
+        f"A.TOTAL.{'+'.join(niveis)}.PC.{'+'.join(geos)}",
+        {"freq": "A", "hhcomp": "TOTAL", "rskpovth": niveis, "unit": "PC",
+         "geo": geos, "sinceTimePeriod": str(desde_ano)},
+        inicio=str(desde_ano),
+        extra="rskpovth",
+    )
+
+
+# Rótulos das três populações de `ilc_mdes03`, na ordem em que devem ser lidas.
+PRIVACAO_NIVEIS = {
+    "TOTAL": "População total",
+    "B_60": "Em risco de pobreza",
+    "A_60": "Acima do limiar",
+}
 
 
 # Categorias analíticas candidatas para o nível de preços dos alimentos.

@@ -328,6 +328,39 @@ momento. Deflacioná-los pela média anual do índice desconta duas vezes parte 
 efeito-preço e nenhuma vez outra parte. A direção pode manter-se; a magnitude não
 é defensável.
 
+### Acessibilidade alimentar — três limiares
+
+«Conseguir pagar a comida» não é uma grandeza única. Consoante o limiar, Portugal
+parece estar muito bem ou bastante mal, **com dados oficiais em ambos os casos**:
+
+| Indicador | O que mede | Portugal | Fonte |
+|---|---|---|---|
+| Privação severa | Não pagar refeição com carne ou peixe de 2 em 2 dias | **1,9 %** | Eurostat `ilc_mdes03` |
+| Não paga dieta saudável | Cabaz nutricionalmente adequado ao menor custo | **14,4 %** (1,5 M) | FAO SOFI 2026 |
+| Peso no orçamento | Fatia do orçamento do 1.º quintil | **14,8 %** | INE, IDF 2022/2023 |
+
+O primeiro é um limiar **muito baixo** — mede algo próximo da fome, e está em
+mínimo de série. Apresentá-lo sozinho daria uma leitura indevidamente
+tranquilizadora: sugeriria um problema de 2 % da população quando, por um limiar
+nutricionalmente defensável, são 14 %. **A fome severa recuou; a impossibilidade
+de comer bem não.**
+
+Por isso os três partilham o mesmo bloco na interface, com a mesma nota de
+leitura: **não há caminho na aplicação que mostre o de 1,9 % isolado**.
+
+**O confronto com Espanha é o dado mais forte.** Custo de uma dieta saudável
+praticamente igual — 4,30 contra 4,33 PPP$/dia —, mas 14,4 % da população
+portuguesa não consegue pagá-la contra 9,3 % da espanhola. Com o mesmo preço e
+resultados tão diferentes, a diferença está nos rendimentos e na sua
+distribuição, não nos preços. É a demonstração mais limpa de que um indicador de
+preços não é um indicador de acessibilidade.
+
+**Ressalvas.** O custo da dieta saudável é um **mínimo normativo**, não despesa
+observada, e vem em PPP$ — não é comparável com a âncora em euros. A privação
+severa é auto-reportada, por amostragem, sem intervalos de confiança publicados.
+O SOFI é o **único conjunto da aplicação que não vem de API**: está inscrito em
+`src/config.py` e exige atualização manual a cada edição anual.
+
 ### O viés de substituição, medido
 
 O separador **Histórico** compara três índices sobre as mesmas nove classes, todos com base em
