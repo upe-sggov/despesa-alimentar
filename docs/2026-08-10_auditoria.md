@@ -18,9 +18,9 @@ ligações de dados**, com confronto dos valores devolvidos contra a fonte.
 | 🟡 A corrigir | 6 | Rigor, rastreabilidade, robustez |
 | ⚪ A declarar | 4 | Pressupostos legítimos que devem estar explícitos |
 
-**Estado a 10.08.2026, fim do dia:** os três críticos — **A1, A2 e A3 — estão corrigidos e
-verificados em execução**. Ver «Registo de aplicação» no fim do documento. Os restantes catorze
-mantêm-se em aberto.
+**Estado a 10.08.2026, fim do dia:** os três críticos — **A1, A2 e A3** — e o **B3** estão
+corrigidos e verificados em execução. Ver «Registo de aplicação» no fim do documento. Os restantes
+treze mantêm-se em aberto.
 
 ---
 
@@ -189,6 +189,8 @@ atraso. Hoje isso aparece apenas na mensagem de estado.
 ---
 
 ## 🟠 B3 · A lista de reserva do nível de preços contém categorias que não são alimentação
+
+> ✅ **Corrigido a 10.08.2026.** Ver «Registo de aplicação», no fim.
 
 **Onde:** `src/config.py` / `src/eurostat.py`, `PPP_CANDIDATOS_ALIMENTOS`.
 
@@ -400,7 +402,7 @@ Para que o âmbito da garantia fique claro:
 | 1 | ✅ **A1** rendimento EU-SILC | Repõe um indicador em falta e corrige uma legenda falsa |
 | 2 | ✅ **A2** rótulo do salário mínimo | Erro factual, correção de texto, custo nulo |
 | 3 | ✅ **A3** extrapolação agregada | Número errado num ecrã que fala de milhões de euros |
-| 4 | **B3** lista do nível de preços | Custo nulo, remove risco de inversão de conclusão |
+| 4 | ✅ **B3** lista do nível de preços | Custo nulo, remove risco de inversão de conclusão |
 | 5 | **B1 + B2** agregados e emparelhamento de anos | Têm de ser feitos juntos |
 | 6 | **B4** dois coeficientes de Engel | Incoerência visível ao leitor |
 | 7 | **C1 … C6** | Rigor e robustez |
@@ -466,9 +468,45 @@ fosse revertida.
 **Correção acessória.** Os dois cartões formatavam o separador decimal em inglês («351.0 M€»);
 passam a usar o mesmo auxiliar `_milhoes()` do resto do ecrã.
 
+### B3 · Categorias do nível de preços — 10.08.2026
+
+**Confirmação da fonte.** O `prc_ppp_ind_1` tem **64 categorias**, quase todas não alimentares, e o
+ramo alimentar é `A0101*`. Rótulos e valores para Portugal em 2025:
+
+| Código | Rótulo oficial | PT | Alimentar? |
+|---|---|---|---|
+| `A010101` | Food | 101,4 | ✅ preferida |
+| `A0101` | Food and non-alcoholic beverages | 102,0 | ✅ reserva |
+| `E011` | Household final consumption expenditure | 86,6 | ❌ removida |
+| `A01` | Actual individual consumption | 85,3 | ❌ removida |
+| `CP011`, `0101` | *não existem* | — | ❌ removidas |
+
+**O que foi feito.** `PPP_CANDIDATOS_ALIMENTOS` foi substituída por `PPP_CATEGORIAS_ALIMENTOS` —
+um dicionário código → rótulo em português, restrito ao ramo `A0101*` — e por
+`PPP_CATEGORIA_PREFERIDA`. A reserva `A0101` é mais lata do que a preferida, pelo que **o rótulo
+do gráfico passou a ser dinâmico**: o título do eixo e a legenda nomeiam a categoria efetivamente
+obtida, e, se a reserva for usada, aparece um aviso a dizer que inclui águas, sumos, cafés e chás.
+Antes, o título dizia sempre «nível de preços dos alimentos», fosse qual fosse a categoria.
+
+**Verificado em execução, nos dois caminhos.** Com `A010101` disponível: «categoria `A010101` —
+Alimentação», Portugal 101, sem aviso. Forçando a indisponibilidade de `A010101`: «categoria
+`A0101` — Alimentação e bebidas não alcoólicas», Portugal 102, com o aviso visível. Sem exceções
+em nenhum dos casos.
+
+**Teste de regressão.** `test_candidatas_do_nivel_de_precos_sao_todas_alimentares` exige que toda
+a lista comece por `A0101`, proíbe nominalmente os quatro códigos removidos e verifica que a
+preferida é a primeira a ser tentada.
+
+**Achado colateral, não aplicado.** O ramo alimentar desce a nove sub-categorias,
+`A01010101`–`A01010109` (cereais, carne, peixe, lacticínios, óleos e gorduras, frutos, produtos
+hortícolas, açúcar, outros), que correspondem quase um a um às nove classes COICOP usadas na
+aplicação. Abre a possibilidade de comparar o nível de preços **por classe** entre países, e não
+só o agregado alimentar. Fica registado como hipótese de trabalho — não foi implementado.
+
 ### Estado da bateria de testes
 
-39 testes passam (38 anteriores + 1 novo). A aplicação renderiza sem exceções nas duas âncoras.
+40 testes passam (38 anteriores + 2 novos). A aplicação renderiza sem exceções nas duas âncoras e
+nos dois caminhos do nível de preços.
 
 ---
 

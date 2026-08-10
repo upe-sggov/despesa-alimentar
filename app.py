@@ -184,10 +184,12 @@ def carregar_dados(anos_historico: int = 6):
         registo.append(("N.º de agregados familiares", via6, 0))
 
     # Nível de preços comparado — a codificação das categorias das PPP não é a
-    # mesma do índice de preços, pelo que se tentam várias e se usa a primeira
-    # que responda. Se nenhuma responder, o painel respetivo não é apresentado.
+    # mesma do índice de preços, pelo que se tenta a preferida e depois a
+    # reserva. Ambas são alimentares: uma reserva não alimentar invertia a
+    # conclusão sem dar erro (auditoria de 10.08.2026, B3). Se nenhuma
+    # responder, o painel respetivo não é apresentado.
     pli_df, pli_cat = pd.DataFrame(), None
-    for candidato in eurostat.PPP_CANDIDATOS_ALIMENTOS:
+    for candidato in eurostat.PPP_CATEGORIAS_ALIMENTOS:
         try:
             tentativa, via7 = eurostat.nivel_precos(
                 list(PAISES.keys()), candidato, ano - JANELA)
@@ -2343,6 +2345,14 @@ with aba4:
                     "Use entretanto a vista «A que ritmo estão a subir»."
                 )
             else:
+                # A categoria efetivamente obtida determina o rótulo: a reserva
+                # inclui bebidas não alcoólicas e não pode ser apresentada como
+                # se fosse só alimentação (auditoria, B3).
+                pli_cat_usada = dados.get("pli_cat")
+                pli_rotulo = eurostat.PPP_CATEGORIAS_ALIMENTOS.get(
+                    pli_cat_usada, "Alimentação")
+                pli_e_reserva = pli_cat_usada != eurostat.PPP_CATEGORIA_PREFERIDA
+
                 ano_pli = pli["time"].max()
                 pli_ult = pli[pli["time"] == ano_pli].copy()
                 pli_ult["pais"] = pli_ult["geo"].map(PAISES)
@@ -2375,7 +2385,8 @@ with aba4:
                                annotation_text="média UE-27", annotation_position="top")
                 figp.update_layout(height=max(320, 34 * len(pli_ult)),
                                    margin=dict(t=42, b=40, l=10, r=70),
-                                   xaxis_title="Nível de preços dos alimentos (média UE-27 = 100)",
+                                   xaxis_title=(f"Nível de preços — {pli_rotulo.lower()} "
+                                                "(média UE-27 = 100)"),
                                    plot_bgcolor="#fff", showlegend=False)
                 figp.update_xaxes(gridcolor="#eef1f4")
                 st.plotly_chart(figp, use_container_width=True)
@@ -2383,9 +2394,17 @@ with aba4:
                     "Barras à direita da linha: alimentos mais caros do que a média europeia. "
                     "À esquerda: mais baratos. Portugal a verde. Fonte: programa de Paridades de "
                     f"Poder de Compra Eurostat-OCDE (`prc_ppp_ind_1`, categoria "
-                    f"`{dados.get('pli_cat')}`). Publicação **anual** — indicador de nível, não de "
-                    "conjuntura."
+                    f"`{pli_cat_usada}` — {pli_rotulo}). Publicação **anual** — indicador de "
+                    "nível, não de conjuntura."
                 )
+                if pli_e_reserva:
+                    st.warning(
+                        f"A categoria de referência (`{eurostat.PPP_CATEGORIA_PREFERIDA}`, "
+                        "só alimentação) não respondeu nesta sessão. Estes valores usam a "
+                        f"categoria de reserva `{pli_cat_usada}`, que **inclui bebidas não "
+                        "alcoólicas** — águas, sumos, cafés e chás. O nível é próximo, mas o "
+                        "âmbito não é o mesmo."
+                    )
 
         # ==================== VISTA: ESFORÇO (COEFICIENTE DE ENGEL) ====================
         elif ver_esforco:
@@ -3030,7 +3049,7 @@ with aba5:
     | Despesa alimentar (âncora) | [`nama_10_co3_p3`](https://ec.europa.eu/eurostat/databrowser/view/nama_10_co3_p3/default/table) | Despesa efetiva em euros (Contas Nacionais) | Anual |
     | Dimensão do agregado | [`ilc_lvph01`](https://ec.europa.eu/eurostat/databrowser/view/ilc_lvph01/default/table) | N.º médio de pessoas por agregado | Anual |
     | N.º de agregados | [`lfst_hhnhtych`](https://ec.europa.eu/eurostat/databrowser/view/lfst_hhnhtych/default/table) | Total de agregados familiares (milhares) | Anual |
-    | Nível de preços comparado | [`prc_ppp_ind_1`](https://ec.europa.eu/eurostat/databrowser/view/prc_ppp_ind_1/default/table) | Quão caros são os alimentos (UE-27 = 100) | Anual |
+    | Nível de preços comparado | [`prc_ppp_ind_1`](https://ec.europa.eu/eurostat/databrowser/view/prc_ppp_ind_1/default/table) | Quão caros são os alimentos, categoria `A010101` (UE-27 = 100) | Anual |
     | Rendimento das famílias | [`ilc_di03`](https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table) | Rendimento líquido equivalente, médio e mediano | Anual |
     | Salário médio | [`nama_10_a10`](https://ec.europa.eu/eurostat/databrowser/view/nama_10_a10/default/table) ÷ `nama_10_a10_e` | Remuneração média **bruta** dos trabalhadores por conta de outrem | Anual |
     | Salário mínimo | [`earn_mw_cur`](https://ec.europa.eu/eurostat/databrowser/view/earn_mw_cur/default/table) | RMMG em duodécimos de 14 mensalidades, **bruta** | Semestral |

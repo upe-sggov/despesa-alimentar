@@ -194,6 +194,31 @@ def test_vies_do_agregado_medio_e_sistematico():
     assert racios[0] > 1.0                        # e no sentido de subestimação
 
 
+def test_candidatas_do_nivel_de_precos_sao_todas_alimentares():
+    """
+    A aplicação usa a primeira categoria que responda. Se uma reserva não
+    alimentar entrar na lista, uma falha da preferida faz a aplicação
+    apresentar o nível de preços de todo o consumo sob o título «alimentos» —
+    e a conclusão inverte-se de «acima» para «abaixo» da média europeia, sem
+    erro nenhum. Auditoria de 10.08.2026, B3.
+
+    No `prc_ppp_ind_1`, o ramo alimentar é `A0101*`. Fora dele estão, entre
+    outros, `E011` (consumo final das famílias) e `A01` (consumo individual
+    efetivo), que já estiveram nesta lista.
+    """
+    from src.eurostat import PPP_CATEGORIA_PREFERIDA, PPP_CATEGORIAS_ALIMENTOS
+
+    assert PPP_CATEGORIAS_ALIMENTOS, "a lista não pode ficar vazia"
+    for codigo in PPP_CATEGORIAS_ALIMENTOS:
+        assert codigo.startswith("A0101"), f"{codigo} não é uma categoria alimentar"
+    for proibido in ("E011", "A01", "CP011", "0101"):
+        assert proibido not in PPP_CATEGORIAS_ALIMENTOS
+
+    # a preferida tem de estar na lista e ser a primeira a ser tentada
+    assert PPP_CATEGORIA_PREFERIDA in PPP_CATEGORIAS_ALIMENTOS
+    assert next(iter(PPP_CATEGORIAS_ALIMENTOS)) == PPP_CATEGORIA_PREFERIDA
+
+
 def test_extrapolacao_nacional_nao_depende_da_composicao():
     """
     O total nacional tem de sair do agregado **médio**. Se sair da despesa já

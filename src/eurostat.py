@@ -313,10 +313,28 @@ PRIVACAO_NIVEIS = {
 
 
 # Categorias analíticas candidatas para o nível de preços dos alimentos.
-# A nomenclatura das PPP não coincide com a COICOP do índice de preços e a
-# codificação mudou com a COICOP 2018, pelo que se tentam várias hipóteses e
-# se usa a primeira que devolva dados.
-PPP_CANDIDATOS_ALIMENTOS = ["A010101", "E011", "CP011", "A01", "0101"]
+#
+# A nomenclatura das PPP não coincide com a COICOP do índice de preços, pelo
+# que se tenta a categoria preferida e, se falhar, a reserva. **Todas as
+# candidatas têm de ser alimentares.** A lista anterior incluía `E011` (consumo
+# final das famílias, 86,6) e `A01` (consumo individual efetivo, 85,3), que não
+# são alimentação: bastava a primeira falhar para a aplicação mostrar o nível
+# de preços de *todo* o consumo sob o título «nível de preços dos alimentos», e
+# a conclusão invertia-se de «1,4 % acima da UE-27» para «13,4 % abaixo».
+# Continha ainda `CP011` e `0101`, que não existem no conjunto.
+# Auditoria de 10.08.2026, B3.
+#
+# Rótulos e valores confirmados na API a 10.08.2026 (Portugal, 2025):
+#   A010101  Food                              101,4
+#   A0101    Food and non-alcoholic beverages  102,0
+PPP_CATEGORIAS_ALIMENTOS = {
+    "A010101": "Alimentação",
+    "A0101": "Alimentação e bebidas não alcoólicas",
+}
+
+# A reserva é mais lata do que a categoria preferida: inclui águas, sumos,
+# cafés e chás. Quem a usar tem de o dizer no rótulo do gráfico.
+PPP_CATEGORIA_PREFERIDA = "A010101"
 
 
 def nivel_precos(geos, categoria: str, desde_ano: int) -> tuple[pd.DataFrame, str]:
@@ -326,6 +344,11 @@ def nivel_precos(geos, categoria: str, desde_ano: int) -> tuple[pd.DataFrame, st
     responde: *são mais caros aqui?*
 
     Fonte: programa de Paridades de Poder de Compra Eurostat-OCDE.
+
+    `categoria` deve pertencer a `PPP_CATEGORIAS_ALIMENTOS` quando o resultado
+    for apresentado como «nível de preços dos alimentos». O conjunto tem 64
+    categorias, quase todas não alimentares, e nada na resposta assinala a
+    diferença — o valor devolvido tem sempre o mesmo aspeto.
     """
     geos = list(geos)
     return obter(
