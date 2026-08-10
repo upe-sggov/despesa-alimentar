@@ -18,9 +18,9 @@ ligações de dados**, com confronto dos valores devolvidos contra a fonte.
 | 🟡 A corrigir | 6 | Rigor, rastreabilidade, robustez |
 | ⚪ A declarar | 4 | Pressupostos legítimos que devem estar explícitos |
 
-**Estado a 10.08.2026, fim do dia:** os três críticos — **A1, A2 e A3** — e os importantes **B1,
-B2 e B3** estão corrigidos e verificados em execução. Ver «Registo de aplicação» no fim do
-documento. Ficam em aberto **B4** e os onze itens 🟡/⚪.
+**Estado a 10.08.2026, fim do dia:** os três críticos — **A1, A2 e A3** — e os quatro importantes
+— **B1, B2, B3 e B4** — estão corrigidos e verificados em execução. Ver «Registo de aplicação» no
+fim do documento. Ficam em aberto os **dez itens 🟡/⚪**.
 
 ---
 
@@ -229,6 +229,8 @@ PPP_CANDIDATOS_ALIMENTOS = ["A010101", "A0101"]   # Food · Food and non-alcohol
 
 ## 🟠 B4 · Dois coeficientes de Engel diferentes, no mesmo ecrã
 
+> ✅ **Corrigido a 10.08.2026.** Ver «Registo de aplicação», no fim.
+
 O separador «Despesa e composição» mostra, a poucos centímetros um do outro:
 
 - **16,4 %** — «Do que as famílias gastam, vai para comida» (Contas Nacionais, 2022);
@@ -408,7 +410,7 @@ Para que o âmbito da garantia fique claro:
 | 3 | ✅ **A3** extrapolação agregada | Número errado num ecrã que fala de milhões de euros |
 | 4 | ✅ **B3** lista do nível de preços | Custo nulo, remove risco de inversão de conclusão |
 | 5 | ✅ **B1 + B2** agregados e emparelhamento de anos | Têm de ser feitos juntos |
-| 6 | **B4** dois coeficientes de Engel | Incoerência visível ao leitor |
+| 6 | ✅ **B4** dois coeficientes de Engel | Incoerência visível ao leitor |
 | 7 | **C1 … C6** | Rigor e robustez |
 | 8 | **D1** ano-base do IDF | Depende de resposta do INE |
 | 9 | **D2** mapeamento do IVA | Trabalho de fundo, sem dependência externa |
@@ -566,9 +568,54 @@ ligações.
 caminhos — ano presente, ano ausente com desfasamento declarado, ausência de série — e verifica que
 o emparelhamento **importa**, exigindo mais de 8 % de diferença entre as duas escolhas.
 
+### B4 · Coeficiente de Engel — 10.08.2026
+
+**Correção ao diagnóstico original.** O relatório descrevia «a mesma grandeza, 4,4 pontos de
+diferença» e atribuía-a a «conceito interno *versus* residentes». Duas ressalvas, depois de medir:
+
+Primeira, **não são dois números próximos**. Os dois lados da fração divergem muito, por agregado
+e por ano, em 2022:
+
+| | Contas Nacionais | IDF | rácio |
+|---|---|---|---|
+| Despesa alimentar | 6 659 € | 2 872 € | **2,32×** |
+| Despesa total | 40 670 € | 23 900 € | **1,70×** |
+| **Engel** | **16,4 %** | **12,0 %** | |
+
+O coeficiente diverge porque o **numerador diverge mais do que o denominador**. É a mesma
+divergência de fundo que já leva a aplicação a apresentar a âncora como intervalo (255,01 € a
+650,25 €), e não uma discrepância nova.
+
+Segunda, **não confirmei a causa atribuída**. As dimensões do `nama_10_co3_p3` são
+`freq.unit.coicop.geo` — não expõem eixo de conceito interno/nacional, pelo que não consigo
+verificar essa explicação na fonte. Contribuem também rendas imputadas e a subdeclaração conhecida
+nos inquéritos de orçamento familiar. Ficou registada a **divergência medida**, não uma causa
+inferida.
+
+**Decisão da Inês, 10.08.2026: apresentar como intervalo**, aplicando ao Engel a doutrina que a
+aplicação já usa para a âncora — quando as duas bases oficiais discordam, mostra-se o intervalo e
+não se arbitra.
+
+**O que foi feito.** Nova função pura `calculos.intervalo_engel(engel_cn)`. O cartão passa a ler
+**«12,0 % a 16,4 %»**, com as duas fontes nomeadas na legenda e a explicação da divergência no
+tooltip. O limite inferior é a **constante publicada pelo INE** — a mesma que alimenta a coluna
+«Peso no orçamento» —, e não um recálculo: 2 872 / 23 900 dá 12,017 %, que arredondaria a 12,0 %
+hoje mas deixaria de coincidir com a tabela por construção. Acrescentou-se uma legenda sob a tabela
+por quintil a identificar o 12,0 % como o extremo inferior do cartão.
+
+O resultado é que o número da tabela passa a **explicar** o cartão em vez de o contradizer.
+
+**Separador UE-27.** Mantém-se só nas Contas Nacionais, e a Metodologia passa a dizer porquê: é a
+única base construída da mesma maneira em todos os países da UE. O nível é discutível, a comparação
+entre países é válida porque todos entram pela mesma via.
+
+**Teste de regressão.** `test_engel_e_um_intervalo_ancorado_no_valor_do_ine` fixa o extremo inferior
+na constante do INE, cobre a ausência das Contas Nacionais (o intervalo colapsa num ponto) e
+verifica que a ordem dos extremos não é assumida.
+
 ### Estado da bateria de testes
 
-41 testes passam (38 anteriores + 3 novos), em cerca de um segundo. `agregados_do_ano` foi colocada
+42 testes passam (38 anteriores + 4 novos), em cerca de um segundo. `agregados_do_ano` foi colocada
 em `src/calculos.py`, e não em `app.py`, para que o teste não tenha de importar a aplicação — o que
 disparava a recolha de dados e punha a bateria dependente da rede.
 

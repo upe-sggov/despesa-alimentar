@@ -34,6 +34,49 @@ from .config import (
 
 
 # --------------------------------------------------------------------------
+# Coeficiente de Engel
+# --------------------------------------------------------------------------
+def intervalo_engel(engel_cn: dict | None) -> dict:
+    """
+    Coeficiente de Engel nas duas bases oficiais, como intervalo.
+
+    A aplicação tinha os dois valores no mesmo ecrã sem os relacionar: 16,4 %
+    das Contas Nacionais no cartão, 12,0 % do IDF na tabela por quintil logo
+    abaixo (auditoria de 10.08.2026, B4). São a mesma grandeza conceptual
+    medida em duas bases que divergem — a mesma divergência que já leva a
+    aplicação a apresentar a âncora como intervalo, e não como ponto.
+
+    Não é uma discrepância pequena. Por agregado e por ano, em 2022:
+
+    ==========================  =================  =========  ======
+    ..                          Contas Nacionais         IDF   rácio
+    ==========================  =================  =========  ======
+    Despesa alimentar                    6 659 €    2 872 €     2,32
+    Despesa total                       40 670 €   23 900 €     1,70
+    ==========================  =================  =========  ======
+
+    O Engel diverge porque o numerador diverge **mais** do que o denominador.
+
+    O limite inferior é a constante publicada pelo INE — a mesma que alimenta a
+    coluna «Peso no orçamento» da tabela por quintil —, para que o número da
+    tabela seja reconhecível como o extremo do intervalo em vez de o contrariar.
+
+    `engel_cn` é a entrada de `dados["engel"]["PT"]`, ou None se a ligação
+    falhou. Devolve `{minimo, maximo, so_idf, idf, contas, ano_contas}`; com
+    `so_idf=True` quando só há a base do IDF.
+    """
+    idf = float(IDF_PESO_ALIMENTAR["total"])
+    if not engel_cn or engel_cn.get("quota") is None:
+        return {"minimo": idf, "maximo": idf, "so_idf": True,
+                "idf": idf, "contas": None, "ano_contas": None}
+
+    contas = float(engel_cn["quota"])
+    return {"minimo": min(idf, contas), "maximo": max(idf, contas),
+            "so_idf": False, "idf": idf, "contas": contas,
+            "ano_contas": engel_cn.get("ano")}
+
+
+# --------------------------------------------------------------------------
 # Denominador da âncora
 # --------------------------------------------------------------------------
 def agregados_do_ano(serie: dict, ano) -> dict:

@@ -20,7 +20,8 @@ from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
                           comparar_ponderadores,
                           composicao_quintis, decompor, despesa_do_agregado,
                           escala_mais_proxima, indices_comparados,
-                          intervalo_agregado, resumo_decomposicao, resumo_iva,
+                          intervalo_agregado, intervalo_engel,
+                          resumo_decomposicao, resumo_iva,
                           simular_iva, testar_escalas, unidades_equivalentes)
 from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         BASE_POR_DEFEITO, BASES_ANCORA, COD_AGREGADOS,
@@ -944,12 +945,29 @@ with aba1:
                         "Valor de referência antes de qualquer ajustamento de composição."))
         r2.metric("Equivalente anual", euro(valor_medio_agregado * 12))
         eng_pt = (dados.get("engel") or {}).get("PT")
+        _eng = intervalo_engel(eng_pt)
+
+        def _pct(v):
+            return f"{v:.1f} %".replace(".", ",")
+
         if eng_pt:
+            # Intervalo, e não ponto: as duas bases oficiais divergem, e é a
+            # mesma divergência que já leva a âncora a ser apresentada como
+            # intervalo. O extremo inferior é o número do INE que aparece na
+            # tabela por quintil logo abaixo (auditoria de 10.08.2026, B4).
             r3.metric("Do que as famílias gastam, vai para comida",
-                      f"{eng_pt['quota']:.1f} %".replace(".", ","),
-                      help=(f"Coeficiente de Engel, {eng_pt['ano']}. Quanto do consumo total "
-                            "das famílias portuguesas vai para comida. Comparação europeia "
-                            "no separador UE-27."))
+                      f"{_pct(_eng['minimo'])} a {_pct(_eng['maximo'])}",
+                      help=("Coeficiente de Engel nas duas bases oficiais: "
+                            f"{_pct(_eng['idf'])} no IDF 2022/2023 (agregados residentes) "
+                            f"e {_pct(_eng['contas'])} nas Contas Nacionais de "
+                            f"{_eng['ano_contas']} (conceito macroeconómico). Divergem "
+                            "porque a despesa alimentar por agregado difere entre bases "
+                            "mais do que a despesa total — o mesmo motivo por que a "
+                            "âncora é um intervalo. O limite inferior é o valor que "
+                            "consta da tabela por quintil, mais abaixo. Comparação "
+                            "europeia no separador UE-27, que usa as Contas Nacionais "
+                            "por serem a única base comparável entre países."))
+            r3.caption("IDF 2022/2023 · Contas Nacionais — ver Metodologia")
         else:
             r3.markdown(
             f"<div style='padding-top:14px;font-size:12.5px;color:#4a4a48'>"
@@ -1020,6 +1038,15 @@ with aba1:
                 if r.agravamento_orcamento is not None else "—"),
         } for r in df_quintis.itertuples()])
         st.dataframe(tab_q, use_container_width=True, hide_index=True)
+        if not _eng["so_idf"]:
+            st.caption(
+                f"O **{_pct(_eng['idf'])}** da média nacional, na coluna «Peso no orçamento», é o "
+                "limite inferior do intervalo do coeficiente de Engel mostrado em cima. O limite "
+                f"superior, {_pct(_eng['contas'])}, vem das Contas Nacionais: medem o consumo das "
+                "famílias por via macroeconómica e registam, por agregado, mais 2,3 vezes de "
+                "despesa alimentar contra mais 1,7 vezes de despesa total. Nenhuma das duas é a "
+                "resposta certa — ver Metodologia."
+            )
 
         _q1 = df_quintis[df_quintis["quintil"] == "q1"].iloc[0]
         _q5 = df_quintis[df_quintis["quintil"] == "q5"].iloc[0]
@@ -2478,6 +2505,19 @@ with aba4:
 
     É um dos indicadores mais antigos e mais robustos de bem-estar económico — e comparável entre
     países sem conversão cambial, por ser um rácio.
+
+    **Porque é que esta página mostra um valor e o separador «Despesa e composição» mostra um
+    intervalo.** O coeficiente pode medir-se em duas bases, e elas não coincidem: **12,0 %** no IDF
+    2022/2023 do INE, **16,4 %** nas Contas Nacionais. Por agregado e por ano, as Contas Nacionais
+    registam **2,3 vezes** mais despesa alimentar e **1,7 vezes** mais despesa total do que o
+    inquérito — e o coeficiente diverge porque o numerador diverge mais do que o denominador. É a
+    mesma divergência entre bases que leva a aplicação a apresentar a despesa mensal como intervalo,
+    e não como ponto.
+
+    Aqui usam-se **as Contas Nacionais**, e só elas, porque são a única base construída da mesma
+    maneira em todos os países da UE — o IDF não tem equivalente europeu com esta desagregação. O
+    nível é discutível; a **comparação entre países** é o que este quadro serve, e essa é válida
+    porque todos os países entram pela mesma via.
                 """)
                 st.warning("""
     **Atenção: este número não tem salários no denominador.**

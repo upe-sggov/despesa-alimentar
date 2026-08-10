@@ -194,6 +194,37 @@ def test_vies_do_agregado_medio_e_sistematico():
     assert racios[0] > 1.0                        # e no sentido de subestimação
 
 
+def test_engel_e_um_intervalo_ancorado_no_valor_do_ine():
+    """
+    O extremo inferior tem de ser **a constante publicada pelo INE**, a mesma
+    que alimenta a coluna «Peso no orçamento» da tabela por quintil. Se fosse
+    recalculado (2 872 / 23 900 = 12,017 %), o cartão diria 12,0 % por
+    arredondamento mas deixaria de ser garantidamente o número da tabela.
+    Auditoria de 10.08.2026, B4.
+    """
+    from src.calculos import intervalo_engel
+    from src.config import IDF_PESO_ALIMENTAR
+
+    idf = float(IDF_PESO_ALIMENTAR["total"])
+
+    r = intervalo_engel({"quota": 16.37, "ano": "2022"})
+    assert r["minimo"] == idf
+    assert r["maximo"] == pytest.approx(16.37)
+    assert r["so_idf"] is False
+
+    # sem Contas Nacionais, o intervalo colapsa no valor do IDF
+    for ausente in (None, {}, {"quota": None, "ano": "2022"}):
+        r = intervalo_engel(ausente)
+        assert r["so_idf"] is True
+        assert r["minimo"] == r["maximo"] == idf
+
+    # a ordem não pode ser assumida: se as Contas Nacionais ficassem abaixo,
+    # o intervalo tem de continuar bem orientado
+    r = intervalo_engel({"quota": 9.0, "ano": "2022"})
+    assert r["minimo"] == pytest.approx(9.0)
+    assert r["maximo"] == idf
+
+
 def test_denominador_da_ancora_emparelha_o_ano_da_despesa():
     """
     A despesa das Contas Nacionais é de 2022. Dividi-la pelos agregados de 2025
