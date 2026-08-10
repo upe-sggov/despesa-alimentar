@@ -724,9 +724,11 @@ deve fazer-se acompanhar destas ressalvas:
    a esse parâmetro e deve ser apresentado como intervalo, nunca como valor único.
 8. **Preço de prateleira não é preço pago — e o critério é preciso.** O Documento
    Metodológico do IPC (INE, 2023) determina que os descontos entram no índice
-   **«desde que de aplicação generalizada aos consumidores»**. Uma promoção aberta
-   a qualquer cliente é captada; um desconto condicional — cartão de fidelização,
-   cupão, talão — é excluído **por regra**, não por falha de recolha. O desvio
+   **«desde que de aplicação generalizada aos consumidores»** (citação literal,
+   pp. 26 e 40). Uma promoção aberta a qualquer cliente é captada; um desconto
+   condicional — cartão de fidelização, cupão, talão — é excluído **por regra**,
+   não por falha de recolha. *A arrumação dos tipos concretos de desconto é
+   leitura nossa: o documento fixa o critério, não classifica casos.* O desvio
    entre preço registado e preço pago é o que resulta dos descontos condicionais e
    tende a crescer com a difusão dos programas de fidelização, pelo que o índice
    pode sobrestimar ligeiramente a aceleração do preço efetivamente pago. Só dados

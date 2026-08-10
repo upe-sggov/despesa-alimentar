@@ -2675,6 +2675,10 @@ Chamar-lhe cabaz seria prometer o que não entrega.
     | Promoção aberta a qualquer cliente, campanha de folheto, redução de preço em loja | **Sim** |
     | Cartão de fidelização, cupão, talão, desconto em cartão | **Não** — é condicional |
 
+    *O critério entre aspas é citação literal (INE, Documento Metodológico do IPC, 2023, pp. 26 e
+    40). A arrumação dos tipos de desconto no quadro é leitura desta ferramenta: o documento fixa a
+    regra, não classifica casos concretos.*
+
     Não é, portanto, que a recolha falhe descontos ao acaso: exclui **por regra** os que dependem
     de o consumidor aderir a um programa. O desvio entre preço registado e preço pago é o que
     resulta desses descontos condicionais, e **tende a crescer** à medida que os programas de

@@ -939,10 +939,34 @@ relevante para avaliar o precedente do IVA Zero: o balanço final de **+4,71 %**
 apresentava apenas as descidas iniciais, o que dava do episódio uma leitura mais favorável do que
 os dados sustentam.
 
-**Fica por verificar.** O quadro da nota indica «DECO: −5,8 % no período inicial», enquanto o
-documento de 06.08.2026 dá −8,45 % aos três meses. São períodos de referência diferentes e não são
-necessariamente contraditórios, mas o −5,8 % não foi reverificado em fonte primária. Assinalado na
-própria nota; não foi alterado.
+**Correção 5 — o −5,8 % da DECO.** Numa primeira leitura afirmei que o −5,8 % do quadro e o
+−8,45 % do documento de 06.08.2026 se referiam a períodos diferentes e podiam ambos estar certos.
+**Isso está errado.** As notas de verificação na p.3 do `cabaz_06082026.pdf` são explícitas: o
+−5,8 % *«consegui confirmar em nenhuma fonte primária (nem jornalística)»*, com a recomendação de
+usar em vez dele os valores efetivamente publicados. Não é uma diferença de período — é um valor
+sem suporte. Substituído na nota.
+
+**Proveniência dos valores do IVA Zero**, apurada na p.2 do mesmo documento:
+
+| Valor | Medidor | Período | Universo | Fonte citada |
+|---|---|---|---|---|
+| **−10,14 %** | ASAE | 18.04 → 04.09.2023 | Bens abrangidos pela isenção | portugal.gov.pt |
+| −9,67 % | ASAE | 17.04 → fim de junho 2023 | idem | Sapo |
+| −9,29 % | ASAE | 17.04 → 28.08.2023 | idem | Sapo |
+| **−8,45 %** (−11,72 €) | DECO | 3 meses | **41 dos 63 produtos** | Adefesa |
+| **+4,71 %** (+6,45 €, 136,83 → 143,28 €) | DECO | 18.04.2023 → 04.01.2024 | **41 dos 63 produtos** | Jornal SOL |
+
+Duas qualificações que não tinham sido registadas e que importam:
+
+1. **Os valores da DECO referem-se a 41 produtos, não aos 63 do cabaz semanal.** Citá-los como
+   «o cabaz da DECO» é impreciso.
+2. **ASAE e DECO não são comparáveis entre si** — universos, amostras e períodos diferentes. A
+   divergência entre as duas leituras não demonstra, por si, discrepância metodológica: podem estar
+   as duas certas sobre coisas diferentes.
+
+Nenhum destes valores isola o efeito do IVA da evolução dos preços de base, pelo que **nenhum é
+uma estimativa de repercussão**. É a razão pela qual o simulador trata a repercussão como
+parâmetro explícito.
 
 **Nota sobre o ambiente:** o `.venv` do projeto está vazio. Para o tornar funcional:
 `.venv\Scripts\pip install -r requirements.txt`.
