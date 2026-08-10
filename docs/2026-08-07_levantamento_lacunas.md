@@ -48,7 +48,7 @@ em 07.08.2026 — chamadas à API do Eurostat e parsing dos ficheiros do INE. N�
 
 | # | Produto | Prioridade | Estado |
 |---|---|---|---|
-| 1 | Nota metodológica «O que é (e o que não é) o cabaz» | Alta | 🟡 Em prosa no README; ausente da interface |
+| 1 | Nota metodológica «O que é (e o que não é) o cabaz» | Alta | ✅ **Implementada** em 08.08.2026 — quadro dos seis instrumentos na aba «Metodologia e fontes», aberto por defeito |
 | 2 | Cabaz ponderado por decil de rendimento | Alta | ✅ **Implementado** em 08.08.2026 (aba 1) — ver §2.1 e §2.16 |
 | 3 | Desagregação territorial do preço alimentar | Média | 🟡 Procura sim, oferta não |
 | 4 | Benchmarking europeu da inflação alimentar | Média | ✅ Já feito (aba 4) |
@@ -847,8 +847,9 @@ implementação — nada depende já de dados externos.
 2. ~~**Cabaz por quintil** com o Q.2.11~~ — ✅ **feito em 08.08.2026**. Entrega a linha #2 (Alta).
    Implementado com ponderação IDF, segundo a arquitetura de §2.16, e com a regra de apresentação
    das três grandezas em conjunto. Inclui a comparação IDF/IHPC na aba de metodologia.
-3. **Quadro dos seis instrumentos** na aba «Metodologia e fontes» — zero dependências, entrega a
-   linha #1 (Alta), diretamente ao serviço do uso (a).
+3. ~~**Quadro dos seis instrumentos** na aba «Metodologia e fontes»~~ — ✅ **feito em 08.08.2026**.
+   Entrega a linha #1 (Alta). Inclui o posicionamento explícito da própria ferramenta, que não é um
+   sétimo cabaz, e o aviso de leitura pública sobre o número da DECO.
 4. **Afinar a limitação 8** com o critério do documento metodológico (§2.7) — correção de rigor,
    custo nulo.
 5. **Törnqvist ao nível das classes** — sem dados novos, demonstra o viés de substituição.
@@ -890,10 +891,40 @@ implementação — nada depende já de dados externos.
 | 7 | `app.py`: corrigido o cabeçalho de proveniência dos CSV, que afirmava âncora única | ✅ |
 | 8 | `tests/test_calculos.py`: 7 testes novos sobre os quintis e a comparação de ponderadores | ✅ |
 | 9 | `README.md`: secções «As duas bases de ponderação» e «Cabaz por quintil de rendimento» | ✅ |
+| 10 | `app.py`, aba 5: quadro dos seis instrumentos «O que é — e o que não é — o cabaz», aberto por defeito, com o posicionamento da própria ferramenta e o aviso de leitura pública | ✅ |
 
 **Verificação:** 22 testes passam; render completo da aplicação sem exceções nem erros de ecrã,
 nas duas bases de âncora; os valores do IDF fecham com os totais publicados a menos de 1 €/ano de
 arredondamento do próprio quadro do INE.
+
+---
+
+## 9. Correções aplicadas à nota de enquadramento de 21.07.2026
+
+Aplicadas diretamente em `2026-07-21_UPE_NG_SETCS_Cabaz_NotaEnquadramento.html`, com registo
+visível no próprio documento, em 08.08.2026. Autorização permanente dada pelo Gabinete para
+corrigir erros deste tipo assim que sejam detetados.
+
+| # | Local | O que dizia | O que passa a dizer | Fundamento |
+|---|---|---|---|---|
+| 1 | §1.3, cartão «Onde está a pressão» | Que o impacto regressivo decorre de a subida se concentrar em bens com maior peso na base da distribuição | Que o impacto **é regressivo por via da exposição orçamental** (14,8 % contra 9,1 %), e não de uma inflação mais alta na base | §2.16 — a inflação por quintil varia 0,18 p.p. e é mais alta no quintil mais rico |
+| 2 | §1.1, quadro dos instrumentos | Observatório de Preços com **26 produtos** | **39 produtos**, com séries que recuam a janeiro de 2022 | §2.15 — extração direta do portal em 07.08.2026 |
+
+**Sobre a correção 1.** A conclusão da nota estava certa; o mecanismo invocado é que não estava.
+A distinção não é académica: se a regressividade viesse da composição do cabaz, uma medida dirigida
+a produtos específicos (IVA sobre carne, por exemplo) atacaria o problema. Vindo da exposição, não
+ataca — o instrumento adequado é do lado do rendimento, ou uma medida que reduza a fatura alimentar
+na proporção do que cada agregado gasta. A formulação corrigida é também mais robusta, porque a
+exposição orçamental é estrutural, ao passo que a diferença de taxas se altera de mês para mês.
+
+O argumento da nota sobre elasticidade e renúncia na base da distribuição foi **mantido**, mas
+reposicionado: é uma perda de bem-estar que o índice de preços não capta, não uma explicação para
+uma inflação medida mais alta. São coisas diferentes e a nota fundia-as.
+
+**Fica por resolver.** Duas afirmações identificadas em §5.C — as «1 220 lojas» da ASAE e a série
+própria de monitorização da ASAE — continuam na nota. Não são corrigíveis por substituição, porque
+não há valor alternativo em fonte pública: exigem supressão ou reformulação com o Gabinete. Ver
+§5.C.
 
 **Nota sobre o ambiente:** o `.venv` do projeto está vazio. Para o tornar funcional:
 `.venv\Scripts\pip install -r requirements.txt`.
