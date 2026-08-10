@@ -1,0 +1,3075 @@
+setor,produto,produto_id,serie_id,fase,unidade,periodo,inicio,preco
+alface,Alface,1031,1031,consumo,€/kg,1,2022-01-03,2.11
+alface,Alface,1031,1031,consumo,€/kg,2,2022-01-31,1.91
+alface,Alface,1031,1031,consumo,€/kg,3,2022-02-28,2.0
+alface,Alface,1031,1031,consumo,€/kg,4,2022-03-28,1.94
+alface,Alface,1031,1031,consumo,€/kg,5,2022-04-25,1.89
+alface,Alface,1031,1031,consumo,€/kg,6,2022-05-23,1.8
+alface,Alface,1031,1031,consumo,€/kg,7,2022-06-20,1.95
+alface,Alface,1031,1031,consumo,€/kg,8,2022-07-18,2.3
+alface,Alface,1031,1031,consumo,€/kg,9,2022-08-15,2.31
+alface,Alface,1031,1031,consumo,€/kg,10,2022-09-12,2.3
+alface,Alface,1031,1031,consumo,€/kg,11,2022-10-10,2.36
+alface,Alface,1031,1031,consumo,€/kg,12,2022-11-07,2.32
+alface,Alface,1031,1031,consumo,€/kg,13,2022-12-05,2.72
+alface,Alface,1031,1031,consumo,€/kg,1,2023-01-02,2.79
+alface,Alface,1031,1031,consumo,€/kg,2,2023-01-30,3.16
+alface,Alface,1031,1031,consumo,€/kg,3,2023-02-27,2.75
+alface,Alface,1031,1031,consumo,€/kg,4,2023-03-27,2.23
+alface,Alface,1031,1031,consumo,€/kg,5,2023-04-24,1.83
+alface,Alface,1031,1031,consumo,€/kg,6,2023-05-22,2.09
+alface,Alface,1031,1031,consumo,€/kg,7,2023-06-19,2.03
+alface,Alface,1031,1031,consumo,€/kg,8,2023-07-17,1.99
+alface,Alface,1031,1031,consumo,€/kg,9,2023-08-14,2.13
+alface,Alface,1031,1031,consumo,€/kg,10,2023-09-11,2.09
+alface,Alface,1031,1031,consumo,€/kg,11,2023-10-09,2.29
+alface,Alface,1031,1031,consumo,€/kg,12,2023-11-06,2.63
+alface,Alface,1031,1031,consumo,€/kg,13,2023-12-04,2.97
+alface,Alface,1031,1031,consumo,€/kg,1,2024-01-01,3.01
+alface,Alface,1031,1031,consumo,€/kg,2,2024-01-29,2.67
+alface,Alface,1031,1031,consumo,€/kg,3,2024-02-26,2.3
+alface,Alface,1031,1031,consumo,€/kg,4,2024-03-25,2.47
+alface,Alface,1031,1031,consumo,€/kg,5,2024-04-22,2.83
+alface,Alface,1031,1031,consumo,€/kg,6,2024-05-20,2.28
+alface,Alface,1031,1031,consumo,€/kg,7,2024-06-17,2.27
+alface,Alface,1031,1031,consumo,€/kg,8,2024-07-15,2.25
+alface,Alface,1031,1031,consumo,€/kg,9,2024-08-12,2.24
+alface,Alface,1031,1031,consumo,€/kg,10,2024-09-09,2.3
+alface,Alface,1031,1031,consumo,€/kg,11,2024-10-07,2.52
+alface,Alface,1031,1031,consumo,€/kg,12,2024-11-04,2.8
+alface,Alface,1031,1031,consumo,€/kg,13,2024-12-02,2.58
+alface,Alface,1031,1031,consumo,€/kg,1,2024-12-30,2.56
+alface,Alface,1031,1031,consumo,€/kg,2,2025-01-27,2.64
+alface,Alface,1031,1031,consumo,€/kg,3,2025-02-24,2.46
+alface,Alface,1031,1031,consumo,€/kg,4,2025-03-24,2.45
+alface,Alface,1031,1031,consumo,€/kg,5,2025-04-21,2.47
+alface,Alface,1031,1031,consumo,€/kg,6,2025-05-19,2.39
+alface,Alface,1031,1031,consumo,€/kg,7,2025-06-16,2.36
+alface,Alface,1031,1031,consumo,€/kg,8,2025-07-14,2.31
+alface,Alface,1031,1031,consumo,€/kg,9,2025-08-11,2.59
+alface,Alface,1031,1031,consumo,€/kg,10,2025-09-08,2.44
+alface,Alface,1031,1031,consumo,€/kg,11,2025-10-06,2.37
+alface,Alface,1031,1031,consumo,€/kg,12,2025-11-03,2.61
+alface,Alface,1031,1031,consumo,€/kg,13,2025-12-01,2.76
+alface,Alface,1031,1031,consumo,€/kg,1,2025-12-29,2.96
+alface,Alface,1031,1031,consumo,€/kg,2,2026-01-26,3.06
+alface,Alface,1031,1031,consumo,€/kg,3,2026-02-23,3.02
+alface,Alface,1031,1031,consumo,€/kg,4,2026-03-23,2.9
+alface,Alface,1031,1031,consumo,€/kg,5,2026-04-20,2.66
+alface,Alface,1031,1031,consumo,€/kg,6,2026-05-18,2.68
+alface,Alface,1031,123,producao,€/kg,1,2022-01-03,0.57
+alface,Alface,1031,123,producao,€/kg,2,2022-01-31,0.58
+alface,Alface,1031,123,producao,€/kg,3,2022-02-28,0.5
+alface,Alface,1031,123,producao,€/kg,4,2022-03-28,0.7
+alface,Alface,1031,123,producao,€/kg,5,2022-04-25,0.58
+alface,Alface,1031,123,producao,€/kg,6,2022-05-23,0.53
+alface,Alface,1031,123,producao,€/kg,7,2022-06-20,0.86
+alface,Alface,1031,123,producao,€/kg,8,2022-07-18,1.0
+alface,Alface,1031,123,producao,€/kg,9,2022-08-15,0.82
+alface,Alface,1031,123,producao,€/kg,10,2022-09-12,0.82
+alface,Alface,1031,123,producao,€/kg,11,2022-10-10,0.85
+alface,Alface,1031,123,producao,€/kg,12,2022-11-07,0.98
+alface,Alface,1031,123,producao,€/kg,13,2022-12-05,1.28
+alface,Alface,1031,123,producao,€/kg,1,2023-01-02,1.48
+alface,Alface,1031,123,producao,€/kg,2,2023-01-30,1.42
+alface,Alface,1031,123,producao,€/kg,3,2023-02-27,0.83
+alface,Alface,1031,123,producao,€/kg,4,2023-03-27,0.6
+alface,Alface,1031,123,producao,€/kg,5,2023-04-24,0.51
+alface,Alface,1031,123,producao,€/kg,6,2023-05-22,0.46
+alface,Alface,1031,123,producao,€/kg,7,2023-06-19,0.64
+alface,Alface,1031,123,producao,€/kg,8,2023-07-17,0.62
+alface,Alface,1031,123,producao,€/kg,9,2023-08-14,0.53
+alface,Alface,1031,123,producao,€/kg,10,2023-09-11,0.67
+alface,Alface,1031,123,producao,€/kg,11,2023-10-09,0.88
+alface,Alface,1031,123,producao,€/kg,12,2023-11-06,1.56
+alface,Alface,1031,123,producao,€/kg,13,2023-12-04,1.3
+alface,Alface,1031,123,producao,€/kg,1,2024-01-01,0.91
+alface,Alface,1031,123,producao,€/kg,2,2024-01-29,0.67
+alface,Alface,1031,123,producao,€/kg,3,2024-02-26,0.53
+alface,Alface,1031,123,producao,€/kg,4,2024-03-25,0.74
+alface,Alface,1031,123,producao,€/kg,5,2024-04-22,0.76
+alface,Alface,1031,123,producao,€/kg,6,2024-05-20,0.71
+alface,Alface,1031,123,producao,€/kg,7,2024-06-17,0.64
+alface,Alface,1031,123,producao,€/kg,8,2024-07-15,0.59
+alface,Alface,1031,123,producao,€/kg,9,2024-08-12,0.7
+alface,Alface,1031,123,producao,€/kg,10,2024-09-09,0.71
+alface,Alface,1031,123,producao,€/kg,11,2024-10-07,0.99
+alface,Alface,1031,123,producao,€/kg,12,2024-11-04,1.0
+alface,Alface,1031,123,producao,€/kg,13,2024-12-02,0.7
+alface,Alface,1031,123,producao,€/kg,1,2024-12-30,0.71
+alface,Alface,1031,123,producao,€/kg,2,2025-01-27,0.69
+alface,Alface,1031,123,producao,€/kg,3,2025-02-24,0.6
+alface,Alface,1031,123,producao,€/kg,4,2025-03-24,0.58
+alface,Alface,1031,123,producao,€/kg,5,2025-04-21,0.65
+alface,Alface,1031,123,producao,€/kg,6,2025-05-19,0.6
+alface,Alface,1031,123,producao,€/kg,7,2025-06-16,0.58
+alface,Alface,1031,123,producao,€/kg,8,2025-07-14,0.75
+alface,Alface,1031,123,producao,€/kg,9,2025-08-11,0.91
+alface,Alface,1031,123,producao,€/kg,10,2025-09-08,0.63
+alface,Alface,1031,123,producao,€/kg,11,2025-10-06,0.58
+alface,Alface,1031,123,producao,€/kg,12,2025-11-03,0.78
+alface,Alface,1031,123,producao,€/kg,13,2025-12-01,1.06
+alface,Alface,1031,123,producao,€/kg,1,2025-12-29,1.04
+alface,Alface,1031,123,producao,€/kg,2,2026-01-26,0.96
+alface,Alface,1031,123,producao,€/kg,3,2026-02-23,0.98
+alface,Alface,1031,123,producao,€/kg,4,2026-03-23,0.65
+alface,Alface,1031,123,producao,€/kg,5,2026-04-20,0.74
+alface,Alface,1031,123,producao,€/kg,6,2026-05-18,0.64
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,1,2022-01-03,5.37
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,2,2022-01-31,3.73
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,3,2022-02-28,5.53
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,4,2022-03-28,5.23
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,5,2022-04-25,5.57
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,6,2022-05-23,6.43
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,7,2022-06-20,5.81
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,8,2022-07-18,5.21
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,9,2022-08-15,4.65
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,10,2022-09-12,4.97
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,11,2022-10-10,4.98
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,12,2022-11-07,5.06
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,13,2022-12-05,6.24
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,1,2023-01-02,5.91
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,2,2023-01-30,5.65
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,3,2023-02-27,4.47
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,4,2023-03-27,4.98
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,5,2023-04-24,4.18
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,6,2023-05-22,4.23
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,7,2023-06-19,3.99
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,8,2023-07-17,4.08
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,9,2023-08-14,4.06
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,10,2023-09-11,3.81
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,11,2023-10-09,4.31
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,12,2023-11-06,4.39
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,13,2023-12-04,4.13
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,1,2024-01-01,4.73
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,2,2024-01-29,4.41
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,3,2024-02-26,4.39
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,4,2024-03-25,4.81
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,5,2024-04-22,4.22
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,6,2024-05-20,4.56
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,7,2024-06-17,4.14
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,8,2024-07-15,4.08
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,9,2024-08-12,4.57
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,10,2024-09-09,4.22
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,11,2024-10-07,4.59
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,12,2024-11-04,4.29
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,13,2024-12-02,4.75
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,1,2024-12-30,4.02
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,2,2025-01-27,4.44
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,3,2025-02-24,4.28
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,4,2025-03-24,4.42
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,5,2025-04-21,4.37
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,6,2025-05-19,4.09
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,7,2025-06-16,3.78
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,8,2025-07-14,3.91
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,9,2025-08-11,3.89
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,10,2025-09-08,3.96
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,11,2025-10-06,4.02
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,12,2025-11-03,3.75
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,13,2025-12-01,4.65
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,1,2025-12-29,4.44
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,2,2026-01-26,4.64
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,3,2026-02-23,3.88
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,4,2026-03-23,4.27
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,5,2026-04-20,4.53
+alface,Alface 4ªGama,1032,1032,consumo,€/kg,6,2026-05-18,3.82
+arroz,Arroz (média),1020,1020,consumo,€/kg,1,2022-01-03,1.04
+arroz,Arroz (média),1020,1020,consumo,€/kg,2,2022-01-31,1.07
+arroz,Arroz (média),1020,1020,consumo,€/kg,3,2022-02-28,1.09
+arroz,Arroz (média),1020,1020,consumo,€/kg,4,2022-03-28,1.12
+arroz,Arroz (média),1020,1020,consumo,€/kg,5,2022-04-25,1.14
+arroz,Arroz (média),1020,1020,consumo,€/kg,6,2022-05-23,1.19
+arroz,Arroz (média),1020,1020,consumo,€/kg,7,2022-06-20,1.19
+arroz,Arroz (média),1020,1020,consumo,€/kg,8,2022-07-18,1.21
+arroz,Arroz (média),1020,1020,consumo,€/kg,9,2022-08-15,1.22
+arroz,Arroz (média),1020,1020,consumo,€/kg,10,2022-09-12,1.22
+arroz,Arroz (média),1020,1020,consumo,€/kg,11,2022-10-10,1.22
+arroz,Arroz (média),1020,1020,consumo,€/kg,12,2022-11-07,1.28
+arroz,Arroz (média),1020,1020,consumo,€/kg,13,2022-12-05,1.39
+arroz,Arroz (média),1020,1020,consumo,€/kg,1,2023-01-02,1.4
+arroz,Arroz (média),1020,1020,consumo,€/kg,2,2023-01-30,1.42
+arroz,Arroz (média),1020,1020,consumo,€/kg,3,2023-02-27,1.4
+arroz,Arroz (média),1020,1020,consumo,€/kg,4,2023-03-27,1.42
+arroz,Arroz (média),1020,1020,consumo,€/kg,5,2023-04-24,1.34
+arroz,Arroz (média),1020,1020,consumo,€/kg,6,2023-05-22,1.33
+arroz,Arroz (média),1020,1020,consumo,€/kg,7,2023-06-19,1.32
+arroz,Arroz (média),1020,1020,consumo,€/kg,8,2023-07-17,1.31
+arroz,Arroz (média),1020,1020,consumo,€/kg,9,2023-08-14,1.35
+arroz,Arroz (média),1020,1020,consumo,€/kg,10,2023-09-11,1.33
+arroz,Arroz (média),1020,1020,consumo,€/kg,11,2023-10-09,1.34
+arroz,Arroz (média),1020,1020,consumo,€/kg,12,2023-11-06,1.35
+arroz,Arroz (média),1020,1020,consumo,€/kg,13,2023-12-04,1.38
+arroz,Arroz (média),1020,1020,consumo,€/kg,1,2024-01-01,1.4
+arroz,Arroz (média),1020,1020,consumo,€/kg,2,2024-01-29,1.43
+arroz,Arroz (média),1020,1020,consumo,€/kg,3,2024-02-26,1.41
+arroz,Arroz (média),1020,1020,consumo,€/kg,4,2024-03-25,1.4
+arroz,Arroz (média),1020,1020,consumo,€/kg,5,2024-04-22,1.37
+arroz,Arroz (média),1020,1020,consumo,€/kg,6,2024-05-20,1.39
+arroz,Arroz (média),1020,1020,consumo,€/kg,7,2024-06-17,1.39
+arroz,Arroz (média),1020,1020,consumo,€/kg,8,2024-07-15,1.52
+arroz,Arroz (média),1020,1020,consumo,€/kg,9,2024-08-12,1.49
+arroz,Arroz (média),1020,1020,consumo,€/kg,10,2024-09-09,1.52
+arroz,Arroz (média),1020,1020,consumo,€/kg,11,2024-10-07,1.47
+arroz,Arroz (média),1020,1020,consumo,€/kg,12,2024-11-04,1.47
+arroz,Arroz (média),1020,1020,consumo,€/kg,13,2024-12-02,1.5
+arroz,Arroz (média),1020,1020,consumo,€/kg,1,2024-12-30,1.47
+arroz,Arroz (média),1020,1020,consumo,€/kg,2,2025-01-27,1.49
+arroz,Arroz (média),1020,1020,consumo,€/kg,3,2025-02-24,1.43
+arroz,Arroz (média),1020,1020,consumo,€/kg,4,2025-03-24,1.42
+arroz,Arroz (média),1020,1020,consumo,€/kg,5,2025-04-21,1.41
+arroz,Arroz (média),1020,1020,consumo,€/kg,6,2025-05-19,1.42
+arroz,Arroz (média),1020,1020,consumo,€/kg,7,2025-06-16,1.44
+arroz,Arroz (média),1020,1020,consumo,€/kg,8,2025-07-14,1.4
+arroz,Arroz (média),1020,1020,consumo,€/kg,9,2025-08-11,1.46
+arroz,Arroz (média),1020,1020,consumo,€/kg,10,2025-09-08,1.41
+arroz,Arroz (média),1020,1020,consumo,€/kg,11,2025-10-06,1.39
+arroz,Arroz (média),1020,1020,consumo,€/kg,12,2025-11-03,1.4
+arroz,Arroz (média),1020,1020,consumo,€/kg,13,2025-12-01,1.41
+arroz,Arroz (média),1020,1020,consumo,€/kg,1,2025-12-29,1.43
+arroz,Arroz (média),1020,1020,consumo,€/kg,2,2026-01-26,1.41
+arroz,Arroz (média),1020,1020,consumo,€/kg,3,2026-02-23,1.39
+arroz,Arroz (média),1020,1020,consumo,€/kg,4,2026-03-23,1.38
+arroz,Arroz (média),1020,1020,consumo,€/kg,5,2026-04-20,1.43
+arroz,Arroz (média),1020,1020,consumo,€/kg,6,2026-05-18,1.43
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,1,2022-01-03,0.91
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,2,2022-01-31,0.94
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,3,2022-02-28,0.98
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,4,2022-03-28,0.98
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,5,2022-04-25,0.96
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,6,2022-05-23,0.98
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,7,2022-06-20,1.01
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,8,2022-07-18,1.02
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,9,2022-08-15,1.02
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,10,2022-09-12,1.04
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,11,2022-10-10,1.06
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,12,2022-11-07,1.24
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,13,2022-12-05,1.42
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,1,2023-01-02,1.4
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,2,2023-01-30,1.39
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,3,2023-02-27,1.53
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,4,2023-03-27,1.46
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,5,2023-04-24,1.45
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,6,2023-05-22,1.42
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,7,2023-06-19,1.27
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,8,2023-07-17,1.37
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,9,2023-08-14,1.39
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,10,2023-09-11,1.38
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,11,2023-10-09,1.4
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,12,2023-11-06,1.39
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,13,2023-12-04,1.39
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,1,2024-01-01,1.35
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,2,2024-01-29,1.39
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,3,2024-02-26,1.38
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,4,2024-03-25,1.37
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,5,2024-04-22,1.35
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,6,2024-05-20,1.37
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,7,2024-06-17,1.31
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,8,2024-07-15,1.37
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,9,2024-08-12,1.33
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,10,2024-09-09,1.34
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,11,2024-10-07,1.31
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,12,2024-11-04,1.37
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,13,2024-12-02,1.37
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,1,2024-12-30,1.3
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,2,2025-01-27,1.36
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,3,2025-02-24,1.33
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,4,2025-03-24,1.24
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,5,2025-04-21,1.23
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,6,2025-05-19,1.26
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,7,2025-06-16,1.22
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,8,2025-07-14,1.21
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,9,2025-08-11,1.23
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,10,2025-09-08,1.2
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,11,2025-10-06,1.19
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,12,2025-11-03,1.2
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,13,2025-12-01,1.21
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,1,2025-12-29,1.21
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,2,2026-01-26,1.2
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,3,2026-02-23,1.22
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,4,2026-03-23,1.21
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,5,2026-04-20,1.2
+arroz,Arroz Carolino,1021,1021,consumo,€/kg,6,2026-05-18,1.19
+arroz,Arroz Carolino,1021,102,producao,€/kg,1,2022-01-03,0.34
+arroz,Arroz Carolino,1021,102,producao,€/kg,2,2022-01-31,0.33
+arroz,Arroz Carolino,1021,102,producao,€/kg,13,2022-12-05,0.65
+arroz,Arroz Carolino,1021,102,producao,€/kg,1,2023-01-02,0.65
+arroz,Arroz Carolino,1021,102,producao,€/kg,2,2023-01-30,0.65
+arroz,Arroz Carolino,1021,102,producao,€/kg,12,2023-11-06,0.5
+arroz,Arroz Carolino,1021,102,producao,€/kg,13,2023-12-04,0.5
+arroz,Arroz Carolino,1021,102,producao,€/kg,1,2024-01-01,0.51
+arroz,Arroz Carolino,1021,102,producao,€/kg,2,2024-01-29,0.5
+arroz,Arroz Carolino,1021,102,producao,€/kg,3,2024-02-26,0.5
+arroz,Arroz Carolino,1021,102,producao,€/kg,12,2024-11-04,0.35
+arroz,Arroz Carolino,1021,102,producao,€/kg,13,2024-12-02,0.35
+arroz,Arroz Carolino,1021,102,producao,€/kg,1,2024-12-30,0.35
+arroz,Arroz Carolino,1021,102,producao,€/kg,12,2025-11-03,0.39
+arroz,Arroz Carolino,1021,102,producao,€/kg,13,2025-12-01,0.37
+arroz,Arroz Carolino,1021,102,producao,€/kg,1,2025-12-29,0.38
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,1,2022-01-03,3.74
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,2,2022-01-31,4.04
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,3,2022-02-28,4.05
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,4,2022-03-28,3.96
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,5,2022-04-25,4.36
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,6,2022-05-23,4.28
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,7,2022-06-20,3.81
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,8,2022-07-18,3.8
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,9,2022-08-15,3.93
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,10,2022-09-12,4.0
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,11,2022-10-10,4.45
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,12,2022-11-07,4.2
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,13,2022-12-05,4.81
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,1,2023-01-02,5.17
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,2,2023-01-30,5.64
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,3,2023-02-27,5.27
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,4,2023-03-27,5.81
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,5,2023-04-24,5.92
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,6,2023-05-22,5.87
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,7,2023-06-19,6.16
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,8,2023-07-17,6.22
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,9,2023-08-14,6.45
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,10,2023-09-11,6.75
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,11,2023-10-09,7.55
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,12,2023-11-06,7.93
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,13,2023-12-04,7.15
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,1,2024-01-01,8.67
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,2,2024-01-29,8.57
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,3,2024-02-26,9.21
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,4,2024-03-25,8.85
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,5,2024-04-22,9.03
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,6,2024-05-20,9.38
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,7,2024-06-17,8.99
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,8,2024-07-15,8.51
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,9,2024-08-12,8.97
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,10,2024-09-09,8.64
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,11,2024-10-07,8.33
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,12,2024-11-04,7.98
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,13,2024-12-02,7.54
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,1,2024-12-30,7.45
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,2,2025-01-27,7.1
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,3,2025-02-24,6.6
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,4,2025-03-24,6.66
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,5,2025-04-21,5.59
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,6,2025-05-19,6.01
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,7,2025-06-16,6.05
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,8,2025-07-14,5.83
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,9,2025-08-11,5.53
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,10,2025-09-08,5.26
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,11,2025-10-06,5.07
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,12,2025-11-03,5.66
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,13,2025-12-01,5.65
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,1,2025-12-29,5.55
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,2,2026-01-26,5.72
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,3,2026-02-23,5.65
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,4,2026-03-23,5.52
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,5,2026-04-20,5.48
+azeite-3,Azeite Virgem,1025,1025,consumo,€/l,6,2026-05-18,5.18
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,1,2022-01-03,4.36
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,2,2022-01-31,4.33
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,3,2022-02-28,4.49
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,4,2022-03-28,4.46
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,5,2022-04-25,4.69
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,6,2022-05-23,4.54
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,7,2022-06-20,4.52
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,8,2022-07-18,4.46
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,9,2022-08-15,4.62
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,10,2022-09-12,4.6
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,11,2022-10-10,4.85
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,12,2022-11-07,5.12
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,13,2022-12-05,5.29
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,1,2023-01-02,5.31
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,2,2023-01-30,5.93
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,3,2023-02-27,5.76
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,4,2023-03-27,5.56
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,5,2023-04-24,5.84
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,6,2023-05-22,6.29
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,7,2023-06-19,6.41
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,8,2023-07-17,6.59
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,9,2023-08-14,6.88
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,10,2023-09-11,7.87
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,11,2023-10-09,8.66
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,12,2023-11-06,9.06
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,13,2023-12-04,8.98
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,1,2024-01-01,8.86
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,2,2024-01-29,9.74
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,3,2024-02-26,9.75
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,4,2024-03-25,9.78
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,5,2024-04-22,9.6
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,6,2024-05-20,9.53
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,7,2024-06-17,9.64
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,8,2024-07-15,9.47
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,9,2024-08-12,9.46
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,10,2024-09-09,9.41
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,11,2024-10-07,9.2
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,12,2024-11-04,8.69
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,13,2024-12-02,8.8
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,1,2024-12-30,8.11
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,2,2025-01-27,7.91
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,3,2025-02-24,7.55
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,4,2025-03-24,7.42
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,5,2025-04-21,7.04
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,6,2025-05-19,6.92
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,7,2025-06-16,7.01
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,8,2025-07-14,6.77
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,9,2025-08-11,7.12
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,10,2025-09-08,6.64
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,11,2025-10-06,6.55
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,12,2025-11-03,6.84
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,13,2025-12-01,7.1
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,1,2025-12-29,6.82
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,2,2026-01-26,6.52
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,3,2026-02-23,6.58
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,4,2026-03-23,6.48
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,5,2026-04-20,6.77
+azeite-3,Azeite Virgem Extra,1026,1026,consumo,€/l,6,2026-05-18,6.79
+banana,Banana,1035,1035,consumo,€/kg,1,2022-01-03,1.07
+banana,Banana,1035,1035,consumo,€/kg,2,2022-01-31,1.11
+banana,Banana,1035,1035,consumo,€/kg,3,2022-02-28,1.11
+banana,Banana,1035,1035,consumo,€/kg,4,2022-03-28,1.1
+banana,Banana,1035,1035,consumo,€/kg,5,2022-04-25,1.14
+banana,Banana,1035,1035,consumo,€/kg,6,2022-05-23,1.16
+banana,Banana,1035,1035,consumo,€/kg,7,2022-06-20,1.16
+banana,Banana,1035,1035,consumo,€/kg,8,2022-07-18,1.16
+banana,Banana,1035,1035,consumo,€/kg,9,2022-08-15,1.17
+banana,Banana,1035,1035,consumo,€/kg,10,2022-09-12,1.18
+banana,Banana,1035,1035,consumo,€/kg,11,2022-10-10,1.2
+banana,Banana,1035,1035,consumo,€/kg,12,2022-11-07,1.21
+banana,Banana,1035,1035,consumo,€/kg,13,2022-12-05,1.21
+banana,Banana,1035,1035,consumo,€/kg,1,2023-01-02,1.26
+banana,Banana,1035,1035,consumo,€/kg,2,2023-01-30,1.34
+banana,Banana,1035,1035,consumo,€/kg,3,2023-02-27,1.34
+banana,Banana,1035,1035,consumo,€/kg,4,2023-03-27,1.33
+banana,Banana,1035,1035,consumo,€/kg,5,2023-04-24,1.26
+banana,Banana,1035,1035,consumo,€/kg,6,2023-05-22,1.27
+banana,Banana,1035,1035,consumo,€/kg,7,2023-06-19,1.24
+banana,Banana,1035,1035,consumo,€/kg,8,2023-07-17,1.24
+banana,Banana,1035,1035,consumo,€/kg,9,2023-08-14,1.24
+banana,Banana,1035,1035,consumo,€/kg,10,2023-09-11,1.23
+banana,Banana,1035,1035,consumo,€/kg,11,2023-10-09,1.23
+banana,Banana,1035,1035,consumo,€/kg,12,2023-11-06,1.27
+banana,Banana,1035,1035,consumo,€/kg,13,2023-12-04,1.26
+banana,Banana,1035,1035,consumo,€/kg,1,2024-01-01,1.27
+banana,Banana,1035,1035,consumo,€/kg,2,2024-01-29,1.25
+banana,Banana,1035,1035,consumo,€/kg,3,2024-02-26,1.25
+banana,Banana,1035,1035,consumo,€/kg,4,2024-03-25,1.31
+banana,Banana,1035,1035,consumo,€/kg,5,2024-04-22,1.3
+banana,Banana,1035,1035,consumo,€/kg,6,2024-05-20,1.29
+banana,Banana,1035,1035,consumo,€/kg,7,2024-06-17,1.29
+banana,Banana,1035,1035,consumo,€/kg,8,2024-07-15,1.29
+banana,Banana,1035,1035,consumo,€/kg,9,2024-08-12,1.29
+banana,Banana,1035,1035,consumo,€/kg,10,2024-09-09,1.28
+banana,Banana,1035,1035,consumo,€/kg,11,2024-10-07,1.29
+banana,Banana,1035,1035,consumo,€/kg,12,2024-11-04,1.28
+banana,Banana,1035,1035,consumo,€/kg,13,2024-12-02,1.28
+banana,Banana,1035,1035,consumo,€/kg,1,2024-12-30,1.32
+banana,Banana,1035,1035,consumo,€/kg,2,2025-01-27,1.34
+banana,Banana,1035,1035,consumo,€/kg,3,2025-02-24,1.34
+banana,Banana,1035,1035,consumo,€/kg,4,2025-03-24,1.33
+banana,Banana,1035,1035,consumo,€/kg,5,2025-04-21,1.34
+banana,Banana,1035,1035,consumo,€/kg,6,2025-05-19,1.35
+banana,Banana,1035,1035,consumo,€/kg,7,2025-06-16,1.36
+banana,Banana,1035,1035,consumo,€/kg,8,2025-07-14,1.33
+banana,Banana,1035,1035,consumo,€/kg,9,2025-08-11,1.3
+banana,Banana,1035,1035,consumo,€/kg,10,2025-09-08,1.35
+banana,Banana,1035,1035,consumo,€/kg,11,2025-10-06,1.29
+banana,Banana,1035,1035,consumo,€/kg,12,2025-11-03,1.3
+banana,Banana,1035,1035,consumo,€/kg,13,2025-12-01,1.35
+banana,Banana,1035,1035,consumo,€/kg,1,2025-12-29,1.29
+banana,Banana,1035,1035,consumo,€/kg,2,2026-01-26,1.33
+banana,Banana,1035,1035,consumo,€/kg,3,2026-02-23,1.32
+banana,Banana,1035,1035,consumo,€/kg,4,2026-03-23,1.32
+banana,Banana,1035,1035,consumo,€/kg,5,2026-04-20,1.32
+banana,Banana,1035,1035,consumo,€/kg,6,2026-05-18,1.36
+batata,Batata,1027,1027,consumo,€/kg,1,2022-01-03,0.7
+batata,Batata,1027,1027,consumo,€/kg,2,2022-01-31,0.73
+batata,Batata,1027,1027,consumo,€/kg,3,2022-02-28,0.74
+batata,Batata,1027,1027,consumo,€/kg,4,2022-03-28,0.74
+batata,Batata,1027,1027,consumo,€/kg,5,2022-04-25,0.78
+batata,Batata,1027,1027,consumo,€/kg,6,2022-05-23,0.75
+batata,Batata,1027,1027,consumo,€/kg,7,2022-06-20,0.76
+batata,Batata,1027,1027,consumo,€/kg,8,2022-07-18,0.77
+batata,Batata,1027,1027,consumo,€/kg,9,2022-08-15,0.83
+batata,Batata,1027,1027,consumo,€/kg,10,2022-09-12,0.86
+batata,Batata,1027,1027,consumo,€/kg,11,2022-10-10,0.93
+batata,Batata,1027,1027,consumo,€/kg,12,2022-11-07,0.93
+batata,Batata,1027,1027,consumo,€/kg,13,2022-12-05,0.96
+batata,Batata,1027,1027,consumo,€/kg,1,2023-01-02,0.95
+batata,Batata,1027,1027,consumo,€/kg,2,2023-01-30,0.97
+batata,Batata,1027,1027,consumo,€/kg,3,2023-02-27,0.99
+batata,Batata,1027,1027,consumo,€/kg,4,2023-03-27,1.04
+batata,Batata,1027,1027,consumo,€/kg,5,2023-04-24,1.06
+batata,Batata,1027,1027,consumo,€/kg,6,2023-05-22,1.06
+batata,Batata,1027,1027,consumo,€/kg,7,2023-06-19,1.01
+batata,Batata,1027,1027,consumo,€/kg,8,2023-07-17,0.97
+batata,Batata,1027,1027,consumo,€/kg,9,2023-08-14,1.07
+batata,Batata,1027,1027,consumo,€/kg,10,2023-09-11,1.03
+batata,Batata,1027,1027,consumo,€/kg,11,2023-10-09,0.98
+batata,Batata,1027,1027,consumo,€/kg,12,2023-11-06,1.01
+batata,Batata,1027,1027,consumo,€/kg,13,2023-12-04,1.04
+batata,Batata,1027,1027,consumo,€/kg,1,2024-01-01,1.1
+batata,Batata,1027,1027,consumo,€/kg,2,2024-01-29,1.1
+batata,Batata,1027,1027,consumo,€/kg,3,2024-02-26,1.12
+batata,Batata,1027,1027,consumo,€/kg,4,2024-03-25,1.16
+batata,Batata,1027,1027,consumo,€/kg,5,2024-04-22,1.2
+batata,Batata,1027,1027,consumo,€/kg,6,2024-05-20,1.16
+batata,Batata,1027,1027,consumo,€/kg,7,2024-06-17,1.18
+batata,Batata,1027,1027,consumo,€/kg,8,2024-07-15,1.1
+batata,Batata,1027,1027,consumo,€/kg,9,2024-08-12,1.12
+batata,Batata,1027,1027,consumo,€/kg,10,2024-09-09,1.14
+batata,Batata,1027,1027,consumo,€/kg,11,2024-10-07,1.11
+batata,Batata,1027,1027,consumo,€/kg,12,2024-11-04,1.1
+batata,Batata,1027,1027,consumo,€/kg,13,2024-12-02,1.19
+batata,Batata,1027,1027,consumo,€/kg,1,2024-12-30,1.14
+batata,Batata,1027,1027,consumo,€/kg,2,2025-01-27,1.15
+batata,Batata,1027,1027,consumo,€/kg,3,2025-02-24,1.08
+batata,Batata,1027,1027,consumo,€/kg,4,2025-03-24,1.08
+batata,Batata,1027,1027,consumo,€/kg,5,2025-04-21,1.2
+batata,Batata,1027,1027,consumo,€/kg,6,2025-05-19,1.15
+batata,Batata,1027,1027,consumo,€/kg,7,2025-06-16,1.19
+batata,Batata,1027,1027,consumo,€/kg,8,2025-07-14,1.17
+batata,Batata,1027,1027,consumo,€/kg,9,2025-08-11,1.15
+batata,Batata,1027,1027,consumo,€/kg,10,2025-09-08,1.17
+batata,Batata,1027,1027,consumo,€/kg,11,2025-10-06,1.07
+batata,Batata,1027,1027,consumo,€/kg,12,2025-11-03,1.06
+batata,Batata,1027,1027,consumo,€/kg,13,2025-12-01,1.28
+batata,Batata,1027,1027,consumo,€/kg,1,2025-12-29,1.34
+batata,Batata,1027,1027,consumo,€/kg,2,2026-01-26,1.43
+batata,Batata,1027,1027,consumo,€/kg,3,2026-02-23,1.21
+batata,Batata,1027,1027,consumo,€/kg,4,2026-03-23,1.29
+batata,Batata,1027,1027,consumo,€/kg,5,2026-04-20,1.24
+batata,Batata,1027,1027,consumo,€/kg,6,2026-05-18,1.24
+batata,Batata,1027,120,producao,€/kg,1,2022-01-03,0.26
+batata,Batata,1027,120,producao,€/kg,2,2022-01-31,0.26
+batata,Batata,1027,120,producao,€/kg,3,2022-02-28,0.28
+batata,Batata,1027,120,producao,€/kg,4,2022-03-28,0.31
+batata,Batata,1027,120,producao,€/kg,5,2022-04-25,0.41
+batata,Batata,1027,120,producao,€/kg,6,2022-05-23,0.36
+batata,Batata,1027,120,producao,€/kg,7,2022-06-20,0.28
+batata,Batata,1027,120,producao,€/kg,8,2022-07-18,0.27
+batata,Batata,1027,120,producao,€/kg,9,2022-08-15,0.34
+batata,Batata,1027,120,producao,€/kg,10,2022-09-12,0.36
+batata,Batata,1027,120,producao,€/kg,11,2022-10-10,0.38
+batata,Batata,1027,120,producao,€/kg,12,2022-11-07,0.47
+batata,Batata,1027,120,producao,€/kg,13,2022-12-05,0.49
+batata,Batata,1027,120,producao,€/kg,1,2023-01-02,0.5
+batata,Batata,1027,120,producao,€/kg,2,2023-01-30,0.53
+batata,Batata,1027,120,producao,€/kg,3,2023-02-27,0.59
+batata,Batata,1027,120,producao,€/kg,4,2023-03-27,0.6
+batata,Batata,1027,120,producao,€/kg,6,2023-05-22,0.6
+batata,Batata,1027,120,producao,€/kg,7,2023-06-19,0.49
+batata,Batata,1027,120,producao,€/kg,8,2023-07-17,0.52
+batata,Batata,1027,120,producao,€/kg,9,2023-08-14,0.49
+batata,Batata,1027,120,producao,€/kg,10,2023-09-11,0.36
+batata,Batata,1027,120,producao,€/kg,11,2023-10-09,0.34
+batata,Batata,1027,120,producao,€/kg,12,2023-11-06,0.37
+batata,Batata,1027,120,producao,€/kg,13,2023-12-04,0.39
+batata,Batata,1027,120,producao,€/kg,1,2024-01-01,0.41
+batata,Batata,1027,120,producao,€/kg,2,2024-01-29,0.43
+batata,Batata,1027,120,producao,€/kg,3,2024-02-26,0.44
+batata,Batata,1027,120,producao,€/kg,4,2024-03-25,0.52
+batata,Batata,1027,120,producao,€/kg,5,2024-04-22,0.53
+batata,Batata,1027,120,producao,€/kg,6,2024-05-20,0.53
+batata,Batata,1027,120,producao,€/kg,7,2024-06-17,0.53
+batata,Batata,1027,120,producao,€/kg,8,2024-07-15,0.59
+batata,Batata,1027,120,producao,€/kg,9,2024-08-12,0.54
+batata,Batata,1027,120,producao,€/kg,10,2024-09-09,0.54
+batata,Batata,1027,120,producao,€/kg,11,2024-10-07,0.5
+batata,Batata,1027,120,producao,€/kg,12,2024-11-04,0.45
+batata,Batata,1027,120,producao,€/kg,13,2024-12-02,0.48
+batata,Batata,1027,120,producao,€/kg,1,2024-12-30,0.44
+batata,Batata,1027,120,producao,€/kg,2,2025-01-27,0.42
+batata,Batata,1027,120,producao,€/kg,3,2025-02-24,0.4
+batata,Batata,1027,120,producao,€/kg,4,2025-03-24,0.4
+batata,Batata,1027,120,producao,€/kg,5,2025-04-21,0.4
+batata,Batata,1027,120,producao,€/kg,6,2025-05-19,0.4
+batata,Batata,1027,120,producao,€/kg,7,2025-06-16,0.36
+batata,Batata,1027,120,producao,€/kg,8,2025-07-14,0.34
+batata,Batata,1027,120,producao,€/kg,9,2025-08-11,0.39
+batata,Batata,1027,120,producao,€/kg,10,2025-09-08,0.39
+batata,Batata,1027,120,producao,€/kg,11,2025-10-06,0.4
+batata,Batata,1027,120,producao,€/kg,12,2025-11-03,0.42
+batata,Batata,1027,120,producao,€/kg,13,2025-12-01,0.43
+batata,Batata,1027,120,producao,€/kg,1,2025-12-29,0.42
+batata,Batata,1027,120,producao,€/kg,2,2026-01-26,0.41
+batata,Batata,1027,120,producao,€/kg,3,2026-02-23,0.39
+batata,Batata,1027,120,producao,€/kg,4,2026-03-23,0.46
+batata,Batata,1027,120,producao,€/kg,5,2026-04-20,0.46
+batata,Batata,1027,120,producao,€/kg,6,2026-05-18,0.51
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,1,2022-01-03,3.3
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,2,2022-01-31,3.39
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,3,2022-02-28,3.5
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,4,2022-03-28,3.87
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,5,2022-04-25,3.92
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,6,2022-05-23,3.99
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,7,2022-06-20,4.25
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,8,2022-07-18,4.24
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,9,2022-08-15,4.14
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,10,2022-09-12,4.21
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,11,2022-10-10,4.24
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,12,2022-11-07,4.29
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,13,2022-12-05,4.21
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,1,2023-01-02,4.11
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,2,2023-01-30,4.06
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,3,2023-02-27,4.06
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,4,2023-03-27,4.18
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,5,2023-04-24,4.21
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,6,2023-05-22,4.42
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,7,2023-06-19,4.11
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,8,2023-07-17,4.2
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,9,2023-08-14,4.22
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,10,2023-09-11,4.16
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,11,2023-10-09,4.08
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,12,2023-11-06,4.18
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,13,2023-12-04,4.26
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,1,2024-01-01,4.28
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,2,2024-01-29,4.35
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,3,2024-02-26,4.19
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,4,2024-03-25,4.37
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,5,2024-04-22,4.29
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,6,2024-05-20,4.54
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,7,2024-06-17,4.4
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,8,2024-07-15,4.41
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,9,2024-08-12,4.36
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,10,2024-09-09,4.4
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,11,2024-10-07,4.41
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,12,2024-11-04,4.4
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,13,2024-12-02,4.55
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,1,2024-12-30,4.45
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,2,2025-01-27,4.42
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,3,2025-02-24,4.38
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,4,2025-03-24,4.37
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,5,2025-04-21,4.42
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,6,2025-05-19,4.45
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,7,2025-06-16,4.55
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,8,2025-07-14,4.61
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,9,2025-08-11,4.68
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,10,2025-09-08,4.72
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,11,2025-10-06,4.69
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,12,2025-11-03,4.71
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,13,2025-12-01,4.57
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,1,2025-12-29,4.75
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,2,2026-01-26,4.62
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,3,2026-02-23,4.77
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,4,2026-03-23,4.83
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,5,2026-04-20,4.81
+carne-de-frango,Carne de Frango,1001,1001,consumo,€/kg,6,2026-05-18,4.71
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,1,2022-01-03,2.13
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,2,2022-01-31,2.38
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,3,2022-02-28,2.36
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,4,2022-03-28,2.72
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,5,2022-04-25,2.73
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,6,2022-05-23,2.71
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,7,2022-06-20,2.73
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,8,2022-07-18,2.87
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,9,2022-08-15,2.73
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,10,2022-09-12,2.81
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,11,2022-10-10,2.78
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,12,2022-11-07,2.82
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,13,2022-12-05,3.02
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,1,2023-01-02,2.62
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,2,2023-01-30,2.68
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,3,2023-02-27,2.71
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,4,2023-03-27,2.95
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,5,2023-04-24,2.91
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,6,2023-05-22,3.21
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,7,2023-06-19,2.78
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,8,2023-07-17,2.86
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,9,2023-08-14,2.84
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,10,2023-09-11,2.79
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,11,2023-10-09,2.91
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,12,2023-11-06,2.81
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,13,2023-12-04,2.96
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,1,2024-01-01,2.96
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,2,2024-01-29,2.95
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,3,2024-02-26,2.98
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,4,2024-03-25,3.06
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,5,2024-04-22,2.95
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,6,2024-05-20,3.03
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,7,2024-06-17,3.03
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,8,2024-07-15,3.06
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,9,2024-08-12,3.05
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,10,2024-09-09,2.87
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,11,2024-10-07,2.92
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,12,2024-11-04,2.89
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,13,2024-12-02,3.19
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,1,2024-12-30,2.98
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,2,2025-01-27,3.02
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,3,2025-02-24,3.05
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,4,2025-03-24,2.84
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,5,2025-04-21,2.92
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,6,2025-05-19,3.11
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,7,2025-06-16,3.05
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,8,2025-07-14,3.27
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,9,2025-08-11,3.29
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,10,2025-09-08,3.21
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,11,2025-10-06,3.24
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,12,2025-11-03,3.23
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,13,2025-12-01,3.07
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,1,2025-12-29,3.23
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,2,2026-01-26,3.23
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,3,2026-02-23,3.27
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,4,2026-03-23,3.26
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,5,2026-04-20,3.44
+carne-de-frango,Frango inteiro,1002,1002,consumo,€/kg,6,2026-05-18,3.23
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,1,2022-01-03,1.94
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,2,2022-01-31,1.93
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,3,2022-02-28,2.19
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,4,2022-03-28,2.45
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,5,2022-04-25,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,6,2022-05-23,2.5
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,7,2022-06-20,2.49
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,8,2022-07-18,2.51
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,9,2022-08-15,2.53
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,10,2022-09-12,2.46
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,11,2022-10-10,2.37
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,12,2022-11-07,2.29
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,13,2022-12-05,2.25
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,1,2023-01-02,2.21
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,2,2023-01-30,2.17
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,3,2023-02-27,2.28
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,4,2023-03-27,2.34
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,5,2023-04-24,2.45
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,6,2023-05-22,2.53
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,7,2023-06-19,2.49
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,8,2023-07-17,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,9,2023-08-14,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,10,2023-09-11,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,11,2023-10-09,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,12,2023-11-06,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,13,2023-12-04,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,1,2024-01-01,2.42
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,2,2024-01-29,2.41
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,3,2024-02-26,2.35
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,4,2024-03-25,2.35
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,5,2024-04-22,2.31
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,6,2024-05-20,2.38
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,7,2024-06-17,2.4
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,8,2024-07-15,2.44
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,9,2024-08-12,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,10,2024-09-09,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,11,2024-10-07,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,12,2024-11-04,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,13,2024-12-02,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,1,2024-12-30,2.48
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,2,2025-01-27,2.43
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,3,2025-02-24,2.39
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,4,2025-03-24,2.38
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,5,2025-04-21,2.43
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,6,2025-05-19,2.53
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,7,2025-06-16,2.53
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,8,2025-07-14,2.52
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,9,2025-08-11,2.55
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,10,2025-09-08,2.56
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,11,2025-10-06,2.58
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,12,2025-11-03,2.58
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,13,2025-12-01,2.56
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,1,2025-12-29,2.55
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,2,2026-01-26,2.55
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,3,2026-02-23,2.57
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,4,2026-03-23,2.64
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,5,2026-04-20,2.7
+carne-de-frango,Frango inteiro,1002,1,producao,€/kg,6,2026-05-18,2.7
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,1,2022-01-03,4.75
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,2,2022-01-31,4.67
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,3,2022-02-28,4.77
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,4,2022-03-28,5.51
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,5,2022-04-25,6.13
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,6,2022-05-23,6.27
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,7,2022-06-20,6.15
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,8,2022-07-18,6.48
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,9,2022-08-15,6.59
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,10,2022-09-12,6.5
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,11,2022-10-10,6.38
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,12,2022-11-07,6.39
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,13,2022-12-05,6.13
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,1,2023-01-02,6.43
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,2,2023-01-30,6.31
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,3,2023-02-27,6.28
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,4,2023-03-27,6.19
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,5,2023-04-24,6.14
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,6,2023-05-22,6.11
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,7,2023-06-19,6.06
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,8,2023-07-17,6.11
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,9,2023-08-14,5.94
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,10,2023-09-11,6.07
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,11,2023-10-09,6.02
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,12,2023-11-06,5.94
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,13,2023-12-04,6.15
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,1,2024-01-01,6.12
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,2,2024-01-29,6.09
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,3,2024-02-26,6.12
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,4,2024-03-25,6.26
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,5,2024-04-22,6.29
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,6,2024-05-20,6.14
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,7,2024-06-17,6.31
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,8,2024-07-15,6.41
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,9,2024-08-12,6.06
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,10,2024-09-09,6.41
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,11,2024-10-07,6.2
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,12,2024-11-04,6.29
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,13,2024-12-02,6.01
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,1,2024-12-30,5.99
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,2,2025-01-27,6.14
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,3,2025-02-24,6.16
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,4,2025-03-24,6.42
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,5,2025-04-21,6.39
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,6,2025-05-19,6.37
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,7,2025-06-16,6.22
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,8,2025-07-14,6.37
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,9,2025-08-11,6.52
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,10,2025-09-08,6.46
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,11,2025-10-06,6.48
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,12,2025-11-03,6.43
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,13,2025-12-01,6.26
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,1,2025-12-29,6.33
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,2,2026-01-26,6.37
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,3,2026-02-23,6.46
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,4,2026-03-23,6.34
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,5,2026-04-20,6.37
+carne-de-frango,Frango peito,1004,1004,consumo,€/kg,6,2026-05-18,6.4
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,1,2022-01-03,2.68
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,2,2022-01-31,2.86
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,3,2022-02-28,2.83
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,4,2022-03-28,3.22
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,5,2022-04-25,3.4
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,6,2022-05-23,3.47
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,7,2022-06-20,3.68
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,8,2022-07-18,3.6
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,9,2022-08-15,3.48
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,10,2022-09-12,3.64
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,11,2022-10-10,3.64
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,12,2022-11-07,3.64
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,13,2022-12-05,3.68
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,1,2023-01-02,3.5
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,2,2023-01-30,3.43
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,3,2023-02-27,3.33
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,4,2023-03-27,3.18
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,5,2023-04-24,3.5
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,6,2023-05-22,3.45
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,7,2023-06-19,3.37
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,8,2023-07-17,3.27
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,9,2023-08-14,3.37
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,10,2023-09-11,3.3
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,11,2023-10-09,3.2
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,12,2023-11-06,3.37
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,13,2023-12-04,3.42
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,1,2024-01-01,3.48
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,2,2024-01-29,3.43
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,3,2024-02-26,3.31
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,4,2024-03-25,3.43
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,5,2024-04-22,3.4
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,6,2024-05-20,3.55
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,7,2024-06-17,3.46
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,8,2024-07-15,3.5
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,9,2024-08-12,3.42
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,10,2024-09-09,3.6
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,11,2024-10-07,3.54
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,12,2024-11-04,3.52
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,13,2024-12-02,3.72
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,1,2024-12-30,3.64
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,2,2025-01-27,3.55
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,3,2025-02-24,3.47
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,4,2025-03-24,3.5
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,5,2025-04-21,3.51
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,6,2025-05-19,3.49
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,7,2025-06-16,3.58
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,8,2025-07-14,3.66
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,9,2025-08-11,3.62
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,10,2025-09-08,3.72
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,11,2025-10-06,3.81
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,12,2025-11-03,3.83
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,13,2025-12-01,3.68
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,1,2025-12-29,3.69
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,2,2026-01-26,3.68
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,3,2026-02-23,3.91
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,4,2026-03-23,3.97
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,5,2026-04-20,3.7
+carne-de-frango,Frango perna,1003,1003,consumo,€/kg,6,2026-05-18,3.79
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,1,2022-01-03,3.89
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,2,2022-01-31,4.02
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,3,2022-02-28,4.39
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,4,2022-03-28,4.56
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,5,2022-04-25,4.86
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,6,2022-05-23,4.71
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,7,2022-06-20,4.9
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,8,2022-07-18,4.93
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,9,2022-08-15,5.07
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,10,2022-09-12,5.16
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,11,2022-10-10,5.11
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,12,2022-11-07,5.01
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,13,2022-12-05,5.35
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,1,2023-01-02,4.94
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,2,2023-01-30,4.92
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,3,2023-02-27,5.4
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,4,2023-03-27,5.32
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,5,2023-04-24,5.53
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,6,2023-05-22,5.45
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,7,2023-06-19,5.39
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,8,2023-07-17,5.51
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,9,2023-08-14,5.32
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,10,2023-09-11,5.38
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,11,2023-10-09,5.08
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,12,2023-11-06,5.2
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,13,2023-12-04,5.38
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,1,2024-01-01,5.01
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,2,2024-01-29,5.16
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,3,2024-02-26,5.26
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,4,2024-03-25,5.41
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,5,2024-04-22,5.37
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,6,2024-05-20,5.47
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,7,2024-06-17,5.4
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,8,2024-07-15,5.49
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,9,2024-08-12,5.52
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,10,2024-09-09,5.37
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,11,2024-10-07,5.35
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,12,2024-11-04,5.33
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,13,2024-12-02,5.44
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,1,2024-12-30,5.36
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,2,2025-01-27,5.19
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,3,2025-02-24,5.34
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,4,2025-03-24,5.61
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,5,2025-04-21,5.39
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,6,2025-05-19,5.61
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,7,2025-06-16,5.55
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,8,2025-07-14,5.69
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,9,2025-08-11,5.63
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,10,2025-09-08,5.64
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,11,2025-10-06,5.46
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,12,2025-11-03,5.39
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,13,2025-12-01,5.43
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,1,2025-12-29,5.38
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,2,2026-01-26,5.4
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,3,2026-02-23,5.45
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,4,2026-03-23,5.88
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,5,2026-04-20,5.44
+carne-de-porco,Carne de Porco,1005,1005,consumo,€/kg,6,2026-05-18,5.47
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,1,2022-01-03,3.46
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,2,2022-01-31,3.6
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,3,2022-02-28,3.92
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,4,2022-03-28,4.06
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,5,2022-04-25,4.39
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,6,2022-05-23,4.24
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,7,2022-06-20,4.23
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,8,2022-07-18,4.45
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,9,2022-08-15,4.86
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,10,2022-09-12,4.95
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,11,2022-10-10,5.18
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,12,2022-11-07,4.61
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,13,2022-12-05,4.8
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,1,2023-01-02,4.81
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,2,2023-01-30,4.14
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,3,2023-02-27,5.36
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,4,2023-03-27,5.21
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,5,2023-04-24,5.05
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,6,2023-05-22,5.13
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,7,2023-06-19,4.9
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,8,2023-07-17,5.04
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,9,2023-08-14,4.91
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,10,2023-09-11,5.04
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,11,2023-10-09,4.71
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,12,2023-11-06,4.85
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,13,2023-12-04,4.57
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,1,2024-01-01,4.56
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,2,2024-01-29,4.9
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,3,2024-02-26,4.86
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,4,2024-03-25,4.93
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,5,2024-04-22,4.87
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,6,2024-05-20,5.07
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,7,2024-06-17,4.71
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,8,2024-07-15,4.77
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,9,2024-08-12,4.92
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,10,2024-09-09,4.73
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,11,2024-10-07,4.77
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,12,2024-11-04,4.76
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,13,2024-12-02,4.72
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,1,2024-12-30,4.79
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,2,2025-01-27,4.55
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,3,2025-02-24,4.93
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,4,2025-03-24,5.27
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,5,2025-04-21,4.82
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,6,2025-05-19,5.41
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,7,2025-06-16,5.13
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,8,2025-07-14,5.35
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,9,2025-08-11,5.19
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,10,2025-09-08,5.26
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,11,2025-10-06,5.29
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,12,2025-11-03,5.1
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,13,2025-12-01,4.96
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,1,2025-12-29,4.9
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,2,2026-01-26,5.03
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,3,2026-02-23,5.09
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,4,2026-03-23,5.44
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,5,2026-04-20,5.1
+carne-de-porco,Porco Bifana,1006,1006,consumo,€/kg,6,2026-05-18,5.08
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,1,2022-01-03,1.3
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,2,2022-01-31,1.39
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,3,2022-02-28,1.69
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,4,2022-03-28,2.08
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,5,2022-04-25,2.16
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,6,2022-05-23,2.15
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,7,2022-06-20,2.2
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,8,2022-07-18,2.26
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,9,2022-08-15,2.29
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,10,2022-09-12,2.3
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,11,2022-10-10,2.27
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,12,2022-11-07,2.19
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,13,2022-12-05,2.18
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,1,2023-01-02,2.2
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,2,2023-01-30,2.35
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,3,2023-02-27,2.58
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,4,2023-03-27,2.67
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,5,2023-04-24,2.67
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,6,2023-05-22,2.67
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,7,2023-06-19,2.67
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,8,2023-07-17,2.67
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,9,2023-08-14,2.58
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,10,2023-09-11,2.45
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,11,2023-10-09,2.3
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,12,2023-11-06,2.19
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,13,2023-12-04,2.18
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,1,2024-01-01,2.18
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,2,2024-01-29,2.2
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,3,2024-02-26,2.34
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,4,2024-03-25,2.41
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,5,2024-04-22,2.41
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,6,2024-05-20,2.41
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,7,2024-06-17,2.46
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,8,2024-07-15,2.47
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,9,2024-08-12,2.42
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,10,2024-09-09,2.3
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,11,2024-10-07,2.17
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,12,2024-11-04,2.11
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,13,2024-12-02,2.11
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,1,2024-12-30,2.1
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,2,2025-01-27,2.1
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,3,2025-02-24,2.2
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,4,2025-03-24,2.33
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,5,2025-04-21,2.37
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,6,2025-05-19,2.38
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,7,2025-06-16,2.42
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,8,2025-07-14,2.38
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,9,2025-08-11,2.25
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,10,2025-09-08,2.1
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,11,2025-10-06,1.92
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,12,2025-11-03,1.81
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,13,2025-12-01,1.52
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,1,2025-12-29,1.41
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,2,2026-01-26,1.4
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,3,2026-02-23,1.56
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,4,2026-03-23,1.76
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,5,2026-04-20,1.77
+carne-de-porco,Porco Bifana,1006,5,producao,€/kg,6,2026-05-18,1.79
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,1,2022-01-03,3.95
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,2,2022-01-31,3.87
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,3,2022-02-28,4.11
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,4,2022-03-28,4.24
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,5,2022-04-25,4.79
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,6,2022-05-23,4.42
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,7,2022-06-20,4.82
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,8,2022-07-18,4.79
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,9,2022-08-15,4.78
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,10,2022-09-12,5.11
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,11,2022-10-10,5.04
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,12,2022-11-07,4.94
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,13,2022-12-05,4.87
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,1,2023-01-02,4.88
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,2,2023-01-30,4.9
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,3,2023-02-27,5.29
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,4,2023-03-27,5.15
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,5,2023-04-24,5.12
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,6,2023-05-22,5.07
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,7,2023-06-19,5.06
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,8,2023-07-17,5.08
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,9,2023-08-14,4.96
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,10,2023-09-11,5.02
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,11,2023-10-09,4.7
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,12,2023-11-06,4.55
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,13,2023-12-04,4.98
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,1,2024-01-01,4.6
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,2,2024-01-29,4.74
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,3,2024-02-26,4.74
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,4,2024-03-25,4.9
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,5,2024-04-22,4.98
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,6,2024-05-20,4.87
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,7,2024-06-17,4.86
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,8,2024-07-15,5.28
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,9,2024-08-12,5.35
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,10,2024-09-09,5.02
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,11,2024-10-07,4.93
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,12,2024-11-04,4.81
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,13,2024-12-02,5.03
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,1,2024-12-30,4.94
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,2,2025-01-27,4.62
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,3,2025-02-24,4.88
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,4,2025-03-24,5.23
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,5,2025-04-21,5.14
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,6,2025-05-19,4.99
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,7,2025-06-16,4.91
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,8,2025-07-14,5.24
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,9,2025-08-11,5.27
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,10,2025-09-08,5.16
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,11,2025-10-06,5.04
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,12,2025-11-03,4.85
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,13,2025-12-01,4.97
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,1,2025-12-29,4.84
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,2,2026-01-26,4.93
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,3,2026-02-23,5.04
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,4,2026-03-23,5.34
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,5,2026-04-20,4.79
+carne-de-porco,Porco entremeada,1007,1007,consumo,€/kg,6,2026-05-18,4.84
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,1,2022-01-03,4.58
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,2,2022-01-31,3.85
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,3,2022-02-28,4.35
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,4,2022-03-28,5.35
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,5,2022-04-25,4.73
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,6,2022-05-23,4.85
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,7,2022-06-20,5.48
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,8,2022-07-18,4.55
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,9,2022-08-15,5.3
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,10,2022-09-12,5.84
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,11,2022-10-10,5.32
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,12,2022-11-07,5.08
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,13,2022-12-05,5.25
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,1,2023-01-02,5.32
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,2,2023-01-30,5.44
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,3,2023-02-27,6.18
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,4,2023-03-27,5.89
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,5,2023-04-24,4.47
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,6,2023-05-22,5.63
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,7,2023-06-19,5.8
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,8,2023-07-17,5.44
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,9,2023-08-14,6.1
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,10,2023-09-11,5.64
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,11,2023-10-09,5.6
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,12,2023-11-06,6.15
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,13,2023-12-04,5.63
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,1,2024-01-01,4.88
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,2,2024-01-29,5.39
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,3,2024-02-26,5.72
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,4,2024-03-25,5.71
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,5,2024-04-22,5.74
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,6,2024-05-20,5.82
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,7,2024-06-17,5.67
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,8,2024-07-15,5.67
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,9,2024-08-12,6.14
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,10,2024-09-09,5.31
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,11,2024-10-07,5.76
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,12,2024-11-04,5.2
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,13,2024-12-02,5.88
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,1,2024-12-30,5.64
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,2,2025-01-27,5.4
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,3,2025-02-24,6.0
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,4,2025-03-24,5.79
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,5,2025-04-21,6.13
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,6,2025-05-19,6.05
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,7,2025-06-16,5.97
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,8,2025-07-14,6.13
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,9,2025-08-11,6.15
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,10,2025-09-08,6.12
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,11,2025-10-06,5.84
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,12,2025-11-03,6.21
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,13,2025-12-01,6.15
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,1,2025-12-29,6.55
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,2,2026-01-26,6.19
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,3,2026-02-23,5.62
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,4,2026-03-23,6.04
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,5,2026-04-20,5.76
+carne-de-porco,Porco picada,1008,1008,consumo,€/kg,6,2026-05-18,5.99
+cebola,Cebola,1029,1029,consumo,€/kg,1,2022-01-03,0.9
+cebola,Cebola,1029,1029,consumo,€/kg,2,2022-01-31,1.01
+cebola,Cebola,1029,1029,consumo,€/kg,3,2022-02-28,0.97
+cebola,Cebola,1029,1029,consumo,€/kg,4,2022-03-28,1.01
+cebola,Cebola,1029,1029,consumo,€/kg,5,2022-04-25,1.03
+cebola,Cebola,1029,1029,consumo,€/kg,6,2022-05-23,1.0
+cebola,Cebola,1029,1029,consumo,€/kg,7,2022-06-20,1.0
+cebola,Cebola,1029,1029,consumo,€/kg,8,2022-07-18,0.94
+cebola,Cebola,1029,1029,consumo,€/kg,9,2022-08-15,0.99
+cebola,Cebola,1029,1029,consumo,€/kg,10,2022-09-12,1.02
+cebola,Cebola,1029,1029,consumo,€/kg,11,2022-10-10,1.09
+cebola,Cebola,1029,1029,consumo,€/kg,12,2022-11-07,1.12
+cebola,Cebola,1029,1029,consumo,€/kg,13,2022-12-05,1.27
+cebola,Cebola,1029,1029,consumo,€/kg,1,2023-01-02,1.36
+cebola,Cebola,1029,1029,consumo,€/kg,2,2023-01-30,1.47
+cebola,Cebola,1029,1029,consumo,€/kg,3,2023-02-27,1.67
+cebola,Cebola,1029,1029,consumo,€/kg,4,2023-03-27,1.76
+cebola,Cebola,1029,1029,consumo,€/kg,5,2023-04-24,1.64
+cebola,Cebola,1029,1029,consumo,€/kg,6,2023-05-22,1.59
+cebola,Cebola,1029,1029,consumo,€/kg,7,2023-06-19,1.46
+cebola,Cebola,1029,1029,consumo,€/kg,8,2023-07-17,1.36
+cebola,Cebola,1029,1029,consumo,€/kg,9,2023-08-14,1.46
+cebola,Cebola,1029,1029,consumo,€/kg,10,2023-09-11,1.5
+cebola,Cebola,1029,1029,consumo,€/kg,11,2023-10-09,1.41
+cebola,Cebola,1029,1029,consumo,€/kg,12,2023-11-06,1.45
+cebola,Cebola,1029,1029,consumo,€/kg,13,2023-12-04,1.5
+cebola,Cebola,1029,1029,consumo,€/kg,1,2024-01-01,1.57
+cebola,Cebola,1029,1029,consumo,€/kg,2,2024-01-29,1.6
+cebola,Cebola,1029,1029,consumo,€/kg,3,2024-02-26,1.57
+cebola,Cebola,1029,1029,consumo,€/kg,4,2024-03-25,1.65
+cebola,Cebola,1029,1029,consumo,€/kg,5,2024-04-22,1.59
+cebola,Cebola,1029,1029,consumo,€/kg,6,2024-05-20,1.47
+cebola,Cebola,1029,1029,consumo,€/kg,7,2024-06-17,1.4
+cebola,Cebola,1029,1029,consumo,€/kg,8,2024-07-15,1.36
+cebola,Cebola,1029,1029,consumo,€/kg,9,2024-08-12,1.33
+cebola,Cebola,1029,1029,consumo,€/kg,10,2024-09-09,1.4
+cebola,Cebola,1029,1029,consumo,€/kg,11,2024-10-07,1.28
+cebola,Cebola,1029,1029,consumo,€/kg,12,2024-11-04,1.32
+cebola,Cebola,1029,1029,consumo,€/kg,13,2024-12-02,1.35
+cebola,Cebola,1029,1029,consumo,€/kg,1,2024-12-30,1.31
+cebola,Cebola,1029,1029,consumo,€/kg,2,2025-01-27,1.36
+cebola,Cebola,1029,1029,consumo,€/kg,3,2025-02-24,1.32
+cebola,Cebola,1029,1029,consumo,€/kg,4,2025-03-24,1.37
+cebola,Cebola,1029,1029,consumo,€/kg,5,2025-04-21,1.45
+cebola,Cebola,1029,1029,consumo,€/kg,6,2025-05-19,1.5
+cebola,Cebola,1029,1029,consumo,€/kg,7,2025-06-16,1.44
+cebola,Cebola,1029,1029,consumo,€/kg,8,2025-07-14,1.43
+cebola,Cebola,1029,1029,consumo,€/kg,9,2025-08-11,1.49
+cebola,Cebola,1029,1029,consumo,€/kg,10,2025-09-08,1.42
+cebola,Cebola,1029,1029,consumo,€/kg,11,2025-10-06,1.43
+cebola,Cebola,1029,1029,consumo,€/kg,12,2025-11-03,1.44
+cebola,Cebola,1029,1029,consumo,€/kg,13,2025-12-01,1.39
+cebola,Cebola,1029,1029,consumo,€/kg,1,2025-12-29,1.41
+cebola,Cebola,1029,1029,consumo,€/kg,2,2026-01-26,1.44
+cebola,Cebola,1029,1029,consumo,€/kg,3,2026-02-23,1.42
+cebola,Cebola,1029,1029,consumo,€/kg,4,2026-03-23,1.44
+cebola,Cebola,1029,1029,consumo,€/kg,5,2026-04-20,1.51
+cebola,Cebola,1029,1029,consumo,€/kg,6,2026-05-18,1.42
+cebola,Cebola,1029,140,producao,€/kg,1,2022-01-03,0.35
+cebola,Cebola,1029,140,producao,€/kg,2,2022-01-31,0.44
+cebola,Cebola,1029,140,producao,€/kg,3,2022-02-28,0.7
+cebola,Cebola,1029,140,producao,€/kg,4,2022-03-28,0.42
+cebola,Cebola,1029,140,producao,€/kg,5,2022-04-25,0.37
+cebola,Cebola,1029,140,producao,€/kg,6,2022-05-23,0.39
+cebola,Cebola,1029,140,producao,€/kg,7,2022-06-20,0.34
+cebola,Cebola,1029,140,producao,€/kg,8,2022-07-18,0.33
+cebola,Cebola,1029,140,producao,€/kg,9,2022-08-15,0.38
+cebola,Cebola,1029,140,producao,€/kg,10,2022-09-12,0.45
+cebola,Cebola,1029,140,producao,€/kg,11,2022-10-10,0.46
+cebola,Cebola,1029,140,producao,€/kg,12,2022-11-07,0.56
+cebola,Cebola,1029,140,producao,€/kg,13,2022-12-05,0.8
+cebola,Cebola,1029,140,producao,€/kg,1,2023-01-02,1.0
+cebola,Cebola,1029,140,producao,€/kg,2,2023-01-30,1.1
+cebola,Cebola,1029,140,producao,€/kg,3,2023-02-27,1.2
+cebola,Cebola,1029,140,producao,€/kg,4,2023-03-27,0.89
+cebola,Cebola,1029,140,producao,€/kg,5,2023-04-24,0.75
+cebola,Cebola,1029,140,producao,€/kg,6,2023-05-22,0.64
+cebola,Cebola,1029,140,producao,€/kg,7,2023-06-19,0.53
+cenoura,Cenoura,1028,1028,consumo,€/kg,1,2022-01-03,0.68
+cenoura,Cenoura,1028,1028,consumo,€/kg,2,2022-01-31,0.67
+cenoura,Cenoura,1028,1028,consumo,€/kg,3,2022-02-28,0.68
+cenoura,Cenoura,1028,1028,consumo,€/kg,4,2022-03-28,0.7
+cenoura,Cenoura,1028,1028,consumo,€/kg,5,2022-04-25,0.75
+cenoura,Cenoura,1028,1028,consumo,€/kg,6,2022-05-23,0.76
+cenoura,Cenoura,1028,1028,consumo,€/kg,7,2022-06-20,0.76
+cenoura,Cenoura,1028,1028,consumo,€/kg,8,2022-07-18,0.77
+cenoura,Cenoura,1028,1028,consumo,€/kg,9,2022-08-15,0.76
+cenoura,Cenoura,1028,1028,consumo,€/kg,10,2022-09-12,0.85
+cenoura,Cenoura,1028,1028,consumo,€/kg,11,2022-10-10,0.91
+cenoura,Cenoura,1028,1028,consumo,€/kg,12,2022-11-07,0.94
+cenoura,Cenoura,1028,1028,consumo,€/kg,13,2022-12-05,1.0
+cenoura,Cenoura,1028,1028,consumo,€/kg,1,2023-01-02,1.07
+cenoura,Cenoura,1028,1028,consumo,€/kg,2,2023-01-30,1.12
+cenoura,Cenoura,1028,1028,consumo,€/kg,3,2023-02-27,1.24
+cenoura,Cenoura,1028,1028,consumo,€/kg,4,2023-03-27,1.32
+cenoura,Cenoura,1028,1028,consumo,€/kg,5,2023-04-24,1.2
+cenoura,Cenoura,1028,1028,consumo,€/kg,6,2023-05-22,1.21
+cenoura,Cenoura,1028,1028,consumo,€/kg,7,2023-06-19,1.14
+cenoura,Cenoura,1028,1028,consumo,€/kg,8,2023-07-17,1.09
+cenoura,Cenoura,1028,1028,consumo,€/kg,9,2023-08-14,1.05
+cenoura,Cenoura,1028,1028,consumo,€/kg,10,2023-09-11,1.05
+cenoura,Cenoura,1028,1028,consumo,€/kg,11,2023-10-09,1.01
+cenoura,Cenoura,1028,1028,consumo,€/kg,12,2023-11-06,1.01
+cenoura,Cenoura,1028,1028,consumo,€/kg,13,2023-12-04,1.04
+cenoura,Cenoura,1028,1028,consumo,€/kg,1,2024-01-01,1.07
+cenoura,Cenoura,1028,1028,consumo,€/kg,2,2024-01-29,1.04
+cenoura,Cenoura,1028,1028,consumo,€/kg,3,2024-02-26,1.06
+cenoura,Cenoura,1028,1028,consumo,€/kg,4,2024-03-25,1.06
+cenoura,Cenoura,1028,1028,consumo,€/kg,5,2024-04-22,1.05
+cenoura,Cenoura,1028,1028,consumo,€/kg,6,2024-05-20,1.05
+cenoura,Cenoura,1028,1028,consumo,€/kg,7,2024-06-17,1.03
+cenoura,Cenoura,1028,1028,consumo,€/kg,8,2024-07-15,1.03
+cenoura,Cenoura,1028,1028,consumo,€/kg,9,2024-08-12,1.03
+cenoura,Cenoura,1028,1028,consumo,€/kg,10,2024-09-09,1.05
+cenoura,Cenoura,1028,1028,consumo,€/kg,11,2024-10-07,1.03
+cenoura,Cenoura,1028,1028,consumo,€/kg,12,2024-11-04,1.04
+cenoura,Cenoura,1028,1028,consumo,€/kg,13,2024-12-02,1.02
+cenoura,Cenoura,1028,1028,consumo,€/kg,1,2024-12-30,1.02
+cenoura,Cenoura,1028,1028,consumo,€/kg,2,2025-01-27,1.0
+cenoura,Cenoura,1028,1028,consumo,€/kg,3,2025-02-24,0.98
+cenoura,Cenoura,1028,1028,consumo,€/kg,4,2025-03-24,1.02
+cenoura,Cenoura,1028,1028,consumo,€/kg,5,2025-04-21,1.0
+cenoura,Cenoura,1028,1028,consumo,€/kg,6,2025-05-19,1.03
+cenoura,Cenoura,1028,1028,consumo,€/kg,7,2025-06-16,1.04
+cenoura,Cenoura,1028,1028,consumo,€/kg,8,2025-07-14,1.05
+cenoura,Cenoura,1028,1028,consumo,€/kg,9,2025-08-11,1.06
+cenoura,Cenoura,1028,1028,consumo,€/kg,10,2025-09-08,1.07
+cenoura,Cenoura,1028,1028,consumo,€/kg,11,2025-10-06,1.04
+cenoura,Cenoura,1028,1028,consumo,€/kg,12,2025-11-03,1.03
+cenoura,Cenoura,1028,1028,consumo,€/kg,13,2025-12-01,1.0
+cenoura,Cenoura,1028,1028,consumo,€/kg,1,2025-12-29,1.01
+cenoura,Cenoura,1028,1028,consumo,€/kg,2,2026-01-26,1.03
+cenoura,Cenoura,1028,1028,consumo,€/kg,3,2026-02-23,1.08
+cenoura,Cenoura,1028,1028,consumo,€/kg,4,2026-03-23,1.1
+cenoura,Cenoura,1028,1028,consumo,€/kg,5,2026-04-20,1.09
+cenoura,Cenoura,1028,1028,consumo,€/kg,6,2026-05-18,1.13
+cenoura,Cenoura,1028,141,producao,€/kg,1,2022-01-03,0.28
+cenoura,Cenoura,1028,141,producao,€/kg,2,2022-01-31,0.29
+cenoura,Cenoura,1028,141,producao,€/kg,3,2022-02-28,0.31
+cenoura,Cenoura,1028,141,producao,€/kg,4,2022-03-28,0.34
+cenoura,Cenoura,1028,141,producao,€/kg,5,2022-04-25,0.35
+cenoura,Cenoura,1028,141,producao,€/kg,6,2022-05-23,0.33
+cenoura,Cenoura,1028,141,producao,€/kg,7,2022-06-20,0.34
+cenoura,Cenoura,1028,141,producao,€/kg,8,2022-07-18,0.35
+cenoura,Cenoura,1028,141,producao,€/kg,9,2022-08-15,0.34
+cenoura,Cenoura,1028,141,producao,€/kg,10,2022-09-12,0.42
+cenoura,Cenoura,1028,141,producao,€/kg,11,2022-10-10,0.46
+cenoura,Cenoura,1028,141,producao,€/kg,12,2022-11-07,0.47
+cenoura,Cenoura,1028,141,producao,€/kg,13,2022-12-05,0.49
+cenoura,Cenoura,1028,141,producao,€/kg,1,2023-01-02,0.55
+cenoura,Cenoura,1028,141,producao,€/kg,2,2023-01-30,0.65
+cenoura,Cenoura,1028,141,producao,€/kg,3,2023-02-27,0.71
+cenoura,Cenoura,1028,141,producao,€/kg,4,2023-03-27,0.77
+cenoura,Cenoura,1028,141,producao,€/kg,5,2023-04-24,0.76
+cenoura,Cenoura,1028,141,producao,€/kg,6,2023-05-22,0.72
+cenoura,Cenoura,1028,141,producao,€/kg,7,2023-06-19,0.47
+cenoura,Cenoura,1028,141,producao,€/kg,8,2023-07-17,0.4
+cenoura,Cenoura,1028,141,producao,€/kg,9,2023-08-14,0.4
+cenoura,Cenoura,1028,141,producao,€/kg,10,2023-09-11,0.43
+cenoura,Cenoura,1028,141,producao,€/kg,11,2023-10-09,0.44
+cenoura,Cenoura,1028,141,producao,€/kg,12,2023-11-06,0.44
+cenoura,Cenoura,1028,141,producao,€/kg,13,2023-12-04,0.49
+cenoura,Cenoura,1028,141,producao,€/kg,1,2024-01-01,0.53
+cenoura,Cenoura,1028,141,producao,€/kg,2,2024-01-29,0.53
+cenoura,Cenoura,1028,141,producao,€/kg,3,2024-02-26,0.54
+cenoura,Cenoura,1028,141,producao,€/kg,4,2024-03-25,0.6
+cenoura,Cenoura,1028,141,producao,€/kg,5,2024-04-22,0.6
+cenoura,Cenoura,1028,141,producao,€/kg,6,2024-05-20,0.58
+cenoura,Cenoura,1028,141,producao,€/kg,7,2024-06-17,0.51
+cenoura,Cenoura,1028,141,producao,€/kg,8,2024-07-15,0.42
+cenoura,Cenoura,1028,141,producao,€/kg,9,2024-08-12,0.41
+cenoura,Cenoura,1028,141,producao,€/kg,10,2024-09-09,0.39
+cenoura,Cenoura,1028,141,producao,€/kg,11,2024-10-07,0.38
+cenoura,Cenoura,1028,141,producao,€/kg,12,2024-11-04,0.36
+cenoura,Cenoura,1028,141,producao,€/kg,13,2024-12-02,0.38
+cenoura,Cenoura,1028,141,producao,€/kg,1,2024-12-30,0.4
+cenoura,Cenoura,1028,141,producao,€/kg,2,2025-01-27,0.42
+cenoura,Cenoura,1028,141,producao,€/kg,3,2025-02-24,0.43
+cenoura,Cenoura,1028,141,producao,€/kg,4,2025-03-24,0.55
+cenoura,Cenoura,1028,141,producao,€/kg,5,2025-04-21,0.53
+cenoura,Cenoura,1028,141,producao,€/kg,6,2025-05-19,0.46
+cenoura,Cenoura,1028,141,producao,€/kg,7,2025-06-16,0.37
+cenoura,Cenoura,1028,141,producao,€/kg,8,2025-07-14,0.39
+cenoura,Cenoura,1028,141,producao,€/kg,9,2025-08-11,0.42
+cenoura,Cenoura,1028,141,producao,€/kg,10,2025-09-08,0.44
+cenoura,Cenoura,1028,141,producao,€/kg,11,2025-10-06,0.43
+cenoura,Cenoura,1028,141,producao,€/kg,12,2025-11-03,0.41
+cenoura,Cenoura,1028,141,producao,€/kg,13,2025-12-01,0.41
+cenoura,Cenoura,1028,141,producao,€/kg,1,2025-12-29,0.43
+cenoura,Cenoura,1028,141,producao,€/kg,2,2026-01-26,0.48
+cenoura,Cenoura,1028,141,producao,€/kg,3,2026-02-23,0.53
+cenoura,Cenoura,1028,141,producao,€/kg,4,2026-03-23,0.66
+cenoura,Cenoura,1028,141,producao,€/kg,5,2026-04-20,0.68
+cenoura,Cenoura,1028,141,producao,€/kg,6,2026-05-18,0.59
+couve,Brócolo,1034,1034,consumo,€/kg,1,2022-01-03,1.85
+couve,Brócolo,1034,1034,consumo,€/kg,2,2022-01-31,1.84
+couve,Brócolo,1034,1034,consumo,€/kg,3,2022-02-28,1.96
+couve,Brócolo,1034,1034,consumo,€/kg,4,2022-03-28,1.99
+couve,Brócolo,1034,1034,consumo,€/kg,5,2022-04-25,1.99
+couve,Brócolo,1034,1034,consumo,€/kg,6,2022-05-23,2.02
+couve,Brócolo,1034,1034,consumo,€/kg,7,2022-06-20,2.15
+couve,Brócolo,1034,1034,consumo,€/kg,8,2022-07-18,2.65
+couve,Brócolo,1034,1034,consumo,€/kg,9,2022-08-15,3.04
+couve,Brócolo,1034,1034,consumo,€/kg,10,2022-09-12,3.21
+couve,Brócolo,1034,1034,consumo,€/kg,11,2022-10-10,2.77
+couve,Brócolo,1034,1034,consumo,€/kg,12,2022-11-07,2.56
+couve,Brócolo,1034,1034,consumo,€/kg,13,2022-12-05,2.67
+couve,Brócolo,1034,1034,consumo,€/kg,1,2023-01-02,2.65
+couve,Brócolo,1034,1034,consumo,€/kg,2,2023-01-30,2.95
+couve,Brócolo,1034,1034,consumo,€/kg,3,2023-02-27,3.03
+couve,Brócolo,1034,1034,consumo,€/kg,4,2023-03-27,2.42
+couve,Brócolo,1034,1034,consumo,€/kg,5,2023-04-24,2.64
+couve,Brócolo,1034,1034,consumo,€/kg,6,2023-05-22,2.56
+couve,Brócolo,1034,1034,consumo,€/kg,7,2023-06-19,2.43
+couve,Brócolo,1034,1034,consumo,€/kg,8,2023-07-17,2.85
+couve,Brócolo,1034,1034,consumo,€/kg,9,2023-08-14,3.12
+couve,Brócolo,1034,1034,consumo,€/kg,10,2023-09-11,3.09
+couve,Brócolo,1034,1034,consumo,€/kg,11,2023-10-09,3.01
+couve,Brócolo,1034,1034,consumo,€/kg,12,2023-11-06,3.0
+couve,Brócolo,1034,1034,consumo,€/kg,13,2023-12-04,2.83
+couve,Brócolo,1034,1034,consumo,€/kg,1,2024-01-01,2.61
+couve,Brócolo,1034,1034,consumo,€/kg,2,2024-01-29,2.52
+couve,Brócolo,1034,1034,consumo,€/kg,3,2024-02-26,2.55
+couve,Brócolo,1034,1034,consumo,€/kg,4,2024-03-25,2.68
+couve,Brócolo,1034,1034,consumo,€/kg,5,2024-04-22,2.66
+couve,Brócolo,1034,1034,consumo,€/kg,6,2024-05-20,2.59
+couve,Brócolo,1034,1034,consumo,€/kg,7,2024-06-17,2.76
+couve,Brócolo,1034,1034,consumo,€/kg,8,2024-07-15,2.65
+couve,Brócolo,1034,1034,consumo,€/kg,9,2024-08-12,2.96
+couve,Brócolo,1034,1034,consumo,€/kg,10,2024-09-09,3.18
+couve,Brócolo,1034,1034,consumo,€/kg,11,2024-10-07,2.7
+couve,Brócolo,1034,1034,consumo,€/kg,12,2024-11-04,2.63
+couve,Brócolo,1034,1034,consumo,€/kg,13,2024-12-02,2.64
+couve,Brócolo,1034,1034,consumo,€/kg,1,2024-12-30,2.52
+couve,Brócolo,1034,1034,consumo,€/kg,2,2025-01-27,2.54
+couve,Brócolo,1034,1034,consumo,€/kg,3,2025-02-24,2.26
+couve,Brócolo,1034,1034,consumo,€/kg,4,2025-03-24,2.63
+couve,Brócolo,1034,1034,consumo,€/kg,5,2025-04-21,2.48
+couve,Brócolo,1034,1034,consumo,€/kg,6,2025-05-19,2.67
+couve,Brócolo,1034,1034,consumo,€/kg,7,2025-06-16,2.71
+couve,Brócolo,1034,1034,consumo,€/kg,8,2025-07-14,3.07
+couve,Brócolo,1034,1034,consumo,€/kg,9,2025-08-11,3.68
+couve,Brócolo,1034,1034,consumo,€/kg,10,2025-09-08,3.44
+couve,Brócolo,1034,1034,consumo,€/kg,11,2025-10-06,3.22
+couve,Brócolo,1034,1034,consumo,€/kg,12,2025-11-03,2.96
+couve,Brócolo,1034,1034,consumo,€/kg,13,2025-12-01,2.9
+couve,Brócolo,1034,1034,consumo,€/kg,1,2025-12-29,2.89
+couve,Brócolo,1034,1034,consumo,€/kg,2,2026-01-26,2.57
+couve,Brócolo,1034,1034,consumo,€/kg,3,2026-02-23,2.65
+couve,Brócolo,1034,1034,consumo,€/kg,4,2026-03-23,3.16
+couve,Brócolo,1034,1034,consumo,€/kg,5,2026-04-20,3.25
+couve,Brócolo,1034,1034,consumo,€/kg,6,2026-05-18,2.97
+couve,Brócolo,1034,126,producao,€/kg,1,2022-01-03,0.35
+couve,Brócolo,1034,126,producao,€/kg,2,2022-01-31,0.51
+couve,Brócolo,1034,126,producao,€/kg,3,2022-02-28,0.54
+couve,Brócolo,1034,126,producao,€/kg,4,2022-03-28,0.54
+couve,Brócolo,1034,126,producao,€/kg,5,2022-04-25,0.52
+couve,Brócolo,1034,126,producao,€/kg,6,2022-05-23,0.51
+couve,Brócolo,1034,126,producao,€/kg,7,2022-06-20,0.82
+couve,Brócolo,1034,126,producao,€/kg,8,2022-07-18,1.02
+couve,Brócolo,1034,126,producao,€/kg,9,2022-08-15,1.81
+couve,Brócolo,1034,126,producao,€/kg,10,2022-09-12,1.61
+couve,Brócolo,1034,126,producao,€/kg,11,2022-10-10,1.13
+couve,Brócolo,1034,126,producao,€/kg,12,2022-11-07,0.79
+couve,Brócolo,1034,126,producao,€/kg,13,2022-12-05,0.91
+couve,Brócolo,1034,126,producao,€/kg,1,2023-01-02,0.84
+couve,Brócolo,1034,126,producao,€/kg,2,2023-01-30,1.03
+couve,Brócolo,1034,126,producao,€/kg,3,2023-02-27,0.97
+couve,Brócolo,1034,126,producao,€/kg,4,2023-03-27,0.73
+couve,Brócolo,1034,126,producao,€/kg,5,2023-04-24,0.75
+couve,Brócolo,1034,126,producao,€/kg,6,2023-05-22,0.57
+curgete,Curgete,1030,1030,consumo,€/kg,1,2022-01-03,2.41
+curgete,Curgete,1030,1030,consumo,€/kg,2,2022-01-31,2.01
+curgete,Curgete,1030,1030,consumo,€/kg,3,2022-02-28,1.76
+curgete,Curgete,1030,1030,consumo,€/kg,4,2022-03-28,2.37
+curgete,Curgete,1030,1030,consumo,€/kg,5,2022-04-25,1.44
+curgete,Curgete,1030,1030,consumo,€/kg,6,2022-05-23,1.14
+curgete,Curgete,1030,1030,consumo,€/kg,7,2022-06-20,0.87
+curgete,Curgete,1030,1030,consumo,€/kg,8,2022-07-18,0.94
+curgete,Curgete,1030,1030,consumo,€/kg,9,2022-08-15,1.19
+curgete,Curgete,1030,1030,consumo,€/kg,10,2022-09-12,1.95
+curgete,Curgete,1030,1030,consumo,€/kg,11,2022-10-10,2.28
+curgete,Curgete,1030,1030,consumo,€/kg,12,2022-11-07,2.13
+curgete,Curgete,1030,1030,consumo,€/kg,13,2022-12-05,1.96
+curgete,Curgete,1030,1030,consumo,€/kg,1,2023-01-02,1.81
+curgete,Curgete,1030,1030,consumo,€/kg,2,2023-01-30,2.18
+curgete,Curgete,1030,1030,consumo,€/kg,3,2023-02-27,2.26
+curgete,Curgete,1030,1030,consumo,€/kg,4,2023-03-27,1.61
+curgete,Curgete,1030,1030,consumo,€/kg,5,2023-04-24,1.31
+curgete,Curgete,1030,1030,consumo,€/kg,6,2023-05-22,1.31
+curgete,Curgete,1030,1030,consumo,€/kg,7,2023-06-19,1.12
+curgete,Curgete,1030,1030,consumo,€/kg,8,2023-07-17,1.12
+curgete,Curgete,1030,1030,consumo,€/kg,9,2023-08-14,1.4
+curgete,Curgete,1030,1030,consumo,€/kg,10,2023-09-11,1.39
+curgete,Curgete,1030,1030,consumo,€/kg,11,2023-10-09,1.41
+curgete,Curgete,1030,1030,consumo,€/kg,12,2023-11-06,1.65
+curgete,Curgete,1030,1030,consumo,€/kg,13,2023-12-04,1.84
+curgete,Curgete,1030,1030,consumo,€/kg,1,2024-01-01,1.93
+curgete,Curgete,1030,1030,consumo,€/kg,2,2024-01-29,1.77
+curgete,Curgete,1030,1030,consumo,€/kg,3,2024-02-26,1.53
+curgete,Curgete,1030,1030,consumo,€/kg,4,2024-03-25,1.4
+curgete,Curgete,1030,1030,consumo,€/kg,5,2024-04-22,1.58
+curgete,Curgete,1030,1030,consumo,€/kg,6,2024-05-20,1.64
+curgete,Curgete,1030,1030,consumo,€/kg,7,2024-06-17,1.54
+curgete,Curgete,1030,1030,consumo,€/kg,8,2024-07-15,1.33
+curgete,Curgete,1030,1030,consumo,€/kg,9,2024-08-12,1.3
+curgete,Curgete,1030,1030,consumo,€/kg,10,2024-09-09,1.58
+curgete,Curgete,1030,1030,consumo,€/kg,11,2024-10-07,1.81
+curgete,Curgete,1030,1030,consumo,€/kg,12,2024-11-04,1.88
+curgete,Curgete,1030,1030,consumo,€/kg,13,2024-12-02,1.7
+curgete,Curgete,1030,1030,consumo,€/kg,1,2024-12-30,1.84
+curgete,Curgete,1030,1030,consumo,€/kg,2,2025-01-27,1.77
+curgete,Curgete,1030,1030,consumo,€/kg,3,2025-02-24,1.59
+curgete,Curgete,1030,1030,consumo,€/kg,4,2025-03-24,1.38
+curgete,Curgete,1030,1030,consumo,€/kg,5,2025-04-21,1.28
+curgete,Curgete,1030,1030,consumo,€/kg,6,2025-05-19,1.31
+curgete,Curgete,1030,1030,consumo,€/kg,7,2025-06-16,1.36
+curgete,Curgete,1030,1030,consumo,€/kg,8,2025-07-14,1.35
+curgete,Curgete,1030,1030,consumo,€/kg,9,2025-08-11,1.54
+curgete,Curgete,1030,1030,consumo,€/kg,10,2025-09-08,1.69
+curgete,Curgete,1030,1030,consumo,€/kg,11,2025-10-06,1.6
+curgete,Curgete,1030,1030,consumo,€/kg,12,2025-11-03,1.58
+curgete,Curgete,1030,1030,consumo,€/kg,13,2025-12-01,1.61
+curgete,Curgete,1030,1030,consumo,€/kg,1,2025-12-29,2.09
+curgete,Curgete,1030,1030,consumo,€/kg,2,2026-01-26,2.64
+curgete,Curgete,1030,1030,consumo,€/kg,3,2026-02-23,2.09
+curgete,Curgete,1030,1030,consumo,€/kg,4,2026-03-23,1.99
+curgete,Curgete,1030,1030,consumo,€/kg,5,2026-04-20,1.54
+curgete,Curgete,1030,1030,consumo,€/kg,6,2026-05-18,1.53
+curgete,Curgete,1030,134,producao,€/kg,1,2022-01-03,1.5
+curgete,Curgete,1030,134,producao,€/kg,2,2022-01-31,1.24
+curgete,Curgete,1030,134,producao,€/kg,3,2022-02-28,1.2
+curgete,Curgete,1030,134,producao,€/kg,4,2022-03-28,1.28
+curgete,Curgete,1030,134,producao,€/kg,5,2022-04-25,0.68
+curgete,Curgete,1030,134,producao,€/kg,6,2022-05-23,0.66
+curgete,Curgete,1030,134,producao,€/kg,7,2022-06-20,0.61
+curgete,Curgete,1030,134,producao,€/kg,8,2022-07-18,0.68
+curgete,Curgete,1030,134,producao,€/kg,9,2022-08-15,0.89
+curgete,Curgete,1030,134,producao,€/kg,10,2022-09-12,1.2
+curgete,Curgete,1030,134,producao,€/kg,11,2022-10-10,1.22
+curgete,Curgete,1030,134,producao,€/kg,12,2022-11-07,1.05
+curgete,Curgete,1030,134,producao,€/kg,13,2022-12-05,1.12
+curgete,Curgete,1030,134,producao,€/kg,1,2023-01-02,1.26
+curgete,Curgete,1030,134,producao,€/kg,2,2023-01-30,1.34
+curgete,Curgete,1030,134,producao,€/kg,3,2023-02-27,1.32
+curgete,Curgete,1030,134,producao,€/kg,4,2023-03-27,0.99
+curgete,Curgete,1030,134,producao,€/kg,5,2023-04-24,0.6
+curgete,Curgete,1030,134,producao,€/kg,6,2023-05-22,0.67
+curgete,Curgete,1030,134,producao,€/kg,7,2023-06-19,0.52
+curgete,Curgete,1030,134,producao,€/kg,8,2023-07-17,0.6
+curgete,Curgete,1030,134,producao,€/kg,9,2023-08-14,0.69
+curgete,Curgete,1030,134,producao,€/kg,10,2023-09-11,0.69
+curgete,Curgete,1030,134,producao,€/kg,11,2023-10-09,0.72
+curgete,Curgete,1030,134,producao,€/kg,12,2023-11-06,0.98
+curgete,Curgete,1030,134,producao,€/kg,13,2023-12-04,1.17
+curgete,Curgete,1030,134,producao,€/kg,1,2024-01-01,1.47
+curgete,Curgete,1030,134,producao,€/kg,2,2024-01-29,1.08
+curgete,Curgete,1030,134,producao,€/kg,3,2024-02-26,0.93
+curgete,Curgete,1030,134,producao,€/kg,4,2024-03-25,0.83
+curgete,Curgete,1030,134,producao,€/kg,5,2024-04-22,0.92
+curgete,Curgete,1030,134,producao,€/kg,6,2024-05-20,0.93
+curgete,Curgete,1030,134,producao,€/kg,7,2024-06-17,0.88
+curgete,Curgete,1030,134,producao,€/kg,8,2024-07-15,0.76
+curgete,Curgete,1030,134,producao,€/kg,9,2024-08-12,0.46
+curgete,Curgete,1030,134,producao,€/kg,10,2024-09-09,0.95
+curgete,Curgete,1030,134,producao,€/kg,11,2024-10-07,1.15
+curgete,Curgete,1030,134,producao,€/kg,12,2024-11-04,1.01
+curgete,Curgete,1030,134,producao,€/kg,13,2024-12-02,1.11
+curgete,Curgete,1030,134,producao,€/kg,1,2024-12-30,1.16
+curgete,Curgete,1030,134,producao,€/kg,2,2025-01-27,1.15
+curgete,Curgete,1030,134,producao,€/kg,3,2025-02-24,1.1
+curgete,Curgete,1030,134,producao,€/kg,4,2025-03-24,0.92
+curgete,Curgete,1030,134,producao,€/kg,5,2025-04-21,0.77
+curgete,Curgete,1030,134,producao,€/kg,6,2025-05-19,0.81
+curgete,Curgete,1030,134,producao,€/kg,7,2025-06-16,0.76
+curgete,Curgete,1030,134,producao,€/kg,8,2025-07-14,0.79
+curgete,Curgete,1030,134,producao,€/kg,9,2025-08-11,0.85
+curgete,Curgete,1030,134,producao,€/kg,10,2025-09-08,1.07
+curgete,Curgete,1030,134,producao,€/kg,11,2025-10-06,0.85
+curgete,Curgete,1030,134,producao,€/kg,12,2025-11-03,0.86
+curgete,Curgete,1030,134,producao,€/kg,13,2025-12-01,1.13
+curgete,Curgete,1030,134,producao,€/kg,1,2025-12-29,1.62
+curgete,Curgete,1030,134,producao,€/kg,2,2026-01-26,1.68
+curgete,Curgete,1030,134,producao,€/kg,3,2026-02-23,1.34
+curgete,Curgete,1030,134,producao,€/kg,4,2026-03-23,0.98
+curgete,Curgete,1030,134,producao,€/kg,5,2026-04-20,0.91
+curgete,Curgete,1030,134,producao,€/kg,6,2026-05-18,0.85
+laranja,Laranja,1036,1036,consumo,€/kg,1,2022-01-03,0.88
+laranja,Laranja,1036,1036,consumo,€/kg,2,2022-01-31,0.84
+laranja,Laranja,1036,1036,consumo,€/kg,3,2022-02-28,0.83
+laranja,Laranja,1036,1036,consumo,€/kg,4,2022-03-28,0.84
+laranja,Laranja,1036,1036,consumo,€/kg,5,2022-04-25,0.86
+laranja,Laranja,1036,1036,consumo,€/kg,6,2022-05-23,0.88
+laranja,Laranja,1036,1036,consumo,€/kg,7,2022-06-20,0.94
+laranja,Laranja,1036,1036,consumo,€/kg,8,2022-07-18,0.98
+laranja,Laranja,1036,1036,consumo,€/kg,9,2022-08-15,1.08
+laranja,Laranja,1036,1036,consumo,€/kg,10,2022-09-12,1.17
+laranja,Laranja,1036,1036,consumo,€/kg,11,2022-10-10,1.43
+laranja,Laranja,1036,1036,consumo,€/kg,12,2022-11-07,1.28
+laranja,Laranja,1036,1036,consumo,€/kg,13,2022-12-05,1.14
+laranja,Laranja,1036,1036,consumo,€/kg,1,2023-01-02,1.03
+laranja,Laranja,1036,1036,consumo,€/kg,2,2023-01-30,1.08
+laranja,Laranja,1036,1036,consumo,€/kg,3,2023-02-27,1.05
+laranja,Laranja,1036,1036,consumo,€/kg,4,2023-03-27,1.11
+laranja,Laranja,1036,1036,consumo,€/kg,5,2023-04-24,1.12
+laranja,Laranja,1036,1036,consumo,€/kg,6,2023-05-22,1.23
+laranja,Laranja,1036,1036,consumo,€/kg,7,2023-06-19,1.25
+laranja,Laranja,1036,1036,consumo,€/kg,8,2023-07-17,1.44
+laranja,Laranja,1036,1036,consumo,€/kg,9,2023-08-14,1.75
+laranja,Laranja,1036,1036,consumo,€/kg,10,2023-09-11,1.81
+laranja,Laranja,1036,1036,consumo,€/kg,11,2023-10-09,1.66
+laranja,Laranja,1036,1036,consumo,€/kg,12,2023-11-06,1.44
+laranja,Laranja,1036,1036,consumo,€/kg,13,2023-12-04,1.33
+laranja,Laranja,1036,1036,consumo,€/kg,1,2024-01-01,1.35
+laranja,Laranja,1036,1036,consumo,€/kg,2,2024-01-29,1.25
+laranja,Laranja,1036,1036,consumo,€/kg,3,2024-02-26,1.24
+laranja,Laranja,1036,1036,consumo,€/kg,4,2024-03-25,1.17
+laranja,Laranja,1036,1036,consumo,€/kg,5,2024-04-22,1.19
+laranja,Laranja,1036,1036,consumo,€/kg,6,2024-05-20,1.22
+laranja,Laranja,1036,1036,consumo,€/kg,7,2024-06-17,1.26
+laranja,Laranja,1036,1036,consumo,€/kg,8,2024-07-15,1.26
+laranja,Laranja,1036,1036,consumo,€/kg,9,2024-08-12,1.36
+laranja,Laranja,1036,1036,consumo,€/kg,10,2024-09-09,1.4
+laranja,Laranja,1036,1036,consumo,€/kg,11,2024-10-07,1.4
+laranja,Laranja,1036,1036,consumo,€/kg,12,2024-11-04,1.29
+laranja,Laranja,1036,1036,consumo,€/kg,13,2024-12-02,1.31
+laranja,Laranja,1036,1036,consumo,€/kg,1,2024-12-30,1.25
+laranja,Laranja,1036,1036,consumo,€/kg,2,2025-01-27,1.22
+laranja,Laranja,1036,1036,consumo,€/kg,3,2025-02-24,1.19
+laranja,Laranja,1036,1036,consumo,€/kg,4,2025-03-24,1.14
+laranja,Laranja,1036,1036,consumo,€/kg,5,2025-04-21,1.22
+laranja,Laranja,1036,1036,consumo,€/kg,6,2025-05-19,1.3
+laranja,Laranja,1036,1036,consumo,€/kg,7,2025-06-16,1.41
+laranja,Laranja,1036,1036,consumo,€/kg,8,2025-07-14,1.46
+laranja,Laranja,1036,1036,consumo,€/kg,9,2025-08-11,1.53
+laranja,Laranja,1036,1036,consumo,€/kg,10,2025-09-08,1.66
+laranja,Laranja,1036,1036,consumo,€/kg,11,2025-10-06,1.57
+laranja,Laranja,1036,1036,consumo,€/kg,12,2025-11-03,1.41
+laranja,Laranja,1036,1036,consumo,€/kg,13,2025-12-01,1.3
+laranja,Laranja,1036,1036,consumo,€/kg,1,2025-12-29,1.29
+laranja,Laranja,1036,1036,consumo,€/kg,2,2026-01-26,1.29
+laranja,Laranja,1036,1036,consumo,€/kg,3,2026-02-23,1.32
+laranja,Laranja,1036,1036,consumo,€/kg,4,2026-03-23,1.28
+laranja,Laranja,1036,1036,consumo,€/kg,5,2026-04-20,1.32
+laranja,Laranja,1036,1036,consumo,€/kg,6,2026-05-18,1.35
+laranja,Laranja,1036,11,producao,€/kg,1,2022-01-03,0.61
+laranja,Laranja,1036,11,producao,€/kg,2,2022-01-31,0.57
+laranja,Laranja,1036,11,producao,€/kg,3,2022-02-28,0.53
+laranja,Laranja,1036,11,producao,€/kg,4,2022-03-28,0.49
+laranja,Laranja,1036,11,producao,€/kg,5,2022-04-25,0.4
+laranja,Laranja,1036,11,producao,€/kg,6,2022-05-23,0.28
+laranja,Laranja,1036,11,producao,€/kg,7,2022-06-20,0.31
+laranja,Laranja,1036,11,producao,€/kg,8,2022-07-18,0.34
+laranja,Laranja,1036,11,producao,€/kg,9,2022-08-15,0.33
+laranja,Laranja,1036,11,producao,€/kg,10,2022-09-12,0.42
+laranja,Laranja,1036,11,producao,€/kg,11,2022-10-10,0.45
+laranja,Laranja,1036,11,producao,€/kg,12,2022-11-07,0.38
+laranja,Laranja,1036,11,producao,€/kg,13,2022-12-05,0.35
+laranja,Laranja,1036,11,producao,€/kg,1,2023-01-02,0.35
+laranja,Laranja,1036,11,producao,€/kg,2,2023-01-30,0.35
+laranja,Laranja,1036,11,producao,€/kg,3,2023-02-27,0.44
+laranja,Laranja,1036,11,producao,€/kg,4,2023-03-27,0.6
+laranja,Laranja,1036,11,producao,€/kg,5,2023-04-24,0.59
+laranja,Laranja,1036,11,producao,€/kg,6,2023-05-22,0.57
+laranja,Laranja,1036,11,producao,€/kg,7,2023-06-19,0.57
+laranja,Laranja,1036,11,producao,€/kg,8,2023-07-17,0.57
+laranja,Laranja,1036,11,producao,€/kg,11,2023-10-09,1.2
+laranja,Laranja,1036,11,producao,€/kg,12,2023-11-06,1.15
+laranja,Laranja,1036,11,producao,€/kg,13,2023-12-04,1.1
+laranja,Laranja,1036,11,producao,€/kg,1,2024-01-01,1.01
+laranja,Laranja,1036,11,producao,€/kg,2,2024-01-29,0.89
+laranja,Laranja,1036,11,producao,€/kg,3,2024-02-26,0.78
+laranja,Laranja,1036,11,producao,€/kg,4,2024-03-25,0.71
+laranja,Laranja,1036,11,producao,€/kg,5,2024-04-22,0.68
+laranja,Laranja,1036,11,producao,€/kg,6,2024-05-20,0.7
+laranja,Laranja,1036,11,producao,€/kg,7,2024-06-17,0.64
+laranja,Laranja,1036,11,producao,€/kg,8,2024-07-15,0.68
+laranja,Laranja,1036,11,producao,€/kg,9,2024-08-12,0.66
+laranja,Laranja,1036,11,producao,€/kg,10,2024-09-09,0.76
+laranja,Laranja,1036,11,producao,€/kg,11,2024-10-07,0.76
+laranja,Laranja,1036,11,producao,€/kg,12,2024-11-04,0.7
+laranja,Laranja,1036,11,producao,€/kg,13,2024-12-02,0.79
+laranja,Laranja,1036,11,producao,€/kg,1,2024-12-30,0.79
+laranja,Laranja,1036,11,producao,€/kg,2,2025-01-27,0.82
+laranja,Laranja,1036,11,producao,€/kg,3,2025-02-24,0.76
+laranja,Laranja,1036,11,producao,€/kg,4,2025-03-24,0.64
+laranja,Laranja,1036,11,producao,€/kg,5,2025-04-21,0.71
+laranja,Laranja,1036,11,producao,€/kg,6,2025-05-19,0.87
+laranja,Laranja,1036,11,producao,€/kg,7,2025-06-16,0.95
+laranja,Laranja,1036,11,producao,€/kg,8,2025-07-14,0.95
+laranja,Laranja,1036,11,producao,€/kg,9,2025-08-11,0.96
+laranja,Laranja,1036,11,producao,€/kg,10,2025-09-08,0.95
+laranja,Laranja,1036,11,producao,€/kg,11,2025-10-06,0.95
+laranja,Laranja,1036,11,producao,€/kg,12,2025-11-03,0.92
+laranja,Laranja,1036,11,producao,€/kg,13,2025-12-01,0.85
+laranja,Laranja,1036,11,producao,€/kg,1,2025-12-29,0.82
+laranja,Laranja,1036,11,producao,€/kg,2,2026-01-26,0.88
+laranja,Laranja,1036,11,producao,€/kg,3,2026-02-23,0.86
+laranja,Laranja,1036,11,producao,€/kg,4,2026-03-23,0.87
+laranja,Laranja,1036,11,producao,€/kg,5,2026-04-20,0.87
+laranja,Laranja,1036,11,producao,€/kg,6,2026-05-18,0.85
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,1,2022-01-03,0.55
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,2,2022-01-31,0.57
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,3,2022-02-28,0.58
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,4,2022-03-28,0.58
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,5,2022-04-25,0.61
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,6,2022-05-23,0.62
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,7,2022-06-20,0.64
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,8,2022-07-18,0.65
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,9,2022-08-15,0.69
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,10,2022-09-12,0.72
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,11,2022-10-10,0.8
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,12,2022-11-07,0.85
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,13,2022-12-05,0.86
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,1,2023-01-02,0.88
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,2,2023-01-30,0.9
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,3,2023-02-27,0.89
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,4,2023-03-27,0.88
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,5,2023-04-24,0.85
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,6,2023-05-22,0.85
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,7,2023-06-19,0.83
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,8,2023-07-17,0.83
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,9,2023-08-14,0.83
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,10,2023-09-11,0.81
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,11,2023-10-09,0.82
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,12,2023-11-06,0.81
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,13,2023-12-04,0.82
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,1,2024-01-01,0.84
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,2,2024-01-29,0.86
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,3,2024-02-26,0.87
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,4,2024-03-25,0.86
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,5,2024-04-22,0.86
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,6,2024-05-20,0.87
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,7,2024-06-17,0.86
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,8,2024-07-15,0.86
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,9,2024-08-12,0.87
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,10,2024-09-09,0.86
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,11,2024-10-07,0.86
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,12,2024-11-04,0.86
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,13,2024-12-02,0.87
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,1,2024-12-30,0.88
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,2,2025-01-27,0.88
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,3,2025-02-24,0.88
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,4,2025-03-24,0.88
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,5,2025-04-21,0.89
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,6,2025-05-19,0.89
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,7,2025-06-16,0.89
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,8,2025-07-14,0.9
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,9,2025-08-11,0.91
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,10,2025-09-08,0.91
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,11,2025-10-06,0.9
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,12,2025-11-03,0.89
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,13,2025-12-01,0.89
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,1,2025-12-29,0.92
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,2,2026-01-26,0.91
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,3,2026-02-23,0.91
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,4,2026-03-23,0.89
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,5,2026-04-20,0.89
+laticinios-de-vaca,Leite UHT MG,1012,1012,consumo,€/l,6,2026-05-18,0.89
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,1,2022-01-03,0.36
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,2,2022-01-31,0.36
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,3,2022-02-28,0.36
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,4,2022-03-28,0.39
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,5,2022-04-25,0.4
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,6,2022-05-23,0.4
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,7,2022-06-20,0.41
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,8,2022-07-18,0.42
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,9,2022-08-15,0.44
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,10,2022-09-12,0.48
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,11,2022-10-10,0.54
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,12,2022-11-07,0.57
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,13,2022-12-05,0.57
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,1,2023-01-02,0.57
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,2,2023-01-30,0.57
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,3,2023-02-27,0.57
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,4,2023-03-27,0.56
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,5,2023-04-24,0.53
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,6,2023-05-22,0.51
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,7,2023-06-19,0.5
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,8,2023-07-17,0.48
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,9,2023-08-14,0.49
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,10,2023-09-11,0.48
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,11,2023-10-09,0.46
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,12,2023-11-06,0.46
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,13,2023-12-04,0.46
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,1,2024-01-01,0.46
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,2,2024-01-29,0.46
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,3,2024-02-26,0.46
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,4,2024-03-25,0.45
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,5,2024-04-22,0.45
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,6,2024-05-20,0.45
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,7,2024-06-17,0.45
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,8,2024-07-15,0.45
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,9,2024-08-12,0.45
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,10,2024-09-09,0.45
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,11,2024-10-07,0.46
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,12,2024-11-04,0.47
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,13,2024-12-02,0.47
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,2,2025-01-27,0.49
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,3,2025-02-24,0.49
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,4,2025-03-24,0.49
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,5,2025-04-21,0.49
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,6,2025-05-19,0.49
+laticinios-de-vaca,Leite UHT MG,1012,10,producao,€/l,8,2025-07-14,0.48
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,1,2022-01-03,6.39
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,2,2022-01-31,6.65
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,3,2022-02-28,6.71
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,4,2022-03-28,6.83
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,5,2022-04-25,7.21
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,6,2022-05-23,7.49
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,7,2022-06-20,7.51
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,8,2022-07-18,7.58
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,9,2022-08-15,7.74
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,10,2022-09-12,7.93
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,11,2022-10-10,8.17
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,12,2022-11-07,8.6
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,13,2022-12-05,8.74
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,1,2023-01-02,8.78
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,2,2023-01-30,8.86
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,3,2023-02-27,8.73
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,4,2023-03-27,8.59
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,5,2023-04-24,8.29
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,6,2023-05-22,8.15
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,7,2023-06-19,8.1
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,8,2023-07-17,7.95
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,9,2023-08-14,7.9
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,10,2023-09-11,7.88
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,11,2023-10-09,7.84
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,12,2023-11-06,7.9
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,13,2023-12-04,7.86
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,1,2024-01-01,8.1
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,2,2024-01-29,8.25
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,3,2024-02-26,8.23
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,4,2024-03-25,8.34
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,5,2024-04-22,8.34
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,6,2024-05-20,8.26
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,7,2024-06-17,8.26
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,8,2024-07-15,8.26
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,9,2024-08-12,8.37
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,10,2024-09-09,8.35
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,11,2024-10-07,8.43
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,12,2024-11-04,8.44
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,13,2024-12-02,8.46
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,1,2024-12-30,8.55
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,2,2025-01-27,8.61
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,3,2025-02-24,8.75
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,4,2025-03-24,8.83
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,5,2025-04-21,8.83
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,6,2025-05-19,8.97
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,7,2025-06-16,9.05
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,8,2025-07-14,9.14
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,9,2025-08-11,9.08
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,10,2025-09-08,9.16
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,11,2025-10-06,9.02
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,12,2025-11-03,9.06
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,13,2025-12-01,9.19
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,1,2025-12-29,9.07
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,2,2026-01-26,8.94
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,3,2026-02-23,9.05
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,4,2026-03-23,8.98
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,5,2026-04-20,9.01
+laticinios-de-vaca,Manteiga,1013,1013,consumo,€/kg,6,2026-05-18,8.97
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,1,2022-01-03,6.43
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,2,2022-01-31,6.63
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,3,2022-02-28,6.65
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,4,2022-03-28,6.74
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,5,2022-04-25,7.06
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,6,2022-05-23,7.2
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,7,2022-06-20,7.54
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,8,2022-07-18,7.74
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,9,2022-08-15,7.97
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,10,2022-09-12,8.28
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,11,2022-10-10,8.58
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,12,2022-11-07,9.66
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,13,2022-12-05,10.11
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,1,2023-01-02,10.15
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,2,2023-01-30,9.9
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,3,2023-02-27,10.04
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,4,2023-03-27,9.79
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,5,2023-04-24,9.18
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,6,2023-05-22,9.28
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,7,2023-06-19,9.22
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,8,2023-07-17,9.15
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,9,2023-08-14,9.05
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,10,2023-09-11,9.06
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,11,2023-10-09,8.98
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,12,2023-11-06,8.87
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,13,2023-12-04,8.84
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,1,2024-01-01,9.23
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,2,2024-01-29,9.41
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,3,2024-02-26,9.28
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,4,2024-03-25,9.33
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,5,2024-04-22,9.23
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,6,2024-05-20,9.32
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,7,2024-06-17,9.2
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,8,2024-07-15,9.15
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,9,2024-08-12,9.22
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,10,2024-09-09,9.31
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,11,2024-10-07,9.18
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,12,2024-11-04,9.16
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,13,2024-12-02,9.38
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,1,2024-12-30,9.3
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,2,2025-01-27,9.29
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,3,2025-02-24,8.99
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,4,2025-03-24,9.29
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,5,2025-04-21,9.43
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,6,2025-05-19,9.43
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,7,2025-06-16,9.5
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,8,2025-07-14,9.41
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,9,2025-08-11,9.58
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,10,2025-09-08,9.46
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,11,2025-10-06,9.45
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,12,2025-11-03,9.44
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,13,2025-12-01,9.48
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,1,2025-12-29,9.44
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,2,2026-01-26,9.36
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,3,2026-02-23,9.25
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,4,2026-03-23,9.39
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,5,2026-04-20,9.33
+laticinios-de-vaca,Queijo Flamengo,1014,1014,consumo,€/kg,6,2026-05-18,9.24
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,1,2022-01-03,6.55
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,2,2022-01-31,6.86
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,3,2022-02-28,6.78
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,4,2022-03-28,6.94
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,5,2022-04-25,7.27
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,6,2022-05-23,7.0
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,7,2022-06-20,7.59
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,8,2022-07-18,7.65
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,9,2022-08-15,8.21
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,10,2022-09-12,8.11
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,11,2022-10-10,7.75
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,12,2022-11-07,9.66
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,13,2022-12-05,10.48
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,1,2023-01-02,10.91
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,2,2023-01-30,10.02
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,3,2023-02-27,10.41
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,4,2023-03-27,10.09
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,5,2023-04-24,9.54
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,6,2023-05-22,9.54
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,7,2023-06-19,9.28
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,8,2023-07-17,9.41
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,9,2023-08-14,8.99
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,10,2023-09-11,8.96
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,11,2023-10-09,8.86
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,12,2023-11-06,8.67
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,13,2023-12-04,8.58
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,1,2024-01-01,9.23
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,2,2024-01-29,9.48
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,3,2024-02-26,9.35
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,4,2024-03-25,9.47
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,5,2024-04-22,9.22
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,6,2024-05-20,9.24
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,7,2024-06-17,9.25
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,8,2024-07-15,9.04
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,9,2024-08-12,9.1
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,10,2024-09-09,9.26
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,11,2024-10-07,9.04
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,12,2024-11-04,9.17
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,13,2024-12-02,9.65
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,1,2024-12-30,9.18
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,2,2025-01-27,9.16
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,3,2025-02-24,8.36
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,4,2025-03-24,9.26
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,5,2025-04-21,9.24
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,6,2025-05-19,9.34
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,7,2025-06-16,9.58
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,8,2025-07-14,9.34
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,9,2025-08-11,9.31
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,10,2025-09-08,9.21
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,11,2025-10-06,9.35
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,12,2025-11-03,9.2
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,13,2025-12-01,9.29
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,1,2025-12-29,9.22
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,2,2026-01-26,9.31
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,3,2026-02-23,9.37
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,4,2026-03-23,9.47
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,5,2026-04-20,9.35
+laticinios-de-vaca,Queijo Flamengo Bola,1015,1015,consumo,€/kg,6,2026-05-18,8.96
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,1,2022-01-03,6.37
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,2,2022-01-31,6.52
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,3,2022-02-28,6.56
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,4,2022-03-28,6.59
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,5,2022-04-25,6.93
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,6,2022-05-23,7.3
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,7,2022-06-20,7.49
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,8,2022-07-18,7.78
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,9,2022-08-15,7.85
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,10,2022-09-12,8.35
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,11,2022-10-10,9.16
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,12,2022-11-07,9.7
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,13,2022-12-05,9.9
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,1,2023-01-02,9.76
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,2,2023-01-30,9.83
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,3,2023-02-27,9.83
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,4,2023-03-27,9.68
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,5,2023-04-24,9.05
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,6,2023-05-22,9.17
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,7,2023-06-19,9.19
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,8,2023-07-17,9.04
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,9,2023-08-14,9.08
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,10,2023-09-11,9.11
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,11,2023-10-09,9.04
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,12,2023-11-06,8.96
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,13,2023-12-04,9.0
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,1,2024-01-01,9.21
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,2,2024-01-29,9.36
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,3,2024-02-26,9.24
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,4,2024-03-25,9.22
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,5,2024-04-22,9.21
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,6,2024-05-20,9.35
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,7,2024-06-17,9.14
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,8,2024-07-15,9.18
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,9,2024-08-12,9.27
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,10,2024-09-09,9.32
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,11,2024-10-07,9.24
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,12,2024-11-04,9.13
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,13,2024-12-02,9.24
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,1,2024-12-30,9.35
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,2,2025-01-27,9.34
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,3,2025-02-24,9.31
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,4,2025-03-24,9.33
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,5,2025-04-21,9.53
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,6,2025-05-19,9.47
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,7,2025-06-16,9.47
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,8,2025-07-14,9.43
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,9,2025-08-11,9.69
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,10,2025-09-08,9.56
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,11,2025-10-06,9.49
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,12,2025-11-03,9.53
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,13,2025-12-01,9.57
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,1,2025-12-29,9.52
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,2,2026-01-26,9.38
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,3,2026-02-23,9.22
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,4,2026-03-23,9.34
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,5,2026-04-20,9.32
+laticinios-de-vaca,Queijo Flamengo fatias,1016,1016,consumo,€/kg,6,2026-05-18,9.35
+maca,Maçã,1038,1038,consumo,€/kg,1,2022-01-03,1.35
+maca,Maçã,1038,1038,consumo,€/kg,2,2022-01-31,1.33
+maca,Maçã,1038,1038,consumo,€/kg,3,2022-02-28,1.26
+maca,Maçã,1038,1038,consumo,€/kg,4,2022-03-28,1.25
+maca,Maçã,1038,1038,consumo,€/kg,5,2022-04-25,1.3
+maca,Maçã,1038,1038,consumo,€/kg,6,2022-05-23,1.3
+maca,Maçã,1038,1038,consumo,€/kg,7,2022-06-20,1.37
+maca,Maçã,1038,1038,consumo,€/kg,8,2022-07-18,1.4
+maca,Maçã,1038,1038,consumo,€/kg,9,2022-08-15,1.34
+maca,Maçã,1038,1038,consumo,€/kg,10,2022-09-12,1.32
+maca,Maçã,1038,1038,consumo,€/kg,11,2022-10-10,1.37
+maca,Maçã,1038,1038,consumo,€/kg,12,2022-11-07,1.4
+maca,Maçã,1038,1038,consumo,€/kg,13,2022-12-05,1.45
+maca,Maçã,1038,1038,consumo,€/kg,1,2023-01-02,1.37
+maca,Maçã,1038,1038,consumo,€/kg,2,2023-01-30,1.4
+maca,Maçã,1038,1038,consumo,€/kg,3,2023-02-27,1.4
+maca,Maçã,1038,1038,consumo,€/kg,4,2023-03-27,1.46
+maca,Maçã,1038,1038,consumo,€/kg,5,2023-04-24,1.46
+maca,Maçã,1038,1038,consumo,€/kg,6,2023-05-22,1.69
+maca,Maçã,1038,1038,consumo,€/kg,7,2023-06-19,1.71
+maca,Maçã,1038,1038,consumo,€/kg,8,2023-07-17,1.67
+maca,Maçã,1038,1038,consumo,€/kg,9,2023-08-14,1.61
+maca,Maçã,1038,1038,consumo,€/kg,10,2023-09-11,1.5
+maca,Maçã,1038,1038,consumo,€/kg,11,2023-10-09,1.47
+maca,Maçã,1038,1038,consumo,€/kg,12,2023-11-06,1.55
+maca,Maçã,1038,1038,consumo,€/kg,13,2023-12-04,1.54
+maca,Maçã,1038,1038,consumo,€/kg,1,2024-01-01,1.59
+maca,Maçã,1038,1038,consumo,€/kg,2,2024-01-29,1.58
+maca,Maçã,1038,1038,consumo,€/kg,3,2024-02-26,1.51
+maca,Maçã,1038,1038,consumo,€/kg,4,2024-03-25,1.52
+maca,Maçã,1038,1038,consumo,€/kg,5,2024-04-22,1.59
+maca,Maçã,1038,1038,consumo,€/kg,6,2024-05-20,1.7
+maca,Maçã,1038,1038,consumo,€/kg,7,2024-06-17,1.63
+maca,Maçã,1038,1038,consumo,€/kg,8,2024-07-15,1.66
+maca,Maçã,1038,1038,consumo,€/kg,9,2024-08-12,1.57
+maca,Maçã,1038,1038,consumo,€/kg,10,2024-09-09,1.55
+maca,Maçã,1038,1038,consumo,€/kg,11,2024-10-07,1.52
+maca,Maçã,1038,1038,consumo,€/kg,12,2024-11-04,1.53
+maca,Maçã,1038,1038,consumo,€/kg,13,2024-12-02,1.59
+maca,Maçã,1038,1038,consumo,€/kg,1,2024-12-30,1.58
+maca,Maçã,1038,1038,consumo,€/kg,2,2025-01-27,1.58
+maca,Maçã,1038,1038,consumo,€/kg,3,2025-02-24,1.52
+maca,Maçã,1038,1038,consumo,€/kg,4,2025-03-24,1.53
+maca,Maçã,1038,1038,consumo,€/kg,5,2025-04-21,1.54
+maca,Maçã,1038,1038,consumo,€/kg,6,2025-05-19,1.59
+maca,Maçã,1038,1038,consumo,€/kg,7,2025-06-16,1.68
+maca,Maçã,1038,1038,consumo,€/kg,8,2025-07-14,1.73
+maca,Maçã,1038,1038,consumo,€/kg,9,2025-08-11,1.78
+maca,Maçã,1038,1038,consumo,€/kg,10,2025-09-08,1.77
+maca,Maçã,1038,1038,consumo,€/kg,11,2025-10-06,1.64
+maca,Maçã,1038,1038,consumo,€/kg,12,2025-11-03,1.65
+maca,Maçã,1038,1038,consumo,€/kg,13,2025-12-01,1.77
+maca,Maçã,1038,1038,consumo,€/kg,1,2025-12-29,1.69
+maca,Maçã,1038,1038,consumo,€/kg,2,2026-01-26,1.73
+maca,Maçã,1038,1038,consumo,€/kg,3,2026-02-23,1.7
+maca,Maçã,1038,1038,consumo,€/kg,4,2026-03-23,1.68
+maca,Maçã,1038,1038,consumo,€/kg,5,2026-04-20,1.67
+maca,Maçã,1038,1038,consumo,€/kg,6,2026-05-18,1.73
+maca,Maçã,1038,28,producao,€/kg,1,2022-01-03,0.6
+maca,Maçã,1038,28,producao,€/kg,2,2022-01-31,0.62
+maca,Maçã,1038,28,producao,€/kg,3,2022-02-28,0.6
+maca,Maçã,1038,28,producao,€/kg,4,2022-03-28,0.59
+maca,Maçã,1038,28,producao,€/kg,5,2022-04-25,0.6
+maca,Maçã,1038,28,producao,€/kg,6,2022-05-23,0.57
+maca,Maçã,1038,28,producao,€/kg,7,2022-06-20,0.56
+maca,Maçã,1038,28,producao,€/kg,8,2022-07-18,0.5
+maca,Maçã,1038,28,producao,€/kg,9,2022-08-15,1.17
+maca,Maçã,1038,28,producao,€/kg,10,2022-09-12,0.98
+maca,Maçã,1038,28,producao,€/kg,11,2022-10-10,0.89
+maca,Maçã,1038,28,producao,€/kg,12,2022-11-07,0.74
+maca,Maçã,1038,28,producao,€/kg,13,2022-12-05,0.66
+maca,Maçã,1038,28,producao,€/kg,1,2023-01-02,0.68
+maca,Maçã,1038,28,producao,€/kg,2,2023-01-30,0.7
+maca,Maçã,1038,28,producao,€/kg,3,2023-02-27,0.7
+maca,Maçã,1038,28,producao,€/kg,4,2023-03-27,0.7
+maca,Maçã,1038,28,producao,€/kg,5,2023-04-24,0.79
+maca,Maçã,1038,28,producao,€/kg,6,2023-05-22,0.87
+maca,Maçã,1038,28,producao,€/kg,7,2023-06-19,0.93
+maca,Maçã,1038,28,producao,€/kg,10,2023-09-11,1.01
+maca,Maçã,1038,28,producao,€/kg,11,2023-10-09,0.99
+maca,Maçã,1038,28,producao,€/kg,12,2023-11-06,1.0
+maca,Maçã,1038,28,producao,€/kg,13,2023-12-04,0.82
+maca,Maçã,1038,28,producao,€/kg,1,2024-01-01,0.83
+maca,Maçã,1038,28,producao,€/kg,2,2024-01-29,0.82
+maca,Maçã,1038,28,producao,€/kg,3,2024-02-26,0.82
+maca,Maçã,1038,28,producao,€/kg,4,2024-03-25,0.82
+maca,Maçã,1038,28,producao,€/kg,5,2024-04-22,0.83
+maca,Maçã,1038,28,producao,€/kg,6,2024-05-20,0.83
+maca,Maçã,1038,28,producao,€/kg,7,2024-06-17,0.86
+maca,Maçã,1038,28,producao,€/kg,8,2024-07-15,0.77
+maca,Maçã,1038,28,producao,€/kg,9,2024-08-12,0.73
+maca,Maçã,1038,28,producao,€/kg,10,2024-09-09,0.97
+maca,Maçã,1038,28,producao,€/kg,11,2024-10-07,0.86
+maca,Maçã,1038,28,producao,€/kg,12,2024-11-04,0.92
+maca,Maçã,1038,28,producao,€/kg,13,2024-12-02,0.8
+maca,Maçã,1038,28,producao,€/kg,1,2024-12-30,0.8
+maca,Maçã,1038,28,producao,€/kg,2,2025-01-27,0.77
+maca,Maçã,1038,28,producao,€/kg,3,2025-02-24,0.78
+maca,Maçã,1038,28,producao,€/kg,4,2025-03-24,0.8
+maca,Maçã,1038,28,producao,€/kg,5,2025-04-21,0.82
+maca,Maçã,1038,28,producao,€/kg,6,2025-05-19,0.78
+maca,Maçã,1038,28,producao,€/kg,7,2025-06-16,0.68
+maca,Maçã,1038,28,producao,€/kg,8,2025-07-14,0.66
+maca,Maçã,1038,28,producao,€/kg,9,2025-08-11,0.72
+maca,Maçã,1038,28,producao,€/kg,10,2025-09-08,1.04
+maca,Maçã,1038,28,producao,€/kg,11,2025-10-06,1.04
+maca,Maçã,1038,28,producao,€/kg,12,2025-11-03,0.75
+maca,Maçã,1038,28,producao,€/kg,13,2025-12-01,0.74
+maca,Maçã,1038,28,producao,€/kg,1,2025-12-29,0.73
+maca,Maçã,1038,28,producao,€/kg,2,2026-01-26,0.71
+maca,Maçã,1038,28,producao,€/kg,3,2026-02-23,0.73
+maca,Maçã,1038,28,producao,€/kg,4,2026-03-23,0.73
+maca,Maçã,1038,28,producao,€/kg,5,2026-04-20,0.75
+maca,Maçã,1038,28,producao,€/kg,6,2026-05-18,0.75
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,1,2022-01-03,0.98
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,2,2022-01-31,1.03
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,3,2022-02-28,1.09
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,4,2022-03-28,1.08
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,5,2022-04-25,1.23
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,6,2022-05-23,1.27
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,7,2022-06-20,1.25
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,8,2022-07-18,1.29
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,9,2022-08-15,1.25
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,10,2022-09-12,1.26
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,11,2022-10-10,1.28
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,12,2022-11-07,1.4
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,13,2022-12-05,1.43
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,1,2023-01-02,1.44
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,2,2023-01-30,1.43
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,3,2023-02-27,1.51
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,4,2023-03-27,1.32
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,5,2023-04-24,1.24
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,6,2023-05-22,1.25
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,7,2023-06-19,1.23
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,8,2023-07-17,1.22
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,9,2023-08-14,1.22
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,10,2023-09-11,1.22
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,11,2023-10-09,1.22
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,12,2023-11-06,1.23
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,13,2023-12-04,1.21
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,1,2024-01-01,1.28
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,2,2024-01-29,1.28
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,3,2024-02-26,1.25
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,4,2024-03-25,1.23
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,5,2024-04-22,1.24
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,6,2024-05-20,1.21
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,7,2024-06-17,1.19
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,8,2024-07-15,1.22
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,9,2024-08-12,1.21
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,10,2024-09-09,1.19
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,11,2024-10-07,1.23
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,12,2024-11-04,1.3
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,13,2024-12-02,1.3
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,1,2024-12-30,1.29
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,2,2025-01-27,1.27
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,3,2025-02-24,1.31
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,4,2025-03-24,1.57
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,5,2025-04-21,1.57
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,6,2025-05-19,1.6
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,7,2025-06-16,1.6
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,8,2025-07-14,1.58
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,9,2025-08-11,1.62
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,10,2025-09-08,1.61
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,11,2025-10-06,1.62
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,12,2025-11-03,1.62
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,13,2025-12-01,1.6
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,1,2025-12-29,1.67
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,2,2026-01-26,1.62
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,3,2026-02-23,1.65
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,4,2026-03-23,1.61
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,5,2026-04-20,1.68
+ovos-de-galinha,Ovo,1009,1009,consumo,€/6 ovos,6,2026-05-18,1.62
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,1,2022-01-03,0.85
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,2,2022-01-31,0.86
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,3,2022-02-28,0.9
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,4,2022-03-28,0.89
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,5,2022-04-25,1.03
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,6,2022-05-23,1.04
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,7,2022-06-20,1.04
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,8,2022-07-18,1.04
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,9,2022-08-15,1.06
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,10,2022-09-12,1.05
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,11,2022-10-10,1.1
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,12,2022-11-07,1.25
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,13,2022-12-05,1.22
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,1,2023-01-02,1.24
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,2,2023-01-30,1.23
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,3,2023-02-27,1.23
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,4,2023-03-27,1.34
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,5,2023-04-24,1.27
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,6,2023-05-22,1.26
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,7,2023-06-19,1.26
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,8,2023-07-17,1.22
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,9,2023-08-14,1.24
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,10,2023-09-11,1.22
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,11,2023-10-09,1.24
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,12,2023-11-06,1.24
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,13,2023-12-04,1.22
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,1,2024-01-01,1.29
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,2,2024-01-29,1.29
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,3,2024-02-26,1.3
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,4,2024-03-25,1.25
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,5,2024-04-22,1.27
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,6,2024-05-20,1.27
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,7,2024-06-17,1.25
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,8,2024-07-15,1.25
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,9,2024-08-12,1.27
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,10,2024-09-09,1.27
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,11,2024-10-07,1.3
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,12,2024-11-04,1.37
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,13,2024-12-02,1.35
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,1,2024-12-30,1.34
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,2,2025-01-27,1.34
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,3,2025-02-24,1.36
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,4,2025-03-24,1.64
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,5,2025-04-21,1.68
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,6,2025-05-19,1.68
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,7,2025-06-16,1.69
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,8,2025-07-14,1.63
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,9,2025-08-11,1.7
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,10,2025-09-08,1.67
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,11,2025-10-06,1.67
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,12,2025-11-03,1.67
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,13,2025-12-01,1.66
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,1,2025-12-29,1.69
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,2,2026-01-26,1.69
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,3,2026-02-23,1.68
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,4,2026-03-23,1.67
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,5,2026-04-20,1.64
+ovos-de-galinha,Ovo L,1011,1011,consumo,€/6 ovos,6,2026-05-18,1.69
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,1,2022-01-03,0.6
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,2,2022-01-31,0.61
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,3,2022-02-28,0.74
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,4,2022-03-28,0.85
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,5,2022-04-25,0.83
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,6,2022-05-23,0.78
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,7,2022-06-20,0.78
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,8,2022-07-18,0.79
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,9,2022-08-15,0.8
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,10,2022-09-12,0.86
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,11,2022-10-10,0.99
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,12,2022-11-07,1.03
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,13,2022-12-05,1.03
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,1,2023-01-02,1.03
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,2,2023-01-30,1.03
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,3,2023-02-27,1.07
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,4,2023-03-27,1.06
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,5,2023-04-24,1.05
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,6,2023-05-22,1.01
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,7,2023-06-19,1.01
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,8,2023-07-17,1.0
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,9,2023-08-14,1.0
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,10,2023-09-11,1.0
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,11,2023-10-09,1.0
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,12,2023-11-06,0.99
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,13,2023-12-04,0.99
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,1,2024-01-01,0.98
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,2,2024-01-29,0.93
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,3,2024-02-26,0.93
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,4,2024-03-25,0.93
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,5,2024-04-22,0.91
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,6,2024-05-20,0.89
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,7,2024-06-17,0.9
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,8,2024-07-15,0.88
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,9,2024-08-12,0.88
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,10,2024-09-09,0.9
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,11,2024-10-07,0.98
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,12,2024-11-04,1.04
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,13,2024-12-02,1.05
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,1,2024-12-30,1.04
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,2,2025-01-27,1.02
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,3,2025-02-24,1.09
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,4,2025-03-24,1.18
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,5,2025-04-21,1.16
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,6,2025-05-19,1.09
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,7,2025-06-16,1.08
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,8,2025-07-14,1.08
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,9,2025-08-11,1.07
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,10,2025-09-08,1.08
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,11,2025-10-06,1.18
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,12,2025-11-03,1.22
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,13,2025-12-01,1.22
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,1,2025-12-29,1.19
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,2,2026-01-26,1.18
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,3,2026-02-23,1.19
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,4,2026-03-23,1.2
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,5,2026-04-20,1.18
+ovos-de-galinha,Ovo L,1011,6,producao,€/6 ovos,6,2026-05-18,1.16
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,1,2022-01-03,0.76
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,2,2022-01-31,0.8
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,3,2022-02-28,0.8
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,4,2022-03-28,0.83
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,5,2022-04-25,0.93
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,6,2022-05-23,0.95
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,7,2022-06-20,0.97
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,8,2022-07-18,0.98
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,9,2022-08-15,0.98
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,10,2022-09-12,0.98
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,11,2022-10-10,1.0
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,12,2022-11-07,1.11
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,13,2022-12-05,1.16
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,1,2023-01-02,1.16
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,2,2023-01-30,1.14
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,3,2023-02-27,1.16
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,4,2023-03-27,1.25
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,5,2023-04-24,1.19
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,6,2023-05-22,1.2
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,7,2023-06-19,1.19
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,8,2023-07-17,1.18
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,9,2023-08-14,1.19
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,10,2023-09-11,1.18
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,11,2023-10-09,1.17
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,12,2023-11-06,1.18
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,13,2023-12-04,1.12
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,1,2024-01-01,1.2
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,2,2024-01-29,1.21
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,3,2024-02-26,1.16
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,4,2024-03-25,1.15
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,5,2024-04-22,1.15
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,6,2024-05-20,1.12
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,7,2024-06-17,1.12
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,8,2024-07-15,1.14
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,9,2024-08-12,1.13
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,10,2024-09-09,1.1
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,11,2024-10-07,1.15
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,12,2024-11-04,1.21
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,13,2024-12-02,1.22
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,1,2024-12-30,1.19
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,2,2025-01-27,1.18
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,3,2025-02-24,1.21
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,4,2025-03-24,1.51
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,5,2025-04-21,1.5
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,6,2025-05-19,1.51
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,7,2025-06-16,1.53
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,8,2025-07-14,1.53
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,9,2025-08-11,1.55
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,10,2025-09-08,1.54
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,11,2025-10-06,1.54
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,12,2025-11-03,1.53
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,13,2025-12-01,1.55
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,1,2025-12-29,1.55
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,2,2026-01-26,1.54
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,3,2026-02-23,1.53
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,4,2026-03-23,1.52
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,5,2026-04-20,1.51
+ovos-de-galinha,Ovo M,1010,1010,consumo,€/6 ovos,6,2026-05-18,1.53
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,1,2022-01-03,0.55
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,2,2022-01-31,0.56
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,3,2022-02-28,0.69
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,4,2022-03-28,0.8
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,5,2022-04-25,0.78
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,6,2022-05-23,0.73
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,7,2022-06-20,0.73
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,8,2022-07-18,0.74
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,9,2022-08-15,0.75
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,10,2022-09-12,0.81
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,11,2022-10-10,0.94
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,12,2022-11-07,0.97
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,13,2022-12-05,0.97
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,1,2023-01-02,0.97
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,2,2023-01-30,0.99
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,3,2023-02-27,1.02
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,4,2023-03-27,1.01
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,5,2023-04-24,1.0
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,6,2023-05-22,0.96
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,7,2023-06-19,0.96
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,8,2023-07-17,0.95
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,9,2023-08-14,0.94
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,10,2023-09-11,0.93
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,11,2023-10-09,0.94
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,12,2023-11-06,0.93
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,13,2023-12-04,0.93
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,1,2024-01-01,0.92
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,2,2024-01-29,0.88
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,3,2024-02-26,0.88
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,4,2024-03-25,0.88
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,5,2024-04-22,0.86
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,6,2024-05-20,0.84
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,7,2024-06-17,0.85
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,8,2024-07-15,0.83
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,9,2024-08-12,0.82
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,10,2024-09-09,0.85
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,11,2024-10-07,0.91
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,12,2024-11-04,0.98
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,13,2024-12-02,0.99
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,1,2024-12-30,0.98
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,2,2025-01-27,0.96
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,3,2025-02-24,1.03
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,4,2025-03-24,1.13
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,5,2025-04-21,1.11
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,6,2025-05-19,1.04
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,7,2025-06-16,1.03
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,8,2025-07-14,1.03
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,9,2025-08-11,1.02
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,10,2025-09-08,1.03
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,11,2025-10-06,1.13
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,12,2025-11-03,1.17
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,13,2025-12-01,1.17
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,1,2025-12-29,1.15
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,2,2026-01-26,1.13
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,3,2026-02-23,1.14
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,4,2026-03-23,1.15
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,5,2026-04-20,1.12
+ovos-de-galinha,Ovo M,1010,4,producao,€/6 ovos,6,2026-05-18,1.09
+peixes,Dourada,1018,1018,consumo,€/kg,1,2022-01-03,5.72
+peixes,Dourada,1018,1018,consumo,€/kg,2,2022-01-31,5.95
+peixes,Dourada,1018,1018,consumo,€/kg,3,2022-02-28,6.38
+peixes,Dourada,1018,1018,consumo,€/kg,4,2022-03-28,6.38
+peixes,Dourada,1018,1018,consumo,€/kg,5,2022-04-25,6.47
+peixes,Dourada,1018,1018,consumo,€/kg,6,2022-05-23,6.67
+peixes,Dourada,1018,1018,consumo,€/kg,7,2022-06-20,6.61
+peixes,Dourada,1018,1018,consumo,€/kg,8,2022-07-18,7.17
+peixes,Dourada,1018,1018,consumo,€/kg,9,2022-08-15,7.04
+peixes,Dourada,1018,1018,consumo,€/kg,10,2022-09-12,7.09
+peixes,Dourada,1018,1018,consumo,€/kg,11,2022-10-10,6.98
+peixes,Dourada,1018,1018,consumo,€/kg,12,2022-11-07,6.5
+peixes,Dourada,1018,1018,consumo,€/kg,13,2022-12-05,6.59
+peixes,Dourada,1018,1018,consumo,€/kg,1,2023-01-02,6.72
+peixes,Dourada,1018,1018,consumo,€/kg,2,2023-01-30,6.91
+peixes,Dourada,1018,1018,consumo,€/kg,3,2023-02-27,6.93
+peixes,Dourada,1018,1018,consumo,€/kg,4,2023-03-27,7.4
+peixes,Dourada,1018,1018,consumo,€/kg,5,2023-04-24,6.45
+peixes,Dourada,1018,1018,consumo,€/kg,6,2023-05-22,6.33
+peixes,Dourada,1018,1018,consumo,€/kg,7,2023-06-19,6.3
+peixes,Dourada,1018,1018,consumo,€/kg,8,2023-07-17,6.22
+peixes,Dourada,1018,1018,consumo,€/kg,9,2023-08-14,6.35
+peixes,Dourada,1018,1018,consumo,€/kg,10,2023-09-11,6.27
+peixes,Dourada,1018,1018,consumo,€/kg,11,2023-10-09,6.49
+peixes,Dourada,1018,1018,consumo,€/kg,12,2023-11-06,6.89
+peixes,Dourada,1018,1018,consumo,€/kg,13,2023-12-04,6.96
+peixes,Dourada,1018,1018,consumo,€/kg,1,2024-01-01,7.03
+peixes,Dourada,1018,1018,consumo,€/kg,2,2024-01-29,7.66
+peixes,Dourada,1018,1018,consumo,€/kg,3,2024-02-26,7.62
+peixes,Dourada,1018,1018,consumo,€/kg,4,2024-03-25,7.43
+peixes,Dourada,1018,1018,consumo,€/kg,5,2024-04-22,7.24
+peixes,Dourada,1018,1018,consumo,€/kg,6,2024-05-20,7.37
+peixes,Dourada,1018,1018,consumo,€/kg,7,2024-06-17,7.93
+peixes,Dourada,1018,1018,consumo,€/kg,8,2024-07-15,7.93
+peixes,Dourada,1018,1018,consumo,€/kg,9,2024-08-12,7.49
+peixes,Dourada,1018,1018,consumo,€/kg,10,2024-09-09,8.07
+peixes,Dourada,1018,1018,consumo,€/kg,11,2024-10-07,8.92
+peixes,Dourada,1018,1018,consumo,€/kg,12,2024-11-04,8.11
+peixes,Dourada,1018,1018,consumo,€/kg,13,2024-12-02,8.63
+peixes,Dourada,1018,1018,consumo,€/kg,1,2024-12-30,8.02
+peixes,Dourada,1018,1018,consumo,€/kg,2,2025-01-27,7.91
+peixes,Dourada,1018,1018,consumo,€/kg,3,2025-02-24,8.34
+peixes,Dourada,1018,1018,consumo,€/kg,4,2025-03-24,8.72
+peixes,Dourada,1018,1018,consumo,€/kg,5,2025-04-21,8.69
+peixes,Dourada,1018,1018,consumo,€/kg,6,2025-05-19,8.5
+peixes,Dourada,1018,1018,consumo,€/kg,7,2025-06-16,8.14
+peixes,Dourada,1018,1018,consumo,€/kg,8,2025-07-14,8.93
+peixes,Dourada,1018,1018,consumo,€/kg,9,2025-08-11,8.69
+peixes,Dourada,1018,1018,consumo,€/kg,10,2025-09-08,8.98
+peixes,Dourada,1018,1018,consumo,€/kg,11,2025-10-06,8.28
+peixes,Dourada,1018,1018,consumo,€/kg,12,2025-11-03,8.82
+peixes,Dourada,1018,1018,consumo,€/kg,13,2025-12-01,8.58
+peixes,Dourada,1018,1018,consumo,€/kg,1,2025-12-29,8.64
+peixes,Dourada,1018,1018,consumo,€/kg,2,2026-01-26,8.48
+peixes,Dourada,1018,1018,consumo,€/kg,3,2026-02-23,9.44
+peixes,Dourada,1018,1018,consumo,€/kg,4,2026-03-23,9.58
+peixes,Dourada,1018,1018,consumo,€/kg,5,2026-04-20,8.84
+peixes,Dourada,1018,1018,consumo,€/kg,6,2026-05-18,9.11
+peixes,Peixe,1017,1017,consumo,€/kg,1,2022-01-03,7.3
+peixes,Peixe,1017,1017,consumo,€/kg,2,2022-01-31,7.43
+peixes,Peixe,1017,1017,consumo,€/kg,3,2022-02-28,7.47
+peixes,Peixe,1017,1017,consumo,€/kg,4,2022-03-28,7.32
+peixes,Peixe,1017,1017,consumo,€/kg,5,2022-04-25,7.13
+peixes,Peixe,1017,1017,consumo,€/kg,6,2022-05-23,7.04
+peixes,Peixe,1017,1017,consumo,€/kg,7,2022-06-20,7.17
+peixes,Peixe,1017,1017,consumo,€/kg,8,2022-07-18,7.21
+peixes,Peixe,1017,1017,consumo,€/kg,9,2022-08-15,7.25
+peixes,Peixe,1017,1017,consumo,€/kg,10,2022-09-12,7.46
+peixes,Peixe,1017,1017,consumo,€/kg,11,2022-10-10,7.61
+peixes,Peixe,1017,1017,consumo,€/kg,12,2022-11-07,7.85
+peixes,Peixe,1017,1017,consumo,€/kg,13,2022-12-05,8.86
+peixes,Peixe,1017,1017,consumo,€/kg,1,2023-01-02,7.79
+peixes,Peixe,1017,1017,consumo,€/kg,2,2023-01-30,7.76
+peixes,Peixe,1017,1017,consumo,€/kg,3,2023-02-27,7.69
+peixes,Peixe,1017,1017,consumo,€/kg,4,2023-03-27,7.88
+peixes,Peixe,1017,1017,consumo,€/kg,5,2023-04-24,7.43
+peixes,Peixe,1017,1017,consumo,€/kg,6,2023-05-22,7.32
+peixes,Peixe,1017,1017,consumo,€/kg,7,2023-06-19,7.31
+peixes,Peixe,1017,1017,consumo,€/kg,8,2023-07-17,7.23
+peixes,Peixe,1017,1017,consumo,€/kg,9,2023-08-14,7.27
+peixes,Peixe,1017,1017,consumo,€/kg,10,2023-09-11,7.14
+peixes,Peixe,1017,1017,consumo,€/kg,11,2023-10-09,7.64
+peixes,Peixe,1017,1017,consumo,€/kg,12,2023-11-06,7.94
+peixes,Peixe,1017,1017,consumo,€/kg,13,2023-12-04,9.19
+peixes,Peixe,1017,1017,consumo,€/kg,1,2024-01-01,8.35
+peixes,Peixe,1017,1017,consumo,€/kg,2,2024-01-29,8.26
+peixes,Peixe,1017,1017,consumo,€/kg,3,2024-02-26,8.37
+peixes,Peixe,1017,1017,consumo,€/kg,4,2024-03-25,8.25
+peixes,Peixe,1017,1017,consumo,€/kg,5,2024-04-22,7.8
+peixes,Peixe,1017,1017,consumo,€/kg,6,2024-05-20,7.99
+peixes,Peixe,1017,1017,consumo,€/kg,7,2024-06-17,7.79
+peixes,Peixe,1017,1017,consumo,€/kg,8,2024-07-15,8.22
+peixes,Peixe,1017,1017,consumo,€/kg,9,2024-08-12,7.73
+peixes,Peixe,1017,1017,consumo,€/kg,10,2024-09-09,8.0
+peixes,Peixe,1017,1017,consumo,€/kg,11,2024-10-07,8.25
+peixes,Peixe,1017,1017,consumo,€/kg,12,2024-11-04,8.41
+peixes,Peixe,1017,1017,consumo,€/kg,13,2024-12-02,9.7
+peixes,Peixe,1017,1017,consumo,€/kg,1,2024-12-30,9.1
+peixes,Peixe,1017,1017,consumo,€/kg,2,2025-01-27,9.0
+peixes,Peixe,1017,1017,consumo,€/kg,3,2025-02-24,9.04
+peixes,Peixe,1017,1017,consumo,€/kg,4,2025-03-24,8.92
+peixes,Peixe,1017,1017,consumo,€/kg,5,2025-04-21,8.88
+peixes,Peixe,1017,1017,consumo,€/kg,6,2025-05-19,8.63
+peixes,Peixe,1017,1017,consumo,€/kg,7,2025-06-16,7.98
+peixes,Peixe,1017,1017,consumo,€/kg,8,2025-07-14,8.52
+peixes,Peixe,1017,1017,consumo,€/kg,9,2025-08-11,8.65
+peixes,Peixe,1017,1017,consumo,€/kg,10,2025-09-08,8.68
+peixes,Peixe,1017,1017,consumo,€/kg,11,2025-10-06,8.8
+peixes,Peixe,1017,1017,consumo,€/kg,12,2025-11-03,9.62
+peixes,Peixe,1017,1017,consumo,€/kg,13,2025-12-01,10.48
+peixes,Peixe,1017,1017,consumo,€/kg,1,2025-12-29,9.79
+peixes,Peixe,1017,1017,consumo,€/kg,2,2026-01-26,9.86
+peixes,Peixe,1017,1017,consumo,€/kg,3,2026-02-23,9.81
+peixes,Peixe,1017,1017,consumo,€/kg,4,2026-03-23,10.17
+peixes,Peixe,1017,1017,consumo,€/kg,5,2026-04-20,9.1
+peixes,Peixe,1017,1017,consumo,€/kg,6,2026-05-18,9.16
+peixes,Pescada,1019,1019,consumo,€/kg,1,2022-01-03,7.31
+peixes,Pescada,1019,1019,consumo,€/kg,2,2022-01-31,7.4
+peixes,Pescada,1019,1019,consumo,€/kg,3,2022-02-28,7.7
+peixes,Pescada,1019,1019,consumo,€/kg,4,2022-03-28,6.99
+peixes,Pescada,1019,1019,consumo,€/kg,5,2022-04-25,7.6
+peixes,Pescada,1019,1019,consumo,€/kg,6,2022-05-23,7.32
+peixes,Pescada,1019,1019,consumo,€/kg,7,2022-06-20,7.48
+peixes,Pescada,1019,1019,consumo,€/kg,8,2022-07-18,7.23
+peixes,Pescada,1019,1019,consumo,€/kg,9,2022-08-15,7.25
+peixes,Pescada,1019,1019,consumo,€/kg,10,2022-09-12,7.47
+peixes,Pescada,1019,1019,consumo,€/kg,11,2022-10-10,7.65
+peixes,Pescada,1019,1019,consumo,€/kg,12,2022-11-07,7.89
+peixes,Pescada,1019,1019,consumo,€/kg,13,2022-12-05,7.28
+peixes,Pescada,1019,1019,consumo,€/kg,1,2023-01-02,7.74
+peixes,Pescada,1019,1019,consumo,€/kg,2,2023-01-30,6.56
+peixes,Pescada,1019,1019,consumo,€/kg,3,2023-02-27,6.64
+peixes,Pescada,1019,1019,consumo,€/kg,4,2023-03-27,6.76
+peixes,Pescada,1019,1019,consumo,€/kg,5,2023-04-24,6.93
+peixes,Pescada,1019,1019,consumo,€/kg,6,2023-05-22,6.88
+peixes,Pescada,1019,1019,consumo,€/kg,7,2023-06-19,6.92
+peixes,Pescada,1019,1019,consumo,€/kg,8,2023-07-17,6.73
+peixes,Pescada,1019,1019,consumo,€/kg,9,2023-08-14,6.78
+peixes,Pescada,1019,1019,consumo,€/kg,10,2023-09-11,6.88
+peixes,Pescada,1019,1019,consumo,€/kg,11,2023-10-09,7.21
+peixes,Pescada,1019,1019,consumo,€/kg,12,2023-11-06,8.0
+peixes,Pescada,1019,1019,consumo,€/kg,13,2023-12-04,7.86
+peixes,Pescada,1019,1019,consumo,€/kg,1,2024-01-01,8.57
+peixes,Pescada,1019,1019,consumo,€/kg,2,2024-01-29,7.73
+peixes,Pescada,1019,1019,consumo,€/kg,3,2024-02-26,7.76
+peixes,Pescada,1019,1019,consumo,€/kg,4,2024-03-25,7.62
+peixes,Pescada,1019,1019,consumo,€/kg,5,2024-04-22,7.54
+peixes,Pescada,1019,1019,consumo,€/kg,6,2024-05-20,7.91
+peixes,Pescada,1019,1019,consumo,€/kg,7,2024-06-17,7.6
+peixes,Pescada,1019,1019,consumo,€/kg,8,2024-07-15,8.14
+peixes,Pescada,1019,1019,consumo,€/kg,9,2024-08-12,7.35
+peixes,Pescada,1019,1019,consumo,€/kg,10,2024-09-09,7.81
+peixes,Pescada,1019,1019,consumo,€/kg,11,2024-10-07,8.78
+peixes,Pescada,1019,1019,consumo,€/kg,12,2024-11-04,8.28
+peixes,Pescada,1019,1019,consumo,€/kg,13,2024-12-02,8.41
+peixes,Pescada,1019,1019,consumo,€/kg,1,2024-12-30,7.12
+peixes,Pescada,1019,1019,consumo,€/kg,2,2025-01-27,8.35
+peixes,Pescada,1019,1019,consumo,€/kg,3,2025-02-24,8.0
+peixes,Pescada,1019,1019,consumo,€/kg,4,2025-03-24,8.43
+peixes,Pescada,1019,1019,consumo,€/kg,5,2025-04-21,8.02
+peixes,Pescada,1019,1019,consumo,€/kg,6,2025-05-19,8.81
+peixes,Pescada,1019,1019,consumo,€/kg,7,2025-06-16,8.24
+peixes,Pescada,1019,1019,consumo,€/kg,8,2025-07-14,9.02
+peixes,Pescada,1019,1019,consumo,€/kg,9,2025-08-11,9.12
+peixes,Pescada,1019,1019,consumo,€/kg,10,2025-09-08,9.16
+peixes,Pescada,1019,1019,consumo,€/kg,11,2025-10-06,7.95
+peixes,Pescada,1019,1019,consumo,€/kg,12,2025-11-03,9.47
+peixes,Pescada,1019,1019,consumo,€/kg,13,2025-12-01,7.69
+peixes,Pescada,1019,1019,consumo,€/kg,1,2025-12-29,8.69
+peixes,Pescada,1019,1019,consumo,€/kg,2,2026-01-26,9.06
+peixes,Pescada,1019,1019,consumo,€/kg,3,2026-02-23,9.15
+peixes,Pescada,1019,1019,consumo,€/kg,4,2026-03-23,9.09
+peixes,Pescada,1019,1019,consumo,€/kg,5,2026-04-20,8.79
+peixes,Pescada,1019,1019,consumo,€/kg,6,2026-05-18,9.02
+peixes,Pescada,1019,237,producao,€/kg,1,2022-01-03,4.7
+peixes,Pescada,1019,237,producao,€/kg,2,2022-01-31,4.27
+peixes,Pescada,1019,237,producao,€/kg,3,2022-02-28,4.53
+peixes,Pescada,1019,237,producao,€/kg,4,2022-03-28,4.87
+peixes,Pescada,1019,237,producao,€/kg,5,2022-04-25,3.22
+peixes,Pescada,1019,237,producao,€/kg,6,2022-05-23,2.88
+peixes,Pescada,1019,237,producao,€/kg,7,2022-06-20,3.07
+peixes,Pescada,1019,237,producao,€/kg,8,2022-07-18,3.08
+peixes,Pescada,1019,237,producao,€/kg,9,2022-08-15,3.18
+peixes,Pescada,1019,237,producao,€/kg,10,2022-09-12,3.64
+peixes,Pescada,1019,237,producao,€/kg,11,2022-10-10,3.81
+peixes,Pescada,1019,237,producao,€/kg,12,2022-11-07,3.6
+peixes,Pescada,1019,237,producao,€/kg,13,2022-12-05,4.02
+peixes,Pescada,1019,237,producao,€/kg,1,2023-01-02,4.71
+peixes,Pescada,1019,237,producao,€/kg,2,2023-01-30,3.56
+peixes,Pescada,1019,237,producao,€/kg,3,2023-02-27,3.46
+peixes,Pescada,1019,237,producao,€/kg,4,2023-03-27,3.6
+peixes,Pescada,1019,237,producao,€/kg,5,2023-04-24,3.55
+peixes,Pescada,1019,237,producao,€/kg,6,2023-05-22,2.94
+peixes,Pescada,1019,237,producao,€/kg,7,2023-06-19,3.15
+peixes,Pescada,1019,237,producao,€/kg,8,2023-07-17,3.39
+peixes,Pescada,1019,237,producao,€/kg,9,2023-08-14,3.64
+peixes,Pescada,1019,237,producao,€/kg,10,2023-09-11,4.11
+peixes,Pescada,1019,237,producao,€/kg,11,2023-10-09,4.95
+peixes,Pescada,1019,237,producao,€/kg,12,2023-11-06,4.5
+peixes,Pescada,1019,237,producao,€/kg,13,2023-12-04,4.17
+peixes,Pescada,1019,237,producao,€/kg,1,2024-01-01,4.82
+peixes,Pescada,1019,237,producao,€/kg,2,2024-01-29,4.26
+peixes,Pescada,1019,237,producao,€/kg,3,2024-02-26,4.64
+peixes,Pescada,1019,237,producao,€/kg,4,2024-03-25,5.17
+peixes,Pescada,1019,237,producao,€/kg,5,2024-04-22,4.08
+peixes,Pescada,1019,237,producao,€/kg,6,2024-05-20,4.13
+peixes,Pescada,1019,237,producao,€/kg,7,2024-06-17,4.15
+peixes,Pescada,1019,237,producao,€/kg,8,2024-07-15,4.53
+peixes,Pescada,1019,237,producao,€/kg,9,2024-08-12,4.62
+peixes,Pescada,1019,237,producao,€/kg,10,2024-09-09,5.43
+peixes,Pescada,1019,237,producao,€/kg,11,2024-10-07,5.66
+peixes,Pescada,1019,237,producao,€/kg,12,2024-11-04,4.67
+peixes,Pescada,1019,237,producao,€/kg,13,2024-12-02,5.02
+peixes,Pescada,1019,237,producao,€/kg,1,2024-12-30,5.64
+peixes,Pescada,1019,237,producao,€/kg,2,2025-01-27,6.07
+peixes,Pescada,1019,237,producao,€/kg,3,2025-02-24,5.93
+peixes,Pescada,1019,237,producao,€/kg,4,2025-03-24,5.34
+peixes,Pescada,1019,237,producao,€/kg,5,2025-04-21,4.64
+peixes,Pescada,1019,237,producao,€/kg,6,2025-05-19,4.63
+peixes,Pescada,1019,237,producao,€/kg,7,2025-06-16,4.16
+peixes,Pescada,1019,237,producao,€/kg,8,2025-07-14,4.22
+peixes,Pescada,1019,237,producao,€/kg,9,2025-08-11,4.05
+peixes,Pescada,1019,237,producao,€/kg,10,2025-09-08,4.45
+peixes,Pescada,1019,237,producao,€/kg,11,2025-10-06,3.72
+peixes,Pescada,1019,237,producao,€/kg,12,2025-11-03,3.96
+peixes,Pescada,1019,237,producao,€/kg,13,2025-12-01,4.18
+peixes,Pescada,1019,237,producao,€/kg,1,2025-12-29,4.84
+peixes,Pescada,1019,237,producao,€/kg,2,2026-01-26,6.37
+peixes,Pescada,1019,237,producao,€/kg,3,2026-02-23,4.6
+peixes,Pescada,1019,237,producao,€/kg,4,2026-03-23,4.61
+peixes,Pescada,1019,237,producao,€/kg,5,2026-04-20,3.97
+peixes,Pescada,1019,237,producao,€/kg,6,2026-05-18,3.63
+pera,Pêra,1037,1037,consumo,€/kg,1,2022-01-03,1.38
+pera,Pêra,1037,1037,consumo,€/kg,2,2022-01-31,1.39
+pera,Pêra,1037,1037,consumo,€/kg,3,2022-02-28,1.37
+pera,Pêra,1037,1037,consumo,€/kg,4,2022-03-28,1.42
+pera,Pêra,1037,1037,consumo,€/kg,5,2022-04-25,1.43
+pera,Pêra,1037,1037,consumo,€/kg,6,2022-05-23,1.45
+pera,Pêra,1037,1037,consumo,€/kg,7,2022-06-20,1.5
+pera,Pêra,1037,1037,consumo,€/kg,8,2022-07-18,1.45
+pera,Pêra,1037,1037,consumo,€/kg,9,2022-08-15,1.29
+pera,Pêra,1037,1037,consumo,€/kg,10,2022-09-12,1.46
+pera,Pêra,1037,1037,consumo,€/kg,11,2022-10-10,1.53
+pera,Pêra,1037,1037,consumo,€/kg,12,2022-11-07,1.6
+pera,Pêra,1037,1037,consumo,€/kg,13,2022-12-05,1.62
+pera,Pêra,1037,1037,consumo,€/kg,1,2023-01-02,1.6
+pera,Pêra,1037,1037,consumo,€/kg,2,2023-01-30,1.59
+pera,Pêra,1037,1037,consumo,€/kg,3,2023-02-27,1.62
+pera,Pêra,1037,1037,consumo,€/kg,4,2023-03-27,1.73
+pera,Pêra,1037,1037,consumo,€/kg,5,2023-04-24,1.8
+pera,Pêra,1037,1037,consumo,€/kg,6,2023-05-22,2.02
+pera,Pêra,1037,1037,consumo,€/kg,7,2023-06-19,2.0
+pera,Pêra,1037,1037,consumo,€/kg,8,2023-07-17,1.93
+pera,Pêra,1037,1037,consumo,€/kg,9,2023-08-14,1.81
+pera,Pêra,1037,1037,consumo,€/kg,10,2023-09-11,1.75
+pera,Pêra,1037,1037,consumo,€/kg,11,2023-10-09,1.79
+pera,Pêra,1037,1037,consumo,€/kg,12,2023-11-06,1.88
+pera,Pêra,1037,1037,consumo,€/kg,13,2023-12-04,1.9
+pera,Pêra,1037,1037,consumo,€/kg,1,2024-01-01,1.91
+pera,Pêra,1037,1037,consumo,€/kg,2,2024-01-29,1.93
+pera,Pêra,1037,1037,consumo,€/kg,3,2024-02-26,1.93
+pera,Pêra,1037,1037,consumo,€/kg,4,2024-03-25,1.97
+pera,Pêra,1037,1037,consumo,€/kg,5,2024-04-22,1.95
+pera,Pêra,1037,1037,consumo,€/kg,6,2024-05-20,1.96
+pera,Pêra,1037,1037,consumo,€/kg,7,2024-06-17,1.9
+pera,Pêra,1037,1037,consumo,€/kg,8,2024-07-15,1.98
+pera,Pêra,1037,1037,consumo,€/kg,9,2024-08-12,1.98
+pera,Pêra,1037,1037,consumo,€/kg,10,2024-09-09,1.88
+pera,Pêra,1037,1037,consumo,€/kg,11,2024-10-07,1.93
+pera,Pêra,1037,1037,consumo,€/kg,12,2024-11-04,1.9
+pera,Pêra,1037,1037,consumo,€/kg,13,2024-12-02,1.94
+pera,Pêra,1037,1037,consumo,€/kg,1,2024-12-30,1.93
+pera,Pêra,1037,1037,consumo,€/kg,2,2025-01-27,1.99
+pera,Pêra,1037,1037,consumo,€/kg,3,2025-02-24,1.98
+pera,Pêra,1037,1037,consumo,€/kg,4,2025-03-24,1.91
+pera,Pêra,1037,1037,consumo,€/kg,5,2025-04-21,1.97
+pera,Pêra,1037,1037,consumo,€/kg,6,2025-05-19,1.97
+pera,Pêra,1037,1037,consumo,€/kg,7,2025-06-16,1.93
+pera,Pêra,1037,1037,consumo,€/kg,8,2025-07-14,2.03
+pera,Pêra,1037,1037,consumo,€/kg,9,2025-08-11,2.04
+pera,Pêra,1037,1037,consumo,€/kg,10,2025-09-08,1.99
+pera,Pêra,1037,1037,consumo,€/kg,11,2025-10-06,1.92
+pera,Pêra,1037,1037,consumo,€/kg,12,2025-11-03,1.97
+pera,Pêra,1037,1037,consumo,€/kg,13,2025-12-01,2.08
+pera,Pêra,1037,1037,consumo,€/kg,1,2025-12-29,1.98
+pera,Pêra,1037,1037,consumo,€/kg,2,2026-01-26,1.99
+pera,Pêra,1037,1037,consumo,€/kg,3,2026-02-23,2.04
+pera,Pêra,1037,1037,consumo,€/kg,4,2026-03-23,2.02
+pera,Pêra,1037,1037,consumo,€/kg,5,2026-04-20,1.95
+pera,Pêra,1037,1037,consumo,€/kg,6,2026-05-18,2.01
+pera,Pêra,1037,30,producao,€/kg,1,2022-01-03,0.8
+pera,Pêra,1037,30,producao,€/kg,2,2022-01-31,0.77
+pera,Pêra,1037,30,producao,€/kg,3,2022-02-28,0.81
+pera,Pêra,1037,30,producao,€/kg,4,2022-03-28,0.8
+pera,Pêra,1037,30,producao,€/kg,5,2022-04-25,0.77
+pera,Pêra,1037,30,producao,€/kg,6,2022-05-23,0.8
+pera,Pêra,1037,30,producao,€/kg,7,2022-06-20,0.8
+pera,Pêra,1037,30,producao,€/kg,8,2022-07-18,0.8
+pera,Pêra,1037,30,producao,€/kg,9,2022-08-15,1.23
+pera,Pêra,1037,30,producao,€/kg,10,2022-09-12,1.02
+pera,Pêra,1037,30,producao,€/kg,11,2022-10-10,0.99
+pera,Pêra,1037,30,producao,€/kg,12,2022-11-07,1.06
+pera,Pêra,1037,30,producao,€/kg,13,2022-12-05,1.06
+pera,Pêra,1037,30,producao,€/kg,1,2023-01-02,1.06
+pera,Pêra,1037,30,producao,€/kg,2,2023-01-30,1.08
+pera,Pêra,1037,30,producao,€/kg,3,2023-02-27,1.08
+pera,Pêra,1037,30,producao,€/kg,4,2023-03-27,1.08
+pera,Pêra,1037,30,producao,€/kg,5,2023-04-24,1.18
+pera,Pêra,1037,30,producao,€/kg,6,2023-05-22,1.37
+pera,Pêra,1037,30,producao,€/kg,10,2023-09-11,1.58
+pera,Pêra,1037,30,producao,€/kg,11,2023-10-09,1.54
+pera,Pêra,1037,30,producao,€/kg,12,2023-11-06,1.53
+pera,Pêra,1037,30,producao,€/kg,13,2023-12-04,1.54
+pera,Pêra,1037,30,producao,€/kg,1,2024-01-01,1.56
+pera,Pêra,1037,30,producao,€/kg,2,2024-01-29,1.58
+pera,Pêra,1037,30,producao,€/kg,3,2024-02-26,1.59
+pera,Pêra,1037,30,producao,€/kg,4,2024-03-25,1.59
+pera,Pêra,1037,30,producao,€/kg,5,2024-04-22,1.54
+pera,Pêra,1037,30,producao,€/kg,10,2024-09-09,1.5
+pera,Pêra,1037,30,producao,€/kg,11,2024-10-07,1.37
+pera,Pêra,1037,30,producao,€/kg,12,2024-11-04,1.48
+pera,Pêra,1037,30,producao,€/kg,13,2024-12-02,1.48
+pera,Pêra,1037,30,producao,€/kg,1,2024-12-30,1.47
+pera,Pêra,1037,30,producao,€/kg,2,2025-01-27,1.48
+pera,Pêra,1037,30,producao,€/kg,3,2025-02-24,1.44
+pera,Pêra,1037,30,producao,€/kg,6,2025-05-19,1.15
+pera,Pêra,1037,30,producao,€/kg,7,2025-06-16,1.2
+pera,Pêra,1037,30,producao,€/kg,11,2025-10-06,1.62
+pera,Pêra,1037,30,producao,€/kg,12,2025-11-03,1.63
+pera,Pêra,1037,30,producao,€/kg,13,2025-12-01,1.62
+pera,Pêra,1037,30,producao,€/kg,1,2025-12-29,1.47
+pera,Pêra,1037,30,producao,€/kg,2,2026-01-26,1.42
+pera,Pêra,1037,30,producao,€/kg,3,2026-02-23,1.49
+pera,Pêra,1037,30,producao,€/kg,4,2026-03-23,1.18
+pera,Pêra,1037,30,producao,€/kg,6,2026-05-18,1.04
+pessego,Pêssego,1039,1039,consumo,€/kg,5,2022-04-25,2.9
+pessego,Pêssego,1039,1039,consumo,€/kg,6,2022-05-23,2.55
+pessego,Pêssego,1039,1039,consumo,€/kg,7,2022-06-20,2.15
+pessego,Pêssego,1039,1039,consumo,€/kg,8,2022-07-18,2.04
+pessego,Pêssego,1039,1039,consumo,€/kg,9,2022-08-15,2.11
+pessego,Pêssego,1039,1039,consumo,€/kg,10,2022-09-12,2.14
+pessego,Pêssego,1039,1039,consumo,€/kg,11,2022-10-10,2.13
+pessego,Pêssego,1039,1039,consumo,€/kg,2,2023-01-30,4.3
+pessego,Pêssego,1039,1039,consumo,€/kg,3,2023-02-27,4.68
+pessego,Pêssego,1039,1039,consumo,€/kg,4,2023-03-27,3.46
+pessego,Pêssego,1039,1039,consumo,€/kg,5,2023-04-24,3.84
+pessego,Pêssego,1039,1039,consumo,€/kg,6,2023-05-22,3.22
+pessego,Pêssego,1039,1039,consumo,€/kg,7,2023-06-19,2.3
+pessego,Pêssego,1039,1039,consumo,€/kg,8,2023-07-17,2.07
+pessego,Pêssego,1039,1039,consumo,€/kg,9,2023-08-14,2.07
+pessego,Pêssego,1039,1039,consumo,€/kg,10,2023-09-11,2.0
+pessego,Pêssego,1039,1039,consumo,€/kg,11,2023-10-09,2.33
+pessego,Pêssego,1039,1039,consumo,€/kg,3,2024-02-26,4.23
+pessego,Pêssego,1039,1039,consumo,€/kg,5,2024-04-22,3.47
+pessego,Pêssego,1039,1039,consumo,€/kg,6,2024-05-20,3.02
+pessego,Pêssego,1039,1039,consumo,€/kg,7,2024-06-17,2.23
+pessego,Pêssego,1039,1039,consumo,€/kg,8,2024-07-15,1.92
+pessego,Pêssego,1039,1039,consumo,€/kg,9,2024-08-12,2.18
+pessego,Pêssego,1039,1039,consumo,€/kg,10,2024-09-09,2.33
+pessego,Pêssego,1039,1039,consumo,€/kg,11,2024-10-07,2.64
+pessego,Pêssego,1039,1039,consumo,€/kg,5,2025-04-21,4.29
+pessego,Pêssego,1039,1039,consumo,€/kg,6,2025-05-19,3.24
+pessego,Pêssego,1039,1039,consumo,€/kg,7,2025-06-16,2.75
+pessego,Pêssego,1039,1039,consumo,€/kg,8,2025-07-14,2.56
+pessego,Pêssego,1039,1039,consumo,€/kg,9,2025-08-11,2.56
+pessego,Pêssego,1039,1039,consumo,€/kg,10,2025-09-08,2.44
+pessego,Pêssego,1039,1039,consumo,€/kg,11,2025-10-06,2.55
+pessego,Pêssego,1039,1039,consumo,€/kg,5,2026-04-20,4.16
+pessego,Pêssego,1039,1039,consumo,€/kg,6,2026-05-18,3.26
+tomate,Tomate,1033,1033,consumo,€/kg,1,2022-01-03,1.86
+tomate,Tomate,1033,1033,consumo,€/kg,2,2022-01-31,1.84
+tomate,Tomate,1033,1033,consumo,€/kg,3,2022-02-28,2.19
+tomate,Tomate,1033,1033,consumo,€/kg,4,2022-03-28,2.48
+tomate,Tomate,1033,1033,consumo,€/kg,5,2022-04-25,2.18
+tomate,Tomate,1033,1033,consumo,€/kg,6,2022-05-23,1.83
+tomate,Tomate,1033,1033,consumo,€/kg,7,2022-06-20,1.72
+tomate,Tomate,1033,1033,consumo,€/kg,8,2022-07-18,1.38
+tomate,Tomate,1033,1033,consumo,€/kg,9,2022-08-15,1.39
+tomate,Tomate,1033,1033,consumo,€/kg,10,2022-09-12,1.68
+tomate,Tomate,1033,1033,consumo,€/kg,11,2022-10-10,2.18
+tomate,Tomate,1033,1033,consumo,€/kg,12,2022-11-07,2.08
+tomate,Tomate,1033,1033,consumo,€/kg,13,2022-12-05,2.28
+tomate,Tomate,1033,1033,consumo,€/kg,1,2023-01-02,2.14
+tomate,Tomate,1033,1033,consumo,€/kg,2,2023-01-30,2.43
+tomate,Tomate,1033,1033,consumo,€/kg,3,2023-02-27,2.9
+tomate,Tomate,1033,1033,consumo,€/kg,4,2023-03-27,2.74
+tomate,Tomate,1033,1033,consumo,€/kg,5,2023-04-24,2.48
+tomate,Tomate,1033,1033,consumo,€/kg,6,2023-05-22,2.11
+tomate,Tomate,1033,1033,consumo,€/kg,7,2023-06-19,1.88
+tomate,Tomate,1033,1033,consumo,€/kg,8,2023-07-17,1.65
+tomate,Tomate,1033,1033,consumo,€/kg,9,2023-08-14,1.98
+tomate,Tomate,1033,1033,consumo,€/kg,10,2023-09-11,2.05
+tomate,Tomate,1033,1033,consumo,€/kg,11,2023-10-09,2.17
+tomate,Tomate,1033,1033,consumo,€/kg,12,2023-11-06,2.29
+tomate,Tomate,1033,1033,consumo,€/kg,13,2023-12-04,2.66
+tomate,Tomate,1033,1033,consumo,€/kg,1,2024-01-01,2.66
+tomate,Tomate,1033,1033,consumo,€/kg,2,2024-01-29,2.39
+tomate,Tomate,1033,1033,consumo,€/kg,3,2024-02-26,2.27
+tomate,Tomate,1033,1033,consumo,€/kg,4,2024-03-25,2.19
+tomate,Tomate,1033,1033,consumo,€/kg,5,2024-04-22,2.12
+tomate,Tomate,1033,1033,consumo,€/kg,6,2024-05-20,1.88
+tomate,Tomate,1033,1033,consumo,€/kg,7,2024-06-17,1.95
+tomate,Tomate,1033,1033,consumo,€/kg,8,2024-07-15,1.97
+tomate,Tomate,1033,1033,consumo,€/kg,9,2024-08-12,1.78
+tomate,Tomate,1033,1033,consumo,€/kg,10,2024-09-09,2.19
+tomate,Tomate,1033,1033,consumo,€/kg,11,2024-10-07,2.19
+tomate,Tomate,1033,1033,consumo,€/kg,12,2024-11-04,2.26
+tomate,Tomate,1033,1033,consumo,€/kg,13,2024-12-02,2.24
+tomate,Tomate,1033,1033,consumo,€/kg,1,2024-12-30,2.39
+tomate,Tomate,1033,1033,consumo,€/kg,2,2025-01-27,2.42
+tomate,Tomate,1033,1033,consumo,€/kg,3,2025-02-24,2.44
+tomate,Tomate,1033,1033,consumo,€/kg,4,2025-03-24,2.47
+tomate,Tomate,1033,1033,consumo,€/kg,5,2025-04-21,2.34
+tomate,Tomate,1033,1033,consumo,€/kg,6,2025-05-19,2.05
+tomate,Tomate,1033,1033,consumo,€/kg,7,2025-06-16,2.08
+tomate,Tomate,1033,1033,consumo,€/kg,8,2025-07-14,2.2
+tomate,Tomate,1033,1033,consumo,€/kg,9,2025-08-11,2.25
+tomate,Tomate,1033,1033,consumo,€/kg,10,2025-09-08,2.17
+tomate,Tomate,1033,1033,consumo,€/kg,11,2025-10-06,2.26
+tomate,Tomate,1033,1033,consumo,€/kg,12,2025-11-03,2.29
+tomate,Tomate,1033,1033,consumo,€/kg,13,2025-12-01,2.43
+tomate,Tomate,1033,1033,consumo,€/kg,1,2025-12-29,2.57
+tomate,Tomate,1033,1033,consumo,€/kg,2,2026-01-26,2.6
+tomate,Tomate,1033,1033,consumo,€/kg,3,2026-02-23,2.66
+tomate,Tomate,1033,1033,consumo,€/kg,4,2026-03-23,3.21
+tomate,Tomate,1033,1033,consumo,€/kg,5,2026-04-20,3.03
+tomate,Tomate,1033,1033,consumo,€/kg,6,2026-05-18,2.42
+tomate,Tomate,1033,137,producao,€/kg,1,2022-01-03,0.67
+tomate,Tomate,1033,137,producao,€/kg,2,2022-01-31,1.0
+tomate,Tomate,1033,137,producao,€/kg,3,2022-02-28,1.08
+tomate,Tomate,1033,137,producao,€/kg,4,2022-03-28,1.38
+tomate,Tomate,1033,137,producao,€/kg,5,2022-04-25,0.85
+tomate,Tomate,1033,137,producao,€/kg,6,2022-05-23,0.78
+tomate,Tomate,1033,137,producao,€/kg,7,2022-06-20,0.74
+tomate,Tomate,1033,137,producao,€/kg,8,2022-07-18,0.81
+tomate,Tomate,1033,137,producao,€/kg,9,2022-08-15,0.93
+tomate,Tomate,1033,137,producao,€/kg,10,2022-09-12,0.97
+tomate,Tomate,1033,137,producao,€/kg,11,2022-10-10,1.05
+tomate,Tomate,1033,137,producao,€/kg,12,2022-11-07,0.84
+tomate,Tomate,1033,137,producao,€/kg,13,2022-12-05,0.81
+tomate,Tomate,1033,137,producao,€/kg,1,2023-01-02,0.85
+tomate,Tomate,1033,137,producao,€/kg,2,2023-01-30,1.1
+tomate,Tomate,1033,137,producao,€/kg,3,2023-02-27,1.24
+tomate,Tomate,1033,137,producao,€/kg,4,2023-03-27,1.3
+tomate,Tomate,1033,137,producao,€/kg,5,2023-04-24,1.24
+tomate,Tomate,1033,137,producao,€/kg,6,2023-05-22,0.8
+tomate,Tomate,1033,137,producao,€/kg,7,2023-06-19,0.59
+tomate,Tomate,1033,137,producao,€/kg,8,2023-07-17,0.66
+tomate,Tomate,1033,137,producao,€/kg,9,2023-08-14,0.89
+tomate,Tomate,1033,137,producao,€/kg,10,2023-09-11,0.94
+tomate,Tomate,1033,137,producao,€/kg,11,2023-10-09,1.08
+tomate,Tomate,1033,137,producao,€/kg,12,2023-11-06,1.09
+tomate,Tomate,1033,137,producao,€/kg,13,2023-12-04,1.21
+tomate,Tomate,1033,137,producao,€/kg,1,2024-01-01,0.98
+tomate,Tomate,1033,137,producao,€/kg,2,2024-01-29,0.76
+tomate,Tomate,1033,137,producao,€/kg,3,2024-02-26,0.77
+tomate,Tomate,1033,137,producao,€/kg,4,2024-03-25,0.79
+tomate,Tomate,1033,137,producao,€/kg,5,2024-04-22,0.66
+tomate,Tomate,1033,137,producao,€/kg,6,2024-05-20,0.57
+tomate,Tomate,1033,137,producao,€/kg,7,2024-06-17,0.75
+tomate,Tomate,1033,137,producao,€/kg,8,2024-07-15,0.82
+tomate,Tomate,1033,137,producao,€/kg,9,2024-08-12,0.69
+tomate,Tomate,1033,137,producao,€/kg,10,2024-09-09,1.06
+tomate,Tomate,1033,137,producao,€/kg,11,2024-10-07,0.76
+tomate,Tomate,1033,137,producao,€/kg,12,2024-11-04,0.77
+tomate,Tomate,1033,137,producao,€/kg,13,2024-12-02,0.61
+tomate,Tomate,1033,137,producao,€/kg,1,2024-12-30,0.95
+tomate,Tomate,1033,137,producao,€/kg,2,2025-01-27,0.94
+tomate,Tomate,1033,137,producao,€/kg,3,2025-02-24,1.01
+tomate,Tomate,1033,137,producao,€/kg,4,2025-03-24,0.98
+tomate,Tomate,1033,137,producao,€/kg,5,2025-04-21,0.78
+tomate,Tomate,1033,137,producao,€/kg,6,2025-05-19,0.66
+tomate,Tomate,1033,137,producao,€/kg,7,2025-06-16,0.73
+tomate,Tomate,1033,137,producao,€/kg,8,2025-07-14,1.04
+tomate,Tomate,1033,137,producao,€/kg,9,2025-08-11,0.87
+tomate,Tomate,1033,137,producao,€/kg,10,2025-09-08,0.74
+tomate,Tomate,1033,137,producao,€/kg,11,2025-10-06,0.73
+tomate,Tomate,1033,137,producao,€/kg,12,2025-11-03,0.73
+tomate,Tomate,1033,137,producao,€/kg,13,2025-12-01,0.77
+tomate,Tomate,1033,137,producao,€/kg,1,2025-12-29,0.98
+tomate,Tomate,1033,137,producao,€/kg,2,2026-01-26,0.89
+tomate,Tomate,1033,137,producao,€/kg,3,2026-02-23,1.1
+tomate,Tomate,1033,137,producao,€/kg,4,2026-03-23,1.76
+tomate,Tomate,1033,137,producao,€/kg,5,2026-04-20,1.11
+tomate,Tomate,1033,137,producao,€/kg,6,2026-05-18,0.78
+trigo,Esparguete,1023,1023,consumo,€/kg,1,2022-01-03,1.39
+trigo,Esparguete,1023,1023,consumo,€/kg,2,2022-01-31,1.48
+trigo,Esparguete,1023,1023,consumo,€/kg,3,2022-02-28,1.51
+trigo,Esparguete,1023,1023,consumo,€/kg,4,2022-03-28,1.55
+trigo,Esparguete,1023,1023,consumo,€/kg,5,2022-04-25,1.66
+trigo,Esparguete,1023,1023,consumo,€/kg,6,2022-05-23,1.63
+trigo,Esparguete,1023,1023,consumo,€/kg,7,2022-06-20,1.65
+trigo,Esparguete,1023,1023,consumo,€/kg,8,2022-07-18,1.71
+trigo,Esparguete,1023,1023,consumo,€/kg,9,2022-08-15,1.6
+trigo,Esparguete,1023,1023,consumo,€/kg,10,2022-09-12,1.59
+trigo,Esparguete,1023,1023,consumo,€/kg,11,2022-10-10,1.64
+trigo,Esparguete,1023,1023,consumo,€/kg,12,2022-11-07,1.72
+trigo,Esparguete,1023,1023,consumo,€/kg,13,2022-12-05,1.62
+trigo,Esparguete,1023,1023,consumo,€/kg,1,2023-01-02,1.6
+trigo,Esparguete,1023,1023,consumo,€/kg,2,2023-01-30,1.64
+trigo,Esparguete,1023,1023,consumo,€/kg,3,2023-02-27,1.59
+trigo,Esparguete,1023,1023,consumo,€/kg,4,2023-03-27,1.55
+trigo,Esparguete,1023,1023,consumo,€/kg,5,2023-04-24,1.55
+trigo,Esparguete,1023,1023,consumo,€/kg,6,2023-05-22,1.57
+trigo,Esparguete,1023,1023,consumo,€/kg,7,2023-06-19,1.53
+trigo,Esparguete,1023,1023,consumo,€/kg,8,2023-07-17,1.52
+trigo,Esparguete,1023,1023,consumo,€/kg,9,2023-08-14,1.49
+trigo,Esparguete,1023,1023,consumo,€/kg,10,2023-09-11,1.51
+trigo,Esparguete,1023,1023,consumo,€/kg,11,2023-10-09,1.48
+trigo,Esparguete,1023,1023,consumo,€/kg,12,2023-11-06,1.49
+trigo,Esparguete,1023,1023,consumo,€/kg,13,2023-12-04,1.44
+trigo,Esparguete,1023,1023,consumo,€/kg,1,2024-01-01,1.51
+trigo,Esparguete,1023,1023,consumo,€/kg,2,2024-01-29,1.58
+trigo,Esparguete,1023,1023,consumo,€/kg,3,2024-02-26,1.51
+trigo,Esparguete,1023,1023,consumo,€/kg,4,2024-03-25,1.45
+trigo,Esparguete,1023,1023,consumo,€/kg,5,2024-04-22,1.54
+trigo,Esparguete,1023,1023,consumo,€/kg,6,2024-05-20,1.43
+trigo,Esparguete,1023,1023,consumo,€/kg,7,2024-06-17,1.39
+trigo,Esparguete,1023,1023,consumo,€/kg,8,2024-07-15,1.42
+trigo,Esparguete,1023,1023,consumo,€/kg,9,2024-08-12,1.41
+trigo,Esparguete,1023,1023,consumo,€/kg,10,2024-09-09,1.38
+trigo,Esparguete,1023,1023,consumo,€/kg,11,2024-10-07,1.45
+trigo,Esparguete,1023,1023,consumo,€/kg,12,2024-11-04,1.47
+trigo,Esparguete,1023,1023,consumo,€/kg,13,2024-12-02,1.35
+trigo,Esparguete,1023,1023,consumo,€/kg,1,2024-12-30,1.37
+trigo,Esparguete,1023,1023,consumo,€/kg,2,2025-01-27,1.33
+trigo,Esparguete,1023,1023,consumo,€/kg,3,2025-02-24,1.42
+trigo,Esparguete,1023,1023,consumo,€/kg,4,2025-03-24,1.43
+trigo,Esparguete,1023,1023,consumo,€/kg,5,2025-04-21,1.34
+trigo,Esparguete,1023,1023,consumo,€/kg,6,2025-05-19,1.35
+trigo,Esparguete,1023,1023,consumo,€/kg,7,2025-06-16,1.33
+trigo,Esparguete,1023,1023,consumo,€/kg,8,2025-07-14,1.31
+trigo,Esparguete,1023,1023,consumo,€/kg,9,2025-08-11,1.45
+trigo,Esparguete,1023,1023,consumo,€/kg,10,2025-09-08,1.34
+trigo,Esparguete,1023,1023,consumo,€/kg,11,2025-10-06,1.28
+trigo,Esparguete,1023,1023,consumo,€/kg,12,2025-11-03,1.35
+trigo,Esparguete,1023,1023,consumo,€/kg,13,2025-12-01,1.33
+trigo,Esparguete,1023,1023,consumo,€/kg,1,2025-12-29,1.36
+trigo,Esparguete,1023,1023,consumo,€/kg,2,2026-01-26,1.37
+trigo,Esparguete,1023,1023,consumo,€/kg,3,2026-02-23,1.41
+trigo,Esparguete,1023,1023,consumo,€/kg,4,2026-03-23,1.36
+trigo,Esparguete,1023,1023,consumo,€/kg,5,2026-04-20,1.32
+trigo,Esparguete,1023,1023,consumo,€/kg,6,2026-05-18,1.3
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,1,2022-01-03,0.75
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,2,2022-01-31,0.86
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,3,2022-02-28,0.83
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,4,2022-03-28,0.95
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,5,2022-04-25,0.92
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,6,2022-05-23,0.97
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,7,2022-06-20,0.99
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,8,2022-07-18,1.03
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,9,2022-08-15,1.05
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,10,2022-09-12,1.05
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,11,2022-10-10,1.0
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,12,2022-11-07,1.01
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,13,2022-12-05,0.95
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,1,2023-01-02,1.03
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,2,2023-01-30,1.05
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,3,2023-02-27,1.01
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,4,2023-03-27,1.01
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,5,2023-04-24,1.0
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,6,2023-05-22,1.02
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,7,2023-06-19,0.99
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,8,2023-07-17,0.98
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,9,2023-08-14,1.01
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,10,2023-09-11,0.99
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,11,2023-10-09,0.95
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,12,2023-11-06,1.01
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,13,2023-12-04,0.97
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,1,2024-01-01,0.97
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,2,2024-01-29,1.0
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,3,2024-02-26,0.92
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,4,2024-03-25,0.93
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,5,2024-04-22,1.01
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,6,2024-05-20,0.96
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,7,2024-06-17,0.93
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,8,2024-07-15,0.95
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,9,2024-08-12,0.94
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,10,2024-09-09,0.93
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,11,2024-10-07,1.0
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,12,2024-11-04,0.97
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,13,2024-12-02,0.93
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,1,2024-12-30,0.95
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,2,2025-01-27,0.94
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,3,2025-02-24,0.94
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,4,2025-03-24,0.9
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,5,2025-04-21,0.86
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,6,2025-05-19,0.89
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,7,2025-06-16,0.88
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,8,2025-07-14,0.87
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,9,2025-08-11,0.89
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,10,2025-09-08,0.87
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,11,2025-10-06,0.91
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,12,2025-11-03,0.91
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,13,2025-12-01,0.88
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,1,2025-12-29,0.9
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,2,2026-01-26,0.91
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,3,2026-02-23,0.87
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,4,2026-03-23,0.84
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,5,2026-04-20,0.85
+trigo,Farinha Trigo normal,1024,1024,consumo,€/kg,6,2026-05-18,0.86
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,1,2022-01-03,0.15
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,2,2022-01-31,0.15
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,3,2022-02-28,0.14
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,4,2022-03-28,0.15
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,5,2022-04-25,0.15
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,6,2022-05-23,0.15
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,7,2022-06-20,0.15
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,8,2022-07-18,0.15
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,9,2022-08-15,0.15
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,10,2022-09-12,0.16
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,11,2022-10-10,0.17
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,12,2022-11-07,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,13,2022-12-05,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,1,2023-01-02,0.17
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,2,2023-01-30,0.17
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,3,2023-02-27,0.17
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,4,2023-03-27,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,5,2023-04-24,0.16
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,6,2023-05-22,0.2
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,7,2023-06-19,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,8,2023-07-17,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,9,2023-08-14,0.2
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,10,2023-09-11,0.17
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,11,2023-10-09,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,12,2023-11-06,0.17
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,13,2023-12-04,0.19
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,1,2024-01-01,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,2,2024-01-29,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,3,2024-02-26,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,4,2024-03-25,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,5,2024-04-22,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,6,2024-05-20,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,7,2024-06-17,0.17
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,8,2024-07-15,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,9,2024-08-12,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,10,2024-09-09,0.19
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,11,2024-10-07,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,12,2024-11-04,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,13,2024-12-02,0.19
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,1,2024-12-30,0.19
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,2,2025-01-27,0.19
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,3,2025-02-24,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,4,2025-03-24,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,5,2025-04-21,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,6,2025-05-19,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,7,2025-06-16,0.19
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,8,2025-07-14,0.19
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,9,2025-08-11,0.2
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,10,2025-09-08,0.18
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,11,2025-10-06,0.19
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,12,2025-11-03,0.15
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,13,2025-12-01,0.21
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,1,2025-12-29,0.21
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,2,2026-01-26,0.22
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,3,2026-02-23,0.22
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,4,2026-03-23,0.21
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,5,2026-04-20,0.21
+trigo,Pão Bolas Carcaça,1022,1022,consumo,€/Uni,6,2026-05-18,0.22

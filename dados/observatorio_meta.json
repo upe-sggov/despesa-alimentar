@@ -1,0 +1,32 @@
+{
+  "extraido_em": "2026-08-10",
+  "fonte": "GPP — Observatório de Preços Agroalimentar",
+  "endereco": "https://observatorioagroalimentar.gov.pt/wp-admin/admin-ajax.php",
+  "acao": "get_produto_graph",
+  "produtos": 39,
+  "setores": 20,
+  "periodos": 58,
+  "primeiro_periodo": "2022-01-03",
+  "ultimo_periodo": "2026-05-18",
+  "observacoes": 3074,
+  "com_producao": [
+    "Alface",
+    "Arroz Carolino",
+    "Batata",
+    "Brócolo",
+    "Cebola",
+    "Cenoura",
+    "Curgete",
+    "Frango inteiro",
+    "Laranja",
+    "Leite UHT MG",
+    "Maçã",
+    "Ovo L",
+    "Ovo M",
+    "Pescada",
+    "Porco Bifana",
+    "Pêra",
+    "Tomate"
+  ],
+  "falhas": []
+}

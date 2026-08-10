@@ -29,29 +29,35 @@ comparar Portugal com os restantes Estados-Membros.
 
 ## O que a aplicação faz
 
-A aplicação organiza-se em cinco separadores.
+A aplicação organiza-se em seis separadores.
 
-**1 · Despesa e composição.** O valor de referência é, por defeito, **oficial**:
-a despesa alimentar mensal por agregado, derivada das Contas Nacionais e
-atualizada para o mês mais recente pelo índice oficial de preços. A aplicação
-reparte-o pelas nove classes de produtos alimentares, usando os ponderadores do
-índice harmonizado português, e aplica a cada classe a sua variação homóloga.
-Devolve o contributo de cada tipo de produto para o agravamento — responde a
-*«onde está o aumento?»*.
+**1 · Despesa e composição.** A despesa alimentar mensal por agregado, a partir
+de uma de **duas bases oficiais à escolha** — o IDF ou as Contas Nacionais —,
+atualizada ao mês mais recente pelo índice de preços. A aplicação reparte-a pelas
+nove classes COICOP e aplica a cada uma a sua variação homóloga, devolvendo o
+contributo de cada tipo de produto para o agravamento. Inclui o **cabaz por
+quintil de rendimento**, o esforço face a três referências de rendimento e os
+**três limiares de acessibilidade alimentar**.
 
-**2 · Histórico.** Série mensal oficial do índice de preços alimentares e da
-variação homóloga, de 12 meses a 5 anos.
+**2 · Histórico.** Série mensal do índice de preços alimentares e da variação
+homóloga, e a medição do **viés de substituição** — cabaz de composição fixa
+contra índice de Törnqvist.
 
-**3 · Simulador de IVA.** Permite definir uma taxa por classe e, sobretudo,
+**3 · Da produção ao consumo.** Preços do mesmo produto nas duas pontas da
+cadeia, a partir do Observatório de Preços Agroalimentar do GPP. Responde a
+*«onde na cadeia está o aumento?»* — que nenhum outro separador toca.
+
+**4 · Simulador de IVA.** Permite definir uma taxa por classe e, sobretudo,
 regular a **repercussão** — a fração da alteração de imposto que chega ao preço
 final. Mostra quanto poupa o consumidor, quanto fica na margem do operador e
 qual a variação de receita.
 
-**4 · Comparação UE-27.** Inflação alimentar harmonizada de Portugal face à
+**5 · Comparação UE-27.** Inflação alimentar harmonizada de Portugal face à
 UE-27 e aos países selecionados, com ordenação do último mês disponível.
 
-**5 · Fontes e método.** Proveniência de cada elemento, registo das ligações da
-sessão e limitações a declarar.
+**6 · Fontes e método.** O quadro dos **seis instrumentos** que o debate público
+confunde, a proveniência de cada elemento, o registo das ligações da sessão e as
+limitações a declarar.
 
 ---
 
@@ -88,16 +94,31 @@ despesa-alimentar/
 │   └── config.toml         # tema institucional SGGov
 ├── src/
 │   ├── __init__.py
-│   ├── config.py           # classes COICOP, países, cores, formatação
+│   ├── config.py           # COICOP, países, cores, IDF por quintil, SOFI
 │   ├── eurostat.py         # acesso aos dados (duas vias independentes)
-│   └── calculos.py         # decomposição da despesa e simulação de IVA
+│   ├── calculos.py         # decomposição, IVA, quintis, Törnqvist, escalas
+│   └── observatorio.py     # leitura e análise dos dados do GPP
+├── scripts/
+│   └── recolher_observatorio.py   # recolha do Observatório (passo manual)
+├── dados/
+│   ├── observatorio.csv           # série recolhida, versionada
+│   └── observatorio_meta.json     # data de extração e cobertura
+├── docs/
+│   └── 2026-08-07_levantamento_lacunas.md   # apuramento e decisões
 └── tests/
-    └── test_calculos.py    # 13 testes dos cálculos analíticos
+    └── test_calculos.py    # 38 testes dos cálculos analíticos
 ```
 
-A separação entre **acesso a dados** (`eurostat.py`), **cálculo** (`calculos.py`)
-e **apresentação** (`app.py`) é deliberada: permite testar a lógica sem levantar
-a interface, e substituir a fonte de dados sem tocar no resto.
+A separação entre **acesso a dados** (`eurostat.py`, `observatorio.py`),
+**cálculo** (`calculos.py`) e **apresentação** (`app.py`) é deliberada: permite
+testar a lógica sem levantar a interface, e substituir a fonte de dados sem tocar
+no resto.
+
+**Duas fontes não vêm de API** e exigem atualização manual, por só serem
+publicadas em documento: o **FAO SOFI** (inscrito em `src/config.py`, atualizar a
+cada edição anual) e o **Observatório do GPP** (recolhido por script para
+`dados/`, atualizar quando sair novo período de quatro semanas). Ambas estão
+assinaladas como tal na interface.
 
 ---
 
@@ -327,6 +348,43 @@ do ano n−1» e que os ponderadores **já incorporam** a variação de preços 
 momento. Deflacioná-los pela média anual do índice desconta duas vezes parte do
 efeito-preço e nenhuma vez outra parte. A direção pode manter-se; a magnitude não
 é defensável.
+
+### Da produção ao consumo — Observatório de Preços
+
+Todos os outros indicadores medem o que o consumidor paga ou quanto as famílias
+gastam. Nenhum diz **onde na cadeia** nasceu a subida. O Observatório de Preços
+Agroalimentar do GPP é a única fonte pública que segue o mesmo produto nas duas
+pontas — produção e consumo.
+
+**Os dados não vêm em direto.** O Observatório não tem API: a série exige uma
+chamada por produto ao *endpoint* AJAX do sítio. Fazer 39 pedidos POST a um sítio
+institucional sempre que a cache expira seria desproporcionado, e desnecessário —
+os dados saem em períodos de quatro semanas. A recolha é por isso um passo
+explícito:
+
+```
+python scripts/recolher_observatorio.py
+```
+
+Escreve `dados/observatorio.csv` e `dados/observatorio_meta.json`, ambos
+versionados e com data de extração. Qualquer número apresentado é reconstituível.
+**Convém correr o script quando sair novo período** — a aplicação mostra sempre a
+data da última recolha.
+
+Recolha de 08.08.2026: **3 074 observações, 39 produtos, 20 setores**, de
+03.01.2022 a 18.05.2026. Só **17 dos 39** têm série de produção; para os restantes
+o Observatório publica apenas preço ao consumidor, e a aplicação distingue-os em
+vez de os omitir.
+
+**Ressalva central, repetida na interface:** a diferença entre o preço no consumo
+e o preço na produção **não é a margem de ninguém**. Inclui transporte,
+transformação, embalagem, distribuição e IVA, e as duas fases podem referir-se a
+formas diferentes do produto — peixe inteiro contra posta, animal vivo contra
+peça desmanchada. Não é comparável entre produtos nem legível como lucro.
+
+O caso da **pescada** é o que justifica o separador: preço na produção **−22,8 %**
+e ao consumidor **+23,4 %**. Nenhum índice de preços mostra isto — para o IHPC é
+apenas mais um produto que subiu.
 
 ### Acessibilidade alimentar — três limiares
 

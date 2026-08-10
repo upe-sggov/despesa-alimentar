@@ -447,3 +447,82 @@ def test_jsonstat_recusa_dimensao_extra_inexistente():
     }
     with pytest.raises(ErroEurostat):
         _descodifica_jsonstat(js, extra="rskpovth")
+
+
+# --------------------------------------------- Observatorio de Precos (GPP)
+def _obs_df(registos):
+    """registos: (produto, fase, 'YYYY-MM-DD', preco)"""
+    return pd.DataFrame([
+        {"setor": "teste", "produto": p, "produto_id": 1, "serie_id": 1,
+         "fase": f, "unidade": "EUR/kg", "periodo": 1,
+         "inicio": pd.Timestamp(d), "preco": v}
+        for p, f, d, v in registos
+    ])
+
+
+def test_observatorio_restringe_ao_periodo_comum():
+    """A serie de producao acaba antes da de consumo. Se cada fase fosse medida
+    no seu proprio intervalo, as variacoes nao seriam comparaveis."""
+    from src.observatorio import variacoes
+
+    df = _obs_df([
+        ("X", "consumo",  "2022-01-01", 1.00),
+        ("X", "consumo",  "2023-01-01", 1.50),
+        ("X", "consumo",  "2024-01-01", 3.00),   # produção já não cobre este
+        ("X", "producao", "2022-01-01", 0.50),
+        ("X", "producao", "2023-01-01", 1.00),
+    ])
+    r = variacoes(df).iloc[0]
+    assert r["n_periodos"] == 2
+    assert r["fim"] == pd.Timestamp("2023-01-01")
+    assert r["consumo_var"] == pytest.approx(50.0)    # 1,00 -> 1,50, nao 200 %
+    assert r["producao_var"] == pytest.approx(100.0)
+
+
+def test_observatorio_diferenca_nao_e_soma_das_variacoes():
+    """A variacao da diferenca calcula-se sobre a diferenca, nao por subtracao
+    das duas variacoes."""
+    from src.observatorio import variacoes
+
+    df = _obs_df([
+        ("X", "consumo",  "2022-01-01", 2.00),
+        ("X", "consumo",  "2023-01-01", 3.00),
+        ("X", "producao", "2022-01-01", 1.00),
+        ("X", "producao", "2023-01-01", 1.20),
+    ])
+    r = variacoes(df).iloc[0]
+    # diferenca: 1,00 -> 1,80  =>  +80 %
+    assert r["diferenca_var"] == pytest.approx(80.0)
+
+
+def test_observatorio_classifica_divergencia():
+    """Producao a cair e consumo a subir e o padrao que importa isolar."""
+    from src.observatorio import variacoes
+
+    df = _obs_df([
+        ("X", "consumo",  "2022-01-01", 1.00),
+        ("X", "consumo",  "2023-01-01", 1.30),
+        ("X", "producao", "2022-01-01", 1.00),
+        ("X", "producao", "2023-01-01", 0.80),
+    ])
+    assert variacoes(df).iloc[0]["padrao"] == "Divergência"
+
+
+def test_observatorio_produto_sem_producao_nao_inventa_comparacao():
+    from src.observatorio import variacoes
+
+    df = _obs_df([
+        ("X", "consumo", "2022-01-01", 1.00),
+        ("X", "consumo", "2023-01-01", 1.40),
+    ])
+    r = variacoes(df).iloc[0]
+    assert bool(r["tem_producao"]) is False
+    assert r["padrao"] == "Sem série de produção"
+    assert r["consumo_var"] == pytest.approx(40.0)
+    assert pd.isna(r.get("producao_var", float("nan")))
+
+
+def test_observatorio_sem_dados_devolve_vazio():
+    from src.observatorio import variacoes
+
+    assert variacoes(pd.DataFrame()).empty

@@ -38,7 +38,7 @@ em 07.08.2026 — chamadas à API do Eurostat e parsing dos ficheiros do INE. N�
 |---|---|---|---|
 | 1 | Ponderar pela estrutura real de consumo (IDEF) | 🟢 **Resolvido** | IDF 2022/2023, Q.2.11 — COICOP 4 dígitos em euros |
 | 2 | Desagregar por decil de rendimento | 🟢 **Resolvido** | IDF Q.2.11 — quintis ≡ D1–D2 / D9–D10 |
-| 3 | Desagregar territorialmente | 🟡 Parcial | NUTS II × quintil e grau de urbanização sim; oferta retalhista não |
+| 3 | Desagregar territorialmente | 🟡 Parcial | NUTS II × quintil e grau de urbanização sim; oferta retalhista não. **É o único eixo que fica em aberto** |
 | 4 | Incorporar substituição efetiva (Fisher/Törnqvist) | ✅ **Feito — e o resultado surpreende** | Törnqvist ao nível das classes: o viés é de 0,12 p.p./ano, residual. Ver §2.17 |
 | 5 | Indicador de acessibilidade alimentar | 🟢 **Feito, incluindo a variante «dieta saudável»** | Já existe; `ilc_mdes03` e o FAO SOFI 2026 (§2.14) acrescentam os dois limiares em falta |
 | 6 | Explorar *scanner data* | 🟢 **Respondido** | O IPC **não** usa; usa *web scraping* — ver §2.7 |
@@ -662,6 +662,40 @@ extra +55,7 %. Descidas: curgete −36,5 %, alface 4.ª gama −28,9 %, espargue
 > comparável entre produtos. Algumas séries de produção terminam antes de 2026 — cebola e brócolo
 > em 2023, leite e arroz em 2025.
 
+**Implementado em 08.08.2026**, em separador próprio («Da produção ao consumo»). Notas:
+
+- **A recolha é um script, não uma chamada da aplicação.** O Observatório não tem API: a série
+  exige uma chamada por produto ao *endpoint* AJAX do WordPress. Fazer 39 pedidos POST a um sítio
+  institucional sempre que a cache expira seria desproporcionado, e desnecessário — os dados saem
+  em períodos de quatro semanas. `scripts/recolher_observatorio.py` escreve
+  `dados/observatorio.csv` e `dados/observatorio_meta.json`, ambos versionados. Ganha-se
+  reprodutibilidade: qualquer número apresentado é reconstituível a partir do ficheiro e da data
+  de extração.
+- **Uma chamada devolve as duas fases.** Pedindo a fase de consumo, a resposta traz também a série
+  de produção, pelo mecanismo de comparação do próprio sítio. Reduz a recolha a metade.
+- **Só 17 dos 39 produtos têm série de produção.** Para os outros 22 o Observatório publica apenas
+  preço ao consumidor, e a comparação entre pontas da cadeia não é possível. A aplicação
+  distingue-os explicitamente em vez de os omitir.
+- **As variações são calculadas no período comum às duas fases.** Não é detalhe: várias séries de
+  produção terminam antes das de consumo, e medir cada fase no seu próprio intervalo produziria
+  variações de períodos diferentes, cuja comparação não significa nada. Tem teste.
+
+**Recolha de 08.08.2026:** 3 074 observações, 39 produtos, 20 setores, 58 períodos de
+03.01.2022 a 18.05.2026. Os três valores registados acima reproduzem-se exatamente.
+
+**Distribuição dos padrões** (17 produtos com as duas fases):
+
+| Padrão | N.º | Exemplos |
+|---|---|---|
+| Choque na origem, transmitido | 13 | Ovo M, Ovo L, Batata, Leite UHT |
+| Absorvido pela cadeia | 2 | Cenoura, Brócolo |
+| **Divergência** | **1** | **Pescada** |
+| Descida em ambas as fases | 1 | Curgete |
+
+O **frango inteiro** merece nota: produção +39,2 %, consumo +51,6 %, mas a diferença entre as duas
+pontas alarga **+178,9 %** — o maior de toda a série. Vale a mesma ressalva: pode refletir mudança
+de forma do produto entre fases, e não é margem de ninguém.
+
 ### 2.16 Arquitetura de ponderação — IDF e IHPC ★ decisão de 08.08.2026
 
 **A pergunta.** A aplicação usava um único ponderador — o do IHPC (`prc_hicp_inw`) — tanto para
@@ -953,8 +987,9 @@ implementação — nada depende já de dados externos.
 7. ~~**Os três limiares de acessibilidade** (§2.14)~~ — ✅ **feito em 08.08.2026**, na aba 1. Os
    três saem sempre juntos, com o confronto Portugal–Espanha. A regra de «nunca sozinho» está
    garantida por construção: os três indicadores partilham o mesmo bloco e a mesma nota de leitura.
-8. **Observatório de Preços** (§2.15) — responde a «onde na cadeia está o aumento», que nenhum outro
-   instrumento toca. Dados já extraídos e automatizáveis.
+8. ~~**Observatório de Preços** (§2.15)~~ — ✅ **feito em 08.08.2026**, em separador próprio.
+   Recolha reprodutível por script, com ficheiro versionado. **A lista de prioridades fica
+   encerrada.**
 
 ---
 
@@ -1001,8 +1036,13 @@ implementação — nada depende já de dados externos.
 | 22 | `app.py`, aba 1: secção «Acessibilidade alimentar — três limiares, três respostas», com o confronto Portugal–Espanha e as ressalvas de uso | ✅ |
 | 23 | `app.py`: corrigida a afirmação de que uma medida por escalão de rendimento «exigiria o IDEF/INE ou microdados» — passou a existir na própria página | ✅ |
 | 24 | `tests/test_calculos.py`: 3 testes sobre a preservação de dimensões, incluindo a recusa de uma dimensão inexistente | ✅ |
+| 25 | `scripts/recolher_observatorio.py`: recolha reprodutível do Observatório do GPP, com descoberta automática de setores e produtos | ✅ |
+| 26 | `dados/observatorio.csv` e `dados/observatorio_meta.json`: 3 074 observações versionadas, com data de extração | ✅ |
+| 27 | `src/observatorio.py`: leitura, variações no período comum e classificação de padrões de transmissão | ✅ |
+| 28 | `app.py`: separador novo «Da produção ao consumo» — panorama, padrões, detalhe por produto e exportação | ✅ |
+| 29 | `tests/test_calculos.py`: 5 testes sobre o Observatório, incluindo a restrição ao período comum | ✅ |
 
-**Verificação:** 33 testes passam; render completo da aplicação sem exceções nem erros de ecrã,
+**Verificação:** 38 testes passam; render completo da aplicação sem exceções nem erros de ecrã,
 nas duas bases de âncora; os valores do IDF fecham com os totais publicados a menos de 1 €/ano de
 arredondamento do próprio quadro do INE; o Törnqvist calculado fica a 0,12 pontos do IHPC oficial,
 apesar de construído por via independente.

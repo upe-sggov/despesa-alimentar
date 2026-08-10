@@ -15,7 +15,7 @@ import streamlit as st
 
 from pathlib import Path
 
-from src import eurostat
+from src import eurostat, observatorio
 from src.calculos import (ESCALAS, cabaz_quintis, comparar_ponderadores,
                           composicao_quintis, decompor, despesa_do_agregado,
                           escala_mais_proxima, indices_comparados,
@@ -847,9 +847,9 @@ def painel(nome: str):
         )
 
 
-aba1, aba2, aba3, aba4, aba5 = st.tabs([
-    "🛒 Despesa e composição", "📈 Histórico", "🧾 Simulador de IVA",
-    "🇪🇺 Comparação UE-27", "📚 Metodologia e fontes",
+aba1, aba2, aba6, aba3, aba4, aba5 = st.tabs([
+    "🛒 Despesa e composição", "📈 Histórico", "🔗 Da produção ao consumo",
+    "🧾 Simulador de IVA", "🇪🇺 Comparação UE-27", "📚 Metodologia e fontes",
 ])
 
 # ==========================================================================
@@ -1864,6 +1864,178 @@ with aba2:
                           extra=[("Base do indice", base), ("Classe COICOP", "CP011")]),
             f"despesa_alimentar_serie_{date.today()}.csv", "text/csv",
         )
+
+    # ==========================================================================
+    # ABA 6 — Da produção ao consumo
+    # ==========================================================================
+with aba6:
+    with painel("Da produção ao consumo"):
+        st.markdown("#### Onde na cadeia está o aumento")
+        st.caption(
+            "Todos os outros indicadores desta ferramenta medem o que o consumidor paga ou "
+            "quanto as famílias gastam. Nenhum diz se a subida nasceu na exploração agrícola, "
+            "na transformação ou na distribuição. O Observatório de Preços Agroalimentar do GPP "
+            "é a única fonte pública que segue o mesmo produto nas duas pontas da cadeia."
+        )
+
+        _obs, _obs_meta = observatorio.carregar()
+        if _obs.empty:
+            st.warning(
+                "**Sem dados recolhidos.** O Observatório não tem API: a série é obtida por "
+                "`scripts/recolher_observatorio.py`, que escreve `dados/observatorio.csv`. "
+                "Execute o script para preencher este separador."
+            )
+        else:
+            _var = observatorio.variacoes(_obs)
+            _com_prod = _var[_var["tem_producao"]].copy()
+            _ini = _obs["inicio"].min()
+            _fim = _obs["inicio"].max()
+
+            o1, o2, o3, o4 = st.columns(4)
+            o1.metric("Produtos seguidos", f"{_obs['produto'].nunique()}")
+            o2.metric("Com as duas fases", f"{len(_com_prod)}",
+                      help="Só para estes é possível comparar produção e consumo.")
+            o3.metric("Períodos de quatro semanas", f"{_obs['inicio'].nunique()}")
+            o4.metric("Última observação", _fim.strftime("%d/%m/%Y"))
+
+            st.caption(
+                f"Série de {_ini.strftime('%d/%m/%Y')} a {_fim.strftime('%d/%m/%Y')}. "
+                f"Recolha de {_obs_meta.get('extraido_em', '—')} · "
+                f"{_obs_meta.get('fonte', 'GPP')}."
+            )
+
+            st.warning("""
+    **A diferença entre o preço no consumo e o preço na produção não é a margem de ninguém.**
+
+    Inclui transporte, transformação, embalagem, distribuição e IVA. E as duas fases podem
+    referir-se a **formas diferentes do mesmo produto** — peixe inteiro contra posta, animal vivo
+    contra peça desmanchada. Por isso a diferença **não é comparável entre produtos** e **não deve
+    ser lida como lucro** de nenhum operador. O que estes dados mostram com segurança é *onde* os
+    preços se moveram, não *quem* decidiu o quê.
+            """)
+
+            # ---- panorama dos produtos com as duas fases ----
+            st.markdown("**Os dois lados da cadeia, por produto**")
+            st.caption(
+                f"Variação entre {_ini.strftime('%m/%Y')} e o fim da série, no período comum às "
+                "duas fases. Só os produtos com série de produção aparecem aqui."
+            )
+
+            if _com_prod.empty:
+                st.info("Nenhum produto tem as duas fases nesta recolha.")
+            else:
+                _ord = _com_prod.sort_values("consumo_var")
+                figo = go.Figure()
+                figo.add_trace(go.Bar(
+                    y=_ord["produto"], x=_ord["producao_var"], orientation="h",
+                    name="Produção", marker_color=DOURADO,
+                    hovertemplate="%{y}<br>Produção: %{x:+.1f} %<extra></extra>"))
+                figo.add_trace(go.Bar(
+                    y=_ord["produto"], x=_ord["consumo_var"], orientation="h",
+                    name="Consumo", marker_color=VERDE,
+                    hovertemplate="%{y}<br>Consumo: %{x:+.1f} %<extra></extra>"))
+                figo.update_layout(barmode="group", height=max(360, 34 * len(_ord)),
+                                   margin=dict(t=10, b=40, l=10, r=10),
+                                   xaxis_title="Variação desde o início da série (%)",
+                                   plot_bgcolor="#fff",
+                                   legend=dict(orientation="h", y=-0.08))
+                figo.update_xaxes(gridcolor="#eef1f4", zerolinecolor="#cbd5e1")
+                st.plotly_chart(figo, use_container_width=True)
+
+                _tab_o = pd.DataFrame([{
+                    "Produto": r.produto,
+                    "Produção": f"{r.producao_var:+.1f} %".replace(".", ","),
+                    "Consumo": f"{r.consumo_var:+.1f} %".replace(".", ","),
+                    "Diferença consumo−produção": (
+                        f"{r.diferenca_var:+.1f} %".replace(".", ",")
+                        if pd.notna(r.diferenca_var) else "—"),
+                    "Padrão": r.padrao,
+                    "Períodos": int(r.n_periodos),
+                } for r in _com_prod.itertuples()])
+                st.dataframe(_tab_o, use_container_width=True, hide_index=True)
+
+            # ---- o que os padrões significam ----
+            _contagem = _var["padrao"].value_counts()
+            st.markdown("**Três padrões que a leitura agregada do cabaz esconde**")
+            for nome, explicacao in observatorio.PADROES.items():
+                if nome not in _contagem:
+                    continue
+                exemplos = _var[_var["padrao"] == nome]["produto"].head(4).tolist()
+                st.markdown(
+                    f"- **{nome}** ({_contagem[nome]}) — {explicacao} "
+                    f"*Ex.: {', '.join(exemplos)}.*"
+                )
+
+            _div = _var[_var["padrao"] == "Divergência"]
+            if not _div.empty:
+                _d = _div.iloc[0]
+                st.error(f"""
+    **{_d['produto']} é o caso mais nítido — e o que justifica este separador.**
+
+    O preço na produção **desce {percentagem(abs(_d['producao_var']), sinal=False)}** enquanto o
+    preço ao consumidor **sobe {percentagem(_d['consumo_var'], sinal=False)}**. A diferença entre
+    as duas pontas passa de {euro(_d['diferenca_inicial'])} para {euro(_d['diferenca_final'])}
+    por {_d['unidade'] or 'unidade'}.
+
+    Nenhum índice de preços mostra isto: para o IHPC, é apenas mais um produto que subiu. Mantém-se
+    integralmente a ressalva acima — o alargamento da diferença não é, por si, margem de ninguém, e
+    pode refletir mudança de forma do produto entre as duas fases.
+                """)
+
+            # ---- detalhe por produto ----
+            st.divider()
+            st.markdown("**Ver um produto em detalhe**")
+            _lista = sorted(_var["produto"].unique())
+            _pref = next((p for p in ("Pescada", "Ovo M", "Cenoura") if p in _lista), _lista[0])
+            _escolhido = st.selectbox(
+                "Produto", options=_lista, index=_lista.index(_pref),
+                label_visibility="collapsed")
+
+            _serie = observatorio.serie_produto(_obs, _escolhido)
+            _linha = _var[_var["produto"] == _escolhido].iloc[0]
+            if _serie.empty:
+                st.info("Sem série para este produto.")
+            else:
+                figd2 = go.Figure()
+                _cores_f = {"Consumo": VERDE, "Produção": DOURADO}
+                for coluna in _serie.columns:
+                    figd2.add_trace(go.Scatter(
+                        x=_serie.index, y=_serie[coluna], name=coluna, mode="lines",
+                        line=dict(color=_cores_f.get(coluna, CINZENTO), width=2.6),
+                        hovertemplate="%{x|%d/%m/%Y}<br>%{y:.2f} €<extra>" + coluna + "</extra>"))
+                if {"Consumo", "Produção"}.issubset(set(_serie.columns)):
+                    figd2.add_trace(go.Scatter(
+                        x=_serie.index, y=_serie["Consumo"] - _serie["Produção"],
+                        name="Diferença", mode="lines",
+                        line=dict(color=AZUL, width=1.6, dash="dot"),
+                        hovertemplate="%{x|%d/%m/%Y}<br>%{y:.2f} €<extra>Diferença</extra>"))
+                figd2.update_layout(
+                    height=380, margin=dict(t=10, b=30, l=10, r=10),
+                    yaxis_title=f"Preço ({_linha['unidade'] or '€'})",
+                    plot_bgcolor="#fff", hovermode="x unified",
+                    legend=dict(orientation="h", y=-0.16))
+                figd2.update_yaxes(gridcolor="#eef1f4", rangemode="tozero")
+                figd2.update_xaxes(gridcolor="#eef1f4")
+                st.plotly_chart(figd2, use_container_width=True)
+
+                if not _linha["tem_producao"]:
+                    st.info(
+                        "O Observatório publica apenas o preço ao consumidor para este produto. "
+                        "A comparação com a produção não é possível."
+                    )
+
+            st.download_button(
+                "⬇️ Descarregar série completa do Observatório (CSV)",
+                csv_com_fonte(
+                    _obs.assign(inicio=_obs["inicio"].dt.strftime("%Y-%m-%d")),
+                    "Observatorio de Precos Agroalimentar - producao e consumo", dados,
+                    extra=[
+                        ("Fonte", "GPP - Observatorio de Precos Agroalimentar"),
+                        ("Recolha", _obs_meta.get("extraido_em", "-")),
+                        ("Script", "scripts/recolher_observatorio.py"),
+                        ("Nota", "A diferenca consumo-producao nao e margem de nenhum operador"),
+                    ]),
+                file_name="observatorio_precos.csv", mime="text/csv")
 
     # ==========================================================================
     # ABA 3 — Simulador de IVA
