@@ -1000,10 +1000,33 @@ def resumo_composicao_iva(df: pd.DataFrame) -> dict:
     base_defeito = float(
         df.apply(lambda r: r["peso"] if r["iva_defeito"] == 6 else 0.0, axis=1).sum())
 
+    # ------------------------------------------------------------------
+    # IVA contido na despesa, em fração do preço com imposto.
+    #
+    # É este o número que diz em que **direção** a aproximação por classe erra —
+    # e a direção não é sempre a mesma. Comparar apenas a base à taxa reduzida
+    # dava a impressão de que o simulador sobrestima sempre, e não é verdade:
+    # num cenário de isenção total ele **subestima**, porque credita a
+    # pastelaria, a charcutaria e os hortícolas transformados com 6 % quando
+    # suportam 23 %.
+    # ------------------------------------------------------------------
+    def _contido(taxa, peso):
+        return peso * (taxa / 100) / (1 + taxa / 100)
+
+    iva_modelo = sum(_contido(r["iva_defeito"], r["peso"]) for _, r in df.iterrows())
+    iva_certo = sum(_contido(6, r["taxa_6"]) + _contido(13, r["taxa_13"])
+                    + _contido(23, r["taxa_23"]) for _, r in df.iterrows())
+    iva_indet_min = sum(_contido(6, r["indeterminado"]) for _, r in df.iterrows())
+    iva_indet_max = sum(_contido(23, r["indeterminado"]) for _, r in df.iterrows())
+
     # Intervalo do que está à taxa reduzida: o mínimo é o apurado; o máximo
     # admite que toda a parcela indeterminada lá cai.
     minimo_6 = float(df["taxa_6"].sum())
     return {
+        # --- IVA contido, em fração do preço com imposto ---
+        "iva_modelo_pct": iva_modelo / total * 100,
+        "iva_apurado_min_pct": (iva_certo + iva_indet_min) / total * 100,
+        "iva_apurado_max_pct": (iva_certo + iva_indet_max) / total * 100,
         "total": total,
         "taxa_6": minimo_6,
         "taxa_13": float(df["taxa_13"].sum()),

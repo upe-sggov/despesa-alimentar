@@ -947,6 +947,27 @@ def test_resumo_mede_o_erro_do_pressuposto_por_classe():
         r["indeterminado_pct"])
 
 
+def test_o_erro_da_aproximacao_muda_de_sinal_com_o_cenario():
+    """Comparar so a base a taxa reduzida dava a impressao de que o simulador
+    sobrestima sempre. Nao e verdade: numa isencao total **subestima**, porque
+    credita a pastelaria e a charcutaria com 6 % quando suportam 23 %."""
+    from src.calculos import composicao_iva, resumo_composicao_iva
+
+    r = resumo_composicao_iva(composicao_iva(_pesos_sub_sinteticos()))
+
+    # Direcao 1: base a taxa reduzida — o modelo assume mais do que ha.
+    assert r["assumido_6_pct"] > r["apurado_6_max_pct"]
+
+    # Direcao 2: IVA contido — o modelo fica **abaixo** do apurado.
+    assert r["iva_apurado_min_pct"] > r["iva_modelo_pct"]
+    assert r["iva_apurado_max_pct"] >= r["iva_apurado_min_pct"]
+
+    # E as duas afirmacoes sao mesmo sobre grandezas diferentes: se fossem a
+    # mesma, teriam o mesmo sinal.
+    assert (r["assumido_6_pct"] - r["apurado_6_min_pct"]) > 0
+    assert (r["iva_modelo_pct"] - r["iva_apurado_min_pct"]) < 0
+
+
 def test_todas_as_nove_classes_tem_componentes_com_verba():
     from src.config import CODIGOS, IVA_COMPONENTES
 

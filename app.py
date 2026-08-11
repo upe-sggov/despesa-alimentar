@@ -2650,25 +2650,36 @@ with aba3:
                       help=("Subclasses que atravessam taxas em proporção não repartível — "
                             "marisco, mel dentro dos doces, sal dentro dos condimentos."))
 
-            _folga = _res_iva["assumido_6_pct"] - _res_iva["apurado_6_max_pct"]
+            _iva_mod = _res_iva["iva_modelo_pct"] / 100 * media_agregado
+            _iva_min = _res_iva["iva_apurado_min_pct"] / 100 * media_agregado
+            _iva_max = _res_iva["iva_apurado_max_pct"] / 100 * media_agregado
+            _sub_min = _res_iva["iva_apurado_min_pct"] / _res_iva["iva_modelo_pct"] * 100 - 100
+            _sub_max = _res_iva["iva_apurado_max_pct"] / _res_iva["iva_modelo_pct"] * 100 - 100
+            _sobre = (_res_iva["assumido_6_pct"] / _res_iva["apurado_6_min_pct"] * 100 - 100)
             st.error(f"""
-    **A simulação sobrestima a base à taxa reduzida — e agora sabe-se quanto.**
+    **A aproximação por grupo erra em direções opostas consoante o cenário — e agora sabe-se
+    quanto.**
 
     Aplicar uma taxa por grupo equivale a assumir que **{_pct(_res_iva['assumido_6_pct'])}** do
-    cabaz alimentar está a 6 %, porque sete dos nove grupos têm essa predefinição. O apurado ao
-    nível da subclasse é **{_pct(_res_iva['apurado_6_min_pct'])} a
-    {_pct(_res_iva['apurado_6_max_pct'])}** — o limite superior admitindo que **toda** a parcela
-    indeterminada cai na taxa reduzida.
+    cabaz está a 6 %, porque sete dos nove grupos têm essa predefinição. O apurado é
+    **{_pct(_res_iva['apurado_6_min_pct'])} a {_pct(_res_iva['apurado_6_max_pct'])}**.
 
-    A diferença é de **{pontos(_folga, casas=1)}** no mínimo. Em termos relativos, a base
-    afetada por uma descida da taxa reduzida está sobrestimada entre
-    **{numero(_res_iva['assumido_6_pct'] / _res_iva['apurado_6_max_pct'] * 100 - 100, 0)} %** e
-    **{numero(_res_iva['assumido_6_pct'] / _res_iva['apurado_6_min_pct'] * 100 - 100, 0)} %**.
+    Daí resultam **dois erros de sinal contrário**, e é preciso saber qual se aplica:
 
-    **O que isto significa na prática:** os valores de poupança do simulador, incluindo os
-    agregados nacionais, são **majorantes**. A ordem de grandeza mantém-se; o nível está do lado
-    generoso. Um cenário «cabaz zero» sobre os grupos a 6 % não atinge a despesa que o simulador
-    lhe atribui, porque parte dessa despesa já hoje é tributada a 23 %.
+    **1 · Numa isenção total — o cenário «cabaz zero» — o simulador subestima.** O IVA contido na
+    despesa alimentar do agregado médio é de **{euro(_iva_mod)}/mês** pelo modelo e de
+    **{euro(_iva_min)} a {euro(_iva_max)}** pelo apuramento: o modelo fica
+    **{numero(_sub_min, 0)} % a {numero(_sub_max, 0)} % abaixo**. A razão é que credita a
+    pastelaria, a charcutaria e os hortícolas transformados com 6 % quando eles suportam 23 %.
+
+    **2 · Numa medida dirigida ao que já está à taxa reduzida, o simulador sobrestima** — em cerca
+    de **{numero(_sobre, 0)} %** —, porque aplica a descida a grupos inteiros quando parte deles
+    já hoje é tributada a 23 %.
+
+    **Como usar entretanto:** leia a repartição entre consumidor e margem, que **não é afetada**, e
+    trate os níveis em euros como ordem de grandeza com o sinal do erro conhecido. O grupo onde a
+    aproximação é pior é **Cereais e derivados** — 58,7 % à taxa predefinida —, por causa da
+    pastelaria; o melhor é **Leite, lácteos e ovos**, com 96,8 %.
             """)
 
             _tab_iva = pd.DataFrame([{
@@ -4031,11 +4042,12 @@ Chamar-lhe cabaz seria prometer o que não entrega.
        comparações entre elas.
     5. **Desfasamento das Contas Nacionais.** A âncora assenta num ano com cerca de dois anos de
        desfasamento, atualizado por índice de preços.
-    6. **A correspondência COICOP → taxa de IVA é aproximada, e o erro está medido.** O Código do
-       IVA classifica por produto, não por classe COICOP. A simulação aplica uma taxa por grupo, o
-       que equivale a assumir que **88,6 %** do cabaz está à taxa reduzida; o apurado ao nível da
-       subclasse é **68,4 % a 74,3 %**. Os valores de poupança do simulador são, por isso,
-       **majorantes** — ver o painel «Quanto do cabaz segue cada taxa» no separador do IVA.
+    6. **A correspondência COICOP → taxa de IVA é aproximada, e o erro está medido — nos dois
+       sentidos.** A simulação aplica uma taxa por grupo, o que equivale a assumir que **88,6 %**
+       do cabaz está à taxa reduzida; o apurado por subclasse é **68,4 % a 74,3 %**. Numa
+       **isenção total** o simulador **subestima** o IVA contido em 25 % a 36 %; numa medida
+       dirigida ao que já está a 6 %, **sobrestima** em cerca de 30 %. Ver o painel «Quanto do
+       cabaz segue cada taxa» no separador do IVA.
     7. **A repercussão é uma hipótese.** Qualquer resultado do simulador é condicional a esse
        parâmetro e deve ser apresentado como intervalo.
     8. **A extrapolação agregada é ilustrativa.** Não é uma estimativa de custo orçamental.

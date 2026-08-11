@@ -1932,10 +1932,27 @@ certeza, e a distinção não é decorativa:
 essa predefinição. O apurado é **68,4 % a 74,3 %**, sendo o limite superior o que se obtém
 admitindo que *toda* a parcela indeterminada cai na taxa reduzida.
 
-**A base afetada por uma descida da taxa reduzida está sobrestimada entre 19 % e 30 %.** Os valores
-de poupança do simulador, incluindo os agregados nacionais, são **majorantes**. Um cenário «cabaz
-zero» sobre os grupos a 6 % não atinge a despesa que o simulador lhe atribui, porque uma parte
-dessa despesa já hoje é tributada a 23 %.
+> ⚠️ **Correção ao que escrevi acima, no mesmo dia.** A primeira versão desta secção dizia que os
+> valores de poupança do simulador eram **majorantes**. **Está incompleto, e para o cenário
+> principal da aplicação está invertido.** Comparei apenas a *base à taxa reduzida* e generalizei a
+> conclusão. Medindo o **IVA contido**, que é o que determina a poupança, o erro muda de sinal
+> consoante o cenário — ver a secção seguinte. A afirmação foi substituída na aplicação e aqui.
+
+**O erro tem duas direções, e é preciso saber qual se aplica.** Medido sobre a despesa alimentar
+do agregado médio, 281,06 €/mês:
+
+| Cenário | Modelo por grupo | Apurado por subclasse | Erro |
+|---|---|---|---|
+| **Isenção total** («cabaz zero») — IVA contido | 20,09 €/mês | **25,15 a 27,30 €/mês** | o modelo **subestima 25 % a 36 %** |
+| **Isentar só o que já está a 6 %** | 14,09 €/mês | **10,88 €/mês** | o modelo **sobrestima 30 %** |
+
+A razão da primeira linha é que o modelo credita a **pastelaria**, a **charcutaria** e os
+**hortícolas transformados** com 6 % quando eles suportam 23 %. Por grupo, o IVA contido está
+subestimado em **+81 %** nos cereais, **+66 %** na carne e **+64 %** nos hortícolas; nos dois
+grupos predefinidos a 23 % o erro é nulo ou negativo.
+
+**O que isto não afeta:** a repartição entre consumidor e margem, que depende da repercussão e não
+da taxa de partida.
 
 **Por grupo, a qualidade da aproximação varia muito:**
 
