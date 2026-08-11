@@ -938,6 +938,10 @@ def composicao_iva(pesos_sub: dict[str, float]) -> pd.DataFrame:
         cod = classe["cod"]
         componentes = IVA_COMPONENTES.get(cod, [])
         por_taxa = {6: 0.0, 13: 0.0, 23: 0.0}
+        # `certa` é o que resiste a qualquer leitura; `predominante` é uma
+        # atribuição por juízo sobre a rubrica, e tem de ser separável para que
+        # a banda de sensibilidade a possa cobrir (auditoria de 12.08.2026, F4).
+        certa = {6: 0.0, 13: 0.0, 23: 0.0}
         indeterminado, predominante = 0.0, 0.0
         for comp in componentes:
             p = _peso(comp["peso"])
@@ -949,6 +953,8 @@ def composicao_iva(pesos_sub: dict[str, float]) -> pd.DataFrame:
             por_taxa[comp["taxa"]] = por_taxa.get(comp["taxa"], 0.0) + p
             if comp["certeza"] == "predominante":
                 predominante += p
+            else:
+                certa[comp["taxa"]] = certa.get(comp["taxa"], 0.0) + p
 
         total = sum(por_taxa.values()) + indeterminado
         publicado = float(pesos_sub.get(cod) or 0.0)
@@ -964,6 +970,9 @@ def composicao_iva(pesos_sub: dict[str, float]) -> pd.DataFrame:
             "taxa_23": por_taxa[23],
             "indeterminado": indeterminado,
             "por_predominancia": predominante,
+            "certa_6": certa[6],
+            "certa_13": certa[13],
+            "certa_23": certa[23],
             # Fração da classe que segue efetivamente a taxa predefinida —
             # é o número que diz se a predefinição é boa aproximação ou não.
             "na_taxa_predefinida": por_taxa.get(classe["iva"], 0.0),
@@ -1046,7 +1055,8 @@ def resumo_composicao_iva(df: pd.DataFrame) -> dict:
     }
 
 
-def taxas_efetivas(comp: pd.DataFrame, indeterminado: str = "predefinida") -> dict:
+def taxas_efetivas(comp: pd.DataFrame, indeterminado: str = "predefinida",
+                   predominancia: str = "como_apurado") -> dict:
     """
     Taxa **média efetiva** de IVA de cada classe, apurada a partir da sua
     composição por subclasse.
@@ -1070,19 +1080,42 @@ def taxas_efetivas(comp: pd.DataFrame, indeterminado: str = "predefinida") -> di
     A taxa efetiva **não é uma taxa legal** e ninguém a paga. É a taxa única que
     suporta o mesmo imposto que o conjunto dos produtos da classe.
 
+    Duas hipóteses, e ambas são explícitas
+    --------------------------------------
     `indeterminado` decide o destino da parcela não repartível:
-    ``"predefinida"`` (o valor central), ``"reduzida"`` ou ``"normal"`` — os dois
-    últimos dão os extremos do intervalo de sensibilidade.
+    ``"predefinida"`` (o valor central), ``"reduzida"`` ou ``"normal"``.
+
+    `predominancia` decide o destino das parcelas atribuídas **por juízo sobre a
+    rubrica** e não por leitura inequívoca das Listas: ``"como_apurado"`` (o
+    valor central), ``"reduzida"`` ou ``"normal"``.
+
+    Os extremos das duas são **limites exteriores, não intervalos plausíveis**.
+    Nenhuma leitura das Listas põe toda a pastelaria a 6 % nem todo o bacalhau
+    seco a 23 %. Servem para responder à pergunta «e se estas atribuições
+    estiverem todas erradas ao mesmo tempo?», que é a única a que um limite
+    exterior responde — e para tornar visível que esta parcela pesa mais do que
+    a indeterminada, que já tinha banda enquanto esta não tinha.
     """
     if comp.empty:
         return {}
 
     destino = {"reduzida": 6, "normal": 23}
     taxas = {}
+    tem_certa = "certa_6" in comp.columns
     for _, r in comp.iterrows():
         t_indet = destino.get(indeterminado, int(r["iva_defeito"]))
-        parcelas = [(6, r["taxa_6"]), (13, r["taxa_13"]), (23, r["taxa_23"]),
-                    (t_indet, r["indeterminado"])]
+        if predominancia in destino and tem_certa:
+            # Só as parcelas de leitura inequívoca ficam onde estão; as de
+            # predominância vão todas para o extremo pedido.
+            t_pred = destino[predominancia]
+            base = {6: float(r["certa_6"]), 13: float(r["certa_13"]),
+                    23: float(r["certa_23"])}
+            base[t_pred] = base.get(t_pred, 0.0) + float(r["por_predominancia"])
+            parcelas = [(t, p) for t, p in base.items()]
+            parcelas.append((t_indet, r["indeterminado"]))
+        else:
+            parcelas = [(6, r["taxa_6"]), (13, r["taxa_13"]), (23, r["taxa_23"]),
+                        (t_indet, r["indeterminado"])]
         peso = sum(p for _, p in parcelas)
         if peso <= 0:
             taxas[r["codigo"]] = float(r["iva_defeito"])

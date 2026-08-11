@@ -1841,6 +1841,12 @@ de «poupança agregada anual».
 
 ## Encerramento da segunda auditoria — 11.08.2026
 
+> ⚠️ **Encerrada, mas não é a última.** No dia seguinte abriu-se uma
+> [terceira auditoria](#terceira-auditoria--12-de-agosto-de-2026), a partir de uma pergunta da
+> Inês sobre se o simulador de IVA fazia sentido. Encontrou o maior erro de todos: a repercussão
+> por defeito, 40 %, estava contrariada pela evidência portuguesa por um fator de 2,4. Os valores
+> absolutos de poupança citados abaixo e na secção da taxa efetiva foram todos revistos em alta.
+
 **Os dezasseis itens estão fechados.** Quinze do diagnóstico inicial (E1 … E15) e um encontrado
 durante a aplicação (**E16**), pela verificação de frescura criada no E3.
 
@@ -2068,6 +2074,13 @@ decimal**, o limite da aritmética de vírgula flutuante. Está travado pelo tes
 
 Cenário por defeito da aplicação: «cabaz zero», repercussão de 40 %.
 
+> ⚠️ **Estes valores foram substituídos no dia seguinte.** A repercussão de 40 % era um parâmetro
+> sem fonte portuguesa, e a calibração com a avaliação do Banco de Portugal ao «IVA zero» de 2023
+> levou-a a 95 %. Todos os números desta tabela ficaram **2,38 vezes** abaixo dos atuais — a
+> poupança agregada anual passou de 566,8 M€ para **1 346,1 M€**. A correção da taxa efetiva que
+> esta secção documenta mantém-se válida e independente; o que mudou foi o parâmetro que a
+> multiplica. Ver a [terceira auditoria](#terceira-auditoria--12-de-agosto-de-2026).
+
 | | Antes | Depois | |
 |---|---|---|---|
 | Poupança mensal, agregado médio | 8,04 € | **10,35 €** | +28,8 % |
@@ -2111,6 +2124,274 @@ Três novos, além dos seis do apuramento. O que sustenta o método é o da iden
 exigem que a taxa efetiva **exceda** a predefinida onde há produtos a 23 % — senão a correção não
 estaria a corrigir nada — e que o destino da parcela indeterminada produza um **intervalo** e não
 um ponto.
+
+---
+
+# Terceira auditoria — 12 de agosto de 2026
+
+## A repercussão: o parâmetro decisivo estava errado por um fator de 2,4
+
+Esta secção está escrita para ser lida isoladamente. Quem só precise de saber o que mudou e
+porquê pode ler só ela.
+
+### Como se chegou aqui
+
+A pergunta que abriu esta ronda foi da Inês, e era a pergunta certa: **«faz sentido ter o
+simulador de IVA ou é uma ferramenta demasiado enganadora?»**
+
+Para responder, medi quanto cada incerteza move a poupança agregada anual. A ordenação foi
+esclarecedora:
+
+| Fonte de incerteza | Amplitude |
+|---|---|
+| Parcela indeterminada (5,9 % do cabaz) | 8,3 % |
+| Âncora da despesa (casal contra agregado médio) | 14,1 % |
+| Parcelas atribuídas por predominância (20,1 % do cabaz) | 28,5 % |
+| **Repercussão (0 % a 100 %)** | **250 %** |
+
+A repercussão domina tudo o resto por uma ordem de grandeza. E o valor por defeito era **40 %**,
+declarado na própria aplicação como «parâmetro de trabalho, não estimativa», fundado em França
+2009 (restauração) e na Suécia — **nenhuma avaliação sobre Portugal, nenhuma sobre alimentação
+em retalho**.
+
+A resposta à pergunta ficou assim dependente de uma coisa: existe evidência portuguesa? Existe,
+e a Inês forneceu-a.
+
+### A fonte
+
+Banco de Portugal, **«Impacto do IVA zero sobre os preços»**, apresentação ao WAPP de 22.11.2023
+(Carlos Gouveia, Cristina Manteu, Sara Serra e Sónia Cabral), que sintetiza a caixa 4 do Boletim
+Económico de outubro de 2023.
+
+A Lei n.º 17/2023, de 14 de abril, isentou de IVA 46 bens alimentares entre 18.04.2023 e
+04.01.2024, a maioria com taxa anterior de 6 %. **É a medida idêntica, no mesmo país, no retalho
+alimentar** — não um caso análogo noutro setor.
+
+### O cálculo, passo a passo
+
+O BdP publica duas grandezas para cada estimativa: a variação de preço **observada** e a variação
+**mecânica**, que é a que haveria se a descida do imposto chegasse toda ao preço. A repercussão é
+o quociente:
+
+```
+ρ = variação observada / variação mecânica
+
+com  variação mecânica = (1 + t₁) / (1 + t₀) − 1
+```
+
+Aplicando aos quatro resultados publicados:
+
+| Estimativa | Observado | Mecânico | **ρ implícito** |
+|---|---|---|---|
+| IHPC, diferença-nas-diferenças vs. Espanha | −4,0 pp | −4,2 % | **95,2 %** |
+| IHPC, diferença-nas-diferenças vs. área do euro | −3,5 pp | −4,2 % | **83,3 %** |
+| Preços online, cabaz abrangido (BPLIM) | −6,0 % | −5,66 % | **106,0 %** |
+| Preços online, óleos alimentares (eram 23 %) | −24,5 % | −18,70 % | **131,0 %** |
+
+**Nenhum destes ρ é citado do BdP.** Todos são calculados aqui, a partir dos dois números
+publicados. É um cálculo desta unidade sobre dados do Banco de Portugal, e está assim identificado
+na aplicação.
+
+### Duas verificações que a derivação exigia
+
+**Primeira: a nossa aritmética coincide com a deles?** Os óleos alimentares estavam a 23 %, e o
+BdP publica um efeito mecânico de **−18,7 %**. A fórmula desta aplicação dá **−18,70 %**. Coincide
+até à casa publicada, e ficou travado por teste — se não coincidisse, todos os ρ da tabela acima
+estariam errados por construção.
+
+**Segunda: a diluição das rubricas não invalida o quociente?** O próprio BdP assinala que a
+granularidade do IHPC é insuficiente — as rubricas afetadas incluem bens não abrangidos pela
+medida. Isso atenua o observado. Mas atenua **o mecânico na mesma proporção**, porque o mecânico
+foi calculado sobre as mesmas rubricas. O quociente sobrevive à diluição. É esta a razão pela qual
+a derivação é legítima apesar da limitação que o BdP declara.
+
+### A decisão: 95 %
+
+Toma-se a **mais conservadora das duas estimativas de diferença-nas-diferenças**, que são as
+únicas com contrafactual estatisticamente validado — o BdP confirma-o explicitamente para Espanha
+e para a área do euro.
+
+Não se toma a média das quatro, porque as duas de preços online medem uma janela de duas semanas
+e dão acima de 100 %. Valores acima da repercussão integral refletem provavelmente concorrência e
+salivência política, não repercussão pura, e não se usa mais de 1,00 por defeito.
+
+**Banda apresentada com os indicadores:** de 83,3 % (contrafactual da área do euro) a 100 %
+(integral). Não se estende abaixo de 83,3 % porque nenhuma estimativa portuguesa o sustenta.
+
+### Ressalvas, que fazem parte da estimativa
+
+Estão inscritas no `config.py`, no painel da aplicação e na limitação 7, porque uma calibração sem
+as suas condições de validade é pior do que nenhuma:
+
+1. O BdP alerta para **desvios-padrão elevados** nas estimativas de diferença-nas-diferenças, e
+   recomenda cautela na interpretação.
+2. Foi uma medida **temporária, taxativa e muito mediática**, com pressões de custo a montante já
+   em queda e acompanhamento público do setor. Uma alteração permanente e discreta pode
+   repercutir-se menos.
+3. A janela avaliada vai até agosto de 2023 — **quatro meses**. Não há aqui evidência sobre erosão
+   a prazo. Note-se que isto **não contradiz** o precedente que a aplicação já mostrava: no
+   balanço de todo o período o cabaz da DECO tinha subido 4,71 %. Repercussão alta e efeito
+   duradouro são coisas diferentes — a descida chegou ao preço, e a inflação de base superou-a
+   depois.
+4. A evidência robusta é sobre cortes **a partir de 6 %**. Para os 23 % há um único produto.
+
+### O que mudou nos números
+
+| | Antes (ρ = 40 %) | **Depois (ρ = 95 %)** |
+|---|---|---|
+| Poupança por mês | 10,35 € | **21,11 €** |
+| Poupança anual por agregado | 124,23 € | **253,33 €** |
+| Poupança agregada anual | 566,8 M€ | **1 346,1 M€** |
+
+**Fator de 2,38.** Os valores anteriores estavam abaixo da realidade, e a razão não era prudência:
+era um parâmetro sem fonte aplicável.
+
+> ### ⚠️ Correção ao que esta unidade afirmou antes
+>
+> A aplicação e este documento descreveram os 40 % como uma escolha conservadora, que evitava
+> apresentar o resultado «como se a descida chegasse toda ao consumidor — o que a evidência não
+> sustenta». **Essa frase estava errada quanto à evidência.** A evidência internacional invocada
+> não era sobre Portugal nem sobre alimentação em retalho; a evidência portuguesa sobre a medida
+> idêntica sustenta repercussão próxima da integral. Quem leu as versões anteriores viu valores de
+> poupança 2,4 vezes inferiores aos que a mesma ferramenta produz agora.
+
+## F3 — Quem recebe o quê: a metade da pergunta que faltava
+
+A mesma publicação do BdP mede duas coisas que apontam em sentidos opostos, e **ambas são
+verdadeiras**:
+
+- **Alívio na inflação, maior nos mais pobres** — em maio de 2023, o IPC dos bens alimentares
+  afetados caiu 4,4 pp no Q1 contra 3,7 pp no Q5. A alimentação pesa mais no cabaz de quem tem
+  menos rendimento, logo a mesma descida de preços vale-lhe mais.
+- **Afetação do dinheiro público, maior nos mais ricos** — **19 %** do custo orçamental foi para
+  os 20 % mais pobres e **23 %** para os 20 % mais ricos. Quem gasta mais em valor absoluto recebe
+  mais de uma redução proporcional do imposto.
+
+O BdP é explícito quanto à consequência: as famílias do quintil mais elevado «recebem mais 20 % de
+recursos públicos do que as do quintil de menores rendimentos, **não contribuindo para uma
+política focada nos agregados vulneráveis**».
+
+E situa a medida entre as alternativas do mesmo ano:
+
+| Medida de 2023 | Para os 20 % mais pobres | Para os 20 % mais ricos |
+|---|---|---|
+| **Redução do IVA** | **19 %** | **23 %** |
+| Complemento extraordinário ao abono | 35 % | 1 % |
+| Apoio às rendas | 40 % | 1 % |
+| Apoio a famílias vulneráveis 2023 | 71 % | 1 % |
+
+**A redução do IVA é a menos focalizada das quatro.** Isto não diz que a medida é má — diz que o
+instrumento é largo, e que comparar apenas o custo total entre medidas ignora metade da questão.
+
+O simulador dizia **quanto** vale a medida e não dizia **a quem** chega. Para uma decisão de
+política é a segunda que decide. Passou a haver um painel próprio, com as duas leituras lado a
+lado e a conclusão do BdP citada literalmente.
+
+## F4 — A banda cobria a incerteza pequena e escondia a grande
+
+A aplicação apresentava uma banda de sensibilidade para a **parcela indeterminada** — 5,9 % do
+cabaz — e **nenhuma** para as parcelas atribuídas **por predominância** — 20,1 %. Medidas em
+amplitude sobre o resultado, a segunda move **3,4 vezes mais** do que a primeira.
+
+Mostrava-se a incerteza pequena e escondia-se a grande. Corrigido: `composicao_iva` passou a
+separar o que é de **leitura inequívoca** das Listas do que foi atribuído por **juízo sobre a
+rubrica**, e `taxas_efetivas` aceita agora uma hipótese sobre cada uma das duas parcelas.
+
+As três bandas, no cenário por defeito, com a poupança mensal de **21,11 €** ao centro:
+
+| Banda | Intervalo | Amplitude |
+|---|---|---|
+| Repercussão (83,3 % a 100 %) | 18,51 € – 22,22 € | 17,6 % |
+| Parcela indeterminada (5,9 %) | 20,52 € – 22,27 € | 8,3 % |
+| **Predominância (20,1 %)** | **16,55 € – 22,56 €** | **28,5 %** |
+
+**A banda da predominância é um limite exterior, não um intervalo plausível.** Corresponde a
+supor que *todas* aquelas atribuições estão erradas ao mesmo tempo e no mesmo sentido — nenhuma
+leitura do Código do IVA põe toda a pastelaria a 6 %. Está assim identificada na aplicação. Serve
+para responder a «e se este juízo estiver todo errado?», e para tornar visível que esta parcela
+pesa mais do que a que já tinha banda.
+
+**O que fecharia isto a sério não é estatística, é jurídico.** As cinco maiores parcelas por
+predominância — pastelaria (7,06 % do cabaz), pré-preparados de retalho (3,02 %), hortícolas
+transformados (2,47 %), preparações de carne (2,45 %), peixe seco e salgado (2,58 %) — são
+questões de leitura das Listas I e II, e a resposta existe nas informações vinculativas da
+Autoridade Tributária, que são públicas. Fica registado como trabalho por fazer, não como fonte
+em falta.
+
+## F5 — O teto do Eurostat, e porque é que a base não se troca
+
+**Verificação que fechou uma via.** Testei se existem ponderadores a **seis dígitos** para as
+quinze subclasses problemáticas, que resolveriam as parcelas indeterminadas e de predominância
+sem qualquer juízo. O Eurostat publica 559 códigos para Portugal em 2026, dos quais apenas 21 a
+seis dígitos — e **nenhum deles cai nas rubricas em causa**. Todas são terminais. O teto da fonte
+foi atingido; insistir no Eurostat não dá mais nada.
+
+**A base de agregação, e porque é que fica como está.** Considerou-se substituir a base do
+simulador — agregados × despesa média — pelo consumo das famílias em alimentação das Contas
+Nacionais. O confronto desaconselha a troca:
+
+| Base | Alimentação, M€/ano |
+|---|---|
+| Simulador (4 562 100 agregados × 281,06 €/mês) | **15 387** |
+| Contas Nacionais, `nama_10_cp18`, CP011, 2022 | 28 188 (**1,83×**) |
+| Contas Nacionais, `nama_10_cp18`, CP011, 2024 | 33 038 (**2,15×**) |
+
+Não é um ajuste: é **mais do dobro**. Parte do desvio é conhecida — os inquéritos subdeclaram a
+despesa alimentar face às contas nacionais —, mas 2,15× excede o desvio típico. Há pelo menos mais
+um fator por identificar: o conjunto chama-se *Household final consumption expenditure* sem
+dimensão de conceito, o que aponta para o **conceito interno** — despesa no território, não
+residentes incluídos. Se for esse o caso, **agravaria** o problema dos não residentes em vez de o
+resolver. A confirmação está por fazer, e **não se troca a base do número que vai ao Gabinete com
+esta dúvida em aberto**.
+
+O que ficou registado é o que o confronto revelou: as duas bases **não são uma melhor e outra
+pior — respondem a perguntas diferentes**. Para o *impacto nas famílias*, a base do inquérito é a
+certa. Para o *custo orçamental*, a das contas nacionais é a certa, porque o IVA incide sobre
+transações reais. A ressalva da aplicação foi reescrita nestes termos, com a ordem de grandeza do
+desvio à vista, em vez do texto anterior que dizia «não é custo orçamental» sem dizer porquê nem
+quanto.
+
+## Resposta à pergunta que abriu a auditoria
+
+**Faz sentido manter o simulador.** Duas razões, e uma condição.
+
+Primeira: parte do que a ferramenta produz **não depende da repercussão de todo**. O IVA contido
+hoje na despesa alimentar do agregado — 25,88 €/mês — é idêntico com ρ a 0 %, 40 % ou 100 %. Não é
+um cenário, é contabilidade.
+
+Segunda: a **ordenação entre medidas** também não depende. Verificado numericamente — as quotas de
+cada medida no total são invariantes até à quarta casa decimal, porque ρ é fator comum:
+
+| Medida | ρ=20 % | ρ=40 % | ρ=80 % | Quota do cabaz zero |
+|---|---|---|---|---|
+| Só cereais | 63,3 | 126,6 | 253,3 M€ | **22,3456 %** |
+| Só carne | 58,2 | 116,4 | 232,9 M€ | **20,5461 %** |
+| Só peixe | 25,2 | 50,4 | 100,8 M€ | **8,8957 %** |
+
+«Isentar cereais vale 2,5 vezes mais do que isentar peixe» é uma afirmação que a ferramenta
+sustenta seja qual for a repercussão.
+
+A condição era que os **valores absolutos** — os que passam por ρ, e são os que alguém leva para
+uma reunião — deixassem de assentar num número inventado. Com a calibração do BdP, deixaram. Se
+não fosse possível calibrar, a conclusão teria sido outra: os valores absolutos não deveriam sair
+da ferramenta, e ela ficaria como medidor de IVA contido e comparador de medidas.
+
+## Testes
+
+De 79 para **88**. Os que sustentam esta ronda:
+
+- `test_efeito_mecanico_reproduz_o_publicado_pelo_banco_de_portugal` — exige os −18,70 % dos
+  óleos. Sem esta coincidência, nenhum ρ derivado vale.
+- `test_repercussao_derivada_e_nao_citada` — fixa a derivação dos quatro ρ.
+- `test_repercussao_padrao_tem_suporte_numa_estimativa_portuguesa` — impede que o valor por
+  defeito volte a ser um número sem fonte: tem de coincidir com uma das duas estimativas com
+  contrafactual validado.
+- `test_a_repercussao_antiga_esta_fora_da_banda_com_suporte` — guarda contra o regresso dos 40 %.
+- `test_composicao_separa_o_que_e_certo_do_que_e_juizo` e
+  `test_banda_da_predominancia_enquadra_o_valor_central` — sustentam a banda nova, incluindo a
+  conservação do peso na separação.
+- `test_distribuicao_do_iva_zero_e_menos_focalizada_que_as_alternativas` — fixa a conclusão
+  distributiva.
 
 ---
 

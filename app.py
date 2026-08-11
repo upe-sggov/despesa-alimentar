@@ -2773,6 +2773,38 @@ with aba3:
                 f"**{milhoes(_band_rho[1][1])}**. Mova o cursor para ver qualquer outro valor."
             )
 
+        # Sensibilidade às parcelas atribuídas **por predominância**. Até
+        # 12.08.2026 a aplicação mostrava banda para a parcela indeterminada
+        # (5,9 % do cabaz) e nenhuma para esta (20,1 %), que move o resultado
+        # 3,4 vezes mais — mostrava a incerteza pequena e escondia a grande
+        # (auditoria de 12.08.2026, F4).
+        _res_band_pred = None
+        if _tem_apuramento and _res_iva.get("por_predominancia_pct", 0) > 0.05:
+            _bp = []
+            for _p in ("reduzida", "normal"):
+                _tp = taxas_efetivas(_comp_iva, predominancia=_p)
+                _bp.append(resumo_iva(
+                    simular_iva(df_decomp,
+                                {c: float(_tp.get(c, d)) for c, d
+                                 in zip(df_decomp["codigo"], df_decomp["iva_defeito"])},
+                                taxas_cenario, repercussao),
+                    despesa_mensal, vezes_ano, agregados))
+            _res_band_pred = sorted(b["poupanca_mes"] for b in _bp)
+
+        if _res_band_pred is not None and abs(_res_band_pred[1] - _res_band_pred[0]) > 0.005:
+            st.caption(
+                f"**Sensibilidade às atribuições por predominância — limite exterior.** "
+                f"{_pct(_res_iva['por_predominancia_pct'])} do cabaz está em subclasses cuja "
+                "taxa foi atribuída por **juízo sobre a rubrica**, e não por leitura inequívoca "
+                "das Listas — a pastelaria a 23 %, o bacalhau seco a 6 %. Se **todas** essas "
+                "atribuições estivessem erradas ao mesmo tempo e no mesmo sentido, a poupança "
+                f"mensal ficaria entre **{euro(_res_band_pred[0])}** e "
+                f"**{euro(_res_band_pred[1])}**. É um **limite exterior, não um intervalo "
+                "plausível**: nenhuma leitura do Código do IVA põe toda a pastelaria a 6 %. "
+                "Serve para mostrar que esta parcela pesa mais do que a indeterminada, logo "
+                "abaixo — e é por isso que passou a ter banda."
+            )
+
         if _res_band is not None and abs(_res_band[1] - _res_band[0]) > 0.005:
             st.caption(
                 f"**Sensibilidade à parcela indeterminada.** "
@@ -3053,15 +3085,32 @@ with aba3:
         g2.metric("Variação de receita implícita",
                   milhoes(res_nac["receita_agregada_milhoes"]))
 
-        st.markdown("""
+        # A ressalva antiga dizia «não é custo orçamental» sem dizer porquê nem
+        # quanto. Confrontar as duas bases dá a ordem de grandeza do desvio —
+        # 1,8 a 2,1 vezes — e mostra que não são uma melhor e outra pior: são
+        # bases de perguntas diferentes (auditoria de 12.08.2026, F5).
+        st.markdown(f"""
         <div class="nota perigo">
-          <div class="tt">Isto não é uma estimativa de custo orçamental</div>
-          É aritmética de ordens de grandeza. A despesa de referência
-          <strong>não representa a despesa alimentar total</strong> de um agregado
-          (exclui produtos, canais e consumo fora de casa), nem os agregados são
-          homogéneos. Uma estimativa de receita cessante exige a base tributável real
-          por taxa — via Contas Nacionais, IDEF ou dados da Autoridade Tributária — e
-          não se obtém por multiplicação.
+          <div class="tt">Isto não é uma estimativa de custo orçamental — e a diferença é grande</div>
+          Esta ferramenta mede o <strong>impacto nas famílias</strong>, e mede-o na base
+          própria dessa pergunta: a despesa das famílias residentes, apurada por inquérito.
+          O <strong>custo orçamental</strong> é outra pergunta, e pede outra base — o IVA é
+          cobrado sobre transações reais, que são o que as Contas Nacionais medem.
+          <br><br>
+          <strong>As duas bases não estão perto uma da outra.</strong> A base deste
+          simulador — {numero(agregados)} agregados × {euro(media_agregado)}/mês — dá cerca
+          de <strong>15 400 M€/ano</strong> de despesa alimentar. O consumo das famílias em
+          produtos alimentares nas Contas Nacionais (<code>nama_10_cp18</code>, CP011) foi
+          de <strong>28 188 M€ em 2022</strong> e <strong>33 038 M€ em 2024</strong> — entre
+          <strong>1,8 e 2,1 vezes mais</strong>. Parte da diferença é conhecida (os
+          inquéritos subdeclaram a despesa alimentar), parte não está explicada, e o
+          conceito das Contas Nacionais poderá incluir a despesa de não residentes no
+          território. <strong>Enquanto isso não estiver resolvido, não se troca a base</strong>
+          — mas ninguém deve ler os valores acima como uma verba de Orçamento.
+          <br><br>
+          E mesmo com a base certa faltaria o resto: o cabaz alimentar doméstico
+          <strong>não inclui restauração, cantinas nem instituições</strong>, não há resposta
+          comportamental, e os agregados não são homogéneos.
         </div>
         """, unsafe_allow_html=True)
 

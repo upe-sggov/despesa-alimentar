@@ -1487,3 +1487,79 @@ def test_distribuicao_do_iva_zero_e_menos_focalizada_que_as_alternativas():
     assert ricos > pobres
     outras = [p for m, p, _ in IVA_ZERO_AFETACAO_ORCAMENTAL if m != "Redução do IVA"]
     assert all(p > pobres for p in outras)
+
+
+# ------------------------------- banda das parcelas atribuidas por predominancia
+def _comp_sintetica():
+    """
+    Uma classe de 100: 50 de leitura inequivoca a 6 %, 40 atribuidos por
+    predominancia (20 a 6 % e 20 a 23 %) e 10 indeterminados. A predominancia
+    esta repartida de proposito - se estivesse toda numa taxa, um dos extremos
+    coincidiria com o valor central e o teste nao provava nada.
+    """
+    return pd.DataFrame([{
+        "codigo": "CP0111", "classe": "Teste", "emoji": "🍞", "iva_defeito": 6,
+        "peso": 100.0, "peso_publicado": 100.0,
+        "taxa_6": 70.0, "taxa_13": 0.0, "taxa_23": 20.0,
+        "indeterminado": 10.0, "por_predominancia": 40.0,
+        "certa_6": 50.0, "certa_13": 0.0, "certa_23": 0.0,
+    }])
+
+
+def test_predominancia_conserva_o_peso_da_classe():
+    """
+    Mover a parcela de predominancia entre taxas nao pode criar nem destruir
+    peso: as parcelas certas mais a predominancia mais o indeterminado tem de
+    dar sempre o mesmo total.
+    """
+    r = _comp_sintetica().iloc[0]
+    certas = r["certa_6"] + r["certa_13"] + r["certa_23"]
+    assert certas + r["por_predominancia"] + r["indeterminado"] == pytest.approx(r["peso"])
+    assert r["taxa_6"] + r["taxa_13"] + r["taxa_23"] + r["indeterminado"] == pytest.approx(r["peso"])
+
+
+def test_banda_da_predominancia_enquadra_o_valor_central():
+    from src.calculos import taxas_efetivas
+
+    comp = _comp_sintetica()
+    central = taxas_efetivas(comp)["CP0111"]
+    baixo = taxas_efetivas(comp, predominancia="reduzida")["CP0111"]
+    alto = taxas_efetivas(comp, predominancia="normal")["CP0111"]
+    assert baixo < central < alto
+    # Com toda a predominancia a 6 % e o indeterminado na predefinida (6 %),
+    # a classe fica inteiramente a 6 %.
+    assert baixo == pytest.approx(6.0)
+
+
+def test_composicao_separa_o_que_e_certo_do_que_e_juizo():
+    """
+    A banda so pode cobrir a predominancia se a composicao a mantiver separada
+    do que resiste a qualquer leitura. Estas colunas sao o que torna isso
+    possivel - sem elas a parcela de juizo fica indistinguivel da certa.
+    """
+    from src.calculos import composicao_iva
+    from src.config import IVA_COMPONENTES
+
+    pesos = {}
+    for comps in IVA_COMPONENTES.values():
+        for c in comps:
+            alvo = c["peso"] if isinstance(c["peso"], str) else c["peso"][0]
+            pesos[alvo] = 10.0
+    df = composicao_iva(pesos)
+    for col in ("certa_6", "certa_13", "certa_23", "por_predominancia"):
+        assert col in df.columns
+    # As certas mais a predominancia tem de reconstituir exatamente as parcelas
+    # por taxa - nenhum peso se perde na separacao.
+    certas = df["certa_6"] + df["certa_13"] + df["certa_23"]
+    por_taxa = df["taxa_6"] + df["taxa_13"] + df["taxa_23"]
+    assert (certas + df["por_predominancia"]).sum() == pytest.approx(por_taxa.sum())
+    assert df["por_predominancia"].sum() > 0
+
+
+def test_taxas_efetivas_sem_colunas_certas_nao_rebenta():
+    """Compatibilidade: uma composicao antiga, sem as colunas novas, ainda serve."""
+    from src.calculos import taxas_efetivas
+
+    comp = _comp_sintetica().drop(columns=["certa_6", "certa_13", "certa_23"])
+    assert taxas_efetivas(comp, predominancia="normal")["CP0111"] == pytest.approx(
+        taxas_efetivas(comp)["CP0111"])
