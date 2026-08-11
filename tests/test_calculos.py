@@ -577,6 +577,47 @@ def test_indices_nao_misturam_bases_do_indice():
     assert dez.loc[2020, "CP0111"] == pytest.approx(100.0)   # ficou o I15
 
 
+def test_os_dois_indices_datam_o_dezembro_base_pelo_mesmo_ponderador():
+    """O ponderador do ano y refere-se a **dezembro de y-1** (Documento
+    Metodologico do IPC). O Tornqvist ja respeitava isso; o Laspeyres de base
+    fixa usava `quotas.loc[base]`, um ano ao lado. O mesmo dezembro ficava
+    representado por dois vetores diferentes nos dois indices cuja diferenca e
+    o que o painel mede (auditoria E4)."""
+    from src.calculos import indices_comparados
+
+    caro, barato = "CP0111", "CP0112"
+    idx = _serie_classes({
+        2020: {c: 100.0 for c in CODIGOS},
+        2021: {c: (150.0 if c == caro else 100.0) for c in CODIGOS},
+        2022: {c: (200.0 if c == caro else 100.0) for c in CODIGOS},
+    })
+    # O ponderador de 2020 (dezembro de 2019) e muito diferente do de 2021
+    # (dezembro de 2020, o verdadeiro momento-base). Se o Laspeyres usasse o
+    # errado, o indice divergiria.
+    pesos = _serie_pesos({
+        2020: {c: (900.0 if c == caro else 10.0) for c in CODIGOS},
+        2021: {c: (10.0 if c == caro else 900.0) for c in CODIGOS},
+        2022: {c: (10.0 if c == caro else 900.0) for c in CODIGOS},
+        2023: {c: (10.0 if c == caro else 900.0) for c in CODIGOS},
+    })
+    r = indices_comparados(idx, pesos).set_index("ano")
+
+    # Com o ponderador certo — o de 2021, quase todo no «barato», que nao sobe —
+    # o cabaz fixo fica proximo do Tornqvist.
+    assert r.loc[2022, "laspeyres_fixo"] == pytest.approx(r.loc[2022, "tornqvist"], abs=1.0)
+
+    # E a via errada tem de **divergir**, senao este teste nao testa nada:
+    # com o ponderador de 2020 o cabaz fixo seguiria o «caro» e dispararia.
+    from src.calculos import _dezembros
+    dez = _dezembros(idx)
+    w = pesos.copy()
+    w["ano"] = w["time"].astype(str).str[:4].astype(int)
+    w = w.pivot_table(index="ano", columns="coicop", values="valor", aggfunc="last")
+    quotas = w.div(w.sum(axis=1), axis=0)
+    errado = float((quotas.loc[2020] * (dez.loc[2022] / dez.loc[2020])).sum()) * 100
+    assert errado > r.loc[2022, "laspeyres_fixo"] + 40
+
+
 def test_indices_comparados_sem_dados_devolve_vazio():
     from src.calculos import indices_comparados
 

@@ -767,7 +767,19 @@ def indices_comparados(indice_classes: pd.DataFrame,
         return pd.DataFrame()
 
     base = anos[0]
-    quotas_base = quotas.loc[base]
+    # O ponderador que representa **dezembro de `base`** é o do ano `base + 1`,
+    # pela mesma definição que o Törnqvist já respeitava algumas linhas abaixo:
+    # o Documento Metodológico do IPC fixa que a estrutura de ponderação se
+    # refere a dezembro do ano n−1.
+    #
+    # Usava-se aqui `quotas.loc[base]`, que se refere a dezembro de `base − 1`.
+    # O mesmo dezembro-base ficava representado por dois vetores de ponderadores
+    # diferentes, com um ano de intervalo, nos dois índices cuja diferença é
+    # precisamente o que este painel mede. Medido sobre os dezembros de 2020 a
+    # 2025: viés acumulado de 0,590 pontos com o ponderador errado contra 0,461
+    # com o certo — **22 % do número apresentado era o artefacto**
+    # (auditoria de 11.08.2026, E4).
+    quotas_base = quotas.loc[base + 1] if (base + 1) in quotas.index else quotas.loc[base]
 
     linhas = [{"ano": base, "laspeyres_fixo": 100.0, "tornqvist": 100.0}]
     log_torn = 0.0

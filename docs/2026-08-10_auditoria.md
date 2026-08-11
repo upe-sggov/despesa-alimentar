@@ -1689,6 +1689,35 @@ que antes apareceriam com o endereço SDMX que falhou.
 a falhar, deixa a Statistics responder, e exige que fique registado **um único** endereço, o da via
 que produziu o número.
 
+### E4 · Ponderador-base do Laspeyres — 11.08.2026
+
+**O que foi feito.** Uma linha em `indices_comparados()`:
+
+```python
+quotas_base = quotas.loc[base + 1] if (base + 1) in quotas.index else quotas.loc[base]
+```
+
+O ponderador que representa **dezembro de `base`** é o do ano `base + 1` — a mesma definição que o
+Törnqvist já respeitava vinte linhas abaixo. O Laspeyres usava o do ano `base`, que se refere a
+dezembro de `base − 1`.
+
+**Efeito, recalculado sobre os dados já migrados** (dezembros de 2020 a 2025):
+
+| | Viés acumulado |
+|---|---|
+| Ponderador de `base` — o que estava | 0,447 pontos |
+| **Ponderador de `base + 1`** — o coerente | **0,319 pontos** |
+
+**29 % do número publicado era o artefacto.** A conclusão qualitativa não muda — 0,32 pontos sobre
+uma subida acumulada de cerca de 35 % continua a ser residual, e continua a ser verdade que a
+substituição relevante acontece dentro das classes. Mas o painel existe para *medir em vez de
+afirmar*, e a medida estava inflacionada em quase um terço por uma incoerência interna de datação.
+
+**Teste de regressão.** `test_os_dois_indices_datam_o_dezembro_base_pelo_mesmo_ponderador` constrói
+uma série em que o ponderador do ano-base e o do ano seguinte são quase opostos, e exige duas
+coisas: que o cabaz fixo fique próximo do Törnqvist com o ponderador certo, **e que a via errada
+divirja em mais de 40 pontos**. Sem a segunda metade, o teste passaria com a correção revertida.
+
 ---
 
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.
