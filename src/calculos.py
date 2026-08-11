@@ -554,7 +554,18 @@ def indices_comparados(indice_classes: pd.DataFrame,
     if len(codigos) < 2:
         return pd.DataFrame()
 
-    dez, w = dez[codigos].dropna(), w[codigos].dropna()
+    # Restringir às **classes** com série completa, não aos **anos** completos.
+    # `dropna()` sem argumentos elimina a linha inteira: bastava uma das nove
+    # classes não ter observação em dezembro de um ano para esse ano
+    # desaparecer da série, sem aviso nenhum. Perder uma classe custa um pouco
+    # de cobertura; perder um ano parte a cadeia do índice
+    # (auditoria de 10.08.2026, C3).
+    dez, w = dez[codigos], w[codigos]
+    completas = [c for c in codigos if dez[c].notna().all() and w[c].notna().all()]
+    excluidas = [c for c in codigos if c not in completas]
+    if len(completas) < 2:
+        return pd.DataFrame()
+    dez, w = dez[completas], w[completas]
     if dez.empty or w.empty:
         return pd.DataFrame()
 
@@ -595,6 +606,10 @@ def indices_comparados(indice_classes: pd.DataFrame,
 
     df = pd.DataFrame(linhas)
     df["vies"] = df["laspeyres_fixo"] - df["tornqvist"]
+    # Quais as classes deixadas de fora, para a interface o poder declarar em
+    # vez de o silenciar.
+    df.attrs["classes_usadas"] = completas
+    df.attrs["classes_excluidas"] = excluidas
     return df
 
 

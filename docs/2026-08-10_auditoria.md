@@ -18,10 +18,11 @@ ligações de dados**, com confronto dos valores devolvidos contra a fonte.
 | 🟡 A corrigir | 6 | Rigor, rastreabilidade, robustez |
 | ⚪ A declarar | 4 | Pressupostos legítimos que devem estar explícitos |
 
-**Estado a 10.08.2026, fim do dia:** corrigidos e verificados em execução os três críticos
-(**A1, A2, A3**), os quatro importantes (**B1, B2, B3, B4**), o **C1** e os pressupostos **D1** e
-**D2**. Ver «Registo de aplicação» no fim do documento. **Dez de dezassete fechados**; ficam
-**C2 … C6** e **D3, D4**.
+**Estado a 11.08.2026:** corrigidos e verificados em execução os três críticos (**A1, A2, A3**),
+os quatro importantes (**B1, B2, B3, B4**), os seis de rigor (**C1 … C6**) e os pressupostos **D1**
+e **D2**. Ver «Registo de aplicação» no fim do documento. **Quinze de dezassete fechados**; ficam
+apenas **D3** (circularidade a declarar no teste das escalas) e **D4** (fontes que envelhecem em
+silêncio).
 
 Os dois itens que dependiam de fontes externas — **C1** e **D1** — foram resolvidos com documentos
 fornecidos pela Inês: o *Boletim Económico* do Banco de Portugal de junho de 2026 e o documento
@@ -270,6 +271,8 @@ Numa ferramenta cujo argumento central é a rastreabilidade, é a afirmação ma
 
 ## 🟡 C2 · Tabela de valores «ilustrativos» inscrita à mão
 
+> ✅ **Corrigido a 11.08.2026.** Ver «Registo de aplicação», no fim.
+
 **Onde:** `app.py`, linhas ~1269–1273 — a tabela de esforço por escala (25,9 % / 22,3 % / 28,6 %…),
 marcada como *«valores ilustrativos, com dados de referência»*.
 
@@ -283,6 +286,8 @@ por símbolos e manter só a estrutura qualitativa.
 ---
 
 ## 🟡 C3 · O Törnqvist descarta anos inteiros por uma classe em falta
+
+> ✅ **Corrigido a 11.08.2026.** Ver «Registo de aplicação», no fim.
 
 **Onde:** `src/calculos.py`, `indices_comparados()`, linha ~467 — `dez[codigos].dropna()`.
 
@@ -300,6 +305,8 @@ completos = [c for c in codigos if dez[c].notna().all() and w[c].notna().all()]
 
 ## 🟡 C4 · Rótulo do período no Observatório é falso para metade dos produtos
 
+> ✅ **Corrigido a 11.08.2026.** Ver «Registo de aplicação», no fim.
+
 **Onde:** `app.py`, linha ~1920.
 
 A legenda diz «Variação entre **01/2022** e o fim da série» usando o mínimo global. Mas as
@@ -313,6 +320,8 @@ ou indicar o intervalo por produto no gráfico.
 
 ## 🟡 C5 · Padrão de formatação frágil, repetido
 
+> ✅ **Corrigido a 11.08.2026** — e tinha já partido num sítio. Ver «Registo de aplicação».
+
 `.replace(",", " ")` e `.replace(".", ",")` aplicados a *f-strings* inteiras aparecem em vários
 sítios (ex. linha ~2243). Funcionam hoje porque não há outra vírgula na frase; qualquer alteração
 de redação parte a formatação **silenciosamente** — já aconteceu antes neste projeto.
@@ -323,6 +332,8 @@ de redação parte a formatação **silenciosamente** — já aconteceu antes ne
 ---
 
 ## 🟡 C6 · O `salario_medio` não é «o salário médio» no sentido corrente
+
+> ✅ **Corrigido a 11.08.2026.** Ver «Registo de aplicação», no fim.
 
 Vem de `nama_10_a10` (D11 ÷ emprego) = **25 103,89 €/ano (2025)**. É a massa salarial por
 trabalhador por conta de outrem, **incluindo tempo parcial**, e exclui contribuições do empregador.
@@ -424,7 +435,7 @@ Para que o âmbito da garantia fique claro:
 | 4 | ✅ **B3** lista do nível de preços | Custo nulo, remove risco de inversão de conclusão |
 | 5 | ✅ **B1 + B2** agregados e emparelhamento de anos | Têm de ser feitos juntos |
 | 6 | ✅ **B4** dois coeficientes de Engel | Incoerência visível ao leitor |
-| 7 | ✅ **C1** · **C2 … C6** por fazer | Rigor e robustez |
+| 7 | ✅ **C1 … C6** | Rigor e robustez |
 | 8 | ✅ **D1** ano-base do IDF | Resolvido com o documento metodológico do INE |
 | 9 | ✅ **D2** mapeamento do IVA | Trabalho de fundo, sem dependência externa |
 
@@ -725,9 +736,78 @@ nove classes, taxas que existam no Código do IVA, ordenação e ausência de re
 verdade podiam divergir em silêncio. Este teste já apanhou uma incoerência na primeira versão da
 estrutura, que tratava como «exceção» aquilo que era o caso geral nas classes predefinidas a 23 %.
 
+### C2 · Tabela das escalas — 11.08.2026
+
+**O que foi feito.** O quadro de nove valores fixos, rotulado «valores ilustrativos», passa a ser
+**calculado com os dados da sessão**: para cada escala e cada composição, a despesa sai de
+`despesa_do_agregado` com a âncora ativa e o denominador é o rendimento equivalente do EU-SILC
+convertido pelas unidades da OCDE modificada. A legenda declara a âncora e o ano do rendimento, e
+avisa que os valores mudam com a base escolhida. Se o rendimento não estiver disponível, o quadro
+dá lugar a uma nota em vez de a números inventados.
+
+**Validação implícita, e é a parte interessante.** A linha da OCDE modificada dá **11,3 % nas três
+composições** — exatamente a invariância que o texto ao lado afirma. Antes isso era uma
+propriedade escrita à mão; agora é um resultado do cálculo, e serve de verificação de que o
+cálculo está certo.
+
+Com a base IDF: per capita 8,0 / 10,7 / 15,3 %; OCDE original 9,7 / 11,0 / 12,5 %; OCDE modificada
+11,3 % constante.
+
+### C3 · Cobertura do Törnqvist — 11.08.2026
+
+**O que foi feito.** `dez[codigos].dropna()` eliminava a **linha** inteira: uma classe sem
+observação em dezembro de um ano fazia esse ano desaparecer da série, e com ele um elo da cadeia do
+índice. Passa a restringir-se às **classes** com série completa, não aos anos completos.
+`indices_comparados` devolve em `df.attrs` as classes usadas e as excluídas, e a interface
+declara-as — com aviso destacado quando alguma fica de fora.
+
+Hoje entram as **nove classes**, pelo que o resultado não muda. O que muda é que deixa de haver um
+modo de falhar silencioso: se amanhã faltar uma observação, perde-se um pouco de cobertura em vez
+de se perder um ano inteiro, e o utilizador é informado.
+
+### C4 · Janela do Observatório — 11.08.2026
+
+**O que foi feito.** A legenda anunciava «variação entre 01/2022 e o fim da série» usando o mínimo
+global, mas cada variação é medida no **período comum às duas fases desse produto** — que vai de
+**16 a 58 períodos** de quatro semanas. Era falsa para boa parte dos produtos.
+
+Passa a dizer que cada produto é medido na sua própria janela, com o intervalo de períodos
+observado, e a tabela ganhou a coluna **«Janela medida»** (mm/aaaa – mm/aaaa) ao lado do número de
+períodos. Acrescentou-se o aviso de que **variações medidas em janelas diferentes não são
+comparáveis entre si** — que era a consequência prática, e não estava dita em lado nenhum.
+
+### C5 · Formatação numérica — 11.08.2026
+
+**Encontrei o padrão já partido.** A etiqueta do gráfico de Engel fazia
+`f"{valor:.1f} %  ({gap:+.1f} p.p.)".replace(".", ",")` — a substituição apanhava também o sufixo,
+e o gráfico mostrava **«p,p,»** em vez de «p.p.». Era exatamente o modo de falha previsto no
+diagnóstico, já em produção.
+
+**O que foi feito.** Três funções novas em `config.py`, ao lado de `euro()` e `percentagem()`:
+`numero()` (milhares com espaço inquebrável e vírgula decimal), `milhoes()` e `pontos()` (pontos
+percentuais ou de índice, com sufixo configurável). Todas as ocorrências do padrão antigo foram
+substituídas — nove sítios em `app.py`.
+
+**Um segundo problema, encontrado pelo caminho.** Existia um `_milhoes` definido **duas vezes** no
+mesmo espaço de nomes: um valor numérico do SOFI no separador 2 e uma função no separador 4.
+Funcionava só porque os separadores correm por ordem. O nome do valor passou a `_sofi_pessoas` e a
+função deu lugar ao `milhoes()` partilhado.
+
+**Teste de regressão.** `test_formatadores_nao_estragam_o_texto_a_volta` verifica os três
+formatadores e trava especificamente o caso que falhava, com `assert "p,p," not in etiqueta`.
+
+### C6 · Rótulo do salário médio — 11.08.2026
+
+**O que foi feito.** O detalhe passa de «Remuneração média anual, bruta» para «Massa salarial ÷
+trabalhadores por conta de outrem — **inclui tempo parcial**, pelo que fica abaixo do salário de um
+trabalhador a tempo inteiro». A Metodologia ganhou um parágrafo a explicar que o divisor conta
+todos os trabalhadores por conta de outrem, que o numerador exclui as contribuições do empregador,
+e que o valor **não é comparável** com estatísticas de ganho médio convertidas a equivalentes a
+tempo completo.
+
 ### Estado da bateria de testes
 
-43 testes passam (38 anteriores + 5 novos), em cerca de um segundo. `agregados_do_ano` foi colocada
+44 testes passam (38 iniciais + 6 novos), em cerca de um segundo. `agregados_do_ano` foi colocada
 em `src/calculos.py`, e não em `app.py`, para que o teste não tenha de importar a aplicação — o que
 disparava a recolha de dados e punha a bateria dependente da rede.
 

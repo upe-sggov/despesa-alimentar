@@ -456,3 +456,31 @@ def percentagem(valor, casas: int = 1, sinal: bool = True) -> str:
         return "—"
     pre = "+" if (sinal and valor > 0) else ""
     return f"{pre}{valor:.{casas}f}".replace(".", ",") + " %"
+
+
+# As três funções seguintes existem para que nenhuma frase volte a ser
+# formatada com `.replace(",", " ")` aplicado à *frase inteira*. Esse padrão
+# funcionava só enquanto não houvesse outra vírgula no texto: qualquer
+# alteração de redação partia a formatação em silêncio, e já partiu neste
+# projeto mais de uma vez (auditoria de 10.08.2026, C5). A regra é formatar o
+# **número**, nunca o texto à volta dele.
+def numero(valor, casas: int = 0) -> str:
+    """Inteiro ou decimal com separador de milhares fino e vírgula decimal."""
+    if valor is None:
+        return "—"
+    return f"{valor:,.{casas}f}".replace(",", " ").replace(".", ",")
+
+
+def milhoes(valor, casas: int = 1, sufixo: str = " M€") -> str:
+    """Valor já expresso em milhões."""
+    if valor is None:
+        return "—"
+    return numero(valor, casas) + sufixo
+
+
+def pontos(valor, casas: int = 2, sinal: bool = True, sufixo: str = " p.p.") -> str:
+    """Pontos percentuais ou pontos de índice."""
+    if valor is None:
+        return "—"
+    pre = "+" if (sinal and valor > 0) else ""
+    return f"{pre}{valor:.{casas}f}".replace(".", ",") + sufixo

@@ -194,6 +194,35 @@ def test_vies_do_agregado_medio_e_sistematico():
     assert racios[0] > 1.0                        # e no sentido de subestimação
 
 
+def test_formatadores_nao_estragam_o_texto_a_volta():
+    """
+    O padrão antigo aplicava `.replace(".", ",")` à frase inteira. Numa etiqueta
+    como «101.4 %  (+1.4 p.p.)» isso convertia também o sufixo, produzindo
+    «p,p,». Os formatadores tocam só no número. Auditoria de 10.08.2026, C5.
+    """
+    from src.config import milhoes, numero, percentagem, pontos
+
+    # O separador de milhares é um espaço **inquebrável**, como em `euro()`:
+    # impede que «4 562 100» parta ao fim da linha.
+    nb = " "
+    assert numero(4_562_100) == f"4{nb}562{nb}100"
+    assert numero(2.5, 1) == "2,5"
+    assert numero(None) == "—"
+
+    assert milhoes(984.24) == "984,2 M€"
+    assert milhoes(-2460.5) == f"-2{nb}460,5 M€"
+
+    assert pontos(1.4, casas=1) == "+1,4 p.p."
+    assert pontos(-0.12) == "-0,12 p.p."
+    assert pontos(0.5, sinal=False) == "0,50 p.p."
+    assert pontos(3.0, sufixo=" pontos") == "+3,00 pontos"
+
+    # o caso que o padrão antigo estragava
+    etiqueta = f"{percentagem(101.4, sinal=False)}  ({pontos(1.4, casas=1)})"
+    assert etiqueta == "101,4 %  (+1,4 p.p.)"
+    assert "p,p," not in etiqueta
+
+
 def test_mapa_do_iva_cobre_as_nove_classes_e_e_coerente():
     """
     O levantamento das Listas I e II tem de cobrir todas as classes e as taxas

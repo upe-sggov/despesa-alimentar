@@ -1,4 +1,4 @@
-"""
+﻿"""
 Despesa alimentar — ferramenta de análise
 UPE · DSSD · Secretaria-Geral do Governo
 
@@ -34,7 +34,8 @@ from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         SOFI_CUSTO, SOFI_FONTE, SOFI_INCAPACIDADE, SOFI_MILHOES,
                         AZUL, CINZENTO, CLASSES, CODIGOS, COICOP_ALIMENTAR, DOURADO,
                         PAISES, PAISES_POR_DEFEITO, POR_CODIGO, RODAPE,
-                        UNIDADE, VERDE, VERMELHO, euro, mes_pt, percentagem)
+                        UNIDADE, VERDE, VERMELHO,
+                        euro, mes_pt, milhoes, numero, percentagem, pontos)
 
 LOGO = ""
 try:
@@ -317,7 +318,7 @@ def carregar_dados(anos_historico: int = 6):
         registo.append(
             ("N.º de agregados — verificação",
              f"{len(rejeitados)} valor(es) implausível(eis), o primeiro "
-             f"{rejeitados[0]:,}; ignorados".replace(",", " "), 0)
+             f"{numero(rejeitados[0])}; ignorados", 0)
         )
 
     agregados_valor, agregados_ano, agregados_fonte = None, None, None
@@ -834,12 +835,12 @@ está **{'acima' if maior_que_media else 'abaixo'}** dela.
             "em sentidos diferentes consoante a dimensão do agregado."
         )
 
-    _agr_txt = f"{agregados:,}".replace(",", "\u00a0")
+    _agr_txt = numero(agregados)
     _mes_txt = mes_pt(ancora["mes"]) if ancora["mes"] else "—"
     _den = base_ancora.get("denominador")
     with st.expander("De onde vem este valor"):
         if base_chave == "contas":
-            _den_txt = f"{_den['valor']:,}".replace(",", " ") if _den else _agr_txt
+            _den_txt = numero(_den["valor"]) if _den else _agr_txt
             _proveniencia = (
                 "Da **despesa alimentar de todas as famílias portuguesas** registada nas Contas "
                 f"Nacionais, dividida pelo número de agregados desse mesmo ano ({_den_txt} em "
@@ -1252,7 +1253,9 @@ with aba1:
             if sme_pt:
                 refs.append({
                     "ref": f"{trabalhadores} × salário médio",
-                    "detalhe": f"Remuneração média anual, bruta, {sme_pt['ano']}",
+                    "detalhe": (f"Massa salarial ÷ trabalhadores por conta de outrem, "
+                                f"{sme_pt['ano']} — **inclui tempo parcial**, pelo que fica "
+                                "abaixo do salário de um trabalhador a tempo inteiro"),
                     "mensal": sme_pt["valor"] * trabalhadores / 12,
                     "natureza": "bruto",
                 })
@@ -1386,15 +1389,44 @@ reserva.
     escala que escolheu na barra lateral (**{ESCALAS[escala_chave]["nome"].split(" (")[0]}**); o
     rendimento do EU-SILC tem de usar a **OCDE modificada**, que é a que esse inquérito aplica.
     A consequência é mensurável:
+                """)
 
-    | Escala usada na despesa | 1 adulto | Casal | Casal + 2 |
-    |---|---|---|---|
-    | OCDE modificada (igual à do rendimento) | 25,9 % | 25,9 % | 25,9 % |
-    | OCDE original | 22,3 % | 25,2 % | 28,6 % |
-    | Per capita | 18,4 % | 24,5 % | 35,0 % |
+                # Tabela calculada com os dados da sessão. Era um quadro de
+                # valores fixos rotulado «ilustrativos», ao lado de números
+                # calculados em direto: o leitor não distinguia uns dos outros
+                # (auditoria de 10.08.2026, C2).
+                if tem_rend and indic_r:
+                    _r_anual = rendimentos[indic_r]["PT"]["valor"]
+                    _casos = [("1 adulto", 1, 0), ("Casal", 2, 0), ("Casal + 2", 2, 2)]
+                    _linhas_esc = []
+                    for _ch, _esc in ESCALAS.items():
+                        _linha = {"Escala usada na despesa": _esc["nome"].split(" (")[0]}
+                        if _ch == "ocde_modificada":
+                            _linha["Escala usada na despesa"] += " (igual à do rendimento)"
+                        for _rot, _a, _c in _casos:
+                            _desp = despesa_do_agregado(
+                                media_agregado, dim_efetiva, _a, _c, _ch)
+                            _ue = unidades_equivalentes(_a, _c, "ocde_modificada")
+                            _rend_mes = _r_anual * _ue / 12
+                            _linha[_rot] = (f"{_desp / _rend_mes * 100:.1f} %"
+                                            .replace(".", ",") if _rend_mes else "—")
+                        _linhas_esc.append(_linha)
+                    st.dataframe(pd.DataFrame(_linhas_esc),
+                                 use_container_width=True, hide_index=True)
+                    st.caption(
+                        f"Calculado com os dados desta sessão: âncora "
+                        f"**{base_ancora['nome']}** ({euro(media_agregado)}/mês para o agregado "
+                        f"médio) e rendimento equivalente "
+                        f"{'médio' if indic_r == 'MEAN_EI' else 'mediano'} do EU-SILC de "
+                        f"{rendimentos[indic_r]['PT']['ano']}. Muda com a âncora que escolher."
+                    )
+                else:
+                    st.info(
+                        "O quadro comparativo das escalas precisa do rendimento do EU-SILC, "
+                        "que não está disponível nesta sessão."
+                    )
 
-    *(valores ilustrativos, com dados de referência)*
-
+                st.markdown("""
     Se as duas escalas coincidirem, **o esforço é constante** seja qual for a composição — ambos
     os lados escalam de forma idêntica. A subida com o número de pessoas resulta, portanto, da
     **diferença entre as escalas**. Isso não invalida a leitura, porque a alimentação tem
@@ -1482,7 +1514,7 @@ que não há nada a descontar nem a acrescentar.
         _ano_sofi = max(SOFI_INCAPACIDADE["Portugal"])
         _sofi_pt = SOFI_INCAPACIDADE["Portugal"][_ano_sofi]
         _sofi_es = SOFI_INCAPACIDADE["Espanha"][_ano_sofi]
-        _milhoes = SOFI_MILHOES.get(_ano_sofi)
+        _sofi_pessoas = SOFI_MILHOES.get(_ano_sofi)
 
         _sev, _ano_sev, _sev_pobres = None, None, None
         if not _priv_pt.empty:
@@ -1513,8 +1545,8 @@ que não há nada a descontar nem a acrescentar.
 
         _texto_sev = (f"**{('%.1f' % _sev).replace('.', ',')} %**" if _sev is not None
                       else "o indicador de privação severa")
-        _texto_milhoes = (f", cerca de **{('%.1f' % _milhoes).replace('.', ',')} milhões de "
-                          f"pessoas**" if _milhoes else "")
+        _texto_milhoes = (f", cerca de **{numero(_sofi_pessoas, 1)} milhões de pessoas**"
+                          if _sofi_pessoas else "")
         st.markdown(f"""
         <div class="nota">
           <div class="tt">Porque é que estes três números não se substituem uns aos outros</div>
@@ -1889,8 +1921,8 @@ with aba2:
             k2.metric("Törnqvist — a mesma subida", percentagem(_subida_torn),
                       help="Ponderadores revistos a cada ano, pela média dos dois extremos.")
             k3.metric("Viés de substituição acumulado",
-                      f"{_vies:+.2f} pontos".replace(".", ","),
-                      f"{_vies / _anos_decorridos:+.2f} p.p./ano".replace(".", ","),
+                      pontos(_vies, sufixo=" pontos"),
+                      pontos(_vies / _anos_decorridos, sufixo=" p.p./ano"),
                       delta_color="off",
                       help="Quanto o cabaz fixo sobrestima a subida, face ao índice superlativo.")
 
@@ -1921,8 +1953,8 @@ with aba2:
     **O resultado não é o que a crítica ao cabaz fixo faria esperar — e isso importa.**
 
     Em {_anos_decorridos} anos, congelar os ponderadores das nove classes sobrestima a subida em
-    **{('%+.2f' % _vies).replace('.', ',')} pontos de índice**, cerca de
-    **{('%+.2f' % (_vies / _anos_decorridos)).replace('.', ',')} p.p. por ano**. Sobre uma subida
+    **{pontos(_vies, sufixo=" pontos de índice")}**, cerca de
+    **{pontos(_vies / _anos_decorridos, sufixo=" p.p. por ano")}**. Sobre uma subida
     acumulada de {percentagem(_subida_torn)}, é residual.
 
     A razão é que **a substituição relevante acontece dentro das classes, não entre elas**. Trocar
@@ -1938,10 +1970,24 @@ with aba2:
     O efeito que se mede aqui é o menor dos dois; o maior fica por medir.
             """)
 
+            _excl = _cmp_idx.attrs.get("classes_excluidas") or []
+            if _excl:
+                _nomes_excl = ", ".join(POR_CODIGO[c]["nome"] for c in _excl
+                                        if c in POR_CODIGO)
+                st.warning(
+                    f"**Cobertura reduzida.** {len(_excl)} das nove classes não têm série "
+                    f"completa em todos os dezembros do período e ficaram de fora deste "
+                    f"cálculo: **{_nomes_excl}**. Os dois índices são comparáveis entre si — "
+                    "usam exatamente as mesmas classes —, mas não cobrem todo o cabaz alimentar."
+                )
+
             with st.expander("Como estes índices são construídos"):
                 st.markdown(f"""
     Todos partem de dezembro de {_ano_base} = 100 e usam o índice mensal por classe
     (`prc_hicp_midx`) e os ponderadores anuais (`prc_hicp_inw`), ambos do Eurostat.
+    Entram as **{len(_cmp_idx.attrs.get('classes_usadas') or [])} classes** com série completa em
+    todos os dezembros do período: uma classe sem observação num único mês eliminaria esse mês da
+    comparação, e com ele o elo do índice.
 
     **Cabaz fixo (Laspeyres de base fixa)** — as quotas do ano-base aplicadas ao relativo de preço
     acumulado desde esse ano:
@@ -2039,10 +2085,23 @@ with aba6:
 
             # ---- panorama dos produtos com as duas fases ----
             st.markdown("**Os dois lados da cadeia, por produto**")
-            st.caption(
-                f"Variação entre {_ini.strftime('%m/%Y')} e o fim da série, no período comum às "
-                "duas fases. Só os produtos com série de produção aparecem aqui."
-            )
+            # A janela **não é a mesma para todos os produtos**: cada variação é
+            # medida no período comum às duas fases desse produto, que em vários
+            # casos é bem mais curto do que a série global. A legenda anterior
+            # anunciava a data mínima global, e era falsa para metade dos
+            # produtos (auditoria de 10.08.2026, C4).
+            if not _com_prod.empty:
+                _n_min, _n_max = int(_com_prod["n_periodos"].min()), int(_com_prod["n_periodos"].max())
+                _cap_janela = (
+                    f"Cada produto é medido **no seu próprio período comum às duas fases** — "
+                    f"entre {_n_min} e {_n_max} períodos de quatro semanas, conforme o produto. "
+                    "As janelas estão na tabela abaixo; **as variações não são comparáveis entre "
+                    "produtos com janelas diferentes**. Só os produtos com série de produção "
+                    "aparecem aqui."
+                )
+            else:
+                _cap_janela = "Só os produtos com série de produção aparecem aqui."
+            st.caption(_cap_janela)
 
             if _com_prod.empty:
                 st.info("Nenhum produto tem as duas fases nesta recolha.")
@@ -2067,13 +2126,15 @@ with aba6:
 
                 _tab_o = pd.DataFrame([{
                     "Produto": r.produto,
+                    "Janela medida": (f"{r.inicio.strftime('%m/%Y')} – "
+                                      f"{r.fim.strftime('%m/%Y')}"),
+                    "Períodos": int(r.n_periodos),
                     "Produção": f"{r.producao_var:+.1f} %".replace(".", ","),
                     "Consumo": f"{r.consumo_var:+.1f} %".replace(".", ","),
                     "Diferença consumo−produção": (
                         f"{r.diferenca_var:+.1f} %".replace(".", ",")
                         if pd.notna(r.diferenca_var) else "—"),
                     "Padrão": r.padrao,
-                    "Períodos": int(r.n_periodos),
                 } for r in _com_prod.itertuples()])
                 st.dataframe(_tab_o, use_container_width=True, hide_index=True)
 
@@ -2389,15 +2450,12 @@ with aba3:
             simular_iva(decompor(_media_outra, dados["pesos"], dados["variacoes_classe"]),
                         taxas_atuais, taxas_cenario, repercussao),
             _media_outra, vezes_ano, agregados)
-        def _milhoes(v):
-            return f"{v:,.1f}".replace(",", " ").replace(".", ",") + " M€"
-
         st.caption(
             f"**Sensibilidade à base de cálculo.** Estes valores usam a base "
             f"**{base_ancora['nome']}**. Com **{outra_ancora['nome']}**, a poupança mensal seria "
             f"{euro(_res_outra['poupanca_mes'])} em vez de {euro(res['poupanca_mes'])}, "
-            f"e a poupança agregada anual {_milhoes(_res_outra_nac['poupanca_agregada_milhoes'])} "
-            f"em vez de {_milhoes(res_nac['poupanca_agregada_milhoes'])}. "
+            f"e a poupança agregada anual {milhoes(_res_outra_nac['poupanca_agregada_milhoes'])} "
+            f"em vez de {milhoes(res_nac['poupanca_agregada_milhoes'])}. "
             "Todos os resultados do simulador escalam proporcionalmente com a âncora — "
             "a repartição entre consumidor e margem não depende dela."
         )
@@ -2411,7 +2469,7 @@ with aba3:
 
         st.markdown("#### Ordens de grandeza a nível agregado")
         st.caption(
-            f"Extrapolação para **{agregados:,}".replace(",", "\u00a0")
+            f"Extrapolação para **{numero(agregados)}"
             + f"** agregados — o total mais recente ({dados.get('agregados_ano') or '—'}), "
             + "porque o que se extrapola é o efeito de uma medida sobre o país de hoje. "
             + "É por isso um número diferente do denominador da âncora das Contas Nacionais, "
@@ -2424,9 +2482,9 @@ with aba3:
         )
         g1, g2 = st.columns(2)
         g1.metric("Poupança agregada anual",
-                  _milhoes(res_nac["poupanca_agregada_milhoes"]))
+                  milhoes(res_nac["poupanca_agregada_milhoes"]))
         g2.metric("Variação de receita implícita",
-                  _milhoes(res_nac["receita_agregada_milhoes"]))
+                  milhoes(res_nac["receita_agregada_milhoes"]))
 
         st.markdown("""
         <div class="nota perigo">
@@ -2622,8 +2680,7 @@ with aba4:
                                     "alimentação. Não envolve salários nem rendimentos."))
                     if ue_e:
                         dif = pt_e["quota"] - ue_e["quota"]
-                        dif_txt = f"{dif:+.1f}".replace(".", ",") + " p.p."
-                        e2.metric("Face à média da UE-27", dif_txt)
+                        e2.metric("Face à média da UE-27", pontos(dif, casas=1))
                     posto = int((df_e["geo"] != "EU27_2020").cumsum()[
                         df_e["geo"] == "PT"].iloc[0])
                     total_p = int((df_e["geo"] != "EU27_2020").sum())
@@ -2750,9 +2807,12 @@ with aba4:
                     else:
                         cores.append("#8fb3d0")
                     if gap is None or geo == "EU27_2020":
-                        etiquetas.append(f"{valor:.1f} %".replace(".", ","))
+                        etiquetas.append(percentagem(valor, sinal=False))
                     else:
-                        etiquetas.append(f"{valor:.1f} %  ({gap:+.1f} p.p.)".replace(".", ","))
+                        # Antes: `.replace(".", ",")` sobre a frase inteira, que
+                        # convertia também o «p.p.» em «p,p,» (auditoria, C5).
+                        etiquetas.append(f"{percentagem(valor, sinal=False)}  "
+                                         f"({pontos(gap, casas=1)})")
 
                 figc = go.Figure(go.Bar(
                     y=ordenado["pais"], x=ordenado["valor"], orientation="h",
@@ -2968,7 +3028,7 @@ with aba5:
                 m2.metric("Inflação alimentar, ponderação IDF",
                           percentagem(_cmp["inflacao_idf"], sinal=False))
                 m3.metric("Diferença atribuível à ponderação",
-                          f"{_cmp['diferenca']:+.2f} p.p.".replace(".", ","))
+                          pontos(_cmp["diferenca"]))
 
                 _dv = _cmp["desvios"].copy()
                 _dv["Grupo"] = _dv["emoji"] + " " + _dv["classe"]
@@ -2984,8 +3044,8 @@ with aba5:
                     })
                 st.caption(
                     f"Desvio médio absoluto entre as duas estruturas: "
-                    f"**{('%.2f' % _cmp['desvio_medio']).replace('.', ',')} p.p.** · "
-                    f"máximo: **{('%.2f' % _cmp['desvio_maximo']).replace('.', ',')} p.p.** "
+                    f"**{pontos(_cmp['desvio_medio'], sinal=False)}** · "
+                    f"máximo: **{pontos(_cmp['desvio_maximo'], sinal=False)}** · "
                     "As quotas são calculadas dentro da alimentação, sobre a soma dos nove grupos."
                 )
                 st.caption(
@@ -3127,6 +3187,12 @@ with aba5:
     **Salário médio.** Calculado a partir das Contas Nacionais: massa salarial (remunerações e
     salários) dividida pelo número de trabalhadores por conta de outrem. É uma remuneração **bruta**
     — antes de imposto e contribuições do trabalhador.
+
+    **Não é «o salário médio» no sentido corrente.** O divisor conta **todos** os trabalhadores por
+    conta de outrem, incluindo os que trabalham **a tempo parcial**, e o numerador exclui as
+    contribuições sociais a cargo do empregador. O resultado fica portanto **abaixo** da remuneração
+    de um trabalhador a tempo inteiro, e não é comparável com as estatísticas de ganho médio que
+    convertem tudo a equivalentes a tempo completo.
 
     Duas vantagens sobre as séries de remunerações líquidas: os códigos são estáveis, e fica na
     **mesma base estatística** da despesa alimentar usada como âncora — o que evita mais uma mistura
