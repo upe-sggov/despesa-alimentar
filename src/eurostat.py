@@ -311,21 +311,42 @@ def variacoes(coicops: Iterable[str], geos: Iterable[str],
     )
 
 
+# --------------------------------------------------------------------------
+# Contas Nacionais — COICOP 2018
+# --------------------------------------------------------------------------
+# Segunda ocorrência do mesmo defeito do E1, encontrada pela verificação de
+# frescura criada no E3 — que é a melhor demonstração de que a verificação
+# fazia falta. O catálogo do Eurostat distingue-os pelo título:
+#
+#   nama_10_co3_p3  «Household final consumption expenditure by purpose
+#                    (COICOP 1999)»   — parado em 2022 para todos os países
+#   nama_10_cp18    «Household final consumption expenditure by purpose
+#                    (COICOP 2018)»   — atualizado, série até 2024/2025
+#
+# O conjunto antigo continuava a responder. Todos os outros conjuntos anuais da
+# aplicação estavam em 2025; só este ficara em 2022, o que não era desfasamento
+# normal de publicação — era uma série que tinha parado
+# (auditoria de 11.08.2026, E16).
+#
+# A dimensão volta a chamar-se `coicop18`, como no IHPC.
+CONTAS_NACIONAIS = "nama_10_cp18"
+
+
 def despesa_alimentar(desde_ano: int) -> tuple[pd.DataFrame, str]:
     """
     Despesa final das famílias em produtos alimentares (COICOP 01.1),
     a preços correntes, em milhões de euros — Contas Nacionais.
 
     É a âncora oficial em euros: o índice de preços dá variações, nunca níveis.
-    Publicação anual, com desfasamento de cerca de dois anos.
+    Publicação anual, com cerca de ano e meio de desfasamento.
     """
     return obter(
-        "nama_10_co3_p3",
+        CONTAS_NACIONAIS,
         f"A.CP_MEUR.CP011.PT",
-        {"freq": "A", "unit": "CP_MEUR", "coicop": "CP011", "geo": "PT",
+        {"freq": "A", "unit": "CP_MEUR", "coicop18": "CP011", "geo": "PT",
          "sinceTimePeriod": str(desde_ano)},
         inicio=str(desde_ano),
-        dim_coicop="coicop",
+        dim_coicop="coicop18",
     )
 
 
@@ -454,8 +475,13 @@ def nivel_precos(geos, categoria: str, desde_ano: int) -> tuple[pd.DataFrame, st
     )
 
 
-# O código do agregado total varia consoante a versão do conjunto.
-TOTAL_CANDIDATOS = ["TOTAL", "CP00", "P31_S14", "CP_TOT"]
+# Código do agregado de todos os fins no `nama_10_cp18`. Era uma lista de
+# candidatos — `TOTAL`, `CP00`, `P31_S14`, `CP_TOT` — e usava-se o primeiro que
+# respondesse, sem que o código efetivamente obtido chegasse a lado nenhum. Um
+# só, declarado, verificado na API e nomeado na interface: é a doutrina que o B3
+# fixou para as categorias das PPP e que aqui não tinha sido aplicada
+# (auditoria de 11.08.2026, E7).
+TOTAL_CONSUMO = "TOTAL"
 
 
 def despesa_total_consumo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
@@ -464,44 +490,31 @@ def despesa_total_consumo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
 
     Combinada com a despesa alimentar (CP011), dá o **coeficiente de Engel**:
     a fração do consumo das famílias que vai para alimentação.
-
-    O código do agregado total não é o mesmo em todas as versões do conjunto,
-    pelo que se tentam vários e se usa o primeiro que responda.
     """
     geos = list(geos)
-    ultimo = None
-    for cod in TOTAL_CANDIDATOS:
-        try:
-            df, via = obter(
-                "nama_10_co3_p3",
-                f"A.CP_MEUR.{cod}.{'+'.join(geos)}",
-                {"freq": "A", "unit": "CP_MEUR", "coicop": cod,
-                 "geo": geos, "sinceTimePeriod": str(desde_ano)},
-                inicio=str(desde_ano),
-                dim_coicop="coicop",
-            )
-            if not df.empty:
-                df = df.copy()
-                df["coicop"] = "TOTAL"
-                return df, f"{via} (código {cod})"
-        except Exception as exc:                             # noqa: BLE001
-            ultimo = exc
-            continue
-    raise ErroEurostat(
-        f"nama_10_co3_p3 — nenhum código de total respondeu "
-        f"({', '.join(TOTAL_CANDIDATOS)}): {ultimo}")
+    df, via = obter(
+        CONTAS_NACIONAIS,
+        f"A.CP_MEUR.{TOTAL_CONSUMO}.{'+'.join(geos)}",
+        {"freq": "A", "unit": "CP_MEUR", "coicop18": TOTAL_CONSUMO,
+         "geo": geos, "sinceTimePeriod": str(desde_ano)},
+        inicio=str(desde_ano),
+        dim_coicop="coicop18",
+    )
+    df = df.copy()
+    df["coicop"] = "TOTAL"
+    return df, f"{via} (código {TOTAL_CONSUMO})"
 
 
 def despesa_alimentar_paises(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     """Despesa alimentar (CP011) por país — o numerador do coeficiente de Engel."""
     geos = list(geos)
     return obter(
-        "nama_10_co3_p3",
+        CONTAS_NACIONAIS,
         f"A.CP_MEUR.CP011.{'+'.join(geos)}",
-        {"freq": "A", "unit": "CP_MEUR", "coicop": "CP011",
+        {"freq": "A", "unit": "CP_MEUR", "coicop18": "CP011",
          "geo": geos, "sinceTimePeriod": str(desde_ano)},
         inicio=str(desde_ano),
-        dim_coicop="coicop",
+        dim_coicop="coicop18",
     )
 
 

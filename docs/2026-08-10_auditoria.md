@@ -1573,6 +1573,103 @@ estava coberto:
 conjunto que seja arquivado amanhã continuará a responder com HTTP 200. É o **E3**, o passo
 seguinte.
 
+### E3 · Verificação de frescura das séries com API — 11.08.2026
+
+**O que foi feito.** Nova função pura `calculos.frescura_das_series()`, apoiada em
+`fim_do_periodo()`, que traduz a codificação de períodos do Eurostat — `2026`, `2026-06`,
+`2026M06`, `2026-S2`, `2026-Q2` — na data em que o período fecha. Toma-se o **fim** do período, e
+não o início, por ser a leitura mais favorável à fonte. Um período ilegível devolve
+«não desatualizada» mas fica marcado como **não verificado**: na dúvida não se acusa, mas também
+não se dá por confirmado.
+
+**Os prazos não são uniformes, e essa é a decisão central.** Um prazo único acusaria de velhas as
+fontes que são lentas por construção — as Contas Nacionais têm ano e meio de desfasamento e está
+certo que tenham. O que se quer apanhar é a série que **parou**. Por isso `LIMITES_FRESCURA`, em
+`config.py`, dá a cada série o seu desfasamento normal mais um ciclo, **com a razão escrita ao
+lado** — e há um teste que exige que essa razão exista e que as duas séries mensais sejam as mais
+apertadas, por serem as que falharam.
+
+**Onde aparece.** Um erro destacado **no topo da aplicação**, antes da mensagem de estado, com a
+série, o conjunto, o último período, a idade em dias e o prazo — e a indicação de que a causa mais
+provável é o conjunto ter sido arquivado. E um quadro completo na Metodologia, «Estas séries ainda
+estão a avançar?», com as onze séries vigiadas.
+
+**Estado hoje:** nenhum aviso dispara. As onze séries estão dentro do prazo.
+
+---
+
+## 🔴 E16 · Segunda ocorrência do E1 — a âncora vinha das Contas Nacionais em COICOP 1999
+
+> ✅ **Encontrado e corrigido a 11.08.2026.** Encontrado **pela verificação criada no E3**, o que
+> é a melhor demonstração de que ela fazia falta.
+
+**Onde:** `src/eurostat.py`, `despesa_alimentar()`, `despesa_total_consumo()` e
+`despesa_alimentar_paises()`.
+
+**Como apareceu.** Ao escrever o teste do E3, a série das Contas Nacionais disparou o aviso. A
+primeira reação foi assumir prazo mal calibrado — as Contas Nacionais são lentas. Fui verificar
+antes de alargar o prazo, e o alargamento teria sido um erro:
+
+| Conjunto | Último ano, Portugal |
+|---|---|
+| `nama_10_co3_p3` (a âncora) | **2022** |
+| `nama_10_a10` (salário médio) | 2025 |
+| `ilc_di03` (rendimento) | 2025 |
+| `prc_ppp_ind_1` (nível de preços) | 2025 |
+| `lfst_hhnhtych` (agregados) | 2025 |
+
+**Todos os outros conjuntos anuais estavam em 2025; só a âncora estava em 2022.** E o 2022 não era
+um atraso português: era o último ano para **todos** os países — DE, ES, FR, IT, NL, EU-27.
+
+**A causa, no catálogo do Eurostat**, exatamente com a mesma forma do E1:
+
+| Conjunto | Título oficial | Atualizado |
+|---|---|---|
+| `nama_10_co3_p3` | Household final consumption expenditure by purpose **(COICOP 1999)** | parado em 2022 |
+| **`nama_10_cp18`** | Household final consumption expenditure by purpose **(COICOP 2018)** | **30.07.2026** |
+
+A transição para a COICOP 2018 não afetou só o índice de preços: afetou também as Contas
+Nacionais, e a aplicação ficou no conjunto legado nas duas frentes. A dimensão volta a chamar-se
+`coicop18`, pelo que a guarda criada no E1 serviu tal e qual.
+
+**O que foi feito.** As três funções passaram para `nama_10_cp18`. Aproveitou-se para fechar o
+**E7**: a lista de candidatos ao código do total — `TOTAL`, `CP00`, `P31_S14`, `CP_TOT`, com o
+primeiro que respondesse — deu lugar a uma constante única, `TOTAL_CONSUMO = "TOTAL"`, verificada
+na API e **nomeada na interface**. A legenda do gráfico de Engel e o cabeçalho do CSV passaram a
+dizer o conjunto e os códigos efetivamente pedidos, em vez do `CP011/CP00` que nunca foi usado.
+
+**Efeito, medido.** A âncora das Contas Nacionais desce ligeiramente, mas o que importa é outra
+coisa:
+
+| | Antes (`co3_p3`, 2022) | Depois (`cp18`, 2024) |
+|---|---|---|
+| Despesa alimentar nacional | 27 318,5 M€ | **33 037,8 M€** |
+| Denominador (agregados do ano) | 4 102 600 (2022) | **4 473 300 (2024)** |
+| Base mensal por agregado | 554,90 € | **615,46 €** |
+| Fator de atualização por preços | **1,1930** | **1,0597** |
+| Âncora final | 662,02 €/mês | **652,22 €/mês** |
+| Coeficiente de Engel, Portugal | 16,4 % (2022) | **17,1 % (2024)** |
+
+O valor final quase não se move — **mas passa a ser muito menos extrapolação**. Antes, 19 % do
+valor vinha de indexar quatro anos de preços a uma estrutura de consumo de 2022; agora são 6 %
+sobre uma estrutura de 2024. É a diferença entre um número medido e um número projetado, e não se
+vê no resultado.
+
+O intervalo da âncora passa de «276,06 € a 662,02 €» para **«281,06 € a 652,22 €»** — e o aviso de
+idade da base na barra lateral passa de quatro anos de atraso para dois.
+
+**Nota de método.** Em 2022, ano em que ambos os conjuntos existem, a despesa alimentar é
+27 318,5 M€ na COICOP 1999 e 28 187,6 M€ na COICOP 2018 — **+3,2 %**. Parte é revisão das contas,
+parte é a reclassificação. Não separei as duas causas e não tenho como o fazer com fontes abertas;
+fica declarado.
+
+**Testes de regressão — cinco novos, a bateria passa de 52 para 56.**
+`test_serie_arquivada_e_apanhada_e_serie_lenta_nao_e` cobre os quatro casos que interessam: o
+índice parado, o índice migrado, a âncora parada e a âncora migrada — e exige que a série lenta
+**não** dispare, senão o mecanismo seria só um alarme permanente.
+`test_conjuntos_do_ihpc_sao_os_correntes_e_nao_os_arquivados` passou a proibir também o
+`nama_10_co3_p3`.
+
 ---
 
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.

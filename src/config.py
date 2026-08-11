@@ -489,6 +489,46 @@ LIMITE_DIAS_OBSERVATORIO = 60
 # incorporar.
 LIMITE_ANOS_SOFI = 2
 
+# --------------------------------------------------------------------------
+# Prazos de validade das séries obtidas por API
+# --------------------------------------------------------------------------
+# A auditoria de 10.08.2026 (D4) criou a verificação de frescura e apontou-a ao
+# SOFI e ao Observatório, com o argumento de que são as fontes **sem** API. A
+# conclusão implícita — que as séries com API não têm esse problema, porque a
+# rede avisaria — estava errada, e custou sete meses de dados desatualizados:
+# uma série arquivada responde com HTTP 200 e simplesmente deixa de avançar
+# (auditoria de 11.08.2026, E1 e E3).
+#
+# O limite de cada série é o seu **desfasamento normal de publicação mais um
+# ciclo**. Um prazo uniforme não serviria: acusaria de velhas as fontes que são
+# lentas por construção — as Contas Nacionais têm dois anos de desfasamento e
+# está certo que tenham. O que se quer apanhar é a série que **parou**, não a
+# série que é lenta.
+#
+# Em dias, para que o cálculo não dependa da aritmética de calendário.
+LIMITES_FRESCURA = {
+    "indice": (60, "O índice completo, com todas as classes, sai por volta do "
+                   "dia 17 do mês seguinte ao de referência. Sessenta dias "
+                   "tolera um mês em atraso e apanha o segundo."),
+    "variacoes": (60, "Mesma publicação do índice — sai no mesmo momento."),
+    "ponderadores": (450, "Anuais, publicados com os dados de janeiro, em "
+                          "fevereiro. Quinze meses tolera uma vaga em atraso."),
+    "contas_nacionais": (800, "As Contas Nacionais por finalidade saem com cerca "
+                              "de ano e meio de desfasamento. Foi este prazo que "
+                              "apanhou o nama_10_co3_p3 parado em 2022, quando "
+                              "todos os outros conjuntos anuais já estavam em 2025."),
+    "agregados": (800, "Inquérito ao Emprego, anual, publicado no ano seguinte."),
+    "dimensao": (800, "EU-SILC, anual, com cerca de um ano de desfasamento."),
+    "rendimento": (800, "EU-SILC, anual, com cerca de um ano de desfasamento."),
+    "privacao": (800, "EU-SILC, anual, com cerca de um ano de desfasamento."),
+    "salario_minimo": (260, "Semestral — janeiro e julho. Oito meses e meio "
+                            "tolera um semestre em atraso."),
+    "salario_medio": (800, "Contas Nacionais anuais por ramo de atividade, "
+                           "publicadas no ano seguinte."),
+    "nivel_precos": (800, "Paridades de poder de compra, publicadas em junho do "
+                          "ano seguinte ao de referência."),
+}
+
 SOFI_FONTE = ("FAO/FIDA/UNICEF/PAM/OMS, The State of Food Security and Nutrition "
               "in the World 2026, anexos A1.5 e A1.6")
 SOFI_EDICAO = 2026

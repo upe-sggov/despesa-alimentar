@@ -738,12 +738,17 @@ def test_conjuntos_do_ihpc_sao_os_correntes_e_nao_os_arquivados():
     assert eurostat.HICP_MENSAL == "prc_hicp_minr"
     assert eurostat.HICP_PONDERADORES == "prc_hicp_iw"
 
+    assert eurostat.CONTAS_NACIONAIS == "nama_10_cp18"
+
     fonte = "".join(
         inspect.getsource(getattr(eurostat, f))
-        for f in ("ponderadores", "indice_precos", "indice_classes", "variacoes")
+        for f in ("ponderadores", "indice_precos", "indice_classes", "variacoes",
+                  "despesa_alimentar", "despesa_total_consumo",
+                  "despesa_alimentar_paises")
     )
-    for arquivado in ("prc_hicp_midx", "prc_hicp_manr", "prc_hicp_inw"):
-        assert arquivado not in fonte, f"{arquivado} foi arquivado em 2025"
+    for arquivado in ("prc_hicp_midx", "prc_hicp_manr", "prc_hicp_inw",
+                      "nama_10_co3_p3"):
+        assert arquivado not in fonte, f"{arquivado} foi arquivado"
 
     # A unidade tem de ir explicita: sem ela a resposta traz niveis e taxas
     # misturados na mesma coluna de valores.
@@ -782,6 +787,85 @@ def test_classes_tem_designacao_oficial_da_coicop_2018():
     antigos = {"Pão e cereais", "Fruta", "Legumes e hortícolas",
                "Açúcar e doces", "Outros alimentos", "Peixe e marisco"}
     assert not ({c["nome"] for c in CLASSES} & antigos)
+
+
+# ------------------------------- frescura das series com API (auditoria E3)
+def test_fim_do_periodo_reconhece_as_codificacoes_do_eurostat():
+    from datetime import date
+
+    from src.calculos import fim_do_periodo
+
+    assert fim_do_periodo("2026") == date(2026, 12, 31)
+    assert fim_do_periodo("2026-06") == date(2026, 6, 30)
+    assert fim_do_periodo("2026M06") == date(2026, 6, 30)
+    assert fim_do_periodo("2026-02") == date(2026, 2, 28)      # ano comum
+    assert fim_do_periodo("2024-02") == date(2024, 2, 29)      # bissexto
+    assert fim_do_periodo("2026-S1") == date(2026, 6, 30)
+    assert fim_do_periodo("2026-S2") == date(2026, 12, 31)
+    assert fim_do_periodo("2026-Q2") == date(2026, 6, 30)
+    # Ilegivel devolve None — quem chama trata como «nao sei», nunca como velho.
+    for lixo in ("", None, "trimestre", "2026-13", "26-06"):
+        assert fim_do_periodo(lixo) is None
+
+
+def test_serie_arquivada_e_apanhada_e_serie_lenta_nao_e():
+    """O E1 passou sete meses despercebido porque a serie respondia. O prazo tem
+    de ser o desfasamento **normal** de cada serie: um prazo uniforme acusaria
+    as Contas Nacionais, que tem dois anos de atraso por construcao."""
+    from datetime import date
+
+    from src.calculos import frescura_das_series
+
+    from src.config import LIMITES_FRESCURA
+
+    hoje = date(2026, 8, 11)
+    lim_mes = LIMITES_FRESCURA["indice"][0]
+    lim_cn = LIMITES_FRESCURA["contas_nacionais"][0]
+    series = [
+        # 1. o caso real: indice mensal parado em dezembro de 2025
+        {"serie": "Índice de preços", "periodo": "2025-12", "limite_dias": lim_mes,
+         "cadencia": "mensal", "conjunto": "prc_hicp_midx"},
+        # 2. o mesmo indice, ja migrado
+        {"serie": "Índice de preços", "periodo": "2026-06", "limite_dias": lim_mes,
+         "cadencia": "mensal", "conjunto": "prc_hicp_minr"},
+        # 3. a segunda ocorrencia, apanhada por esta verificacao (E16)
+        {"serie": "Contas Nacionais", "periodo": "2022", "limite_dias": lim_cn,
+         "cadencia": "anual", "conjunto": "nama_10_co3_p3"},
+        # 4. o conjunto que a substituiu — lento, mas a avancar
+        {"serie": "Contas Nacionais", "periodo": "2024", "limite_dias": lim_cn,
+         "cadencia": "anual", "conjunto": "nama_10_cp18"},
+    ]
+    df = frescura_das_series(series, hoje=hoje)
+    assert list(df["desatualizada"]) == [True, False, True, False]
+    # E a idade tem de ser medida, nao adivinhada: 2025-12 fecha a 31/12/2025.
+    assert df.loc[0, "dias"] == 223
+    assert df.loc[0, "conjunto"] == "prc_hicp_midx"
+
+
+def test_periodo_ilegivel_nao_acusa_nem_confirma():
+    from datetime import date
+
+    from src.calculos import frescura_das_series
+
+    df = frescura_das_series(
+        [{"serie": "X", "periodo": "sei lá", "limite_dias": 60}],
+        hoje=date(2026, 8, 11))
+    assert not bool(df.loc[0, "desatualizada"])
+    assert not bool(df.loc[0, "verificada"])
+
+
+def test_prazos_de_frescura_cobrem_as_series_vigiadas():
+    """Cada prazo tem de vir com a razao escrita ao lado — sem isso ninguem
+    sabe se um valor foi pensado ou copiado."""
+    from src.config import LIMITES_FRESCURA
+
+    for chave, (dias, porque) in LIMITES_FRESCURA.items():
+        assert isinstance(dias, int) and dias > 0, chave
+        assert len(porque) > 30, f"{chave} sem justificação"
+    # As duas mensais sao as que falharam: tem de ser as mais apertadas.
+    mensais = {LIMITES_FRESCURA["indice"][0], LIMITES_FRESCURA["variacoes"][0]}
+    assert max(mensais) < min(v[0] for k, v in LIMITES_FRESCURA.items()
+                              if k not in ("indice", "variacoes"))
 
 
 # --------------------------------------------- Observatorio de Precos (GPP)

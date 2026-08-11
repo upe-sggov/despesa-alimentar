@@ -21,6 +21,8 @@ repercussão é explícita e ajustável, e o resultado é sempre condicional a e
 
 from __future__ import annotations
 
+import calendar as _calendar
+import re as _re
 from datetime import date as _date, datetime as _datetime
 
 import numpy as np
@@ -83,6 +85,77 @@ def idade_fonte(referencia, limite_dias: int, hoje=None) -> dict:
     dias = (hoje - data).days
     return {"data": data, "dias": dias, "limite_dias": limite_dias,
             "desatualizada": dias > limite_dias}
+
+
+def fim_do_periodo(periodo):
+    """
+    Último dia do período, na codificação do Eurostat.
+
+    Aceita `'2026'` (anual), `'2026-06'` ou `'2026M06'` (mensal), `'2026-S1'`
+    (semestral) e `'2026-Q2'` (trimestral). Devolve None se não reconhecer —
+    e quem chama trata isso como «não sei», nunca como «está velho».
+
+    Toma-se o **fim** do período, e não o início, por ser a leitura mais
+    favorável à fonte: uma série mensal de junho não é acusada de ter trinta
+    dias a mais do que tem.
+    """
+    texto = str(periodo).strip().upper()
+    if not texto:
+        return None
+
+    if _re.fullmatch(r"\d{4}", texto):
+        return _date(int(texto), 12, 31)
+
+    for padrao, meses in ((r"(\d{4})-?M?(\d{1,2})", 1),
+                          (r"(\d{4})-?Q(\d)", 3),
+                          (r"(\d{4})-?S(\d)", 6)):
+        m = _re.fullmatch(padrao, texto)
+        if not m:
+            continue
+        ano, indice = int(m.group(1)), int(m.group(2))
+        mes = indice * meses
+        if not 1 <= mes <= 12:
+            return None
+        return _date(ano, mes, _calendar.monthrange(ano, mes)[1])
+
+    return None
+
+
+def frescura_das_series(series, hoje=None) -> pd.DataFrame:
+    """
+    Diz, para cada série obtida por API, se ela ainda está a avançar.
+
+    O **D4** criou `idade_fonte()` e aplicou-o ao SOFI e ao Observatório, com o
+    argumento de que são as fontes sem API — as que ninguém atualiza se ninguém
+    se lembrar. A conclusão implícita, de que as fontes com API não têm esse
+    problema porque a rede avisaria, estava errada: uma série **arquivada**
+    responde com HTTP 200, devolve dados bem formados e simplesmente não avança.
+    Foi assim que a aplicação apresentou dezembro de 2025 durante sete meses
+    (auditoria de 11.08.2026, E1 e E3).
+
+    `series` é uma lista de dicionários com `serie`, `periodo`, `limite_dias`,
+    `cadencia` e `conjunto`. O limite de cada uma é o seu **desfasamento normal
+    de publicação mais um ciclo** — não um prazo uniforme, que acusaria de velhas
+    as fontes que são lentas por construção, como as Contas Nacionais.
+    """
+    linhas = []
+    for s in series:
+        data = fim_do_periodo(s.get("periodo"))
+        idade = idade_fonte(data, int(s["limite_dias"]), hoje=hoje)
+        linhas.append({
+            "serie": s["serie"],
+            "conjunto": s.get("conjunto", ""),
+            "cadencia": s.get("cadencia", ""),
+            "periodo": s.get("periodo"),
+            "dias": idade["dias"],
+            "limite_dias": idade["limite_dias"],
+            "porque": s.get("porque", ""),
+            "desatualizada": idade["desatualizada"],
+            # Um período ilegível não é acusação de nada, mas também não é
+            # confirmação: fica assinalado para não passar por verificado.
+            "verificada": data is not None,
+        })
+    return pd.DataFrame(linhas)
 
 
 # --------------------------------------------------------------------------

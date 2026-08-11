@@ -19,7 +19,8 @@ from src import eurostat, observatorio
 from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
                           comparar_ponderadores,
                           composicao_quintis, decompor, despesa_do_agregado,
-                          escala_mais_proxima, idade_fonte, indices_comparados,
+                          escala_mais_proxima, frescura_das_series,
+                          idade_fonte, indices_comparados,
                           intervalo_agregado, intervalo_engel,
                           resumo_decomposicao, resumo_iva,
                           sensibilidade_escalas, simular_iva, testar_escalas,
@@ -34,6 +35,7 @@ from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         IDF_JANELA_FONTE, IDF_JANELA_RECOLHA,
                         IDF_PESO_ALIMENTAR, IDF_QUINTIS,
                         LIMITE_ANOS_SOFI, LIMITE_DIAS_OBSERVATORIO,
+                        LIMITES_FRESCURA,
                         SOFI_CUSTO, SOFI_FONTE, SOFI_INCAPACIDADE, SOFI_MILHOES,
                         AZUL, CINZENTO, CLASSES, CLASSES_FONTE, CODIGOS,
                         COICOP_ALIMENTAR, DOURADO,
@@ -380,8 +382,53 @@ def carregar_dados(anos_historico: int = 6):
                 salario[geo] = {"periodo": str(sub["time"].iloc[-1]),
                                 "valor": float(sub["valor"].iloc[-1])}
 
+    # --- vigilância de frescura das séries obtidas por API ---
+    # Uma série arquivada responde com HTTP 200 e devolve dados bem formados;
+    # apenas deixa de avançar. Foi assim que a aplicação apresentou dezembro de
+    # 2025 durante sete meses (auditoria de 11.08.2026, E1 e E3). Regista-se
+    # aqui o **último período de cada série**; a comparação com a data corrente
+    # é feita na renderização, para não ficar congelada na cache.
+    def _lim(chave):
+        return LIMITES_FRESCURA[chave]
+
+    _ult_indice = str(indice_pt["time"].max()) if not indice_pt.empty else None
+    _ult_pli = str(pli_df["time"].max()) if not pli_df.empty else None
+    _ult_priv = str(priv_df["time"].max()) if not priv_df.empty else None
+    _ult_rend = None
+    for _ind in rendimento.values():
+        if _ind.get("PT"):
+            _ult_rend = _ind["PT"]["ano"]
+            break
+
+    vigilancia = []
+    for chave, nome, conjunto, cadencia, periodo in [
+        ("indice", "Índice de preços", eurostat.HICP_MENSAL, "mensal", _ult_indice),
+        ("variacoes", "Variação homóloga", eurostat.HICP_MENSAL, "mensal",
+         str(mes_variacoes) if mes_variacoes is not None else None),
+        ("ponderadores", "Ponderadores por classe", eurostat.HICP_PONDERADORES,
+         "anual", str(ano_pesos) if ano_pesos is not None else None),
+        ("contas_nacionais", "Despesa alimentar (Contas Nacionais)",
+         eurostat.CONTAS_NACIONAIS, "anual", despesa_ano),
+        ("agregados", "N.º de agregados familiares", "lfst_hhnhtych", "anual",
+         agregados_ano),
+        ("dimensao", "Dimensão média do agregado", "ilc_lvph01", "anual", dimensao_ano),
+        ("rendimento", "Rendimento das famílias (EU-SILC)", "ilc_di03", "anual", _ult_rend),
+        ("privacao", "Privação alimentar (EU-SILC)", "ilc_mdes03", "anual", _ult_priv),
+        ("salario_minimo", "Salário mínimo nacional", "earn_mw_cur", "semestral",
+         (salario.get("PT") or {}).get("periodo")),
+        ("salario_medio", "Salário médio", "nama_10_a10", "anual",
+         (salario_med.get("PT") or {}).get("ano")),
+        ("nivel_precos", "Nível de preços comparado", "prc_ppp_ind_1", "anual", _ult_pli),
+    ]:
+        if periodo is None:
+            continue                       # série indisponível — já consta do registo
+        limite, porque = _lim(chave)
+        vigilancia.append({"serie": nome, "conjunto": conjunto, "cadencia": cadencia,
+                           "periodo": periodo, "limite_dias": limite, "porque": porque})
+
     return {
         "agregados_especiais": agr_esp_df,
+        "vigilancia": vigilancia,
         "engel": engel,
         "rendimento": rendimento,
         "salario": salario,
@@ -515,7 +562,7 @@ def csv_com_fonte(df: pd.DataFrame, titulo: str, dados: dict, extra=None) -> byt
         f"# {titulo}",
         "# Produzido por: Unidade de Pesquisa e Estatisticas (UPE) - DSSD - Secretaria-Geral do Governo",
         "# Fonte dos dados: Eurostat (indice harmonizado de precos no consumidor e contas nacionais)",
-        "# Conjuntos: prc_hicp_minr, prc_hicp_iw, nama_10_co3_p3, ilc_lvph01",
+        "# Conjuntos: prc_hicp_minr, prc_hicp_iw, nama_10_cp18, ilc_lvph01",
         f"# Ultimo mes disponivel: {dados.get('mes_variacoes') or '-'}",
         f"# Ponderadores de: {dados.get('ano_pesos') or '-'}",
         f"# Ancora das Contas Nacionais: {dados.get('despesa_ano') or '-'} "
@@ -886,6 +933,29 @@ está **{'acima' if maior_que_media else 'abaixo'}** dela.
 
     st.divider()
     st.caption(f"**{UNIDADE}**")
+
+# --- vigilância de frescura: uma série que responde não é uma série que avança ---
+# Calculada aqui, e não dentro de `carregar_dados`, para não ficar congelada na
+# cache: o que envelhece é a distância à data corrente, não os dados.
+_fresc = frescura_das_series(dados.get("vigilancia") or [])
+_paradas = _fresc[_fresc["desatualizada"]] if not _fresc.empty else pd.DataFrame()
+if not _paradas.empty:
+    _linhas_p = "\n".join(
+        f"- **{r.serie}** (`{r.conjunto}`, {r.cadencia}) — último período "
+        f"**{r.periodo}**, há **{numero(r.dias)} dias**; o normal seria no "
+        f"máximo {numero(r.limite_dias)}. {r.porque}"
+        for r in _paradas.itertuples()
+    )
+    st.error(
+        f"⛔ **{len(_paradas)} série(s) do Eurostat deixaram de avançar.** "
+        "Não é falha de rede nem atraso de publicação: o pedido foi bem "
+        "sucedido e os dados vieram — apenas não são recentes.\n\n"
+        f"{_linhas_p}\n\n"
+        "**A causa mais provável é o conjunto ter sido arquivado** e substituído "
+        "por outro, como aconteceu na passagem para a ECOICOP versão 2. Confirme "
+        "no catálogo do Eurostat — o título dos conjuntos arquivados costuma "
+        "trazer o intervalo de anos — antes de citar estes números."
+    )
 
 # --- mensagem de estado ---
 nota_ancora = ""
@@ -2739,7 +2809,9 @@ with aba4:
                 st.caption(
                     "Barras mais longas significam **maior esforço alimentar**: mais do orçamento "
                     "familiar absorvido por comida, menos disponível para tudo o resto. "
-                    "Fonte: Contas Nacionais (`nama_10_co3_p3`), rácio CP011/CP00. Publicação anual."
+                    f"Fonte: Contas Nacionais (`{eurostat.CONTAS_NACIONAIS}`, COICOP 2018), "
+                    f"rácio `CP011`/`{eurostat.TOTAL_CONSUMO}` — os códigos efetivamente "
+                    "pedidos. Publicação anual."
                 )
 
                 with st.expander("Descarregar dados do esforço"):
@@ -2754,7 +2826,9 @@ with aba4:
                         "⬇️ CSV com fonte",
                         csv_com_fonte(tab_e, "Coeficiente de Engel - esforco alimentar", dados,
                                       extra=[("Indicador", "Despesa alimentar / consumo total das familias"),
-                                             ("Conjunto", "nama_10_co3_p3, CP011 / CP00")]),
+                                             ("Conjunto",
+                                              f"{eurostat.CONTAS_NACIONAIS}, "
+                                              f"CP011 / {eurostat.TOTAL_CONSUMO}")]),
                         f"despesa_alimentar_engel_{date.today()}.csv", "text/csv")
 
         # ==================== VISTA: INFLAÇÃO ====================
@@ -3373,7 +3447,7 @@ with aba5:
     | Ponderadores por grupo | [`prc_hicp_iw`](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_iw/default/table) | Fração de cada mil euros de consumo total (‰) | Anual |
     | Índice de preços | [`prc_hicp_minr`](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_minr/default/table) | Nível do índice (unidade `I25`) — não são euros | Mensal |
     | Variação homóloga | [`prc_hicp_minr`](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_minr/default/table) | Subida face ao mesmo mês do ano anterior (unidade `RCH_A`, %) | Mensal |
-    | Despesa alimentar (âncora) | [`nama_10_co3_p3`](https://ec.europa.eu/eurostat/databrowser/view/nama_10_co3_p3/default/table) | Despesa efetiva em euros (Contas Nacionais) | Anual |
+    | Despesa alimentar (âncora) | [`nama_10_cp18`](https://ec.europa.eu/eurostat/databrowser/view/nama_10_cp18/default/table) | Despesa efetiva em euros (Contas Nacionais, COICOP 2018) | Anual |
     | Dimensão do agregado | [`ilc_lvph01`](https://ec.europa.eu/eurostat/databrowser/view/ilc_lvph01/default/table) | N.º médio de pessoas por agregado | Anual |
     | N.º de agregados | [`lfst_hhnhtych`](https://ec.europa.eu/eurostat/databrowser/view/lfst_hhnhtych/default/table) | Total de agregados familiares (milhares), série anual | Anual |
     | Nível de preços comparado | [`prc_ppp_ind_1`](https://ec.europa.eu/eurostat/databrowser/view/prc_ppp_ind_1/default/table) | Quão caros são os alimentos, categoria `A010101` (UE-27 = 100) | Anual |
@@ -3428,7 +3502,7 @@ em Excel ou noutra ferramenta.
                     "prc_hicp_minr": ("Índice de preços e variação homóloga — "
                                       "atualiza a âncora ao mês corrente e alimenta "
                                       "a coluna «Variação %»"),
-                    "nama_10_co3_p3": "Despesa alimentar e consumo total — âncora em euros",
+                    "nama_10_cp18": "Despesa alimentar e consumo total — âncora em euros",
                     "ilc_lvph01": "Dimensão média do agregado",
                     "lfst_hhnhtych": "Número de agregados familiares",
                     "ilc_di03": "Rendimento equivalente das famílias",
@@ -3490,6 +3564,36 @@ produtos. Os ponderadores e as variações vêm prontos do Eurostat; o único c�
 repartição de um valor total por essas proporções. É por isso que a tabela é uma
 **reconstituição**, e não uma medição.
             """)
+
+        with st.expander("⏱️ Estas séries ainda estão a avançar?"):
+            st.markdown("""
+    **Uma série que responde não é uma série que avança.** Um conjunto arquivado devolve HTTP 200
+    e dados bem formados — apenas parou. Foi assim que esta aplicação apresentou dezembro de 2025
+    como «último mês disponível» durante sete meses, sem dar erro nenhum.
+
+    O prazo de cada série é o seu **desfasamento normal de publicação mais um ciclo**, e não um
+    prazo uniforme: as Contas Nacionais têm dois anos de atraso por construção, e está certo que
+    tenham. O que este quadro procura é a série que **parou**, não a série que é lenta.
+            """)
+            if _fresc.empty:
+                st.info("Sem séries a vigiar nesta sessão.")
+            else:
+                _tab_f = pd.DataFrame([{
+                    "": "⛔" if r.desatualizada else ("❔" if not r.verificada else "✅"),
+                    "Série": r.serie,
+                    "Conjunto": r.conjunto,
+                    "Cadência": r.cadencia,
+                    "Último período": r.periodo,
+                    "Idade (dias)": r.dias,
+                    "Prazo (dias)": r.limite_dias,
+                    "Porquê este prazo": r.porque,
+                } for r in _fresc.itertuples()])
+                st.dataframe(_tab_f, use_container_width=True, hide_index=True)
+                st.caption(
+                    "⛔ parou · ✅ dentro do prazo · ❔ período não interpretável — não é "
+                    "acusação, mas também não é confirmação. A idade conta a partir do **fim** "
+                    "do período, que é a leitura mais favorável à fonte."
+                )
 
         with st.expander("🔌 Registo das ligações desta sessão"):
             st.dataframe(pd.DataFrame(dados["registo"],
