@@ -789,6 +789,40 @@ def test_classes_tem_designacao_oficial_da_coicop_2018():
     assert not ({c["nome"] for c in CLASSES} & antigos)
 
 
+# --------------------------- rastreabilidade dos enderecos (auditoria E5)
+def test_tentativa_falhada_nao_entra_na_lista_de_verificacao():
+    """O painel «enderecos exatos desta sessao» promete que servem para
+    verificar qualquer valor. Registar a **tentativa** em vez do resultado
+    fazia com que oferecesse ligacoes que devolviam HTTP 400 (auditoria E5)."""
+    import pandas as pd
+
+    from src import eurostat
+
+    def _sdmx_falha(*a, **k):
+        raise eurostat.ErroEurostat("400 Client Error")
+
+    def _stats_ok(*a, **k):
+        return pd.DataFrame({"unit": [""], "coicop": [""], "geo": ["PT"],
+                             "time": ["2026"], "valor": [1.0]}), "https://exemplo/stats?x=1"
+
+    originais = (eurostat._via_sdmx, eurostat._via_stats, list(eurostat.ENDERECOS))
+    try:
+        eurostat._via_sdmx, eurostat._via_stats = _sdmx_falha, _stats_ok
+        eurostat.ENDERECOS.clear()
+        eurostat.obter("conjunto_x", "CHAVE", {"geo": "PT"})
+        registados = list(eurostat.ENDERECOS)
+    finally:
+        eurostat._via_sdmx, eurostat._via_stats = originais[0], originais[1]
+        eurostat.ENDERECOS[:] = originais[2]
+
+    assert len(registados) == 1
+    conjunto, url, via = registados[0]
+    assert conjunto == "conjunto_x"
+    assert via == "API Statistics"          # a via que produziu o numero
+    assert url == "https://exemplo/stats?x=1"
+    assert "sdmx" not in url.lower()        # a tentativa falhada nao entra
+
+
 # ------------------------------- frescura das series com API (auditoria E3)
 def test_fim_do_periodo_reconhece_as_codificacoes_do_eurostat():
     from datetime import date

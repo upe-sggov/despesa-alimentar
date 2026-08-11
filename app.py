@@ -3511,13 +3511,19 @@ em Excel ou noutra ferramenta.
                     "nama_10_a10_e": "Trabalhadores por conta de outrem — denominador",
                     "prc_ppp_ind_1": "Nível de preços comparado",
                 }
-                for _ds, _url in _end:
+                for _ds, _url, _via in _end:
                     st.markdown(
                         f"**{_rot.get(_ds, _ds)}**  \n"
-                        f"`{_ds}` · [abrir os dados em bruto]({_url})")
+                        f"`{_ds}` · via **{_via}** · [abrir os dados em bruto]({_url})")
                 st.caption(
+                    "Cada endereço é o do pedido que **produziu efetivamente** o número — "
+                    "não o de uma tentativa. Quando a via SDMX falha, a aplicação recorre à "
+                    "API Statistics e é esse o endereço que aqui aparece. Até 11.08.2026 "
+                    "registava-se a tentativa em vez do resultado, e o painel chegou a "
+                    "oferecer ligações que devolviam erro (auditoria, E5).  \n"
                     "Formato SDMX-CSV: uma linha por observação, com as dimensões em colunas "
-                    "(`coicop`, `geo`, `TIME_PERIOD`) e o valor em `OBS_VALUE`."
+                    "(`coicop18`, `geo`, `TIME_PERIOD`) e o valor em `OBS_VALUE`. A via "
+                    "Statistics devolve JSON-stat."
                 )
 
         with st.expander("🧮 Como se obtém cada coluna da tabela detalhada"):

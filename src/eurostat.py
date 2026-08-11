@@ -67,20 +67,30 @@ def _coluna_classe(dataset: str, bruto, dim: str | None, via: str):
 # --------------------------------------------------------------------------
 # Via 1 — SDMX 2.1 (chave no caminho)
 # --------------------------------------------------------------------------
-# Registo dos endereços efetivamente usados, para rastreabilidade. É lido pela
-# aplicação e apresentado no separador Metodologia.
-ENDERECOS: list[tuple[str, str]] = []
+# Registo dos endereços **efetivamente usados**, para rastreabilidade. É lido
+# pela aplicação e apresentado no separador Metodologia, sob a promessa de que
+# servem para «verificar qualquer valor sem depender da aplicação».
+#
+# Durante muito tempo não serviram. O endereço era registado **antes** do
+# pedido, pelo que uma tentativa falhada ficava listada como se fosse a
+# proveniência do número; e a via alternativa nunca registava nada. Resultado
+# concreto, verificado em auditoria: os ponderadores vinham pela API Statistics
+# e o painel oferecia o endereço SDMX, que devolvia **HTTP 400**
+# (auditoria de 11.08.2026, E5).
+#
+# Regra atual: regista **quem obtém o resultado aceite**, com a via identificada.
+# As tentativas falhadas pertencem ao registo de diagnóstico, não à lista de
+# verificação.
+ENDERECOS: list[tuple[str, str, str]] = []
 
 
 def _via_sdmx(dataset: str, chave: str, inicio: str | None = None,
               extra: str | None = None,
-              dim_coicop: str | None = None) -> pd.DataFrame:
+              dim_coicop: str | None = None) -> tuple[pd.DataFrame, str]:
     url = f"{SDMX}{dataset}/{chave}"
     params = {"format": "SDMX-CSV"}
     if inicio:
         params["startPeriod"] = inicio
-    _completo = url + "?" + "&".join(f"{k}={v}" for k, v in params.items())
-    ENDERECOS.append((dataset, _completo))
 
     resp = requests.get(url, params=params, timeout=TEMPO_LIMITE, headers=CABECALHOS)
     resp.raise_for_status()
@@ -104,7 +114,7 @@ def _via_sdmx(dataset: str, chave: str, inicio: str | None = None,
                 f"{dataset}: dimensão «{extra}» ausente da resposta SDMX "
                 f"(colunas: {', '.join(bruto.columns)}).")
         df[extra] = bruto[extra]
-    return df.dropna(subset=["valor"]).reset_index(drop=True)
+    return df.dropna(subset=["valor"]).reset_index(drop=True), resp.url
 
 
 # --------------------------------------------------------------------------
@@ -164,7 +174,7 @@ def _descodifica_jsonstat(js: dict, extra: str | None = None,
 
 
 def _via_stats(dataset: str, filtros: dict, extra: str | None = None,
-               dim_coicop: str | None = None) -> pd.DataFrame:
+               dim_coicop: str | None = None) -> tuple[pd.DataFrame, str]:
     params: list[tuple[str, str]] = [("format", "JSON"), ("lang", "EN")]
     for chave, valor in filtros.items():
         if valor is None:
@@ -177,7 +187,7 @@ def _via_stats(dataset: str, filtros: dict, extra: str | None = None,
     resp = requests.get(STATS + dataset, params=params,
                         timeout=TEMPO_LIMITE, headers=CABECALHOS)
     resp.raise_for_status()
-    return _descodifica_jsonstat(resp.json(), extra, dim_coicop, dataset)
+    return _descodifica_jsonstat(resp.json(), extra, dim_coicop, dataset), resp.url
 
 
 # --------------------------------------------------------------------------
@@ -201,16 +211,18 @@ def obter(dataset: str, chave: str, filtros: dict,
     """
     erros = []
     try:
-        df = _via_sdmx(dataset, chave, inicio, extra, dim_coicop)
+        df, url = _via_sdmx(dataset, chave, inicio, extra, dim_coicop)
         if not df.empty:
+            ENDERECOS.append((dataset, url, "SDMX 2.1"))
             return df, "SDMX 2.1"
         erros.append("SDMX devolveu resposta vazia")
     except Exception as exc:                              # noqa: BLE001
         erros.append(f"SDMX: {exc}")
 
     try:
-        df = _via_stats(dataset, filtros, extra, dim_coicop)
+        df, url = _via_stats(dataset, filtros, extra, dim_coicop)
         if not df.empty:
+            ENDERECOS.append((dataset, url, "API Statistics"))
             return df, "API Statistics"
         erros.append("API Statistics devolveu resposta vazia")
     except Exception as exc:                              # noqa: BLE001

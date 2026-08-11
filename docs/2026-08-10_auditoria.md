@@ -1670,6 +1670,25 @@ fica declarado.
 `test_conjuntos_do_ihpc_sao_os_correntes_e_nao_os_arquivados` passou a proibir também o
 `nama_10_co3_p3`.
 
+### E5 · Endereços de verificação — 11.08.2026
+
+**O que estava errado.** `_via_sdmx` registava o endereço **antes** de fazer o pedido, e
+`_via_stats` não registava nada. Uma tentativa falhada ficava listada como se fosse a proveniência
+do número, e as séries obtidas pela via alternativa não tinham endereço nenhum.
+
+**O que foi feito.** `_via_sdmx` e `_via_stats` passam a devolver `(dados, endereço)`, e é o
+`obter()` que regista — **só quando aceita o resultado**, com a via identificada. O endereço é o
+`resp.url` do pedido efetivo, com os parâmetros já resolvidos pelo `requests`, e não uma
+reconstrução. O painel passa a mostrar a via de cada um.
+
+**Verificado em execução.** Os **onze** endereços que a aplicação oferece nesta sessão respondem
+todos com HTTP 200 — incluindo os dois que vêm pela API Statistics (`ilc_lvph01` e `earn_mw_cur`),
+que antes apareceriam com o endereço SDMX que falhou.
+
+**Teste de regressão.** `test_tentativa_falhada_nao_entra_na_lista_de_verificacao` força a via SDMX
+a falhar, deixa a Statistics responder, e exige que fique registado **um único** endereço, o da via
+que produziu o número.
+
 ---
 
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.
