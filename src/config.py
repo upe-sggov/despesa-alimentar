@@ -254,11 +254,34 @@ IVA_MAPA = {
 # caso o peso do pai menos o dos filhos listados, que é como se isola o que não
 # tem código próprio (os óleos vegetais que não são azeite).
 #
+# ---- `entre`: o intervalo legal de uma parcela indeterminada ----------------
+# Um componente «mista» declara em `entre` as **taxas entre as quais a lei o
+# situa**. O valor por defeito, (6, 23), é o caso comum: parte na Lista I e
+# parte na taxa normal.
+#
+# Não é uma formalidade. Até 12.08.2026 a parcela indeterminada era sempre
+# arbitrada, no valor central, à **taxa predefinida do grupo** — e para os
+# cereais de pequeno-almoço isso punha 6 % numa subclasse que a lei situa entre
+# **13 % e 23 %**: a verba 1.12 da Lista II cobre os «flocos prensados simples
+# de cereais e leguminosas sem adições de açúcar», e não existe verba alguma na
+# Lista I para cereais de pequeno-almoço. O valor central estava **fora do
+# intervalo legal** (auditoria de 12.08.2026, G1).
+#
+# A taxa central de uma parcela indeterminada passa a ser a predefinida do
+# grupo **confinada a este intervalo**.
+#
+# ---- Verificação de 12.08.2026 ---------------------------------------------
+# Todo este quadro foi confrontado, verba a verba, com o texto consolidado do
+# Código do IVA. Antes disso tinha sido construído por leitura indireta.
+CIVA_FONTE = ("Código do IVA, Listas I e II — texto consolidado, versão a "
+              "20.05.2026 (Listas em vigor desde 25.05.2026, redação do "
+              "Decreto-Lei n.º 97/2026, de 20 de maio)")
+#
 # **Limitação a declarar:** os ponderadores são do IHPC, que inclui a despesa de
 # não residentes. É a única fonte aberta que desce a este nível — o IDF fica-se
 # pelo quarto dígito. Vale para repartir *dentro* da classe, que é o uso aqui.
-IVA_COMPONENTES_FONTE = ("Código do IVA, Listas I e II · ponderadores por "
-                         "subclasse do Eurostat, prc_hicp_iw (COICOP 2018)")
+IVA_COMPONENTES_FONTE = (CIVA_FONTE + " · ponderadores por subclasse do "
+                         "Eurostat, prc_hicp_iw (COICOP 2018)")
 
 IVA_COMPONENTES = {
     "CP0111": [
@@ -269,11 +292,18 @@ IVA_COMPONENTES = {
         {"peso": "CP011131", "taxa": 6, "certeza": "certa",
          "desc": "Pão (Lista I, 1.1)"},
         {"peso": "CP011139", "taxa": 23, "certeza": "predominante",
-         "desc": "Outros produtos de padaria — bolos, bolachas, pastelaria, "
-                 "expressamente excluídos da Lista I"},
-        {"peso": "CP01114", "taxa": None, "certeza": "mista",
-         "desc": "Cereais para pequeno-almoço: os flocos prensados simples sem "
-                 "adição de açúcar estão na Lista II (13 %); os restantes a 23 %"},
+         "desc": "Outros produtos de padaria — bolos, bolachas e pastelaria. A "
+                 "verba 1.1.5 da Lista I diz apenas «pão», e o pão tem código "
+                 "próprio (CP011131): esta subclasse é, por construção, o que "
+                 "não é pão. Da leitura exaustiva das duas Listas não resulta "
+                 "verba alguma que a cubra. Fica «predominante» e não «certa» "
+                 "por uma fronteira que só a AT fecha: se as tostas e o pão "
+                 "torrado contam como pão para efeitos da verba 1.1.5"},
+        {"peso": "CP01114", "taxa": None, "certeza": "mista", "entre": (13, 23),
+         "desc": "Cereais para pequeno-almoço — **nunca a 6 %**. A Lista I não "
+                 "tem verba alguma para eles; a Lista II (1.12) cobre os «flocos "
+                 "prensados simples de cereais e leguminosas sem adições de "
+                 "açúcar» a 13 %, e os restantes ficam a 23 %"},
         {"peso": "CP01115", "taxa": 6, "certeza": "predominante",
          "desc": "Massas alimentícias — a Lista I cobre as **não recheadas**; "
                  "as recheadas ficam a 23 %"},
@@ -281,9 +311,10 @@ IVA_COMPONENTES = {
          "desc": "Outros produtos da transformação de cereais e leguminosas"},
     ],
     "CP0112": [
-        {"peso": "CP01121", "taxa": None, "certeza": "mista",
-         "desc": "Animais terrestres vivos — a Lista I refere carnes e miudezas, "
-                 "não animais vivos"},
+        {"peso": "CP01121", "taxa": 23, "certeza": "certa",
+         "desc": "Animais terrestres vivos — a verba 1.2 da Lista I cobre "
+                 "«carnes e miudezas comestíveis, frescas ou congeladas», e não "
+                 "o animal vivo. Não há verba que os abranja"},
         {"peso": "CP01122", "taxa": 6, "certeza": "certa",
          "desc": "Carne fresca, refrigerada ou congelada (Lista I, 1.2) — o corte "
                  "a seis dígitos confirma que as espécies presentes (bovina, "
@@ -309,13 +340,17 @@ IVA_COMPONENTES = {
                  "as pastas de atum, cavala e sardinha ficam a 23 %"},
         {"peso": "CP01134", "taxa": None, "certeza": "mista",
          "desc": "Marisco fresco ou congelado: **moluscos a 6 %, crustáceos a "
-                 "23 %** — a Lista I refere «peixes e moluscos» e não crustáceos. "
-                 "É a divergência que o D2 assinalou e que continua sem repartição"},
+                 "23 %**. A verba 1.3.3 da Lista I diz «moluscos, ainda que "
+                 "secos ou congelados» e não menciona crustáceos — a leitura "
+                 "legal é inequívoca; o que falta é a repartição do peso"},
         {"peso": "CP01135", "taxa": None, "certeza": "mista",
-         "desc": "Marisco seco ou salgado — mesma fronteira molusco/crustáceo"},
+         "desc": "Marisco seco ou salgado — a verba 1.3.3 da Lista I cobre os "
+                 "moluscos «ainda que secos»; os crustáceos ficam a 23 %"},
         {"peso": "CP01136", "taxa": None, "certeza": "mista",
-         "desc": "Preparações de marisco — as conservas de moluscos estão na "
-                 "Lista II (13 %), as de crustáceos a 23 %"},
+         "desc": "Preparações de marisco — atravessa **as três taxas**: as "
+                 "conservas de moluscos com teor superior a 50 % caem na verba "
+                 "1.3.2 da Lista I (6 %), as restantes conservas de moluscos na "
+                 "verba 1.2.1 da Lista II (13 %), e as de crustáceos a 23 %"},
         {"peso": "CP01137", "taxa": None, "certeza": "mista",
          "desc": "Fígados, ovas e miudezas de peixe e marisco — o caviar fica a 23 %"},
     ],
@@ -327,8 +362,12 @@ IVA_COMPONENTES = {
          "desc": "Leite não animal — bebidas de base vegetal (Lista I, 1.4)"},
         {"peso": "CP01145", "taxa": 6, "certeza": "certa", "desc": "Queijo (Lista I, 1.4)"},
         {"peso": "CP01146", "taxa": 6, "certeza": "certa", "desc": "Iogurtes (Lista I, 1.4)"},
-        {"peso": "CP01147", "taxa": 23, "certeza": "certa",
-         "desc": "Sobremesas e bebidas à base de leite — a Lista I não as enumera"},
+        {"peso": "CP01147", "taxa": None, "certeza": "mista",
+         "desc": "Sobremesas **e bebidas** à base de leite — a subclasse junta "
+                 "duas coisas com taxas diferentes: a verba 1.4.7 da Lista I "
+                 "cobre os «leites chocolatados, aromatizados, vitaminados ou "
+                 "enriquecidos» a 6 %, e as sobremesas lácteas não têm verba, "
+                 "ficando a 23 %"},
         {"peso": "CP01148", "taxa": 6, "certeza": "certa", "desc": "Ovos (Lista I, 1.4)"},
         {"peso": "CP01149", "taxa": None, "certeza": "mista", "desc": "Outros produtos lácteos"},
     ],
@@ -342,8 +381,10 @@ IVA_COMPONENTES = {
          "desc": "Manteiga e gorduras derivadas do leite (Lista I, 1.4.3)"},
         {"peso": "CP01153", "taxa": 6, "certeza": "certa",
          "desc": "Margarina e creme vegetal para barrar (Lista I, 1.4.3)"},
-        {"peso": "CP01159", "taxa": 6, "certeza": "certa",
-         "desc": "Banha e outras gorduras animais (Lista I, 1.5)"},
+        {"peso": "CP01159", "taxa": 6, "certeza": "predominante",
+         "desc": "Outras gorduras animais — a verba 1.5.2 da Lista I cobre a "
+                 "«banha e outras gorduras **de porco**», que é o grosso; as "
+                 "gorduras de outras espécies não têm verba e ficam a 23 %"},
     ],
     "CP0116": [
         {"peso": "CP01161", "taxa": 6, "certeza": "certa", "desc": "Frutos tropicais frescos (Lista I, 1.6.4)"},
@@ -404,8 +445,12 @@ IVA_COMPONENTES = {
         {"peso": "CP01194", "taxa": 23, "certeza": "certa",
          "desc": "Especiarias, ervas aromáticas e sementes para culinária"},
         {"peso": "CP01199", "taxa": None, "certeza": "mista",
-         "desc": "Outros produtos alimentares — inclui os produtos sem glúten "
-                 "para celíacos e a nutrição entérica, a 6 % (Lista I, 1.12)"},
+         "desc": "Outros produtos alimentares — recolhe várias verbas da Lista I "
+                 "a 6 %: nutrição entérica e produtos sem glúten para celíacos "
+                 "(1.12), seitan, tofu, tempeh e soja texturizada (1.1.6), algas "
+                 "vivas, frescas ou secas (1.6.5), produtos semelhantes a queijo "
+                 "sem leite (1.13) e os substitutos integrais da dieta (1.14). "
+                 "O restante fica a 23 %"},
     ],
 }
 

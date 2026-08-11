@@ -2297,13 +2297,14 @@ Mostrava-se a incerteza pequena e escondia-se a grande. Corrigido: `composicao_i
 separar o que é de **leitura inequívoca** das Listas do que foi atribuído por **juízo sobre a
 rubrica**, e `taxas_efetivas` aceita agora uma hipótese sobre cada uma das duas parcelas.
 
-As três bandas, no cenário por defeito, com a poupança mensal de **21,11 €** ao centro:
+As três bandas, no cenário por defeito, com a poupança mensal de **21,13 €** ao centro
+*(valores atualizados após o confronto com o texto legal — ver [secção G](#g--confronto-com-o-texto-legal-do-código-do-iva--12-de-agosto-de-2026))*:
 
 | Banda | Intervalo | Amplitude |
 |---|---|---|
-| Repercussão (83,3 % a 100 %) | 18,51 € – 22,22 € | 17,6 % |
-| Parcela indeterminada (5,9 %) | 20,52 € – 22,27 € | 8,3 % |
-| **Predominância (20,1 %)** | **16,55 € – 22,56 €** | **28,5 %** |
+| Repercussão (83,3 % a 100 %) | 18,53 € – 22,24 € | 17,6 % |
+| Parcela indeterminada (6,2 %) | 20,54 € – 22,27 € | 8,2 % |
+| **Predominância (20,1 %)** | **16,57 € – 22,58 €** | **28,4 %** |
 
 **A banda da predominância é um limite exterior, não um intervalo plausível.** Corresponde a
 supor que *todas* aquelas atribuições estão erradas ao mesmo tempo e no mesmo sentido — nenhuma
@@ -2392,6 +2393,126 @@ De 79 para **88**. Os que sustentam esta ronda:
   conservação do peso na separação.
 - `test_distribuicao_do_iva_zero_e_menos_focalizada_que_as_alternativas` — fixa a conclusão
   distributiva.
+
+---
+
+# G — Confronto com o texto legal do Código do IVA — 12 de agosto de 2026
+
+Até agora o quadro de taxas por subclasse tinha sido construído por **leitura indireta** das
+Listas I e II. A Inês forneceu o **texto consolidado do Código do IVA** — versão a 20.05.2026,
+com as Listas em vigor desde 25.05.2026 na redação do Decreto-Lei n.º 97/2026 —, o que permitiu
+confrontar as 63 atribuições, verba a verba, contra o texto.
+
+**A verificação encontrou quatro erros.** Três de rigor, um consequente.
+
+## G1 — Cereais de pequeno-almoço: o valor central estava fora do intervalo legal
+
+**O erro.** A parcela indeterminada de cada subclasse era arbitrada, no valor central, à **taxa
+predefinida do grupo**. Para os cereais de pequeno-almoço (`CP01114`, 0,96 % do cabaz), o grupo é
+o dos cereais e a predefinida é 6 %.
+
+Mas a Lista I **não tem verba alguma** para cereais de pequeno-almoço. Procurei o termo em todo o
+texto: aparece uma única vez, na **Lista II, verba 1.12** — «flocos prensados simples de cereais
+e leguminosas sem adições de açúcar», a 13 %. Tudo o resto fica a 23 %.
+
+O intervalo legal é **13 % a 23 %**. O valor central estava nos 6 %, **fora do intervalo**.
+
+**A correção.** Um componente indeterminado passa a declarar em `entre` as taxas entre as quais a
+lei o situa — por defeito (6, 23), que é o caso comum. A taxa central passa a ser a predefinida do
+grupo **confinada a esse intervalo**, e os extremos da banda de sensibilidade passam a ser os do
+componente e não 6 % e 23 % para todos.
+
+Isto obrigou a mudar o cálculo: a parcela indeterminada entra agora pelo **imposto contido**
+pré-calculado por componente, e não por uma taxa única aplicada ao agregado da classe. O teste da
+identidade com a simulação escalão a escalão apanhou a alteração — foi preciso reconstruir o
+referencial a partir do `IVA_COMPONENTES`, o que o tornou uma verificação mais independente do
+que era.
+
+## G2 — Sobremesas e bebidas à base de leite: uma atribuição «certa» que não era
+
+`CP01147` — *Milk-based dessert and beverages*, 0,36 % do cabaz — estava marcada **`certa` a
+23 %**, com a justificação «a Lista I não as enumera».
+
+**Enumera.** A verba **1.4.7 da Lista I** cobre os «leites chocolatados, aromatizados,
+vitaminados ou enriquecidos», a 6 % — e esses são exatamente a metade *bebidas* desta subclasse.
+A metade *sobremesas* (pudins, mousses) não tem verba e fica a 23 %.
+
+A subclasse junta duas coisas com taxas diferentes. Passou a **`mista`**. Não é uma questão de
+predominância — não há base para dizer qual das metades domina.
+
+## G3 — Outras gorduras animais: verba lida a mais
+
+`CP01159` — *Other animal oils and fats* — estava **`certa` a 6 %**, citando a verba 1.5 da
+Lista I. O texto da verba **1.5.2** é «Banha e outras gorduras **de porco**». Gorduras de outras
+espécies não têm verba. Passou a **`predominante`** a 6 %: a banha é o grosso, mas a atribuição é
+um juízo e não uma leitura. Peso nulo no cabaz atual, mas a certeza declarada estava errada.
+
+## G4 — Animais terrestres vivos: indeterminado sem necessidade
+
+`CP01121` estava **`mista`**, o que mandava o seu peso para a parcela indeterminada. A verba 1.2
+da Lista I cobre «carnes e miudezas comestíveis, **frescas ou congeladas**» — não o animal vivo,
+que não tem verba nenhuma. É **`certa` a 23 %**. Peso nulo, mas uma parcela indeterminada a mais
+alarga a banda sem razão.
+
+## O que a verificação confirmou
+
+A maior parte do quadro resistiu ao confronto, e várias atribuições ficaram com citação exata em
+vez de genérica:
+
+- **Marisco** (`CP01134`, 1,98 %) — a verba **1.3.3** diz «moluscos, ainda que secos ou
+  congelados» e não menciona crustáceos. A leitura legal é **inequívoca**; o que falta é a
+  repartição do peso entre uns e outros. É uma questão de dados, não de direito — e isso muda o
+  que se pode dizer sobre ela.
+- **Preparações de marisco** (`CP01136`) — atravessa **as três taxas**: conservas de moluscos com
+  teor superior a 50 % na verba 1.3.2 da Lista I (6 %), as restantes conservas de moluscos na
+  verba 1.2.1 da Lista II (13 %), crustáceos a 23 %.
+- **Massas** (`CP01115`) — a verba 1.1.4 exclui expressamente «as massas recheadas». Confirmado.
+- **Alheiras** (`CP01125`) — verba 1.3.3 da Lista II, 13 %. Confirmado.
+- **Açúcar** (`CP01181`) — a verba 1.10 da Lista I consta como **«(Revogado.)»** no texto.
+  Confirmado.
+- **Outros produtos alimentares** (`CP01199`) — recolhe cinco verbas da Lista I a 6 % que agora
+  estão enumeradas: 1.12 (nutrição entérica e sem glúten), 1.1.6 (seitan, tofu, tempeh, soja
+  texturizada), 1.6.5 (algas), 1.13 (produtos semelhantes a queijo sem leite) e 1.14 (substitutos
+  integrais da dieta).
+
+**A pastelaria** (`CP011139`, 7,06 % do cabaz — a maior parcela por predominância) ficou como
+estava, e agora sabe-se porquê com precisão: da leitura **exaustiva** das duas Listas não resulta
+verba alguma que a cubra, e o pão tem código próprio, pelo que esta subclasse é por construção o
+que não é pão. Mantém-se `predominante` e não `certa` por uma única fronteira: **se as tostas e o
+pão torrado contam como pão** para efeitos da verba 1.1.5. Essa é uma questão para as informações
+vinculativas da AT — e é agora a única coisa que separa 7 % do cabaz de uma atribuição certa.
+
+## Efeito nos números
+
+Pequeno no agregado, e é isso que se esperava de uma verificação de rigor:
+
+| | Antes | Depois |
+|---|---|---|
+| Taxa efetiva dos cereais | 11,42 % | **11,76 %** |
+| Taxa efetiva do leite e lacticínios | 6,47 % | **6,00 %** |
+| Parcela indeterminada | 5,87 % | **6,23 %** |
+| À taxa normal | 24,8 % | **24,4 %** |
+| Poupança agregada anual | 1 346,1 M€ | **1 347,3 M€** |
+
+As duas correções materiais empurram em sentidos opostos — os cereais para cima, o leite para
+baixo — e quase se anulam no total. **O valor do exercício não está na variação do agregado: está
+em o quadro ter passado a ser verificável contra o texto que o sustenta**, com a versão das
+Listas identificada. As Listas mudam quase todos os anos; uma citação sem versão não é
+verificável.
+
+## O que mudou na aplicação
+
+- A coluna «Taxa» da tabela por subclasse deixou de mostrar «—» para as parcelas indeterminadas:
+  mostra o **intervalo em que a lei as situa**. Vê-se de imediato que nem todas vão de 6 % a 23 %.
+- A fonte passou a identificar a **versão** do texto consolidado.
+- Um aviso no painel do apuramento regista que o quadro foi confrontado com o texto legal, e o
+  que isso corrigiu.
+
+## Testes
+
+De 88 para **92**. Os novos fixam o intervalo legal como parte do modelo: que só as parcelas
+indeterminadas o declarem, que só contenha taxas existentes no Código, que os cereais de
+pequeno-almoço nunca caiam a 6 %, e que a fonte legal identifique a versão.
 
 ---
 

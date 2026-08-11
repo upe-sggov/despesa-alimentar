@@ -943,12 +943,24 @@ def composicao_iva(pesos_sub: dict[str, float]) -> pd.DataFrame:
         # a banda de sensibilidade a possa cobrir (auditoria de 12.08.2026, F4).
         certa = {6: 0.0, 13: 0.0, 23: 0.0}
         indeterminado, predominante = 0.0, 0.0
+        # Imposto contido na parcela indeterminada, nos três cenários. Guardar o
+        # imposto e não a taxa é o que permite que cada componente tenha o **seu**
+        # intervalo legal: os cereais de pequeno-almoço estão entre 13 % e 23 %,
+        # não entre 6 % e 23 % como todos os outros (auditoria de 12.08.2026, G1).
+        indet_contido = {"min": 0.0, "max": 0.0, "predefinida": 0.0}
         for comp in componentes:
             p = _peso(comp["peso"])
             if p <= 0:
                 continue
             if comp["taxa"] is None:
                 indeterminado += p
+                lo, hi = comp.get("entre", (6, 23))
+                # A taxa central é a predefinida do grupo **confinada ao
+                # intervalo legal** — nunca um valor que a lei não admite.
+                central = min(max(int(classe["iva"]), lo), hi)
+                indet_contido["min"] += p * (lo / 100) / (1 + lo / 100)
+                indet_contido["max"] += p * (hi / 100) / (1 + hi / 100)
+                indet_contido["predefinida"] += p * (central / 100) / (1 + central / 100)
                 continue
             por_taxa[comp["taxa"]] = por_taxa.get(comp["taxa"], 0.0) + p
             if comp["certeza"] == "predominante":
@@ -973,6 +985,9 @@ def composicao_iva(pesos_sub: dict[str, float]) -> pd.DataFrame:
             "certa_6": certa[6],
             "certa_13": certa[13],
             "certa_23": certa[23],
+            "indet_contido_min": indet_contido["min"],
+            "indet_contido_max": indet_contido["max"],
+            "indet_contido_predef": indet_contido["predefinida"],
             # Fração da classe que segue efetivamente a taxa predefinida —
             # é o número que diz se a predefinição é boa aproximação ou não.
             "na_taxa_predefinida": por_taxa.get(classe["iva"], 0.0),
@@ -1026,8 +1041,14 @@ def resumo_composicao_iva(df: pd.DataFrame) -> dict:
     iva_modelo = sum(_contido(r["iva_defeito"], r["peso"]) for _, r in df.iterrows())
     iva_certo = sum(_contido(6, r["taxa_6"]) + _contido(13, r["taxa_13"])
                     + _contido(23, r["taxa_23"]) for _, r in df.iterrows())
-    iva_indet_min = sum(_contido(6, r["indeterminado"]) for _, r in df.iterrows())
-    iva_indet_max = sum(_contido(23, r["indeterminado"]) for _, r in df.iterrows())
+    # Os extremos da parcela indeterminada respeitam o intervalo legal de cada
+    # componente — não são 6 % e 23 % para todos.
+    if "indet_contido_min" in df.columns:
+        iva_indet_min = float(df["indet_contido_min"].sum())
+        iva_indet_max = float(df["indet_contido_max"].sum())
+    else:
+        iva_indet_min = sum(_contido(6, r["indeterminado"]) for _, r in df.iterrows())
+        iva_indet_max = sum(_contido(23, r["indeterminado"]) for _, r in df.iterrows())
 
     # Intervalo do que está à taxa reduzida: o mínimo é o apurado; o máximo
     # admite que toda a parcela indeterminada lá cai.
@@ -1100,6 +1121,11 @@ def taxas_efetivas(comp: pd.DataFrame, indeterminado: str = "predefinida",
         return {}
 
     destino = {"reduzida": 6, "normal": 23}
+    # A parcela indeterminada entra pelo **imposto contido**, não por uma taxa
+    # arbitrada: cada componente tem o seu intervalo legal, e há um — os cereais
+    # de pequeno-almoço — cujo intervalo não inclui a taxa reduzida.
+    coluna_indet = {"reduzida": "indet_contido_min", "normal": "indet_contido_max"}
+    tem_indet_contido = "indet_contido_predef" in comp.columns
     taxas = {}
     tem_certa = "certa_6" in comp.columns
     for _, r in comp.iterrows():
@@ -1112,16 +1138,24 @@ def taxas_efetivas(comp: pd.DataFrame, indeterminado: str = "predefinida",
                     23: float(r["certa_23"])}
             base[t_pred] = base.get(t_pred, 0.0) + float(r["por_predominancia"])
             parcelas = [(t, p) for t, p in base.items()]
-            parcelas.append((t_indet, r["indeterminado"]))
         else:
-            parcelas = [(6, r["taxa_6"]), (13, r["taxa_13"]), (23, r["taxa_23"]),
-                        (t_indet, r["indeterminado"])]
-        peso = sum(p for _, p in parcelas)
+            parcelas = [(6, r["taxa_6"]), (13, r["taxa_13"]), (23, r["taxa_23"])]
+
+        # Imposto contido na parcela indeterminada: pré-calculado por
+        # componente, respeitando o intervalo legal de cada um.
+        if tem_indet_contido:
+            contido_indet = float(r[coluna_indet.get(indeterminado, "indet_contido_predef")])
+        else:
+            contido_indet = (float(r["indeterminado"]) * (t_indet / 100)
+                             / (1 + t_indet / 100))
+
+        peso = sum(p for _, p in parcelas) + float(r["indeterminado"])
         if peso <= 0:
             taxas[r["codigo"]] = float(r["iva_defeito"])
             continue
         # Fração do preço com imposto que é imposto.
-        contido = sum(p * (t / 100) / (1 + t / 100) for t, p in parcelas) / peso
+        contido = (sum(p * (t / 100) / (1 + t / 100) for t, p in parcelas)
+                   + contido_indet) / peso
         # Sem arredondar: qualquer arredondamento aqui quebra a identidade com
         # a simulação escalão a escalão, e é essa identidade que justifica o
         # método. O arredondamento pertence à apresentação, não ao cálculo.

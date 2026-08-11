@@ -2811,8 +2811,10 @@ with aba3:
                 f"{_pct(_res_iva['indeterminado_pct'])} do cabaz está em subclasses que "
                 "atravessam taxas em proporção não repartível. Levando essa parcela toda à taxa "
                 f"reduzida ou toda à normal, a poupança mensal fica entre "
-                f"**{euro(_res_band[0])}** e **{euro(_res_band[1])}** — os valores acima usam a "
-                "taxa predefinida de cada grupo para essa parcela, que é o ponto central."
+                f"**{euro(_res_band[0])}** e **{euro(_res_band[1])}**. Os valores acima usam, "
+                "para essa parcela, a taxa predefinida do grupo **confinada ao intervalo em que "
+                "a lei situa cada subclasse** — que nem sempre vai de 6 % a 23 %: os cereais de "
+                "pequeno-almoço estão entre 13 % e 23 %, e nunca a 6 %."
             )
 
         if _res_iva:
@@ -2832,7 +2834,11 @@ with aba3:
             w3.metric("À taxa normal (23 %)", f"{_pct(_res_iva['taxa_23_pct'])}")
             w4.metric("Indeterminado", f"{_pct(_res_iva['indeterminado_pct'])}",
                       help=("Subclasses que atravessam taxas em proporção não repartível — "
-                            "marisco, mel dentro dos doces, sal dentro dos condimentos."))
+                            "marisco (moluscos a 6 %, crustáceos a 23 %), o mel dentro dos "
+                            "doces, o sal dentro dos condimentos, os leites aromatizados "
+                            "dentro das sobremesas lácteas. Cada uma entra com o intervalo "
+                            "em que a lei a situa, e nem todas vão de 6 % a 23 %: os cereais "
+                            "de pequeno-almoço estão entre 13 % e 23 %."))
 
             _iva_mod = _res_iva["iva_modelo_pct"] / 100 * media_agregado
             _iva_ap = (_res_iva["iva_modelo_pct"], _res_iva["iva_apurado_min_pct"],
@@ -3000,7 +3006,12 @@ with aba3:
                             "Grupo": f"{_cl['emoji']} {_cl['nome']}",
                             "Subclasse": _cod,
                             "Ponderador (‰)": _p,
-                            "Taxa": ("—" if _c["taxa"] is None else f"{_c['taxa']} %"),
+                            # Uma parcela indeterminada não fica sem taxa: fica
+                            # com o **intervalo** em que a lei a situa. Há uma —
+                            # os cereais de pequeno-almoço — cujo intervalo não
+                            # inclui a taxa reduzida.
+                            "Taxa": (f"{_c['taxa']} %" if _c["taxa"] is not None
+                                     else "{} a {} %".format(*_c.get("entre", (6, 23)))),
                             "": _marca.get(_c["certeza"], ""),
                             "O que sustenta a atribuição": _c["desc"].replace("**", ""),
                         })
@@ -3009,9 +3020,19 @@ with aba3:
                     column_config={"Ponderador (‰)": st.column_config.NumberColumn(format="%.2f")})
                 st.caption(
                     "✅ a subclasse cai inteira numa verba · ≈ é maioritariamente de uma taxa, "
-                    "mas não só · ❔ atravessa taxas em proporção **não determinável**, e o peso "
-                    "vai para a parcela indeterminada — não é arbitrado.  \n"
+                    "mas não só · ❔ atravessa taxas em proporção **não determinável**: a coluna "
+                    "mostra o **intervalo em que a lei a situa**, e o peso vai para a parcela "
+                    "indeterminada — não é arbitrado.  \n"
                     f"Fonte: {IVA_COMPONENTES_FONTE}."
+                )
+                st.success(
+                    "**Este quadro foi confrontado com o texto legal a 12.08.2026.** Até essa "
+                    "data tinha sido construído por leitura indireta das Listas. A verificação "
+                    "verba a verba contra o texto consolidado corrigiu quatro atribuições — a "
+                    "mais consequente foi a dos **cereais de pequeno-almoço**, cujo valor "
+                    "central estava a 6 % quando a lei os situa entre **13 % e 23 %**: a Lista I "
+                    "não tem verba alguma para eles e a Lista II (1.12) cobre apenas os «flocos "
+                    "prensados simples de cereais e leguminosas sem adições de açúcar»."
                 )
                 st.info("""
     **O que a COICOP 2018 permitiu e a anterior não permitia.** Três cortes novos resolvem as

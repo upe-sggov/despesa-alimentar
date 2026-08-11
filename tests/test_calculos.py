@@ -997,14 +997,41 @@ def test_taxa_efetiva_e_identica_a_simular_escalao_a_escalao():
     t_ef = taxas_efetivas(comp)
     despesa = 281.06
 
+    # O referencial reconstroi os escaloes a partir do `IVA_COMPONENTES`, e nao
+    # das colunas agregadas: assim continua a ser uma verificacao independente
+    # do que `composicao_iva` calcula. A parcela indeterminada de cada
+    # componente entra a taxa predefinida do grupo **confinada ao seu intervalo
+    # legal** - e os cereais de pequeno-almoco nunca a 6 %.
+    from src.config import IVA_COMPONENTES
+
+    def _w(spec):
+        if isinstance(spec, str):
+            return float(pesos_sub.get(spec) or 0.0)
+        pai, filhos = spec
+        return max(float(pesos_sub.get(pai) or 0.0)
+                   - sum(float(pesos_sub.get(f) or 0.0) for f in filhos), 0.0)
+
+    def escaloes_da_classe(r):
+        """(taxa atual, peso) de cada escalao da classe, indeterminados incluidos."""
+        fora = [(6, float(r["taxa_6"])), (13, float(r["taxa_13"])),
+                (23, float(r["taxa_23"]))]
+        for c in IVA_COMPONENTES[r["codigo"]]:
+            if c["taxa"] is not None:
+                continue
+            w = _w(c["peso"])
+            if w <= 0:
+                continue
+            lo, hi = c.get("entre", (6, 23))
+            fora.append((min(max(int(r["iva_defeito"]), lo), hi), w))
+        return fora
+
     def por_escalao(cenario, rho):
         tot = {"mecanico": 0.0, "efetivo": 0.0, "iva_antes": 0.0, "iva_depois": 0.0}
         total = comp["peso"].sum()
         for _, r in comp.iterrows():
             valor = despesa * r["peso"] / total
             t1 = cenario[r["codigo"]]
-            for t0, w in [(6, r["taxa_6"]), (13, r["taxa_13"]), (23, r["taxa_23"]),
-                          (int(r["iva_defeito"]), r["indeterminado"])]:
+            for t0, w in escaloes_da_classe(r):
                 if w <= 0:
                     continue
                 v = valor * w / r["peso"]
@@ -1563,3 +1590,67 @@ def test_taxas_efetivas_sem_colunas_certas_nao_rebenta():
     comp = _comp_sintetica().drop(columns=["certa_6", "certa_13", "certa_23"])
     assert taxas_efetivas(comp, predominancia="normal")["CP0111"] == pytest.approx(
         taxas_efetivas(comp)["CP0111"])
+
+
+# ---------------------------- intervalo legal das parcelas indeterminadas (G1)
+def test_intervalo_legal_declarado_e_valido():
+    """`entre` so pode conter taxas que existam no Codigo do IVA, por ordem."""
+    from src.config import IVA_COMPONENTES
+
+    for cod, comps in IVA_COMPONENTES.items():
+        for c in comps:
+            if c["certeza"] != "mista":
+                assert "entre" not in c, f"{cod} {c['peso']}: so as mistas tem intervalo"
+                continue
+            lo, hi = c.get("entre", (6, 23))
+            assert lo in (6, 13, 23) and hi in (6, 13, 23), f"{cod} {c['peso']}"
+            assert lo < hi, f"{cod} {c['peso']}"
+
+
+def test_cereais_de_pequeno_almoco_nunca_ficam_a_taxa_reduzida():
+    """
+    A Lista I nao tem verba para cereais de pequeno-almoco; a Lista II (1.12)
+    cobre os flocos simples sem acucar a 13 %. O intervalo legal e 13-23 %, e o
+    valor central nao pode cair nos 6 % predefinidos do grupo dos cereais - era
+    o que acontecia ate 12.08.2026.
+    """
+    from src.config import IVA_COMPONENTES
+
+    cereais = {c["peso"]: c for c in IVA_COMPONENTES["CP0111"] if isinstance(c["peso"], str)}
+    assert cereais["CP01114"]["entre"] == (13, 23)
+
+
+def test_parcela_indeterminada_entra_pelo_intervalo_do_seu_componente():
+    """
+    Uma classe predefinida a 6 % com uma unica parcela indeterminada entre 13 e
+    23 % tem de produzir taxa efetiva de 13 % no minimo, 23 % no maximo e 13 %
+    no valor central - nunca 6 %.
+    """
+    from src.calculos import composicao_iva, taxas_efetivas
+    from src.config import IVA_COMPONENTES
+
+    # So a subclasse dos cereais de pequeno-almoco tem peso.
+    pesos = {c["peso"]: 0.0 for c in IVA_COMPONENTES["CP0111"] if isinstance(c["peso"], str)}
+    pesos["CP01114"] = 100.0
+    comp = composicao_iva(pesos)
+    linha = comp[comp["codigo"] == "CP0111"]
+    assert float(linha["indeterminado"].iloc[0]) == pytest.approx(100.0)
+
+    central = taxas_efetivas(comp)["CP0111"]
+    baixo = taxas_efetivas(comp, indeterminado="reduzida")["CP0111"]
+    alto = taxas_efetivas(comp, indeterminado="normal")["CP0111"]
+    assert baixo == pytest.approx(13.0)
+    assert alto == pytest.approx(23.0)
+    assert central == pytest.approx(13.0)
+    assert central > 6.0
+
+
+def test_a_fonte_legal_esta_identificada_com_versao():
+    """
+    Uma citacao do Codigo do IVA sem versao nao e verificavel: as Listas mudam
+    quase todos os anos.
+    """
+    from src.config import CIVA_FONTE
+
+    assert "2026" in CIVA_FONTE
+    assert "Lista" in CIVA_FONTE
