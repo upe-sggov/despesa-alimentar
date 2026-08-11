@@ -24,8 +24,8 @@ from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
                           intervalo_agregado, intervalo_engel,
                           pontos_de_rutura_das_escalas,
                           resumo_composicao_iva, resumo_decomposicao, resumo_iva,
-                          sensibilidade_escalas, simular_iva, testar_escalas,
-                          unidades_equivalentes)
+                          sensibilidade_escalas, simular_iva, taxas_efetivas,
+                          testar_escalas, unidades_equivalentes)
 from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         BASE_POR_DEFEITO, BASES_ANCORA, COD_AGREGADOS,
                         DIMENSAO_RECUO, DIMENSAO_RECUO_FONTE,
@@ -2544,10 +2544,37 @@ with aba3:
     (repercussão 100 %) — cerca de 6 % de amplitude.
             """)
 
+        # ---- taxa atual de cada grupo: apurada, não predefinida ----
+        # A taxa que cada grupo suporta **hoje** é um facto, não um parâmetro.
+        # Até 11.08.2026 a simulação usava a taxa predefinida do grupo, o que
+        # equivalia a assumir que toda a despesa do grupo a seguia — e isso
+        # subestimava o IVA contido em 25 % a 36 % (auditoria, D2 reaberto).
+        _comp_iva = composicao_iva(dados.get("pesos_subclasses") or {})
+        _res_iva = resumo_composicao_iva(_comp_iva) if not _comp_iva.empty else {}
+        _tem_apuramento = bool(_res_iva)
+
+        if _tem_apuramento:
+            _taxas_ef = taxas_efetivas(_comp_iva)
+            _taxas_ef_min = taxas_efetivas(_comp_iva, indeterminado="reduzida")
+            _taxas_ef_max = taxas_efetivas(_comp_iva, indeterminado="normal")
+        else:
+            # Sem os ponderadores por subclasse não há apuramento possível:
+            # recorre-se à predefinição e diz-se que se recorreu.
+            _taxas_ef = dict(zip(df_decomp["codigo"], df_decomp["iva_defeito"].astype(float)))
+            _taxas_ef_min = _taxas_ef_max = _taxas_ef
+            st.warning(
+                "**Os ponderadores por subclasse não estão disponíveis nesta sessão.** A "
+                "simulação recorre à taxa **predefinida** de cada grupo, o que subestima o IVA "
+                "contido em cerca de 25 % a 36 % numa isenção total. Consulte o registo de "
+                "ligações no separador Metodologia."
+            )
+
         editor = pd.DataFrame({
             "Grupo": [f"{r.emoji} {r.classe}" for r in df_decomp.itertuples()],
             "Valor (€)": df_decomp["valor"].round(2),
-            "Taxa atual (%)": df_decomp["iva_defeito"].astype(float),
+            "Taxa média efetiva (%)": [
+                round(float(_taxas_ef.get(c, d)), 1)
+                for c, d in zip(df_decomp["codigo"], df_decomp["iva_defeito"])],
             "Taxa do cenário (%)": df_decomp["iva_defeito"].astype(float),
         })
 
@@ -2586,21 +2613,31 @@ with aba3:
         editado = st.data_editor(
             editor, use_container_width=True, hide_index=True,
             key=f"editor_iva_{cenario}",
-            disabled=["Grupo", "Valor (€)"],
+            # A taxa atual **não é editável**: é apurada, não escolhida.
+            disabled=["Grupo", "Valor (€)", "Taxa média efetiva (%)"],
             column_config={
                 "Valor (€)": st.column_config.NumberColumn(format="%.2f"),
-                "Taxa atual (%)": col_taxa,
+                "Taxa média efetiva (%)": st.column_config.NumberColumn(
+                    format="%.1f %%",
+                    help=("A taxa única que suporta o mesmo imposto que o conjunto dos "
+                          "produtos do grupo. Não é uma taxa legal e ninguém a paga — é "
+                          "apurada a partir da composição do grupo por subclasse.")),
                 "Taxa do cenário (%)": col_taxa,
             },
         )
 
-        if cenario == "manual":
-            st.caption(
-                "Escolha a taxa de cada grupo nas duas colunas da direita. Só estão disponíveis "
-                "as taxas que existem no Código do IVA — isenção, 6 %, 13 % e 23 %."
-            )
+        st.caption(
+            "**A coluna do meio é apurada, não escolhida** — por isso não é editável. Só a "
+            "**taxa do cenário** é sua: é a alavanca de política. Só estão disponíveis as taxas "
+            "que existem no Código do IVA — isenção, 6 %, 13 % e 23 %."
+            + ("" if cenario == "manual" else
+               " Escolha «Definir manualmente», acima, para as alterar grupo a grupo.")
+        )
 
-        taxas_atuais = dict(zip(df_decomp["codigo"], editado["Taxa atual (%)"]))
+        # A taxa atual vem do apuramento e nunca do editor: mesmo que um estado
+        # de sessão antigo traga a coluna antiga, é ignorada.
+        taxas_atuais = {c: float(_taxas_ef.get(c, d))
+                        for c, d in zip(df_decomp["codigo"], df_decomp["iva_defeito"])}
         taxas_cenario = dict(zip(df_decomp["codigo"], editado["Taxa do cenário (%)"]))
 
         sim = simular_iva(df_decomp, taxas_atuais, taxas_cenario, repercussao)
@@ -2616,6 +2653,19 @@ with aba3:
                                taxas_atuais, taxas_cenario, repercussao)
         res_nac = resumo_iva(_sim_nac, media_agregado, vezes_ano, agregados)
 
+        # Sensibilidade à parcela indeterminada: os dois extremos são a mesma
+        # simulação com a parcela não repartível levada toda a 6 % e toda a 23 %.
+        _res_band = None
+        if _tem_apuramento and _res_iva["indeterminado_pct"] > 0.05:
+            _band = []
+            for _t in (_taxas_ef_min, _taxas_ef_max):
+                _band.append(resumo_iva(
+                    simular_iva(df_decomp, {c: float(_t.get(c, d)) for c, d
+                                            in zip(df_decomp["codigo"], df_decomp["iva_defeito"])},
+                                taxas_cenario, repercussao),
+                    despesa_mensal, vezes_ano, agregados))
+            _res_band = sorted(b["poupanca_mes"] for b in _band)
+
         c = st.columns(5)
         c[0].metric("Nova despesa mensal", euro(res["novo_valor"]),
                     euro(res["efetivo"]) if abs(res["efetivo"]) > 0.005 else None)
@@ -2627,9 +2677,15 @@ with aba3:
         c[4].metric("Receita de IVA por mês", euro(res["receita_mes"]),
                     help=f"{euro(res['iva_antes'])} → {euro(res['iva_depois'])}")
 
-        # ---- composição por taxa, apurada ao nível da subclasse ----
-        _comp_iva = composicao_iva(dados.get("pesos_subclasses") or {})
-        _res_iva = resumo_composicao_iva(_comp_iva) if not _comp_iva.empty else {}
+        if _res_band is not None and abs(_res_band[1] - _res_band[0]) > 0.005:
+            st.caption(
+                f"**Sensibilidade à parcela indeterminada.** "
+                f"{_pct(_res_iva['indeterminado_pct'])} do cabaz está em subclasses que "
+                "atravessam taxas em proporção não repartível. Levando essa parcela toda à taxa "
+                f"reduzida ou toda à normal, a poupança mensal fica entre "
+                f"**{euro(_res_band[0])}** e **{euro(_res_band[1])}** — os valores acima usam a "
+                "taxa predefinida de cada grupo para essa parcela, que é o ponto central."
+            )
 
         if _res_iva:
             st.markdown("#### Quanto do cabaz segue cada taxa — apurado, não assumido")
@@ -2651,36 +2707,75 @@ with aba3:
                             "marisco, mel dentro dos doces, sal dentro dos condimentos."))
 
             _iva_mod = _res_iva["iva_modelo_pct"] / 100 * media_agregado
-            _iva_min = _res_iva["iva_apurado_min_pct"] / 100 * media_agregado
-            _iva_max = _res_iva["iva_apurado_max_pct"] / 100 * media_agregado
+            _iva_ap = (_res_iva["iva_modelo_pct"], _res_iva["iva_apurado_min_pct"],
+                       _res_iva["iva_apurado_max_pct"])
             _sub_min = _res_iva["iva_apurado_min_pct"] / _res_iva["iva_modelo_pct"] * 100 - 100
             _sub_max = _res_iva["iva_apurado_max_pct"] / _res_iva["iva_modelo_pct"] * 100 - 100
-            _sobre = (_res_iva["assumido_6_pct"] / _res_iva["apurado_6_min_pct"] * 100 - 100)
-            st.error(f"""
-    **A aproximação por grupo erra em direções opostas consoante o cenário — e agora sabe-se
-    quanto.**
+            st.success(f"""
+    **Porque é que a taxa atual de cada grupo não é a taxa predefinida — e o que isso mudou.**
 
-    Aplicar uma taxa por grupo equivale a assumir que **{_pct(_res_iva['assumido_6_pct'])}** do
-    cabaz está a 6 %, porque sete dos nove grupos têm essa predefinição. O apurado é
+    Até 11.08.2026 a simulação aplicava a cada grupo a sua taxa **predefinida**: 6 % a sete grupos,
+    23 % a dois. Isso equivalia a assumir que **{_pct(_res_iva['assumido_6_pct'])}** do cabaz está
+    à taxa reduzida. O apuramento por subclasse diz que são
     **{_pct(_res_iva['apurado_6_min_pct'])} a {_pct(_res_iva['apurado_6_max_pct'])}**.
 
-    Daí resultam **dois erros de sinal contrário**, e é preciso saber qual se aplica:
+    A diferença não era pequena nem tinha sinal único. Medida sobre o **IVA contido** na despesa
+    alimentar do agregado médio, que é o que determina a poupança:
 
-    **1 · Numa isenção total — o cenário «cabaz zero» — o simulador subestima.** O IVA contido na
-    despesa alimentar do agregado médio é de **{euro(_iva_mod)}/mês** pelo modelo e de
-    **{euro(_iva_min)} a {euro(_iva_max)}** pelo apuramento: o modelo fica
-    **{numero(_sub_min, 0)} % a {numero(_sub_max, 0)} % abaixo**. A razão é que credita a
-    pastelaria, a charcutaria e os hortícolas transformados com 6 % quando eles suportam 23 %.
+    | | IVA contido | Efeito no simulador |
+    |---|---|---|
+    | Taxa predefinida (o que se fazia) | {euro(_iva_mod)}/mês | — |
+    | **Taxa média efetiva** (o que se faz agora) | **{euro(_res_iva['iva_apurado_min_pct'] / 100 * media_agregado)} a {euro(_res_iva['iva_apurado_max_pct'] / 100 * media_agregado)}/mês** | numa isenção total, **{numero(_sub_min, 0)} % a {numero(_sub_max, 0)} %** mais |
 
-    **2 · Numa medida dirigida ao que já está à taxa reduzida, o simulador sobrestima** — em cerca
-    de **{numero(_sobre, 0)} %** —, porque aplica a descida a grupos inteiros quando parte deles
-    já hoje é tributada a 23 %.
-
-    **Como usar entretanto:** leia a repartição entre consumidor e margem, que **não é afetada**, e
-    trate os níveis em euros como ordem de grandeza com o sinal do erro conhecido. O grupo onde a
-    aproximação é pior é **Cereais e derivados** — 58,7 % à taxa predefinida —, por causa da
-    pastelaria; o melhor é **Leite, lácteos e ovos**, com 96,8 %.
+    A razão é que a predefinição creditava a **pastelaria**, a **charcutaria** e os **hortícolas
+    transformados** com 6 % quando eles suportam 23 %. E o erro tinha o **sinal contrário** numa
+    medida dirigida apenas ao que já está a 6 %, porque aí a descida era aplicada a grupos
+    inteiros. Com a taxa efetiva, os dois cenários ficam certos sem que seja preciso saber
+    de antemão qual deles se está a simular.
             """)
+            with st.expander("🧮 Como se calcula a taxa média efetiva — e porque é que basta"):
+                st.markdown("""
+    **O que é.** A taxa média efetiva de um grupo é **a taxa única que suporta o mesmo imposto que
+    o conjunto dos produtos desse grupo**. Não é uma taxa legal, e ninguém a paga: é uma medida
+    da carga fiscal média do grupo, tal como ele é hoje consumido.
+
+    **Como se obtém.** Primeiro apura-se a fração do preço que é imposto, ponderando as subclasses:
+                """)
+                st.latex(r"c = \frac{\sum_b w_b \cdot \dfrac{t_b}{1+t_b}}{\sum_b w_b}")
+                st.markdown(
+                    "onde *b* percorre as subclasses do grupo, *w* é o ponderador de cada uma e "
+                    "*t* a sua taxa legal. Depois inverte-se para obter a taxa equivalente:")
+                st.latex(r"t_{ef} = \frac{c}{1-c}")
+                st.markdown(f"""
+    **Exemplo com números — Cereais e derivados.** O grupo pesa
+    {numero(float(_comp_iva.set_index('codigo').loc['CP0111', 'peso']), 2)} ‰, dos quais
+    {numero(float(_comp_iva.set_index('codigo').loc['CP0111', 'taxa_6']), 2)} ‰ a 6 % (cereais,
+    farinhas e **pão**) e
+    {numero(float(_comp_iva.set_index('codigo').loc['CP0111', 'taxa_23']), 2)} ‰ a 23 %
+    (**outros produtos de padaria** — bolos, bolachas, pastelaria). A carga média resultante é de
+    **{numero(float(_taxas_ef['CP0111']), 1)} %**, e não os 6 % que a predefinição indicava.
+
+    **E porque é que uma taxa média basta.** Podia parecer que era preciso simular escalão a
+    escalão. Não é — e não por aproximação, mas por **identidade algébrica**. A base sem imposto de
+    um grupo é a soma das bases dos seus escalões; se a taxa efetiva for definida como acima, a
+    base que ela produz é exatamente essa soma. E como a taxa do cenário é uniforme dentro do
+    grupo, tudo o que se calcula a seguir — efeito mecânico, repercussão, imposto contido no preço
+    novo — depende apenas da base e da taxa do cenário.
+
+    Os dois caminhos foram confrontados numericamente em quatro cenários, incluindo a isenção
+    total e um cenário misto: **coincidem até à décima quarta casa decimal**, que é o limite da
+    aritmética de vírgula flutuante. Está travado por teste automático.
+                """)
+                st.warning("""
+    **O que continua a ser aproximação.** A taxa efetiva é exata *dado* o apuramento das
+    subclasses — mas o apuramento tem uma parcela indeterminada, e uma parte foi atribuída por
+    predominância. E os ponderadores são do IHPC, que inclui não residentes. A sensibilidade a
+    isso está declarada por baixo dos indicadores, como intervalo.
+
+    Continua também a valer, sem alteração, a advertência de que **isto não é uma estimativa de
+    custo orçamental**: a despesa de referência não é a despesa alimentar total das famílias, e
+    uma estimativa de receita cessante exige a base tributável real.
+                """)
 
             _tab_iva = pd.DataFrame([{
                 "Grupo": f"{r.emoji} {r.classe}",
@@ -2877,7 +2972,7 @@ with aba3:
         with st.expander("Ver detalhe da simulação"):
             det = sim[["classe", "valor", "taxa_atual", "taxa_cenario",
                        "base", "mecanico", "efetivo", "margem", "novo_valor"]].copy()
-            det.columns = ["Classe", "Valor (€)", "Taxa atual (%)", "Taxa cenário (%)",
+            det.columns = ["Classe", "Valor (€)", "Taxa média efetiva (%)", "Taxa cenário (%)",
                            "Base sem IVA (€)", "Efeito mecânico (€)",
                            "Efeito efetivo (€)", "Margem (€)", "Novo valor (€)"]
             st.dataframe(det.round(2), use_container_width=True, hide_index=True)
@@ -2892,7 +2987,11 @@ with aba3:
                               extra=[("Cenario", CENARIOS[cenario][0]),
                                      ("Repercussao assumida", f"{repercussao*100:.0f}%"),
                                      ("Composicao do agregado", composicao),
-                                     ("AVISO", "As taxas e a repercussao sao parametros do utilizador, nao dados oficiais")]),
+                                     ("Taxa de partida",
+                                      "taxa media efetiva apurada por subclasse (COICOP 2018)"
+                                      if _tem_apuramento else
+                                      "taxa predefinida do grupo - apuramento indisponivel"),
+                                     ("AVISO", "A taxa do cenario e a repercussao sao parametros do utilizador, nao dados oficiais")]),
                 f"despesa_alimentar_simulacao_iva_{date.today()}.csv", "text/csv",
             )
 
@@ -3396,6 +3495,28 @@ with aba5:
                 "**aditiva**, propriedade verificada por teste automático."
             )
 
+            st.markdown("---")
+            st.markdown("**5 · Taxa de IVA de partida — no simulador**")
+            st.markdown("""
+    O simulador precisa de saber que taxa cada grupo suporta **hoje**, antes de aplicar o cenário.
+    Essa taxa não é escolhida: é apurada. Cada grupo COICOP contém produtos em taxas legais
+    diferentes — pão a 6 % e pastelaria a 23 %, azeite a 6 % e óleos vegetais a 13 % —, e os
+    ponderadores por subclasse da COICOP 2018 permitem medir a proporção de cada um.
+                """)
+            st.latex(r"c_i = \frac{\sum_b w_b \cdot \dfrac{t_b}{1+t_b}}{\sum_b w_b}"
+                     r"\qquad\qquad t_i^{ef} = \frac{c_i}{1-c_i}")
+            st.caption(
+                "b percorre as subclasses do grupo i · w = ponderador da subclasse · "
+                "t = taxa legal da subclasse · c = fração do preço que é imposto · "
+                "t_ef = taxa única equivalente. **Não é uma taxa legal**: é a carga fiscal média "
+                "do grupo tal como ele é hoje consumido."
+            )
+            st.markdown(
+                "Usar esta taxa é **matematicamente idêntico** a simular escalão a escalão, não "
+                "uma aproximação — a demonstração e a verificação numérica estão no separador do "
+                "IVA, em «Como se calcula a taxa média efetiva»."
+            )
+
         with st.expander("🧭 Duas bases de ponderação — qual serve para quê"):
             st.markdown("""
     A aplicação usa **duas** estruturas de ponderação, e não é indiferente qual se aplica a quê.
@@ -3772,7 +3893,8 @@ with aba5:
 
     | Parâmetro | Origem | Nota |
     |---|---|---|
-    | Taxas de IVA | Predefinidas, editáveis | Limitadas às do Código do IVA. A predefinida é a **predominante** do grupo, não a única — e o levantamento por subclasse, no separador do IVA, diz **quanto** de cada grupo lhe escapa |
+    | Taxa **atual** de cada grupo | **Apurada**, não editável | É a **taxa média efetiva**, calculada dos ponderadores por subclasse da COICOP 2018 e das Listas I e II. Não é um parâmetro do utilizador: é um facto medido |
+    | Taxa **do cenário** | Parâmetro do utilizador | Limitada às taxas que existem no Código do IVA — isenção, 6 %, 13 % e 23 % |
     | Adultos com rendimento | Parâmetro do utilizador | Multiplicador dos salários; as crianças não entram |
     | Repercussão | Parâmetro do utilizador | Hipótese de trabalho, não estimativa |
 
@@ -4042,12 +4164,12 @@ Chamar-lhe cabaz seria prometer o que não entrega.
        comparações entre elas.
     5. **Desfasamento das Contas Nacionais.** A âncora assenta num ano com cerca de dois anos de
        desfasamento, atualizado por índice de preços.
-    6. **A correspondência COICOP → taxa de IVA é aproximada, e o erro está medido — nos dois
-       sentidos.** A simulação aplica uma taxa por grupo, o que equivale a assumir que **88,6 %**
-       do cabaz está à taxa reduzida; o apurado por subclasse é **68,4 % a 74,3 %**. Numa
-       **isenção total** o simulador **subestima** o IVA contido em 25 % a 36 %; numa medida
-       dirigida ao que já está a 6 %, **sobrestima** em cerca de 30 %. Ver o painel «Quanto do
-       cabaz segue cada taxa» no separador do IVA.
+    6. **A taxa de partida de cada grupo é apurada, não predefinida.** O Código do IVA classifica
+       por produto; a aplicação trabalha por grupo COICOP. A partir de 11.08.2026 cada grupo entra
+       na simulação com a sua **taxa média efetiva**, apurada dos ponderadores por subclasse — e
+       não com a taxa predominante. Subsiste como aproximação a parcela **indeterminada** do
+       apuramento e a atribuição por predominância; a sensibilidade a ambas está apresentada como
+       intervalo. Ver o painel «Quanto do cabaz segue cada taxa» no separador do IVA.
     7. **A repercussão é uma hipótese.** Qualquer resultado do simulador é condicional a esse
        parâmetro e deve ser apresentado como intervalo.
     8. **A extrapolação agregada é ilustrativa.** Não é uma estimativa de custo orçamental.

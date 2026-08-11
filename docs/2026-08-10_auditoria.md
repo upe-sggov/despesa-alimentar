@@ -1988,11 +1988,129 @@ marisco para os 6 %. Há também um que exige que **o assumido exceda o apurado 
 não excedesse, o trabalho não teria valido a pena — e um que trava a incoerência entre `taxa=None`
 e `certeza="mista"`, que são a mesma afirmação dita duas vezes e divergiriam em silêncio.
 
-**Fica em aberto, e é decisão sua.** O simulador continua a aplicar **uma taxa por grupo**. Com o
-apuramento feito, passa a ser possível aplicar a taxa do cenário **apenas à parcela que hoje está
-à taxa de partida** — o que é mais próximo de como uma alteração do IVA é legislada, produto a
-produto. Muda o significado dos resultados e a leitura da tabela editável, pelo que não avancei
-sem decisão. O que está feito é o que permite tomá-la com números à frente.
+> ✅ **Decidido e aplicado a 11.08.2026.** Ver a secção seguinte, «Taxa média efetiva».
+
+---
+
+## A taxa média efetiva — o que mudou no simulador, e como explicá-lo
+
+> Esta secção é escrita para poder ser lida isoladamente, por quem não acompanhou o resto.
+
+### O problema, em duas frases
+
+O Código do IVA classifica **por produto**; a aplicação trabalha **por grupo COICOP**. Até
+11.08.2026 o simulador assumia que todo o grupo seguia a sua taxa **predominante** — 6 % em sete
+grupos, 23 % em dois —, e essa aproximação nunca tinha sido medida porque não havia dados que a
+permitissem medir.
+
+### Porque é que o pressuposto era mau
+
+Os grupos não são homogéneos, e em alguns não são sequer maioritariamente homogéneos:
+
+| Grupo | Predefinida | Fração do grupo que a segue | O que escapa |
+|---|---|---|---|
+| Cereais e derivados | 6 % | **58,7 %** | Bolos, bolachas e pastelaria, a 23 % |
+| Pré-preparados e outros | 23 % | 61,7 % | Alimentos para bebés, a 6 % |
+| Carne | 6 % | 71,4 % | Charcutaria e enchidos, a 23 % |
+| Hortícolas e leguminosas | 6 % | 72,4 % | Batata frita e conservas, a 23 % |
+| Óleos e gorduras | 6 % | 75,8 % | Óleos vegetais que não o azeite, a 13 % |
+| Peixe e produtos do mar | 6 % | 86,3 % | Marisco — indeterminado |
+| Fruta e frutos de casca rija | 6 % | 90,4 % | Frutos de casca rija — indeterminado |
+| Açúcar, confeitaria e sobremesas | 23 % | 92,4 % | O mel, a 6 % |
+| Leite, lácteos e ovos | 6 % | 96,8 % | Sobremesas lácteas, a 23 % |
+
+### A solução: uma taxa apurada, não predefinida
+
+Cada grupo passa a entrar na simulação com a sua **taxa média efetiva** — a taxa única que suporta
+o mesmo imposto que o conjunto dos produtos do grupo:
+
+```text
+       Σ_b  w_b · t_b / (1 + t_b)                              c
+c  =  ─────────────────────────────           t_efetiva  =  ───────
+              Σ_b  w_b                                        1 − c
+```
+
+onde *b* percorre as subclasses do grupo, *w* é o ponderador de cada uma e *t* a sua taxa legal.
+
+**Exemplo, cereais e derivados.** O grupo pesa 39,27 ‰: 23,05 ‰ a 6 % (cereais, farinhas e pão) e
+13,81 ‰ a 23 % (outros produtos de padaria), mais 2,41 ‰ indeterminados. A carga média resultante
+é de **11,4 %** — e não os 6 % que a predefinição indicava.
+
+| Grupo | Predefinida | **Efetiva** |
+|---|---|---|
+| Cereais e derivados | 6 % | **11,42 %** |
+| Carne | 6 % | **10,37 %** |
+| Hortícolas, tubérculos e leguminosas | 6 % | **10,20 %** |
+| Óleos e gorduras | 6 % | **7,61 %** |
+| Leite, lácteos e ovos | 6 % | 6,47 % |
+| Fruta e frutos de casca rija | 6 % | 6,41 % |
+| Peixe e produtos do mar | 6 % | 6,00 % |
+| Açúcar, confeitaria e sobremesas | 23 % | 23,00 % |
+| Pré-preparados e outros | 23 % | **21,06 %** |
+
+### Porque é que uma taxa média basta — e não é atalho
+
+Podia parecer que era preciso simular escalão a escalão dentro de cada grupo. **Não é, e a razão
+não é aproximação: é identidade algébrica.**
+
+A base sem imposto de um grupo é a soma das bases dos seus escalões, `Σ_b V_b/(1+t_b)`. A taxa
+efetiva é definida precisamente de modo a que `V/(1+t_ef)` iguale essa soma. Como a taxa do
+cenário é uniforme dentro do grupo, tudo o que se calcula a seguir — efeito mecânico, repercussão,
+imposto contido no preço novo — depende apenas da base e da taxa do cenário. Nada precisa de saber
+quantos escalões havia.
+
+Confrontei os dois caminhos numericamente em quatro cenários — isenção total com repercussão
+integral e parcial, subida para 13 %, e um cenário misto — e **coincidem até à décima quarta casa
+decimal**, o limite da aritmética de vírgula flutuante. Está travado pelo teste
+`test_taxa_efetiva_e_identica_a_simular_escalao_a_escalao`.
+
+### O que mudou nos números
+
+Cenário por defeito da aplicação: «cabaz zero», repercussão de 40 %.
+
+| | Antes | Depois | |
+|---|---|---|---|
+| Poupança mensal, agregado médio | 8,04 € | **10,35 €** | +28,8 % |
+| Poupança anual por agregado | 96,44 € | **124,23 €** | +28,8 % |
+| IVA contido na despesa alimentar | 20,09 €/mês | **25,88 €/mês** | +28,8 % |
+| Poupança agregada anual | 440,0 M€ | **566,8 M€** | +28,8 % |
+| Variação de receita implícita | −1 099,9 M€ | **−1 416,9 M€** | +28,8 % |
+
+**O sentido da correção:** os valores anteriores estavam **abaixo** da realidade, porque creditavam
+a pastelaria, a charcutaria e os hortícolas transformados com 6 % quando eles suportam 23 %.
+
+### O que continua a ser aproximação, e está declarado
+
+1. **A parcela indeterminada** — 5,9 % do cabaz, em subclasses que atravessam taxas sem repartição
+   possível: marisco, o mel dentro dos doces, o sal dentro dos condimentos. Os valores centrais
+   atribuem-na à taxa predefinida do grupo; a aplicação mostra a **banda** que resulta de a levar
+   toda a 6 % ou toda a 23 %. Para a poupança agregada anual: **550,8 a 597,9 M€**.
+2. **20,1 % do cabaz foi atribuído por predominância**, não com certeza.
+3. **Os ponderadores são do IHPC**, que inclui a despesa de não residentes. É a única fonte aberta
+   que desce à subclasse.
+4. **Continua a não ser uma estimativa de custo orçamental.** A despesa de referência não é a
+   despesa alimentar total das famílias, e uma estimativa de receita cessante exige a base
+   tributável real.
+
+### O que isto muda na interface
+
+- A coluna **«Taxa atual»** passou a **«Taxa média efetiva»** e **deixou de ser editável** — é
+  apurada, não escolhida. A tabela de parâmetros da Metodologia foi corrigida em conformidade: a
+  taxa atual saiu da lista de parâmetros do utilizador.
+- A **taxa do cenário** continua editável, e continua limitada às taxas que existem no Código do
+  IVA. É a única alavanca de política.
+- Um painel novo explica o cálculo, com a fórmula, o exemplo dos cereais e a demonstração da
+  identidade; e o passo **5** da secção «os quatro passos desta ferramenta» — que passou a ter
+  cinco — documenta-o onde alguém procura o método.
+- Se os ponderadores por subclasse não estiverem disponíveis numa sessão, a aplicação recorre à
+  predefinição **e diz que recorreu**, com a magnitude do erro que isso reintroduz.
+
+### Testes
+
+Três novos, além dos seis do apuramento. O que sustenta o método é o da identidade; os outros dois
+exigem que a taxa efetiva **exceda** a predefinida onde há produtos a 23 % — senão a correção não
+estaria a corrigir nada — e que o destino da parcela indeterminada produza um **intervalo** e não
+um ponto.
 
 ---
 

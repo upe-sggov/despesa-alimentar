@@ -984,6 +984,83 @@ def test_todas_as_nove_classes_tem_componentes_com_verba():
                 assert c["taxa"] in (6, 13, 23), cod
 
 
+def test_taxa_efetiva_e_identica_a_simular_escalao_a_escalao():
+    """É esta identidade que justifica o método: usar a taxa média efetiva não
+    e aproximacao da simulacao por escalao — e a mesma conta. Se deixar de o
+    ser, o metodo deixa de estar justificado."""
+    from src.calculos import (composicao_iva, decompor, resumo_iva, simular_iva,
+                              taxas_efetivas)
+
+    pesos_sub = _pesos_sub_sinteticos()
+    comp = composicao_iva(pesos_sub)
+    pesos = comp.set_index("codigo")["peso"].to_dict()
+    t_ef = taxas_efetivas(comp)
+    despesa = 281.06
+
+    def por_escalao(cenario, rho):
+        tot = {"mecanico": 0.0, "efetivo": 0.0, "iva_antes": 0.0, "iva_depois": 0.0}
+        total = comp["peso"].sum()
+        for _, r in comp.iterrows():
+            valor = despesa * r["peso"] / total
+            t1 = cenario[r["codigo"]]
+            for t0, w in [(6, r["taxa_6"]), (13, r["taxa_13"]), (23, r["taxa_23"]),
+                          (int(r["iva_defeito"]), r["indeterminado"])]:
+                if w <= 0:
+                    continue
+                v = valor * w / r["peso"]
+                base = v / (1 + t0 / 100)
+                mec = base * (1 + t1 / 100) - v
+                tot["mecanico"] += mec
+                tot["efetivo"] += rho * mec
+                tot["iva_antes"] += v - base
+                tot["iva_depois"] += (v + rho * mec) * (t1 / 100) / (1 + t1 / 100)
+        return tot
+
+    cenarios = [
+        ({c: 0.0 for c in CODIGOS}, 1.0),                    # isencao total
+        ({c: 0.0 for c in CODIGOS}, 0.4),                    # isencao parcial
+        ({c: 13.0 for c in CODIGOS}, 0.4),                   # subida
+        ({c: (0.0 if i % 2 else 23.0) for i, c in enumerate(CODIGOS)}, 0.7),
+    ]
+    for cenario, rho in cenarios:
+        esc = por_escalao(cenario, rho)
+        res = resumo_iva(simular_iva(decompor(despesa, pesos, {}), t_ef, cenario, rho),
+                         despesa, 12, 1)
+        for campo in ("mecanico", "efetivo", "iva_antes", "iva_depois"):
+            assert res[campo] == pytest.approx(esc[campo], abs=1e-9), campo
+
+
+def test_taxa_efetiva_excede_a_predefinida_onde_ha_produtos_a_23():
+    """Nos grupos predefinidos a 6 % que contem produtos a 23 %, a taxa efetiva
+    tem de ser maior — e e essa diferenca que corrige a subestimacao."""
+    from src.calculos import composicao_iva, taxas_efetivas
+    from src.config import POR_CODIGO
+
+    comp = composicao_iva(_pesos_sub_sinteticos()).set_index("codigo")
+    t_ef = taxas_efetivas(comp.reset_index())
+    for cod, r in comp.iterrows():
+        defeito = POR_CODIGO[cod]["iva"]
+        if defeito == 6 and r["taxa_23"] > 0:
+            assert t_ef[cod] > 6.0, cod
+        if r["taxa_6"] == 0 and r["taxa_13"] == 0 and r["indeterminado"] == 0:
+            assert t_ef[cod] == pytest.approx(23.0), cod
+
+
+def test_destino_do_indeterminado_da_os_extremos():
+    """A parcela nao repartivel tem de produzir um intervalo, nao um ponto."""
+    from src.calculos import composicao_iva, taxas_efetivas
+
+    comp = composicao_iva(_pesos_sub_sinteticos())
+    baixo = taxas_efetivas(comp, indeterminado="reduzida")
+    alto = taxas_efetivas(comp, indeterminado="normal")
+    central = taxas_efetivas(comp)
+    com_indet = [r["codigo"] for _, r in comp.iterrows() if r["indeterminado"] > 0]
+    assert com_indet, "o cenario de teste devia ter parcelas indeterminadas"
+    for cod in com_indet:
+        assert baixo[cod] < alto[cod], cod
+        assert min(baixo[cod], alto[cod]) <= central[cod] <= max(baixo[cod], alto[cod])
+
+
 # ------------------------- rigor de apresentacao (auditoria E8, E9, E13)
 def test_formatadores_aplicam_se_ao_numero_e_nao_a_frase():
     """As f-strings adjacentes concatenam em tempo de compilacao: um

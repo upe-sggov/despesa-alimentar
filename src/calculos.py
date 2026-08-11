@@ -1045,6 +1045,56 @@ def resumo_composicao_iva(df: pd.DataFrame) -> dict:
     }
 
 
+def taxas_efetivas(comp: pd.DataFrame, indeterminado: str = "predefinida") -> dict:
+    """
+    Taxa **média efetiva** de IVA de cada classe, apurada a partir da sua
+    composição por subclasse.
+
+    Porque é que uma taxa média basta
+    ---------------------------------
+    Simular escalão a escalão e simular com uma taxa média efetiva dão
+    **exatamente o mesmo resultado**, e não é aproximação — é identidade
+    algébrica. A base sem imposto de uma classe é ``Σ_b V_b / (1 + t_b)``. Se se
+    definir ``t_ef`` de modo a que ``V / (1 + t_ef)`` iguale essa soma, então:
+
+    - a base sem imposto é a mesma, por construção;
+    - o efeito mecânico, ``base · (1 + t₁) − V``, depende só da base e da taxa do
+      cenário, que é uniforme na classe — logo é o mesmo;
+    - o imposto contido no preço novo depende só do valor novo e de ``t₁``.
+
+    Nada no cálculo precisa de saber quantos escalões havia. Por isso a
+    aplicação não passou a simular por escalão: passou a usar a taxa que a
+    composição implica, o que é o mesmo número com metade da complicação.
+
+    A taxa efetiva **não é uma taxa legal** e ninguém a paga. É a taxa única que
+    suporta o mesmo imposto que o conjunto dos produtos da classe.
+
+    `indeterminado` decide o destino da parcela não repartível:
+    ``"predefinida"`` (o valor central), ``"reduzida"`` ou ``"normal"`` — os dois
+    últimos dão os extremos do intervalo de sensibilidade.
+    """
+    if comp.empty:
+        return {}
+
+    destino = {"reduzida": 6, "normal": 23}
+    taxas = {}
+    for _, r in comp.iterrows():
+        t_indet = destino.get(indeterminado, int(r["iva_defeito"]))
+        parcelas = [(6, r["taxa_6"]), (13, r["taxa_13"]), (23, r["taxa_23"]),
+                    (t_indet, r["indeterminado"])]
+        peso = sum(p for _, p in parcelas)
+        if peso <= 0:
+            taxas[r["codigo"]] = float(r["iva_defeito"])
+            continue
+        # Fração do preço com imposto que é imposto.
+        contido = sum(p * (t / 100) / (1 + t / 100) for t, p in parcelas) / peso
+        # Sem arredondar: qualquer arredondamento aqui quebra a identidade com
+        # a simulação escalão a escalão, e é essa identidade que justifica o
+        # método. O arredondamento pertence à apresentação, não ao cálculo.
+        taxas[r["codigo"]] = contido / (1 - contido) * 100 if contido < 1 else 0.0
+    return taxas
+
+
 def comparar_ponderadores(pesos_ihpc: dict[str, float],
                           variacoes: dict[str, float]) -> dict:
     """
