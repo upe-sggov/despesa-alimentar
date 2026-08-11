@@ -2319,6 +2319,13 @@ questões de leitura das Listas I e II, e a resposta existe nas informações vi
 Autoridade Tributária, que são públicas. Fica registado como trabalho por fazer, não como fonte
 em falta.
 
+> ✅ **Feito no mesmo dia, e a previsão confirmou-se — ver [secção I](#i--doutrina-da-autoridade-tributária--12-de-agosto-de-2026)
+> e [secção J](#j--mais-três-fichas-da-at-a-pastelaria-fecha-o-pão-abre--12-de-agosto-de-2026).**
+> Quatro fichas da AT resolveram a dimensão jurídica por inteiro: a pastelaria e os hortícolas
+> transformados passaram a «certa», e o **pão** passou a «predominante» por uma heterogeneidade
+> que eu não conhecia. O que sobra na parcela **já não é jurídico** — é repartição de peso, e
+> ficou encerrado como limite (ver [Encerramento](#encerramento--12-de-agosto-de-2026)).
+
 ## F5 — O teto do Eurostat, e porque é que a base não se troca
 
 **Verificação que fechou uma via.** Testei se existem ponderadores a **seis dígitos** para as
@@ -2826,6 +2833,51 @@ De 99 para **103**. Fixam a pastelaria como certa, o pão como predominante — 
 que a justificação mencione o pré-cozido congelado, para que a razão não se perca —, a citação
 literal do princípio da taxatividade, e que as quatro fichas cubram anos diferentes e nenhuma
 fique órfã.
+
+---
+
+# Encerramento — 12 de agosto de 2026
+
+## A parcela residual não é trabalho pendente: é um limite
+
+Várias secções acima descrevem a repartição das subclasses heterogéneas como **«trabalho por
+fazer»**. Deixou de o ser, por decisão da Inês, e a razão é boa: os dados que a fechariam — que
+fração do pão vendido é pré-cozido congelado, que fração do marisco é molusco, que peso têm as
+alheiras dentro da charcutaria — **são do domínio da distribuição, não da estatística pública**,
+e não há via aberta para os obter. Não é uma fonte que falte consultar; é uma fonte que não
+existe ao nosso alcance.
+
+A partir daqui, **a banda é a resposta, não a ausência de resposta**. Fica registado para que
+quem leia este documento mais tarde não fique à espera de um passo que não vem.
+
+## Onde ficou a incerteza, e o que a fecha
+
+| Parcela | Peso | Natureza | Fecha-se com |
+|---|---|---|---|
+| Repercussão | — | Comportamental | Calibrada (BdP 2023); banda 83,3 %–100 % |
+| Por predominância | 19,85 % | **Repartição de peso** | Dados de distribuição — **fora de alcance** |
+| Indeterminada | 6,23 % | **Repartição de peso** | Idem |
+| Base de agregação | — | Por explicar (~2,3×) | Investigação em aberto, não afeta o simulador |
+
+A coluna que interessa é a terceira. **Nenhuma das duas parcelas residuais é já uma questão
+jurídica** — as quatro fichas da AT e o confronto verba a verba com o texto consolidado
+resolveram essa dimensão por inteiro. O que resta é granularidade estatística, e o
+[teto do Eurostat](#f5--o-teto-do-eurostat-e-porque-é-que-a-base-não-se-troca) está verificado.
+
+## Como dizer isto a quem perguntar
+
+A formulação honesta, para uso em reunião:
+
+> «O valor central é 1 347 M€ por ano. Assenta em três coisas: a estrutura do cabaz, medida pelo
+> INE; as taxas legais, verificadas contra o Código do IVA e contra quatro informações
+> vinculativas da Autoridade Tributária; e a repercussão, calibrada com a avaliação do Banco de
+> Portugal ao IVA zero de 2023. A incerteza que resta é de **repartição de peso** dentro de
+> algumas rubricas — quanto do pão é pré-cozido congelado, quanto do marisco é molusco — e essa
+> não se resolve com fontes públicas. Está declarada nas bandas, e a maior delas move o resultado
+> cerca de 28 %.»
+
+O que **não** se deve dizer é que o número é preciso. E o que não é preciso não é o método: é o
+que o método consegue observar.
 
 ---
 
