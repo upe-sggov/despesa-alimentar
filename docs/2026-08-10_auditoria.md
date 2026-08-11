@@ -1741,6 +1741,34 @@ gritante; `test_csv_declara_os_conjuntos_que_responderam_e_nao_uma_lista_fixa` e
 venha do registo, sem repetições, e **proíbe nominalmente** os conjuntos arquivados — que é o modo
 de a lista fixa voltar a envelhecer.
 
+### E10 + E11 · Cobertura declarada — 11.08.2026
+
+Aplicados juntos: é a mesma correção em dois sítios, e é a que o **C3** já tinha feito no
+Törnqvist e que não tinha sido estendida ao resto.
+
+**E10 — `decompor()`.** Faltando o ponderador de uma classe, o seu peso é zero, sai do
+denominador, e as restantes absorvem 100 % da despesa — cada quota inflacionada, sem aviso. Passa
+a devolver `classes_sem_ponderador` e `classes_sem_variacao` em `df.attrs`. A interface distingue
+os dois casos, porque as consequências são diferentes:
+
+- **sem ponderador** → erro destacado: *todas* as quotas e valores em euros ficam sobrestimados;
+- **sem variação** → aviso: quotas e euros intactos, só o agravamento fica subestimado.
+
+**E11 — `cabaz_quintis()`.** O agravamento somava só as classes com variação, mas o
+`agravamento_orcamento` dividia pelo orçamento **total** do quintil. Passa a devolver a `cobertura`
+por quintil e a `cobertura_minima` em `attrs`, e a interface declara-a quando não é total,
+dizendo exatamente qual coluna fica subestimada.
+
+**Uma decisão que vale a pena registar.** O denominador da cobertura é a **soma das nove classes**,
+e não o total publicado pelo INE. Os dois diferem 1 €/ano em dois dos seis quintis, por
+arredondamento do próprio quadro — e isso não é falta de cobertura. Medir contra o total publicado
+dava 99,96 % de cobertura com os nove valores todos presentes, o que teria feito o aviso disparar
+sem razão.
+
+**Testes de regressão — três novos.** Todos exigem que a **consequência** seja real, não apenas
+que a declaração exista: com uma classe sem ponderador, as outras oito ficam com 1/8 em vez de 1/9;
+com a carne fora, a cobertura dos quintis cai abaixo de 85 % e o agravamento encolhe mesmo.
+
 ---
 
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.

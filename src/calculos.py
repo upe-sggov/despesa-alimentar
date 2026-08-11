@@ -247,6 +247,14 @@ def decompor(valor_total: float,
     para a variação homóloga.
 
     Devolve um DataFrame com uma linha por classe.
+
+    **Cobertura declarada.** Se uma classe não vier do Eurostat, o seu peso é
+    zero, sai do denominador, e as restantes absorvem 100 % da despesa — cada
+    uma com uma quota inflacionada, e sem aviso nenhum. É o mesmo modo de falha
+    que o C3 fechou no Törnqvist, e continuava aberto no cálculo mais central da
+    aplicação (auditoria de 11.08.2026, E10). As classes em falta ficam em
+    `df.attrs["classes_sem_ponderador"]` e `["classes_sem_variacao"]`, para a
+    interface as poder declarar.
     """
     total_pesos = sum(v for v in pesos.values() if v and v > 0)
 
@@ -280,7 +288,12 @@ def decompor(valor_total: float,
             "iva_defeito": classe["iva"],
         })
 
-    return pd.DataFrame(linhas)
+    df = pd.DataFrame(linhas)
+    df.attrs["classes_sem_ponderador"] = [
+        l["codigo"] for l in linhas if not l["ponderador"] > 0]
+    df.attrs["classes_sem_variacao"] = [
+        l["codigo"] for l in linhas if l["variacao"] is None]
+    return df
 
 
 def resumo_decomposicao(df: pd.DataFrame, valor_total: float) -> dict:
@@ -604,9 +617,15 @@ def cabaz_quintis(variacoes: dict[str, float]) -> pd.DataFrame:
     sub-reporte do inquérito é uniforme entre quintis, e nada o sustenta.
     """
     linhas = []
+    sem_variacao = []
     for chave, nome in IDF_QUINTIS.items():
         alimentar_ano = float(IDF_ALIMENTAR_QUINTIL[chave])
         mensal = alimentar_ano / 12
+
+        # Denominador da cobertura: a soma das nove classes, e **não** o total
+        # publicado. Os dois diferem até 1 €/ano por arredondamento do próprio
+        # quadro do INE, e essa diferença não é falta de cobertura.
+        total_classes = sum(float(IDF_CLASSES_QUINTIL[c["cod"]][chave]) for c in CLASSES)
 
         soma_pesos, soma_ponderada, agravamento = 0.0, 0.0, 0.0
         for classe in CLASSES:
@@ -614,6 +633,8 @@ def cabaz_quintis(variacoes: dict[str, float]) -> pd.DataFrame:
             peso = float(IDF_CLASSES_QUINTIL[cod][chave])
             var = variacoes.get(cod)
             if var is None or pd.isna(var):
+                if cod not in sem_variacao:
+                    sem_variacao.append(cod)
                 continue
             soma_pesos += peso
             soma_ponderada += peso * float(var)
@@ -623,6 +644,12 @@ def cabaz_quintis(variacoes: dict[str, float]) -> pd.DataFrame:
 
         inflacao = soma_ponderada / soma_pesos if soma_pesos > 0 else None
         total_mensal = float(IDF_DESPESA_TOTAL[chave]) / 12
+        # Fração da despesa alimentar do quintil efetivamente coberta pelas
+        # classes com variação disponível. Sem isto, um agravamento parcial era
+        # dividido por um orçamento completo e a coluna «Agravamento /
+        # orçamento» subestimava sem o dizer — logo na coluna que fecha o
+        # argumento sobre a regressividade (auditoria de 11.08.2026, E11).
+        cobertura = soma_pesos / total_classes if total_classes else 0.0
 
         # O agravamento em euros é *maior* nos quintis de cima — gastam mais em
         # alimentação, logo o mesmo aumento percentual dá mais euros. Lido só
@@ -640,9 +667,13 @@ def cabaz_quintis(variacoes: dict[str, float]) -> pd.DataFrame:
             "inflacao": inflacao,
             "agravamento": agravamento if soma_pesos > 0 else None,
             "agravamento_orcamento": esforco,
+            "cobertura": cobertura,
         })
 
-    return pd.DataFrame(linhas)
+    df = pd.DataFrame(linhas)
+    df.attrs["classes_sem_variacao"] = sem_variacao
+    df.attrs["cobertura_minima"] = float(df["cobertura"].min()) if not df.empty else 0.0
+    return df
 
 
 def composicao_quintis() -> pd.DataFrame:

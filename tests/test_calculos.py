@@ -830,6 +830,64 @@ def test_classes_tem_designacao_oficial_da_coicop_2018():
     assert not ({c["nome"] for c in CLASSES} & antigos)
 
 
+# --------------------------- cobertura declarada (auditoria E10 e E11)
+def test_decompor_declara_as_classes_sem_ponderador():
+    """Faltando um ponderador, as outras oito absorvem 100 % da despesa e cada
+    quota sai inflacionada. O erro e silencioso — por isso tem de ser
+    declarado (auditoria E10)."""
+    from src.calculos import decompor
+
+    pesos = {c: 100.0 for c in CODIGOS}
+    pesos.pop("CP0115")                       # uma classe sem ponderador
+    df = decompor(400.0, pesos, {c: 2.0 for c in CODIGOS})
+
+    assert df.attrs["classes_sem_ponderador"] == ["CP0115"]
+    # E a consequencia tem de ser real, senao nao valia a pena declarar:
+    # as oito restantes ficam com 1/8 em vez de 1/9.
+    assert df["quota"].sum() == pytest.approx(1.0)
+    assert df.set_index("codigo").loc["CP0111", "quota"] == pytest.approx(1 / 8)
+
+
+def test_decompor_declara_as_classes_sem_variacao():
+    from src.calculos import decompor
+
+    variacoes = {c: 2.0 for c in CODIGOS}
+    del variacoes["CP0113"]
+    df = decompor(400.0, {c: 100.0 for c in CODIGOS}, variacoes)
+
+    assert df.attrs["classes_sem_variacao"] == ["CP0113"]
+    assert df.attrs["classes_sem_ponderador"] == []      # quotas intactas
+    assert df["quota"].sum() == pytest.approx(1.0)
+
+
+def test_quintis_declaram_a_cobertura_do_agravamento():
+    """O agravamento soma so as classes com variacao; o orcamento e sempre o
+    total. Sem declarar a cobertura, a coluna que fecha o argumento sobre a
+    regressividade subestima em silencio (auditoria E11)."""
+    from src.calculos import cabaz_quintis
+    from src.config import IDF_CLASSES_QUINTIL
+
+    completo = cabaz_quintis({c: 3.0 for c in CODIGOS})
+    # Cobertura total = 1 exato. O denominador e a soma das nove classes, e nao
+    # o total publicado: os dois diferem ate 1 EUR/ano por arredondamento do
+    # quadro do INE, e isso nao e falta de cobertura.
+    assert completo.attrs["cobertura_minima"] == pytest.approx(1.0, abs=1e-9)
+    assert completo.attrs["classes_sem_variacao"] == []
+
+    parcial = cabaz_quintis({c: 3.0 for c in CODIGOS if c != "CP0112"})
+    assert parcial.attrs["classes_sem_variacao"] == ["CP0112"]
+    soma_nove = sum(IDF_CLASSES_QUINTIL[c]["total"] for c in CODIGOS)
+    esperado = 1 - IDF_CLASSES_QUINTIL["CP0112"]["total"] / soma_nove
+    cob_total = parcial.set_index("quintil").loc["total", "cobertura"]
+    assert cob_total == pytest.approx(esperado, abs=1e-9)
+    assert parcial.attrs["cobertura_minima"] < 0.85      # a carne pesa muito
+
+    # E o agravamento tem mesmo de encolher — a declaracao nao e decorativa.
+    a_completo = completo.set_index("quintil").loc["total", "agravamento"]
+    a_parcial = parcial.set_index("quintil").loc["total", "agravamento"]
+    assert a_parcial < a_completo
+
+
 # ------------------------ proveniencia dos ficheiros exportados (auditoria E6)
 def _csv_com_fonte(*a, **k):
     """Importa a funcao do app sem disparar a recolha de dados do Streamlit."""

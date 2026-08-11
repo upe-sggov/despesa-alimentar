@@ -992,6 +992,33 @@ st.success(
 df_decomp = decompor(despesa_mensal, dados["pesos"], dados["variacoes_classe"])
 resumo = resumo_decomposicao(df_decomp, despesa_mensal)
 
+# Cobertura da decomposição. Faltando um ponderador, as restantes classes
+# absorvem 100 % da despesa e cada quota sai inflacionada — sem aviso nenhum
+# (auditoria de 11.08.2026, E10). Declara-se, como já se fazia no Törnqvist.
+_sem_peso = df_decomp.attrs.get("classes_sem_ponderador") or []
+_sem_var = df_decomp.attrs.get("classes_sem_variacao") or []
+
+
+def _nomes_classes(codigos):
+    return ", ".join(POR_CODIGO[c]["nome"] for c in codigos if c in POR_CODIGO)
+
+
+if _sem_peso:
+    st.error(
+        f"⚠️ **{len(_sem_peso)} das nove classes não têm ponderador nesta sessão** "
+        f"— {_nomes_classes(_sem_peso)}. A despesa foi repartida apenas pelas "
+        f"restantes {9 - len(_sem_peso)}, pelo que **todas as quotas e todos os "
+        "valores em euros estão sobrestimados**. Consulte o registo de ligações "
+        "no separador Metodologia."
+    )
+elif _sem_var:
+    st.warning(
+        f"**{len(_sem_var)} das nove classes não têm variação homóloga nesta "
+        f"sessão** — {_nomes_classes(_sem_var)}. As quotas e os valores em euros "
+        "não são afetados; o **agravamento dos últimos 12 meses** é o das classes "
+        "com dados, e fica por isso subestimado."
+    )
+
 from contextlib import contextmanager
 
 
@@ -1155,6 +1182,22 @@ with aba1:
                 if r.agravamento_orcamento is not None else "—"),
         } for r in df_quintis.itertuples()])
         st.dataframe(tab_q, use_container_width=True, hide_index=True)
+
+        # O agravamento só soma as classes com variação; o orçamento é sempre o
+        # total. Faltando classes, a coluna «Agravamento / orçamento»
+        # subestimava sem o dizer (auditoria de 11.08.2026, E11).
+        _cob_q = df_quintis.attrs.get("cobertura_minima", 1.0)
+        if _cob_q < 0.999:
+            _falta_q = df_quintis.attrs.get("classes_sem_variacao") or []
+            st.warning(
+                f"**Cobertura parcial: {_pct(_cob_q * 100)} da despesa alimentar.** "
+                f"{len(_falta_q)} classe(s) sem variação homóloga nesta sessão — "
+                f"{_nomes_classes(_falta_q)}. As colunas **Inflação 12m** e "
+                "**Agravamento** medem só as classes cobertas, mas a coluna "
+                "**Agravamento / orçamento** divide pelo orçamento **total** do "
+                "quintil — está por isso subestimada na mesma proporção."
+            )
+
         if not _eng["so_idf"]:
             st.caption(
                 f"O **{_pct(_eng['idf'])}** da média nacional, na coluna «Peso no orçamento», é o "
