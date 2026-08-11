@@ -1747,3 +1747,51 @@ def test_fruta_moida_deixou_de_ser_juizo_e_passou_a_doutrina():
     cp01169 = next(c for c in IVA_COMPONENTES["CP0116"] if c["peso"] == "CP01169")
     assert cp01169["certeza"] == "certa"
     assert cp01169["taxa"] == 23
+
+
+def test_pastelaria_deixou_de_ser_juizo_e_passou_a_doutrina():
+    """
+    Era a maior parcela por predominancia do cabaz (7,06 %). A ficha 16563 e
+    direta: a verba 1.1.5 nao abrange "quaisquer outros produtos afins do pao,
+    ou de pastelaria fina".
+    """
+    from src.config import IVA_COMPONENTES
+
+    cp = next(c for c in IVA_COMPONENTES["CP0111"] if c["peso"] == "CP011139")
+    assert cp["certeza"] == "certa"
+    assert cp["taxa"] == 23
+
+
+def test_o_pao_deixou_de_ser_certo_porque_a_doutrina_o_dividiu():
+    """
+    Correcao no sentido contrario, e igualmente importante: a mesma ficha exclui
+    da verba o pao pre-cozido congelado e a massa de pao congelada. A subclasse
+    nao e homogenea, e "certa" prometia mais do que entrega.
+    """
+    from src.config import IVA_COMPONENTES
+
+    cp = next(c for c in IVA_COMPONENTES["CP0111"] if c["peso"] == "CP011131")
+    assert cp["certeza"] == "predominante"
+    assert cp["taxa"] == 6
+    assert "pré-cozido congelado" in cp["desc"]
+
+
+def test_principio_da_lista_taxativa_esta_citado_literalmente():
+    """
+    E a justificacao doutrinaria do metodo inteiro: percorrer as Listas e
+    atribuir a taxa normal a tudo o que nao esteja la de forma inequivoca.
+    """
+    from src.config import PRINCIPIO_LISTA_TAXATIVA, PRINCIPIO_LISTA_TAXATIVA_FONTE
+
+    assert "taxativamente" in PRINCIPIO_LISTA_TAXATIVA
+    assert "interpretação extensiva" in PRINCIPIO_LISTA_TAXATIVA
+    assert "24929" in PRINCIPIO_LISTA_TAXATIVA_FONTE
+
+
+def test_ha_fichas_de_mais_do_que_um_ano_e_todas_ligadas():
+    """As quatro fichas cobrem anos diferentes; nenhuma pode ficar orfa."""
+    from src.config import AT_FICHAS
+
+    assert len(AT_FICHAS) >= 4
+    anos = {f["despacho"][:4] for f in AT_FICHAS}
+    assert len(anos) >= 3

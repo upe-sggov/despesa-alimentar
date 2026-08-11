@@ -34,7 +34,7 @@ from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         ESCALAS_TESTE_COMPOSICAO, ESCALAS_TESTE_FONTE,
                         ESCALAS_TESTE_INTERVALO, ESCALAS_TESTE_RACIO,
                         IVA_COMPONENTES, IVA_COMPONENTES_FONTE,
-                        AT_FICHAS,
+                        AT_FICHAS, PRINCIPIO_LISTA_TAXATIVA,
                         IVA_MAPA, IVA_MAPA_FONTE, IVA_SUBCLASSES,
                         IVA_ZERO_AFETACAO_ORCAMENTAL, IVA_ZERO_INFLACAO_QUINTIL,
                         IVA_ZERO_QUINTIS_FONTE,
@@ -2797,13 +2797,14 @@ with aba3:
                 f"**Sensibilidade às atribuições por predominância — limite exterior.** "
                 f"{_pct(_res_iva['por_predominancia_pct'])} do cabaz está em subclasses cuja "
                 "taxa foi atribuída por **juízo sobre a rubrica**, e não por leitura inequívoca "
-                "das Listas — a pastelaria a 23 %, o bacalhau seco a 6 %. Se **todas** essas "
-                "atribuições estivessem erradas ao mesmo tempo e no mesmo sentido, a poupança "
-                f"mensal ficaria entre **{euro(_res_band_pred[0])}** e "
+                "das Listas — o **pão** a 6 %, onde a AT excluiu o pré-cozido congelado; o "
+                "bacalhau seco a 6 %, onde o fumado fica a 23 %; os pré-preparados a 23 %. Se "
+                "**todas** essas atribuições estivessem erradas ao mesmo tempo e no mesmo "
+                f"sentido, a poupança mensal ficaria entre **{euro(_res_band_pred[0])}** e "
                 f"**{euro(_res_band_pred[1])}**. É um **limite exterior, não um intervalo "
-                "plausível**: nenhuma leitura do Código do IVA põe toda a pastelaria a 6 %. "
-                "Serve para mostrar que esta parcela pesa mais do que a indeterminada, logo "
-                "abaixo — e é por isso que passou a ter banda."
+                "plausível**: ninguém sustenta que todo o pão vendido seja pré-cozido "
+                "congelado. Serve para mostrar que esta parcela pesa mais do que a "
+                "indeterminada, logo abaixo — e é por isso que passou a ter banda."
             )
 
         if _res_band is not None and abs(_res_band[1] - _res_band[0]) > 0.005:
@@ -3053,6 +3054,16 @@ with aba3:
                                 [{"Subclasse": _c, "O que a ficha decide": _t}
                                  for _c, _t in _f["decide"]]),
                             use_container_width=True, hide_index=True)
+                    st.success(
+                        "**O princípio que sustenta este quadro**, na formulação da ficha "
+                        f"24929: «{PRINCIPIO_LISTA_TAXATIVA}»\n\n"
+                        "É a justificação do método usado aqui — percorrer as Listas e atribuir "
+                        "a taxa normal a tudo o que não esteja lá de forma inequívoca. E "
+                        "explica por que os **preparados** caem quase sempre fora: «as "
+                        "categorias 1.3 e 1.6 não incluem qualquer tipo de preparados; quando "
+                        "assim é, por exemplo a verba 1.1 da Lista I, estes são especificamente "
+                        "referidos»."
+                    )
                     st.caption(
                         "**Uma tensão que se regista e não se resolve.** A ficha 28176 "
                         "caracteriza a verba 1.1.1 como abrangendo os cereais «em grão, ou em "

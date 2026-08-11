@@ -2700,5 +2700,134 @@ chegar a quem lê a aplicação.
 
 ---
 
+# J — Mais três fichas da AT: a pastelaria fecha, o pão abre — 12 de agosto de 2026
+
+A [secção I](#i--doutrina-da-autoridade-tributária--12-de-agosto-de-2026) terminou a dizer que a
+ficha seguinte que valeria mais seria **uma sobre produtos de padaria**, porque a pastelaria era
+a maior parcela por predominância do cabaz. A Inês forneceu três fichas, e uma delas é
+exatamente essa.
+
+| Ficha | Despacho | Assunto |
+|---|---|---|
+| **16563** | 2020-01-30 | Revenda de artigos de pastelaria |
+| **24929** | 2024-01-25 | Preparados de bacalhau, lulas, mariscada e cocktail de marisco |
+| **27368** | 2025-01-30 | Carne de bovino e preparados de carne |
+
+## J1 — A pastelaria: fechada
+
+A ficha 16563 responde à pergunta que estava aberta desde a secção G. A verba 1.1.5 cobre os
+tipos de «pão» definidos na **Portaria n.º 52/2015, de 26.02**, e — citando —
+
+> «Não se enquadram nesta verba **quaisquer outros produtos afins do pão, ou de pastelaria fina**»
+
+e na revenda de produtos de pastelaria aplica-se a taxa normal «por falta de enquadramento nas
+citadas verbas ou em quaisquer outras verbas das Listas anexas ao CIVA».
+
+`CP011139` — **7,06 % do cabaz, a maior parcela por predominância** — passou de «predominante» a
+**«certa»**. A minha dúvida sobre se as tostas contavam como pão está respondida: só é pão o que
+a Portaria 52/2015 define como pão.
+
+## J2 — E o pão abre
+
+A mesma ficha, na mesma frase, diz mais do que eu procurava:
+
+> «nem os produtos congelados, intermédios ou em processo de fabrico, designadamente o **pão
+> pré-cozido congelado** e a **massa de pão congelada**, que são tributados à taxa normal»
+
+`CP011131` — **9,55 % do cabaz** — estava marcado **«certa» a 6 %**, ou seja, «a subclasse cai
+inteira numa verba». **Não cai.** O pão pré-cozido congelado vende-se no retalho e está nesta
+subclasse, a 23 %.
+
+Passou a **«predominante»**. É uma correção **no sentido de aumentar a incerteza declarada**, e
+foi a doutrina que a revelou: eu tinha assumido homogeneidade onde não havia. Vale a pena
+sublinhar que uma fonte melhor nem sempre estreita a banda — às vezes mostra que ela estava
+estreita a mais.
+
+## J3 — Preparados: o princípio que sustenta o método inteiro
+
+A ficha 24929 (marisco) enuncia o critério de forma que vale a pena citar literalmente:
+
+> «A Lista I prevê **taxativamente** os produtos que podem beneficiar da taxa reduzida do IVA,
+> **não sendo passível de uma interpretação extensiva**, pelo que todo o produto que não seja ali
+> contemplado, de forma inequívoca, não pode beneficiar da taxa reduzida de IVA.»
+
+E a razão pela qual os preparados caem quase sempre fora:
+
+> «as categorias 1.3 e 1.6 **não incluem qualquer tipo de preparados**. Quando assim é, por
+> exemplo a verba 1.1 da Lista I, estes são especificamente referidos.»
+
+**Isto é a justificação doutrinária do método usado neste quadro** — percorrer as Listas e
+atribuir a taxa normal a tudo o que não esteja lá de forma inequívoca. Até agora era a minha
+regra de leitura; passou a ser a da Administração, citada.
+
+Consequência direta: `CP01179` (hortícolas moídos e preparações, **2,47 %**) passou de
+«predominante» a **«certa»** a 23 %.
+
+## J4 — Carne: confirmada, com a fronteira exata
+
+A ficha 27368 dá a fronteira operacional, ancorada nos conceitos do **Decreto-Lei n.º 147/2006** e
+no **ofício-circulado n.º 30170, de 2015-04-10**:
+
+- **Carne fresca, miudezas e carne picada sem qualquer outro ingrediente** — verba 1.2, taxa
+  reduzida, **mesmo ultracongeladas**. Confirma `CP01122` a 6 %.
+- **«Preparados de carne»** (carne com adição de outros géneros, condimentos ou aditivos) e
+  **«produtos à base de carne»** — taxa normal. Confirma `CP01125` a 23 %.
+
+O exemplo é nítido: um hambúrguer de **100 % carne** ultracongelado fica a 6 %; o mesmo
+hambúrguer com água, fibra de ervilha e amido de milho fica a 23 %. `CP01125` mantém-se
+«predominante» apenas por causa das **alheiras**, que a verba 1.3.3 da Lista II põe a 13 %.
+
+## Efeito: o total não muda, a composição muda toda
+
+| | Antes | Depois |
+|---|---|---|
+| Parcela por predominância | 19,84 % | **19,85 %** |
+| Poupança agregada anual | 1 347,3 M€ | **1 347,3 M€** |
+
+Mas por dentro é outra parcela:
+
+| Saiu (passou a «certa») | Entrou |
+|---|---|
+| Pastelaria `CP011139` — 7,06 % | Pão `CP011131` — 9,55 % |
+| Hortícolas transformados `CP01179` — 2,47 % | |
+
+**E a banda deslocou-se**, porque o que agora domina a parcela é pão a 6 % em vez de pastelaria a
+23 %:
+
+| | Antes | Depois |
+|---|---|---|
+| Banda da predominância | 16,57 € – 22,58 € | **19,49 € – 25,43 €** |
+
+O limite exterior deixou de estar centrado abaixo do valor central e passou a estar acima: se o
+pão estivesse todo a 23 %, a poupança de uma isenção seria maior, não menor. O texto que explica
+a banda na aplicação foi reescrito — citava a pastelaria como exemplo do que lá estava, e a
+pastelaria já não está.
+
+## O que resta na parcela por predominância
+
+| Subclasse | Peso | O que falta decidir |
+|---|---|---|
+| Pão `CP011131` | 9,55 % | Que fração do pão vendido é pré-cozido congelado |
+| Pré-preparados `CP01191` | 3,02 % | Formatos que a ficha 28176 não apreciou |
+| Peixe seco `CP01132` | 2,58 % | Fronteira do peixe fumado |
+| Preparações de carne `CP01125` | 2,45 % | Peso das alheiras (13 %) |
+| Conservas de peixe `CP01133` | 1,64 % | Pastas de atum, cavala e sardinha |
+| Massas `CP01115` | 0,61 % | Peso das massas recheadas |
+
+**Nenhuma destas é já uma questão jurídica.** Todas passaram a ser questões de **repartição de
+peso** dentro de uma subclasse cuja lei está estabelecida — o mesmo estatuto que o marisco tinha
+desde a secção G. É uma mudança de natureza do problema: deixou de faltar doutrina e passou a
+faltar granularidade estatística, que o Eurostat não dá e que a
+[secção F5](#f5--o-teto-do-eurostat-e-porque-é-que-a-base-não-se-troca) mostrou estar no teto.
+
+## Testes
+
+De 99 para **103**. Fixam a pastelaria como certa, o pão como predominante — com a exigência de
+que a justificação mencione o pré-cozido congelado, para que a razão não se perca —, a citação
+literal do princípio da taxatividade, e que as quatro fichas cubram anos diferentes e nenhuma
+fique órfã.
+
+---
+
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.
 Não constitui posição oficial.*

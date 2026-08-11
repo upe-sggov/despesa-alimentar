@@ -311,6 +311,28 @@ CIVA_FONTE = ("Código do IVA, Listas I e II — texto consolidado, versão a "
 #    caberiam; se a perdem, a que corresponder ao produto resultante. É a regra
 #    que explica por que tantos preparados acabam na taxa normal.
 #
+# ---- O princípio que sustenta todo este quadro ----------------------------
+# A ficha 24929 enuncia-o de forma que vale a pena citar literalmente:
+#
+#   «A Lista I prevê taxativamente os produtos que podem beneficiar da taxa
+#   reduzida do IVA, não sendo passível de uma interpretação extensiva, pelo que
+#   todo o produto que não seja ali contemplado, de forma inequívoca, não pode
+#   beneficiar da taxa reduzida de IVA.»
+#
+# É a justificação doutrinária do método usado aqui: percorrer as Listas e
+# atribuir a taxa normal a tudo o que não esteja lá de forma inequívoca. E a
+# mesma ficha acrescenta a razão pela qual os preparados caem quase sempre fora:
+# «as categorias 1.3 e 1.6 não incluem qualquer tipo de preparados. Quando assim
+# é, por exemplo a verba 1.1 da Lista I, estes são especificamente referidos».
+PRINCIPIO_LISTA_TAXATIVA = (
+    "A Lista I prevê taxativamente os produtos que podem beneficiar da taxa "
+    "reduzida do IVA, não sendo passível de uma interpretação extensiva, pelo "
+    "que todo o produto que não seja ali contemplado, de forma inequívoca, não "
+    "pode beneficiar da taxa reduzida de IVA."
+)
+PRINCIPIO_LISTA_TAXATIVA_FONTE = ("Autoridade Tributária, ficha doutrinária do "
+                                  "processo 24929, despacho de 2024-01-25")
+#
 # ---- Uma tensão que se regista e não se resolve --------------------------
 # A ficha caracteriza a verba 1.1.1 como abrangendo os cereais «em grão, ou em
 # flocos (grão inteiro prensado)», o que sugeriria 6 % para os flocos simples.
@@ -321,6 +343,54 @@ CIVA_FONTE = ("Código do IVA, Listas I e II — texto consolidado, versão a "
 # simples. Fica registada porque é o único ponto do quadro onde uma leitura
 # diferente é defensável.
 AT_FICHAS = [
+    {
+        "processo": "16563",
+        "despacho": "2020-01-30",
+        "orgao": "Diretora de Serviços do IVA, por subdelegação",
+        "assunto": "Taxas — revenda de artigos de pastelaria",
+        "decide": [
+            ("CP011139", "A verba 1.1.5 cobre os tipos de «pão» definidos na Portaria "
+                         "n.º 52/2015, de 26.02, e **não abrange «quaisquer outros "
+                         "produtos afins do pão, ou de pastelaria fina»**. Na revenda "
+                         "de produtos de pastelaria aplica-se a taxa normal «por falta "
+                         "de enquadramento nas citadas verbas ou em quaisquer outras»."),
+            ("CP011131", "A mesma verba **exclui os produtos congelados, intermédios ou "
+                         "em processo de fabrico, designadamente o «pão pré-cozido "
+                         "congelado» e a «massa de pão congelada»**, tributados à taxa "
+                         "normal. A subclasse do pão não é, por isso, homogénea."),
+        ],
+    },
+    {
+        "processo": "24929",
+        "despacho": "2024-01-25",
+        "orgao": "Diretor de Serviços da DSIVA, por subdelegação",
+        "assunto": "Preparados de bacalhau, de lulas, mariscada e cocktail de marisco",
+        "decide": [
+            ("CP01136", "Os preparados de marisco — combinações de ingredientes que "
+                        "constituem um produto novo — ficam à taxa normal. As "
+                        "categorias 1.3 e 1.6 da Lista I **não incluem qualquer tipo "
+                        "de preparados**; quando o legislador os quis abranger, "
+                        "referiu-os expressamente."),
+            ("CP01179", "Pela mesma razão, as preparações de hortícolas não têm "
+                        "enquadramento na categoria 1.6: taxa normal."),
+        ],
+    },
+    {
+        "processo": "27368",
+        "despacho": "2025-01-30",
+        "orgao": "Diretor de Serviços da DSIVA, por subdelegação",
+        "assunto": "Carne de bovino e preparados de carne de bovino",
+        "decide": [
+            ("CP01122", "Carne fresca, miudezas e **carne picada sem qualquer outro "
+                        "ingrediente** ficam na verba 1.2, à taxa reduzida, mesmo "
+                        "ultracongeladas (ofício-circulado n.º 30170, de 2015-04-10)."),
+            ("CP01125", "Os «preparados de carne» (carne com adição de outros géneros, "
+                        "condimentos ou aditivos) e os «produtos à base de carne» "
+                        "ficam à **taxa normal** — conceitos do Decreto-Lei n.º "
+                        "147/2006. Um hambúrguer com água e amido é preparado; um de "
+                        "100 % carne não é."),
+        ],
+    },
     {
         "processo": "28176",
         "despacho": "2025-06-27",
@@ -367,16 +437,21 @@ IVA_COMPONENTES = {
                  "corrigida ou autolevedante, e as lácteas e não lácteas; as "
                  "farinhas obtidas de fruta ou de hortícolas ficam a 23 % "
                  "(ficha 28176). A subclasse é a das farinhas de cereais"},
-        {"peso": "CP011131", "taxa": 6, "certeza": "certa",
-         "desc": "Pão (Lista I, 1.1)"},
-        {"peso": "CP011139", "taxa": 23, "certeza": "predominante",
-         "desc": "Outros produtos de padaria — bolos, bolachas e pastelaria. A "
-                 "verba 1.1.5 da Lista I diz apenas «pão», e o pão tem código "
-                 "próprio (CP011131): esta subclasse é, por construção, o que "
-                 "não é pão. Da leitura exaustiva das duas Listas não resulta "
-                 "verba alguma que a cubra. Fica «predominante» e não «certa» "
-                 "por uma fronteira que só a AT fecha: se as tostas e o pão "
-                 "torrado contam como pão para efeitos da verba 1.1.5"},
+        {"peso": "CP011131", "taxa": 6, "certeza": "predominante",
+         "desc": "Pão (Lista I, 1.1.5) — os tipos definidos na Portaria n.º "
+                 "52/2015. **Não é homogénea:** a AT excluiu da verba «os "
+                 "produtos congelados, intermédios ou em processo de fabrico, "
+                 "designadamente o pão pré-cozido congelado e a massa de pão "
+                 "congelada», que ficam a 23 % (ficha 16563). O pão fresco é o "
+                 "grosso, mas a subclasse inclui o congelado de retalho"},
+        {"peso": "CP011139", "taxa": 23, "certeza": "certa",
+         "desc": "Outros produtos de padaria — bolos, bolachas e pastelaria. **A "
+                 "AT fechou esta questão:** a verba 1.1.5 cobre os tipos de pão "
+                 "definidos na Portaria n.º 52/2015 e «não se enquadram nesta "
+                 "verba quaisquer outros produtos afins do pão, ou de pastelaria "
+                 "fina», aplicando-se a taxa normal «por falta de enquadramento "
+                 "nas citadas verbas ou em quaisquer outras» (ficha 16563). Era "
+                 "a maior parcela por predominância do cabaz"},
         {"peso": "CP01114", "taxa": None, "certeza": "mista", "entre": (13, 23),
          "desc": "Cereais para pequeno-almoço — **nunca a 6 %**. A Lista I não "
                  "tem verba para eles; a Lista II (1.12) cobre os «flocos "
@@ -397,23 +472,31 @@ IVA_COMPONENTES = {
                  "«carnes e miudezas comestíveis, frescas ou congeladas», e não "
                  "o animal vivo. Não há verba que os abranja"},
         {"peso": "CP01122", "taxa": 6, "certeza": "certa",
-         "desc": "Carne fresca, refrigerada ou congelada (Lista I, 1.2) — o corte "
-                 "a seis dígitos confirma que as espécies presentes (bovina, "
-                 "suína, ovina, caprina, aves, coelho) estão todas na verba"},
+         "desc": "Carne fresca, refrigerada ou congelada (Lista I, 1.2) — as "
+                 "espécies presentes (bovina, suína, ovina, caprina, aves, "
+                 "coelho) estão todas na verba. A AT confirmou que abrange a "
+                 "**carne picada sem qualquer outro ingrediente**, mesmo "
+                 "ultracongelada (ficha 27368, ofício-circulado n.º 30170 de "
+                 "2015-04-10); com aditivos passa a «preparado» e sai desta "
+                 "subclasse para a CP01125"},
         {"peso": "CP01123", "taxa": 23, "certeza": "certa",
          "desc": "Carne seca, salgada, em salmoura ou fumada — a Lista I só "
                  "cobre fresca ou congelada"},
         {"peso": "CP01124", "taxa": 6, "certeza": "certa",
          "desc": "Miudezas frescas, refrigeradas ou congeladas (Lista I, 1.2)"},
         {"peso": "CP01125", "taxa": 23, "certeza": "predominante",
-         "desc": "Preparações de carne — charcutaria e enchidos a 23 %, com as "
-                 "alheiras a 13 % (Lista II, 1.3.3)"},
+         "desc": "Preparações de carne — a AT decidiu que os «preparados de "
+                 "carne» (carne com adição de outros géneros, condimentos ou "
+                 "aditivos) e os «produtos à base de carne» ficam à **taxa "
+                 "normal**, conceitos do Decreto-Lei n.º 147/2006 (ficha 27368). "
+                 "Fica «predominante» e não «certa» porque as **alheiras** estão "
+                 "na verba 1.3.3 da Lista II, a 13 %"},
     ],
     "CP0113": [
         {"peso": "CP01131", "taxa": 6, "certeza": "certa",
          "desc": "Peixe vivo, fresco, refrigerado ou congelado (Lista I, 1.3)"},
         {"peso": "CP01132", "taxa": 6, "certeza": "predominante",
-         "desc": "Peixe seco ou salgado (Lista I, 1.3) — o bacalhau é o grosso; "
+         "desc": "Peixe seco ou salgado (Lista I, 1.3.1) — o bacalhau é o grosso; "
                  "o peixe fumado e o salmão, espadarte e esturjão salgados "
                  "ficam a 23 %"},
         {"peso": "CP01133", "taxa": 6, "certeza": "predominante",
@@ -431,7 +514,10 @@ IVA_COMPONENTES = {
          "desc": "Preparações de marisco — atravessa **as três taxas**: as "
                  "conservas de moluscos com teor superior a 50 % caem na verba "
                  "1.3.2 da Lista I (6 %), as restantes conservas de moluscos na "
-                 "verba 1.2.1 da Lista II (13 %), e as de crustáceos a 23 %"},
+                 "verba 1.2.1 da Lista II (13 %), e as de crustáceos a 23 %. Os "
+                 "**preparados** — mariscadas, cocktails, caldeiradas — ficam a "
+                 "23 %: a AT decidiu que «as categorias 1.3 e 1.6 não incluem "
+                 "qualquer tipo de preparados» (ficha 24929)"},
         {"peso": "CP01137", "taxa": None, "certeza": "mista",
          "desc": "Fígados, ovas e miudezas de peixe e marisco — o caviar fica a 23 %"},
     ],
@@ -502,9 +588,13 @@ IVA_COMPONENTES = {
         {"peso": "CP01178", "taxa": 6, "certeza": "certa",
          "desc": "Hortícolas congelados — a Lista I cobre-os, «ainda que "
                  "previamente cozidos»"},
-        {"peso": "CP01179", "taxa": 23, "certeza": "predominante",
+        {"peso": "CP01179", "taxa": 23, "certeza": "certa",
          "desc": "Hortícolas moídos e outras preparações — batata frita de "
-                 "pacote, conservas e preparados"},
+                 "pacote, conservas e preparados. A AT decidiu que **«as "
+                 "categorias 1.3 e 1.6 não incluem qualquer tipo de preparados»**, "
+                 "e que quando o legislador os quis abranger os referiu "
+                 "expressamente (ficha 24929). A categoria 1.6 cobre frescos, "
+                 "secos, desidratados e congelados — não preparações"},
     ],
     "CP0118": [
         {"peso": "CP01181", "taxa": 23, "certeza": "certa",
