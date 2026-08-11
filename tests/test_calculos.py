@@ -682,6 +682,108 @@ def test_jsonstat_recusa_dimensao_extra_inexistente():
         _descodifica_jsonstat(js, extra="rskpovth")
 
 
+# ------------------------------------- ECOICOP versao 2 (auditoria E1 e E2)
+def _js_coicop18():
+    """Resposta com a dimensao de classificacao chamada `coicop18`."""
+    return {
+        "id": ["coicop18", "geo", "time"],
+        "size": [2, 1, 2],
+        "dimension": {
+            "coicop18": {"category": {"index": {"CP0111": 0, "CP0112": 1}}},
+            "geo": {"category": {"index": {"PT": 0}}},
+            "time": {"category": {"index": {"2026-05": 0, "2026-06": 1}}},
+        },
+        # row-major: (CP0111,05) (CP0111,06) (CP0112,05) (CP0112,06)
+        "value": [3.4, 2.5, 5.1, 4.3],
+    }
+
+
+def test_dimensao_coicop18_e_normalizada_para_coicop():
+    """Na ECOICOP v2 a dimensao chama-se `coicop18`. Declarada, tem de chegar
+    ao resto da aplicacao com o nome de sempre."""
+    from src.eurostat import _descodifica_jsonstat
+
+    df = _descodifica_jsonstat(_js_coicop18(), dim_coicop="coicop18")
+    assert set(df["coicop"]) == {"CP0111", "CP0112"}
+    p = df.pivot_table(index="time", columns="coicop", values="valor")
+    assert p.loc["2026-06", "CP0111"] == pytest.approx(2.5)
+    assert p.loc["2026-06", "CP0112"] == pytest.approx(4.3)
+
+
+def test_sem_declarar_a_classificacao_as_classes_colapsam():
+    """A via errada tem de **divergir**, senao este teste nao testa nada: era
+    exatamente assim que a migracao falhava em silencio (auditoria E1)."""
+    from src.eurostat import _descodifica_jsonstat
+
+    df = _descodifica_jsonstat(_js_coicop18())          # sem declarar
+    assert set(df["coicop"]) == {""}                    # tudo numa classe so
+    assert df.groupby("coicop")["valor"].last().shape == (1,)
+
+
+def test_classificacao_declarada_e_ausente_e_erro():
+    """Melhor falhar do que juntar as nove classes numa."""
+    from src.eurostat import ErroEurostat, _descodifica_jsonstat
+
+    with pytest.raises(ErroEurostat):
+        _descodifica_jsonstat(_js_coicop18(), dim_coicop="coicop")
+
+
+def test_conjuntos_do_ihpc_sao_os_correntes_e_nao_os_arquivados():
+    """Os tres conjuntos da ECOICOP v1 pararam em dezembro de 2025 e continuam
+    a responder com HTTP 200 — nao podem voltar a entrar por distracao."""
+    import inspect
+
+    from src import eurostat
+
+    assert eurostat.HICP_MENSAL == "prc_hicp_minr"
+    assert eurostat.HICP_PONDERADORES == "prc_hicp_iw"
+
+    fonte = "".join(
+        inspect.getsource(getattr(eurostat, f))
+        for f in ("ponderadores", "indice_precos", "indice_classes", "variacoes")
+    )
+    for arquivado in ("prc_hicp_midx", "prc_hicp_manr", "prc_hicp_inw"):
+        assert arquivado not in fonte, f"{arquivado} foi arquivado em 2025"
+
+    # A unidade tem de ir explicita: sem ela a resposta traz niveis e taxas
+    # misturados na mesma coluna de valores.
+    assert "I25" in eurostat.HICP_UNIDADES_INDICE
+    assert eurostat.HICP_UNIDADE_VARIACAO == "RCH_A"
+    assert "{'+'.join(unidades)}" in inspect.getsource(eurostat.indice_classes)
+    assert "dim_coicop=\"coicop18\"" in fonte, "a dimensao tem de ser declarada"
+
+
+def test_agregado_de_enquadramento_usa_o_codigo_da_ecoicop2():
+    """`CP00` devolve HTTP 400 no conjunto corrente; o codigo passou a `TOTAL`."""
+    from src.config import AGREGADOS, COD_AGREGADOS
+
+    assert "TOTAL" in COD_AGREGADOS
+    assert "CP00" not in COD_AGREGADOS
+    todos = [a for a in AGREGADOS if a["cod"] == "TOTAL"]
+    assert len(todos) == 1 and todos[0]["grupo"] == "enquadramento"
+
+
+def test_classes_tem_designacao_oficial_da_coicop_2018():
+    """As designacoes sao as do INE, nao uma traducao desta ferramenta."""
+    from src.config import CLASSES, POR_CODIGO
+
+    assert len(CLASSES) == 9
+    for c in CLASSES:
+        assert c["oficial"].strip(), f"{c['cod']} sem designacao oficial"
+    oficiais = {c["oficial"] for c in CLASSES}
+    assert len(oficiais) == 9, "designacoes oficiais repetidas"
+
+    # Duas ancoras verificaveis no anexo do IDF 2022/2023, que sao precisamente
+    # as classes cujo conteudo mudou mais entre versoes.
+    assert POR_CODIGO["CP0112"]["oficial"].startswith("Animais vivos")
+    assert POR_CODIGO["CP0119"]["oficial"].startswith("Alimentos pré-preparados")
+
+    # E os rotulos da ECOICOP v1 nao podem sobreviver.
+    antigos = {"Pão e cereais", "Fruta", "Legumes e hortícolas",
+               "Açúcar e doces", "Outros alimentos", "Peixe e marisco"}
+    assert not ({c["nome"] for c in CLASSES} & antigos)
+
+
 # --------------------------------------------- Observatorio de Precos (GPP)
 def _obs_df(registos):
     """registos: (produto, fase, 'YYYY-MM-DD', preco)"""

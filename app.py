@@ -35,7 +35,8 @@ from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         IDF_PESO_ALIMENTAR, IDF_QUINTIS,
                         LIMITE_ANOS_SOFI, LIMITE_DIAS_OBSERVATORIO,
                         SOFI_CUSTO, SOFI_FONTE, SOFI_INCAPACIDADE, SOFI_MILHOES,
-                        AZUL, CINZENTO, CLASSES, CODIGOS, COICOP_ALIMENTAR, DOURADO,
+                        AZUL, CINZENTO, CLASSES, CLASSES_FONTE, CODIGOS,
+                        COICOP_ALIMENTAR, DOURADO,
                         PAISES, PAISES_POR_DEFEITO, POR_CODIGO, RODAPE,
                         UNIDADE, VERDE, VERMELHO,
                         euro, mes_pt, milhoes, numero, percentagem, pontos)
@@ -514,7 +515,7 @@ def csv_com_fonte(df: pd.DataFrame, titulo: str, dados: dict, extra=None) -> byt
         f"# {titulo}",
         "# Produzido por: Unidade de Pesquisa e Estatisticas (UPE) - DSSD - Secretaria-Geral do Governo",
         "# Fonte dos dados: Eurostat (indice harmonizado de precos no consumidor e contas nacionais)",
-        "# Conjuntos: prc_hicp_midx, prc_hicp_manr, prc_hicp_inw, nama_10_co3_p3, ilc_lvph01",
+        "# Conjuntos: prc_hicp_minr, prc_hicp_iw, nama_10_co3_p3, ilc_lvph01",
         f"# Ultimo mes disponivel: {dados.get('mes_variacoes') or '-'}",
         f"# Ponderadores de: {dados.get('ano_pesos') or '-'}",
         f"# Ancora das Contas Nacionais: {dados.get('despesa_ano') or '-'} "
@@ -1176,7 +1177,7 @@ with aba1:
             csv_com_fonte(df_quintis, "Cabaz alimentar por quintil de rendimento", dados,
                           extra=[
                               ("Niveis e ponderacao", "INE, IDF 2022/2023, quadros Q.2.11.a e Q.2.11.b"),
-                              ("Variacoes de preco", "Eurostat, prc_hicp_manr (IHPC)"),
+                              ("Variacoes de preco", "Eurostat, prc_hicp_minr (IHPC, ECOICOP v2)"),
                               ("Nota", "Niveis do IDF tal como medidos, sem reescalamento"),
                           ]),
             file_name="cabaz_por_quintil.csv", mime="text/csv")
@@ -1714,9 +1715,10 @@ que não há nada a descontar nem a acrescentar.
             )
 
         with e3.expander("📋 Tabela detalhada"):
-            tabela = df_decomp[["codigo", "classe", "ponderador", "quota",
-                                "valor", "variacao", "contributo"]].copy()
-            tabela.columns = ["Código", "Grupo", "Ponderador (‰)", "Quota",
+            tabela = df_decomp[["codigo", "classe", "classe_oficial", "ponderador",
+                                "quota", "valor", "variacao", "contributo"]].copy()
+            tabela.columns = ["Código", "Grupo", "Designação COICOP 2018",
+                              "Ponderador (‰)", "Quota",
                               "Valor (€)", "Variação (%)", "Contributo (€)"]
             st.dataframe(tabela, use_container_width=True, hide_index=True,
                          column_config={
@@ -2000,7 +2002,7 @@ with aba2:
             with st.expander("Como estes índices são construídos"):
                 st.markdown(f"""
     Todos partem de dezembro de {_ano_base} = 100 e usam o índice mensal por classe
-    (`prc_hicp_midx`) e os ponderadores anuais (`prc_hicp_inw`), ambos do Eurostat.
+    (`prc_hicp_minr`) e os ponderadores anuais (`prc_hicp_iw`), ambos do Eurostat.
     Entram as **{len(_cmp_idx.attrs.get('classes_usadas') or [])} classes** com série completa em
     todos os dezembros do período: uma classe sem observação num único mês eliminaria esse mês da
     comparação, e com ele o elo do índice.
@@ -2032,7 +2034,7 @@ with aba2:
                 csv_com_fonte(_cmp_idx, "Vies de substituicao - cabaz fixo contra Tornqvist", dados,
                               extra=[
                                   ("Base", f"dezembro de {_ano_base} = 100"),
-                                  ("Series", "prc_hicp_midx (indice por classe) e prc_hicp_inw"),
+                                  ("Series", "prc_hicp_minr (indice por classe) e prc_hicp_iw"),
                                   ("Nota", "Tornqvist aproximado - ver metodologia no separador"),
                               ]),
                 file_name="vies_substituicao.csv", mime="text/csv")
@@ -2447,7 +2449,10 @@ with aba3:
                     continue
                 st.markdown(
                     f"**{_cl['emoji']} {_cl['nome']}** — predefinida a "
-                    f"**{_cl['iva']} %**"
+                    f"**{_cl['iva']} %**  \n"
+                    f"<span style='font-size:11.5px;color:#6b7280'>COICOP 2018 "
+                    f"01.1.{_cl['cod'][5]} · {_cl['oficial']}</span>",
+                    unsafe_allow_html=True,
                 )
                 _linhas = []
                 for _t, _txt in _mapa["taxas"]:
@@ -3340,13 +3345,21 @@ with aba5:
     desatualizado, é porque a fonte ainda não publicou — não porque a aplicação não o foi buscar.
             """)
             st.warning("""
-    **Alteração metodológica de fevereiro de 2026.** A partir dos dados de janeiro de 2026, o índice
-    passou a ser compilado segundo a **ECOICOP versão 2** (alinhada com a COICOP 2018) e o período de
-    referência passou para **2025 = 100**. As séries com a classificação anterior foram arquivadas.
+    **Alteração metodológica de fevereiro de 2026 — e o que ela custou a esta aplicação.**
+    A partir dos dados de janeiro de 2026, o índice passou a ser compilado segundo a **ECOICOP
+    versão 2** (alinhada com a COICOP 2018), com período de referência **2025 = 100**. As séries
+    com a classificação anterior não foram apenas rebaseadas: **foram arquivadas em conjuntos
+    próprios, que deixaram de avançar**. O Eurostat inscreveu-o no título — «HICP — monthly data
+    (index) **(1996-2025)**».
 
-    A aplicação prefere automaticamente a base mais recente disponível, com recuo ordenado para as
-    anteriores. Se em algum momento as classes de produtos deixarem de responder, é nesta alteração
-    que se deve olhar primeiro.
+    Os conjuntos antigos continuaram a responder normalmente, com dados bem formados, apenas
+    parados em dezembro de 2025. **A aplicação apresentou-os como sendo os mais recentes durante
+    sete meses, sem nunca dar erro.** Foi corrigido a 11.08.2026: passou a usar `prc_hicp_minr` e
+    `prc_hicp_iw`, e as classes passaram a ter as designações da COICOP 2018.
+
+    A lição que ficou inscrita no código: **uma série que responde não é uma série que avança**.
+    A verificação de frescura, que existia apenas para as fontes sem API, tem de cobrir também as
+    que têm.
             """)
 
         with st.expander("🗂️ Origem dos dados — conjuntos utilizados e ligações"):
@@ -3357,9 +3370,9 @@ with aba5:
 
     | Elemento | Conjunto | O que mede | Frequência |
     |---|---|---|---|
-    | Ponderadores por grupo | [`prc_hicp_inw`](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_inw/default/table) | Fração de cada mil euros de consumo total (‰) | Anual |
-    | Índice de preços | [`prc_hicp_midx`](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_midx/default/table) | Nível do índice — não são euros | Mensal |
-    | Variação homóloga | [`prc_hicp_manr`](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_manr/default/table) | Subida face ao mesmo mês do ano anterior (%) | Mensal |
+    | Ponderadores por grupo | [`prc_hicp_iw`](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_iw/default/table) | Fração de cada mil euros de consumo total (‰) | Anual |
+    | Índice de preços | [`prc_hicp_minr`](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_minr/default/table) | Nível do índice (unidade `I25`) — não são euros | Mensal |
+    | Variação homóloga | [`prc_hicp_minr`](https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_minr/default/table) | Subida face ao mesmo mês do ano anterior (unidade `RCH_A`, %) | Mensal |
     | Despesa alimentar (âncora) | [`nama_10_co3_p3`](https://ec.europa.eu/eurostat/databrowser/view/nama_10_co3_p3/default/table) | Despesa efetiva em euros (Contas Nacionais) | Anual |
     | Dimensão do agregado | [`ilc_lvph01`](https://ec.europa.eu/eurostat/databrowser/view/ilc_lvph01/default/table) | N.º médio de pessoas por agregado | Anual |
     | N.º de agregados | [`lfst_hhnhtych`](https://ec.europa.eu/eurostat/databrowser/view/lfst_hhnhtych/default/table) | Total de agregados familiares (milhares), série anual | Anual |
@@ -3411,9 +3424,10 @@ em Excel ou noutra ferramenta.
                 st.info("Sem endereços registados nesta sessão.")
             else:
                 _rot = {
-                    "prc_hicp_inw": "Ponderadores por grupo — coluna «Ponderador ‰»",
-                    "prc_hicp_manr": "Variação homóloga — coluna «Variação %»",
-                    "prc_hicp_midx": "Índice de preços — atualiza a âncora ao mês corrente",
+                    "prc_hicp_iw": "Ponderadores por grupo — coluna «Ponderador ‰»",
+                    "prc_hicp_minr": ("Índice de preços e variação homóloga — "
+                                      "atualiza a âncora ao mês corrente e alimenta "
+                                      "a coluna «Variação %»"),
                     "nama_10_co3_p3": "Despesa alimentar e consumo total — âncora em euros",
                     "ilc_lvph01": "Dimensão média do agregado",
                     "lfst_hhnhtych": "Número de agregados familiares",
@@ -3439,7 +3453,7 @@ A tabela do primeiro separador tem cinco colunas calculadas. Cada uma vem de um 
 **Código** — a classe COICOP, de `CP0111` a `CP0119`. Não é calculado: é a nomenclatura
 oficial. `CP0111` é pão e cereais, `CP0112` carne, e assim por diante.
 
-**Ponderador (‰)** — vem tal e qual de `prc_hicp_inw`, sem transformação. Diz quantos de cada
+**Ponderador (‰)** — vem tal e qual de `prc_hicp_iw`, sem transformação. Diz quantos de cada
 mil euros do consumo total das famílias vão para aquele grupo. Se pão e cereais tiver 28,1 ‰,
 significa 2,81 % do consumo total — e, dentro da alimentação, 28,1 dividido pela soma dos nove.
 
@@ -3450,7 +3464,7 @@ despesa **alimentar** que cabe àquele grupo. A soma das nove quotas dá 100 %.
             """)
             st.latex(r"V_i = \text{despesa total} \times \frac{w_i}{\sum_j w_j}")
             st.markdown("""
-**Variação (%)** — vem tal e qual de `prc_hicp_manr`, sem transformação. É a variação homóloga
+**Variação (%)** — vem tal e qual de `prc_hicp_minr`, sem transformação. É a variação homóloga
 oficial daquele grupo: de quanto subiram os preços face ao mesmo mês do ano anterior.
 
 **Contributo (€)** — quantos euros do agravamento dos últimos doze meses se devem àquele grupo.
@@ -3532,15 +3546,37 @@ Chamar-lhe cabaz seria prometer o que não entrega.
     |---|---|---|
     | Divisão | 01 | Produtos alimentares e bebidas não alcoólicas |
     | Grupo | 01.1 | Produtos alimentares |
-    | Classes | 01.1.1 a 01.1.9 | Pão e cereais, carne, peixe, laticínios, óleos, fruta, legumes, doces, outros |
+    | Classes | 01.1.1 a 01.1.9 | As nove do quadro abaixo |
 
     Estas nove classes são usadas nesta aplicação porque são o **nível mais fino em que o Eurostat
     publica simultaneamente ponderadores e índices** para todos os Estados-Membros. Qualquer outro
     agrupamento — fresco contra processado, saudável contra não saudável — exigiria microdados que
     não existem em acesso público.
 
-    *Nota: a ECOICOP foi revista com a COICOP 2018; as séries com a classificação anterior estão
-    arquivadas. A aplicação usa sempre a base mais recente disponível.*
+    **A aplicação usa a COICOP versão 2018 (ECOICOP ver.2)**, em vigor no índice desde janeiro de
+    2026. As designações abaixo são as **do INE**, não uma tradução desta ferramenta: estão
+    transcritas do anexo do relatório do IDF 2022/2023. A forma curta é a usada nos cartões e nos
+    gráficos, onde não cabe a designação completa.
+            """)
+            st.dataframe(pd.DataFrame([
+                {"Código": f"01.1.{c['cod'][5]}",
+                 "Forma curta": f"{c['emoji']} {c['nome']}",
+                 "Designação oficial (INE, COICOP 2018)": c["oficial"]}
+                for c in CLASSES
+            ]), use_container_width=True, hide_index=True)
+            st.caption(f"Fonte das designações: {CLASSES_FONTE}.")
+            st.info("""
+    **A revisão mudou o conteúdo das classes, não só os nomes.** Os códigos `CP0111` a `CP0119`
+    sobreviveram, mas o que está dentro deles mudou — a classe 01.1.2 passou a incluir animais
+    vivos, a 01.1.6 os frutos de casca rija, a 01.1.7 os tubérculos e as leguminosas, a 01.1.9 os
+    alimentos pré-preparados. Até 11.08.2026 esta aplicação mostrava os rótulos da versão
+    anterior («Pão e cereais», «Fruta», «Legumes e hortícolas»), que já não descreviam o que a
+    classe continha.
+
+    Há um efeito lateral que vale a pena registar: **o IDF 2022/2023 já usava a COICOP 2018**,
+    enquanto o índice ainda estava na versão 1. Durante esse período a aplicação cruzava as duas
+    — estrutura de despesa numa classificação, variação de preços na outra, sob o mesmo rótulo.
+    Com a migração, as duas fontes passaram a estar **na mesma classificação**.
             """)
 
         with st.expander("👶 Porquê «crianças com menos de 14 anos» e não outra idade"):

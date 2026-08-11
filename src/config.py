@@ -17,22 +17,48 @@ AMARELO = "#FFD200"
 CINZENTO = "#171715"
 
 # --------------------------------------------------------------------------
-# Classes de produtos alimentares (COICOP 01.1)
+# Classes de produtos alimentares (COICOP 01.1, versão 2018)
 # --------------------------------------------------------------------------
+# `nome` é a forma curta usada nos cartões e nos gráficos, onde não cabe a
+# designação completa; `oficial` é a designação **do INE**, transcrita do anexo
+# «Classificação do Consumo Individual por Objetivo (COICOP, versão 2018)» do
+# relatório do IDF 2022/2023. As formas curtas são as que o levantamento de
+# 07.08.2026 já usava, §2.1 — não são invenção desta aplicação.
+#
+# Até 11.08.2026 os nomes eram os da **ECOICOP versão 1** («Pão e cereais»,
+# «Carne», «Fruta», «Legumes e hortícolas», «Açúcar e doces», «Outros
+# alimentos»). Os códigos CP0111–CP0119 sobreviveram à revisão da nomenclatura,
+# mas o conteúdo das classes mudou, e os rótulos deixaram de o descrever
+# (auditoria de 11.08.2026, E2).
+#
 # `iva` é a taxa **predominante** predefinida, editável na aplicação. O Código
 # do IVA classifica por produto — Listas I (6 %) e II (13 %) —, não por classe
 # COICOP. **Nenhuma das nove classes é homogénea**: ver `IVA_MAPA`, que assinala
 # o que dentro de cada uma segue taxa diferente da predefinida.
+CLASSES_FONTE = ("INE, Inquérito às Despesas das Famílias 2022/2023, anexo — "
+                 "Classificação do Consumo Individual por Objetivo "
+                 "(COICOP, versão 2018)")
+
 CLASSES = [
-    {"cod": "CP0111", "nome": "Pão e cereais",        "emoji": "🍞", "cor": "#C98B3A", "iva": 6},
-    {"cod": "CP0112", "nome": "Carne",                "emoji": "🥩", "cor": "#C0392B", "iva": 6},
-    {"cod": "CP0113", "nome": "Peixe e marisco",      "emoji": "🐟", "cor": "#2980B9", "iva": 6},
-    {"cod": "CP0114", "nome": "Leite, queijo e ovos", "emoji": "🥛", "cor": "#8E9AAF", "iva": 6},
-    {"cod": "CP0115", "nome": "Óleos e gorduras",     "emoji": "🫒", "cor": "#B8A02E", "iva": 6},
-    {"cod": "CP0116", "nome": "Fruta",                "emoji": "🍎", "cor": "#D35400", "iva": 6},
-    {"cod": "CP0117", "nome": "Legumes e hortícolas", "emoji": "🥦", "cor": "#0E7433", "iva": 6},
-    {"cod": "CP0118", "nome": "Açúcar e doces",       "emoji": "🍬", "cor": "#A0568F", "iva": 23},
-    {"cod": "CP0119", "nome": "Outros alimentos",     "emoji": "🧺", "cor": "#6B7280", "iva": 23},
+    {"cod": "CP0111", "nome": "Cereais e derivados", "emoji": "🍞", "cor": "#C98B3A", "iva": 6,
+     "oficial": "Cereais e produtos à base de cereais"},
+    {"cod": "CP0112", "nome": "Carne", "emoji": "🥩", "cor": "#C0392B", "iva": 6,
+     "oficial": "Animais vivos, carne e outras partes de animais terrestres abatidos"},
+    {"cod": "CP0113", "nome": "Peixe e produtos do mar", "emoji": "🐟", "cor": "#2980B9", "iva": 6,
+     "oficial": "Peixe e outros produtos alimentares do mar"},
+    {"cod": "CP0114", "nome": "Leite, lácteos e ovos", "emoji": "🥛", "cor": "#8E9AAF", "iva": 6,
+     "oficial": "Leite, outros produtos lácteos e ovos"},
+    {"cod": "CP0115", "nome": "Óleos e gorduras", "emoji": "🫒", "cor": "#B8A02E", "iva": 6,
+     "oficial": "Óleos e gorduras"},
+    {"cod": "CP0116", "nome": "Fruta e frutos de casca rija", "emoji": "🍎", "cor": "#D35400", "iva": 6,
+     "oficial": "Fruta e frutos de casca rija"},
+    {"cod": "CP0117", "nome": "Hortícolas, tubérculos e leguminosas", "emoji": "🥦", "cor": "#0E7433", "iva": 6,
+     "oficial": "Produtos hortícolas, tubérculos, bananas-pão, bananas para "
+                "culinária e leguminosas"},
+    {"cod": "CP0118", "nome": "Açúcar, confeitaria e sobremesas", "emoji": "🍬", "cor": "#A0568F", "iva": 23,
+     "oficial": "Açúcar, confeitaria e sobremesas"},
+    {"cod": "CP0119", "nome": "Pré-preparados e outros", "emoji": "🧺", "cor": "#6B7280", "iva": 23,
+     "oficial": "Alimentos pré-preparados e outros produtos alimentares n.e."},
 ]
 
 CODIGOS = [c["cod"] for c in CLASSES]
@@ -56,100 +82,148 @@ POR_CODIGO = {c["cod"]: c for c in CLASSES}
 # uma. A predefinida é assinalada pela aplicação a partir de `CLASSES`, e não
 # repetida aqui — repeti-la abria a porta a que as duas divergissem em silêncio.
 IVA_MAPA_FONTE = ("Código do IVA, Lista I (taxa reduzida) e Lista II "
-                  "(taxa intermédia)")
+                  "(taxa intermédia); classes da COICOP versão 2018 conforme o "
+                  "anexo do IDF 2022/2023 do INE")
 
+# O levantamento foi **refeito a 11.08.2026 contra as subclasses da COICOP
+# versão 2018**, e não contra as da ECOICOP versão 1 sobre as quais tinha sido
+# construído. As verbas das Listas I e II não mudaram — mudou aquilo que cada
+# classe contém, e portanto o que fica dentro e fora de cada verba. Onde a
+# nomenclatura nova dá subclasse própria a um produto que antes estava diluído,
+# isso está assinalado: é o que torna a divergência verificável em vez de
+# afirmada.
 IVA_MAPA = {
     "CP0111": {
         "taxas": [
             (6, "Cereais, arroz, farinhas, massas não recheadas, pão; seitan, "
-                "tofu, tempeh e soja texturizada (Lista I, 1.1)"),
+                "tofu, tempeh e soja texturizada (Lista I, 1.1) — cobre as "
+                "subclasses 01.1.1.1 a 01.1.1.3 e 01.1.1.5"),
             (13, "Flocos prensados simples de cereais e leguminosas sem adição "
-                 "de açúcar (Lista II, 1.12)"),
+                 "de açúcar (Lista II, 1.12) — parte dos cereais para "
+                 "pequeno-almoço, 01.1.1.4"),
             (23, "Bolos, bolachas, biscoitos e pastelaria; massas recheadas, "
                  "expressamente excluídas da Lista I"),
         ],
+        "nota": "A subclasse 01.1.1.3 chama-se «Pão e produtos de padaria» e "
+                "atravessa a fronteira das verbas: o pão está na Lista I, a "
+                "pastelaria não.",
     },
     "CP0112": {
         "taxas": [
             (6, "Carnes e miudezas comestíveis, frescas ou congeladas, das "
                 "espécies bovina, suína, ovina, caprina, equídea, aves de "
-                "capoeira, coelho e caça (Lista I, 1.2)"),
+                "capoeira, coelho e caça (Lista I, 1.2) — subclasses 01.1.2.2 "
+                "e 01.1.2.4"),
             (13, "Alheiras (Lista II, 1.3.3)"),
-            (23, "Restante charcutaria e enchidos — fiambre, presunto, "
-                 "chouriço, salsicha —, que a Lista I não abrange"),
+            (23, "Carne seca, salgada, em salmoura ou fumada (01.1.2.3) e "
+                 "preparações de animais abatidos (01.1.2.5) — a restante "
+                 "charcutaria e enchidos, que a Lista I não abrange"),
         ],
+        "nota": "A classe passou a incluir **animais terrestres vivos** "
+                "(01.1.2.1), que não são carne e cuja verba não foi "
+                "confirmada. É residual na despesa das famílias, mas fica "
+                "por classificar.",
     },
     "CP0113": {
         "taxas": [
             (6, "Peixe fresco, refrigerado, congelado, seco ou salgado; "
                 "moluscos; conservas de peixe e molusco com teor superior a "
-                "50 % (Lista I, 1.3)"),
+                "50 % (Lista I, 1.3) — subclasses 01.1.3.1 a 01.1.3.3"),
             (13, "Conservas de moluscos (Lista II, 1.2.1)"),
             (23, "**Crustáceos** — camarão, lagosta, sapateira: a Lista I "
                  "refere «peixes e moluscos», não crustáceos. Também peixe "
                  "fumado, espadarte, esturjão e salmão secos, salgados ou em "
                  "conserva, caviar e pastas de atum, cavala e sardinha"),
         ],
+        "nota": "A nomenclatura nova dá **três subclasses próprias ao marisco** "
+                "(01.1.3.4 a 01.1.3.6), que na versão anterior estavam "
+                "diluídas. A divergência com a Lista I passou a ser visível na "
+                "própria estrutura da classe.",
     },
     "CP0114": {
         "taxas": [
             (6, "Leite e lacticínios, queijos, iogurtes, ovos; bebidas e "
                 "iogurtes de base vegetal e substitutos de queijo à base de "
-                "frutos secos, cereais, frutas ou hortícolas (Lista I, 1.4)"),
-            (23, "Sobremesas lácteas e preparados que a Lista I não enumera"),
+                "frutos secos, cereais, frutas ou hortícolas (Lista I, 1.4) — "
+                "cobre também o «leite não animal», 01.1.4.4"),
+            (23, "**Sobremesas e bebidas à base de leite** (01.1.4.7), que a "
+                 "Lista I não enumera"),
         ],
+        "nota": "As sobremesas lácteas passaram a ter subclasse própria "
+                "(01.1.4.7); antes eram um resíduo não identificável.",
     },
     "CP0115": {
         "taxas": [
             (6, "Azeite; banha e outras gorduras de porco (Lista I, 1.5). "
                 "Manteiga, margarina e creme vegetal para barrar "
-                "(Lista I, 1.4.3)"),
+                "(Lista I, 1.4.3) — subclasses 01.1.5.2 e 01.1.5.3"),
             (13, "**Óleos vegetais diretamente comestíveis e suas misturas** — "
                  "os óleos alimentares correntes (Lista II, 1.5.3)"),
         ],
-        "nota": "É a divergência mais material das nove classes: uma "
-                "subcategoria inteira à taxa intermédia, numa classe "
+        "nota": "Continua a ser a divergência mais material das nove classes, "
+                "e a nomenclatura nova torna-a quase exata: «Óleos vegetais» "
+                "é agora a **primeira subclasse** (01.1.5.1) e corresponde "
+                "praticamente um a um à verba da Lista II, numa classe "
                 "predefinida a 6 %.",
     },
     "CP0116": {
         "taxas": [
             (6, "Frutas no estado natural ou desidratadas, castanhas e frutos "
-                "vermelhos congelados (Lista I, 1.6.4)"),
-            (23, "Fruta em calda ou conserva; fruta congelada que não seja "
-                 "frutos vermelhos"),
+                "vermelhos congelados (Lista I, 1.6.4) — subclasses 01.1.6.1 "
+                "a 01.1.6.5 e 01.1.6.7"),
+            (23, "Fruta congelada que não seja frutos vermelhos (01.1.6.6); "
+                 "fruta em calda, conserva e outras preparações (01.1.6.9); "
+                 "frutos de casca rija que não sejam castanhas (01.1.6.8)"),
         ],
+        "nota": "A classe passou a nomear os **frutos de casca rija** "
+                "(01.1.6.8). A Lista I refere as castanhas nominalmente, pelo "
+                "que amêndoa, noz e avelã ficam de fora da taxa reduzida.",
     },
     "CP0117": {
         "taxas": [
             (6, "Legumes e produtos hortícolas frescos, refrigerados, secos, "
                 "desidratados ou congelados, ainda que previamente cozidos; "
-                "leguminosas secas; algas (Lista I, 1.6)"),
+                "leguminosas secas; algas (Lista I, 1.6) — subclasses 01.1.7.1 "
+                "a 01.1.7.8"),
             (23, "Hortícolas transformados — batata frita de pacote e "
-                 "preparados similares"),
+                 "preparados similares (01.1.7.9)"),
         ],
+        "nota": "A classe passou a incluir explicitamente **tubérculos, "
+                "bananas-pão, bananas para culinária e leguminosas**; a Lista I "
+                "cobre-os enquanto frescos, secos ou congelados.",
     },
     "CP0118": {
         "taxas": [
             (6, "Mel de abelhas e mel de cana tradicional (Lista I, 1.8)"),
-            (23, "Açúcar — a verba 1.10 da Lista I foi **revogada** —, "
-                 "chocolate, confeitaria, compotas e gelados"),
+            (23, "Açúcar de cana e beterraba e sucedâneos (01.1.8.1 e "
+                 "01.1.8.2) — a verba 1.10 da Lista I foi **revogada**; "
+                 "chocolate e cacau (01.1.8.5); gelados (01.1.8.6); doces, "
+                 "geleias e marmeladas; restante confeitaria"),
         ],
-        "nota": "Ao contrário das anteriores, esta classe está predefinida a "
-                "23 %: aqui a exceção é o mel.",
+        "nota": "Predefinida a 23 %: aqui a exceção é o mel. E a nomenclatura "
+                "nova agrega-o numa subclasse com doces, geleias e marmeladas "
+                "(01.1.8.3), o que torna a parcela a 6 % **menos separável** do "
+                "que era.",
     },
     "CP0119": {
         "taxas": [
-            (6, "Sal (Lista I, 1.9); produtos dietéticos para nutrição "
-                "entérica e produtos sem glúten para doentes celíacos "
-                "(Lista I, 1.12); alimentos para lactentes e crianças de pouca "
-                "idade, fins medicinais específicos e substitutos integrais da "
-                "dieta (Lista I, 1.14)"),
-            (13, "Refeições prontas a consumir, em pronto a comer e levar ou "
-                 "com entrega ao domicílio (Lista II, 1.8)"),
-            (23, "Molhos, especiarias, caldos, sopas e preparados vários"),
+            (6, "Alimentos para bebés e crianças de pouca idade (01.1.9.2), "
+                "fins medicinais específicos e substitutos integrais da dieta "
+                "(Lista I, 1.14); sal (Lista I, 1.9); produtos dietéticos para "
+                "nutrição entérica e produtos sem glúten para doentes celíacos "
+                "(Lista I, 1.12)"),
+            (13, "Refeições prontas a consumir, **em pronto a comer e levar ou "
+                 "com entrega ao domicílio** (Lista II, 1.8)"),
+            (23, "Condimentos e molhos (01.1.9.3), especiarias, ervas "
+                 "aromáticas e sementes para culinária (01.1.9.4), caldos, "
+                 "sopas e preparados vários (01.1.9.9)"),
         ],
-        "nota": "É a classe mais heterogénea das nove: tem produtos nas três "
-                "taxas. Predefinida a 23 %, a das especiarias e molhos.",
+        "nota": "A classe passou a chamar-se «Alimentos pré-preparados e "
+                "outros», mas **a predefinição a 23 % mantém-se**: a subclasse "
+                "01.1.9.1 é pré-preparado de retalho, e a verba 1.8 da Lista II "
+                "cobre o pronto a comer e levar e a entrega ao domicílio, que "
+                "na COICOP caem no grupo 11.1 (restauração) e não aqui. "
+                "Continua a ser a classe mais heterogénea das nove.",
     },
 }
 
@@ -171,7 +245,11 @@ AGREGADOS = [
     {"cod": "FOOD", "nome": "Alimentação e bebidas (total)", "cor": "#0E7433", "larg": 2.8,
      "grupo": "alimentacao", "porque": "O agregado que o debate público chama «alimentação»."},
     # --- enquadramento: não são alimentação, servem de referência ---
-    {"cod": "CP00", "nome": "Todos os produtos", "cor": "#171715", "larg": 2.2,
+    # `TOTAL` e não `CP00`: na ECOICOP versão 2 o agregado de todos os produtos
+    # mudou de código. `CP00` devolve HTTP 400 em `prc_hicp_minr` — e a via de
+    # reserva respondia com uma fatia arbitrária em vez de erro
+    # (auditoria de 11.08.2026, E1).
+    {"cod": "TOTAL", "nome": "Todos os produtos", "cor": "#171715", "larg": 2.2,
      "grupo": "enquadramento", "porque": "A inflação geral. Responde a «como pode a inflação "
                                          "ser baixa e o cabaz subir?»"},
     {"cod": "TOT_X_NRG_FOOD", "nome": "Subjacente (sem energia nem alimentos)",

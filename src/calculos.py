@@ -193,6 +193,10 @@ def decompor(valor_total: float,
         linhas.append({
             "codigo": cod,
             "classe": classe["nome"],
+            # Designação do INE para a COICOP 2018. A forma curta serve os
+            # cartões; a oficial tem de acompanhar a tabela e as exportações,
+            # que saem da aplicação e circulam sozinhas.
+            "classe_oficial": classe["oficial"],
             "emoji": classe["emoji"],
             "cor": classe["cor"],
             "ponderador": peso,

@@ -11,7 +11,7 @@ servidor, essa limitação não existe — os pedidos são feitos por HTTP norma
 São usadas duas vias independentes, por ordem de preferência:
 
 1. **SDMX 2.1** — o filtro segue no próprio caminho do endereço
-   (`.../prc_hicp_manr/M.RCH_A.CP011.PT`), pelo que a seleção é
+   (`.../prc_hicp_minr/M.RCH_A.CP011.PT`), pelo que a seleção é
    obrigatoriamente feita no servidor do Eurostat. Devolve SDMX-CSV.
 2. **API Statistics** — filtros por parâmetro, resposta em JSON-stat.
 
@@ -40,6 +40,31 @@ class ErroEurostat(RuntimeError):
 
 
 # --------------------------------------------------------------------------
+# Dimensão de classificação — não se chama «coicop» em todos os conjuntos
+# --------------------------------------------------------------------------
+# Na passagem para a ECOICOP versão 2 o Eurostat renomeou a dimensão de
+# classificação de `coicop` para `coicop18`. O código antigo lia-a com
+# `bruto.get("coicop", "")`: com o conjunto novo isso devolveria uma **coluna
+# vazia**, as nove classes colapsariam numa só no `groupby("coicop")` e não
+# haveria erro nenhum a assinalá-lo (auditoria de 11.08.2026, E1).
+#
+# A regra passa a ser a inversa da anterior: quem precisa da classificação
+# **declara-a**, e a ausência é erro. Quem não precisa passa `None` e recebe a
+# coluna vazia de propósito. É a mesma doutrina da guarda do parâmetro `extra`,
+# generalizada — deixou de ser um caso especial do `ilc_mdes03`.
+def _coluna_classe(dataset: str, bruto, dim: str | None, via: str):
+    """Extrai a dimensão de classificação e normaliza o seu nome para `coicop`."""
+    if dim is None:
+        return pd.Series([""] * len(bruto), index=getattr(bruto, "index", None))
+    if dim not in bruto.columns:
+        raise ErroEurostat(
+            f"{dataset}: dimensão de classificação «{dim}» ausente da resposta {via} "
+            f"(dimensões presentes: {', '.join(map(str, bruto.columns))}). "
+            "Sem ela as classes colapsam numa só, em silêncio.")
+    return bruto[dim]
+
+
+# --------------------------------------------------------------------------
 # Via 1 — SDMX 2.1 (chave no caminho)
 # --------------------------------------------------------------------------
 # Registo dos endereços efetivamente usados, para rastreabilidade. É lido pela
@@ -48,7 +73,8 @@ ENDERECOS: list[tuple[str, str]] = []
 
 
 def _via_sdmx(dataset: str, chave: str, inicio: str | None = None,
-              extra: str | None = None) -> pd.DataFrame:
+              extra: str | None = None,
+              dim_coicop: str | None = None) -> pd.DataFrame:
     url = f"{SDMX}{dataset}/{chave}"
     params = {"format": "SDMX-CSV"}
     if inicio:
@@ -65,7 +91,7 @@ def _via_sdmx(dataset: str, chave: str, inicio: str | None = None,
 
     df = pd.DataFrame({
         "unit": bruto.get("unit", pd.Series([""] * len(bruto))),
-        "coicop": bruto.get("coicop", pd.Series([""] * len(bruto))),
+        "coicop": _coluna_classe(dataset, bruto, dim_coicop, "SDMX"),
         "geo": bruto.get("geo", pd.Series([""] * len(bruto))),
         "time": bruto["TIME_PERIOD"].astype(str),
         "valor": pd.to_numeric(bruto["OBS_VALUE"], errors="coerce"),
@@ -84,7 +110,9 @@ def _via_sdmx(dataset: str, chave: str, inicio: str | None = None,
 # --------------------------------------------------------------------------
 # Via 2 — API Statistics (JSON-stat)
 # --------------------------------------------------------------------------
-def _descodifica_jsonstat(js: dict, extra: str | None = None) -> pd.DataFrame:
+def _descodifica_jsonstat(js: dict, extra: str | None = None,
+                          dim_coicop: str | None = None,
+                          dataset: str = "") -> pd.DataFrame:
     """
     JSON-stat 2.0 guarda os valores num vetor achatado. O índice de cada
     observação decompõe-se nas coordenadas das dimensões em ordem *row-major*
@@ -121,7 +149,10 @@ def _descodifica_jsonstat(js: dict, extra: str | None = None) -> pd.DataFrame:
         return pd.DataFrame(columns=colunas)
 
     df = pd.DataFrame(linhas)
-    for col in ("unit", "coicop", "geo"):
+    # A dimensão de classificação chama-se `coicop18` na ECOICOP versão 2.
+    # Declarada, tem de existir; normaliza-se o nome para o resto da aplicação.
+    df["coicop"] = _coluna_classe(dataset, df, dim_coicop, "JSON-stat")
+    for col in ("unit", "geo"):
         if col not in df.columns:
             df[col] = ""
     df["time"] = df.get("time", "").astype(str)
@@ -132,7 +163,8 @@ def _descodifica_jsonstat(js: dict, extra: str | None = None) -> pd.DataFrame:
     return df[colunas]
 
 
-def _via_stats(dataset: str, filtros: dict, extra: str | None = None) -> pd.DataFrame:
+def _via_stats(dataset: str, filtros: dict, extra: str | None = None,
+               dim_coicop: str | None = None) -> pd.DataFrame:
     params: list[tuple[str, str]] = [("format", "JSON"), ("lang", "EN")]
     for chave, valor in filtros.items():
         if valor is None:
@@ -145,7 +177,7 @@ def _via_stats(dataset: str, filtros: dict, extra: str | None = None) -> pd.Data
     resp = requests.get(STATS + dataset, params=params,
                         timeout=TEMPO_LIMITE, headers=CABECALHOS)
     resp.raise_for_status()
-    return _descodifica_jsonstat(resp.json(), extra)
+    return _descodifica_jsonstat(resp.json(), extra, dim_coicop, dataset)
 
 
 # --------------------------------------------------------------------------
@@ -153,7 +185,8 @@ def _via_stats(dataset: str, filtros: dict, extra: str | None = None) -> pd.Data
 # --------------------------------------------------------------------------
 def obter(dataset: str, chave: str, filtros: dict,
           inicio: str | None = None,
-          extra: str | None = None) -> tuple[pd.DataFrame, str]:
+          extra: str | None = None,
+          dim_coicop: str | None = None) -> tuple[pd.DataFrame, str]:
     """
     Devolve (dados, via_utilizada). Tenta SDMX; se falhar, a API Statistics.
     Levanta ErroEurostat se ambas falharem.
@@ -161,10 +194,14 @@ def obter(dataset: str, chave: str, filtros: dict,
     `extra` preserva uma dimensão adicional para lá de `unit`, `coicop` e `geo`.
     Sem isso, um conjunto com uma dimensão própria — como o nível de pobreza em
     `ilc_mdes03` — devolveria várias séries empilhadas e indistinguíveis.
+
+    `dim_coicop` é o nome que a dimensão de classificação tem **neste conjunto**:
+    `coicop` nas Contas Nacionais, `coicop18` na ECOICOP versão 2. Quem precisa
+    dela tem de a declarar; a ausência é erro, não silêncio.
     """
     erros = []
     try:
-        df = _via_sdmx(dataset, chave, inicio, extra)
+        df = _via_sdmx(dataset, chave, inicio, extra, dim_coicop)
         if not df.empty:
             return df, "SDMX 2.1"
         erros.append("SDMX devolveu resposta vazia")
@@ -172,7 +209,7 @@ def obter(dataset: str, chave: str, filtros: dict,
         erros.append(f"SDMX: {exc}")
 
     try:
-        df = _via_stats(dataset, filtros, extra)
+        df = _via_stats(dataset, filtros, extra, dim_coicop)
         if not df.empty:
             return df, "API Statistics"
         erros.append("API Statistics devolveu resposta vazia")
@@ -182,40 +219,81 @@ def obter(dataset: str, chave: str, filtros: dict,
     raise ErroEurostat(f"{dataset} — " + " | ".join(erros))
 
 
+# --------------------------------------------------------------------------
+# IHPC — ECOICOP versão 2
+# --------------------------------------------------------------------------
+# O Eurostat encerrou a família ECOICOP ver.1 na passagem para a ECOICOP ver.2 e
+# **inscreveu o fim da série no próprio título** dos conjuntos antigos:
+#
+#   prc_hicp_midx   «HICP - monthly data (index) (1996-2025)»          arquivado
+#   prc_hicp_manr   «HICP - monthly data (annual rate of change) (…-2025)» arquivado
+#   prc_hicp_inw    «HICP - item weights (1996-2025)»                   arquivado
+#
+# Os três continuavam a responder com HTTP 200 e dados bem formados — apenas
+# tinham deixado de avançar. A aplicação apresentou dezembro de 2025 como
+# «último mês disponível» durante sete meses, sem dar erro nenhum
+# (auditoria de 11.08.2026, E1).
+#
+# Os conjuntos correntes:
+#
+#   prc_hicp_minr   índice **e** taxas de variação — substitui midx e manr
+#   prc_hicp_iw     ponderadores por rubrica
+#
+# Três diferenças que quebram uma migração feita à letra:
+#
+#   1. a dimensão de classificação chama-se `coicop18`, não `coicop`;
+#   2. índice e variação partilham o conjunto e distinguem-se pela `unit`, pelo
+#      que a unidade **tem de ir explícita na chave** — sem isso a resposta traz
+#      níveis e taxas misturados na mesma coluna;
+#   3. `prc_hicp_iw` tem uma dimensão a mais, `statinfo`, com o valor `IW`.
+HICP_MENSAL = "prc_hicp_minr"
+HICP_PONDERADORES = "prc_hicp_iw"
+
+# Bases do índice aceites, por ordem de preferência. Pedem-se as duas: a base
+# muda de tempos a tempos e a aplicação escolhe depois a mais recente presente.
+HICP_UNIDADES_INDICE = ("I25", "I15")
+HICP_UNIDADE_VARIACAO = "RCH_A"
+
+# Cobertura verificada a 11.08.2026 (Portugal): I25 vai de 1996-01 a 2026-06
+# para CP011 e de 2019-01 a 2026-06 para as nove classes; os ponderadores vão
+# de 1996 a 2026. As duas janelas de indexação das âncoras — o ano civil de 2022
+# e a janela de recolha do IDF, fev/2022 a jan/2023 — ficam cobertas.
+
+
 def ponderadores(codigos: Iterable[str]) -> tuple[pd.DataFrame, str]:
     """Ponderadores oficiais do IHPC português, por classe (por mil)."""
     codigos = list(codigos)
     return obter(
-        "prc_hicp_inw",
-        f"A..{'+'.join(codigos)}.PT",
-        {"freq": "A", "coicop": codigos, "geo": "PT"},
+        HICP_PONDERADORES,
+        f"A.{'+'.join(codigos)}.IW.PT",
+        {"freq": "A", "coicop18": codigos, "statinfo": "IW", "geo": "PT"},
+        dim_coicop="coicop18",
     )
 
 
 def indice_precos(coicop: str, desde: str) -> tuple[pd.DataFrame, str]:
-    """Índice de preços mensal (base 2015 = 100 quando disponível)."""
-    return obter(
-        "prc_hicp_midx",
-        f"M..{coicop}.PT",
-        {"freq": "M", "coicop": coicop, "geo": "PT", "sinceTimePeriod": desde},
-        inicio=desde,
-    )
+    """Índice de preços mensal (base 2025 = 100 quando disponível)."""
+    return indice_classes([coicop], desde)
 
 
 def indice_classes(codigos: Iterable[str], desde: str) -> tuple[pd.DataFrame, str]:
     """
     Índice de preços mensal por classe COICOP — a matéria-prima do Törnqvist.
 
-    Difere de `indice_precos` apenas por pedir várias classes de uma vez, em vez
-    do agregado. É preciso o índice em nível, e não a variação homóloga, porque
-    um índice superlativo encadeia relativos de preço entre dois momentos.
+    É preciso o índice em nível, e não a variação homóloga, porque um índice
+    superlativo encadeia relativos de preço entre dois momentos. A unidade vai
+    explícita na chave: no conjunto novo, omiti-la traria também as taxas de
+    variação, indistinguíveis dos níveis depois de agregadas.
     """
     codigos = list(codigos)
+    unidades = list(HICP_UNIDADES_INDICE)
     return obter(
-        "prc_hicp_midx",
-        f"M..{'+'.join(codigos)}.PT",
-        {"freq": "M", "coicop": codigos, "geo": "PT", "sinceTimePeriod": desde},
+        HICP_MENSAL,
+        f"M.{'+'.join(unidades)}.{'+'.join(codigos)}.PT",
+        {"freq": "M", "unit": unidades, "coicop18": codigos, "geo": "PT",
+         "sinceTimePeriod": desde},
         inicio=desde,
+        dim_coicop="coicop18",
     )
 
 
@@ -224,11 +302,12 @@ def variacoes(coicops: Iterable[str], geos: Iterable[str],
     """Variação homóloga mensal (%), por classe e por país."""
     coicops, geos = list(coicops), list(geos)
     return obter(
-        "prc_hicp_manr",
-        f"M.RCH_A.{'+'.join(coicops)}.{'+'.join(geos)}",
-        {"freq": "M", "unit": "RCH_A", "coicop": coicops,
+        HICP_MENSAL,
+        f"M.{HICP_UNIDADE_VARIACAO}.{'+'.join(coicops)}.{'+'.join(geos)}",
+        {"freq": "M", "unit": HICP_UNIDADE_VARIACAO, "coicop18": coicops,
          "geo": geos, "sinceTimePeriod": desde},
         inicio=desde,
+        dim_coicop="coicop18",
     )
 
 
@@ -246,6 +325,7 @@ def despesa_alimentar(desde_ano: int) -> tuple[pd.DataFrame, str]:
         {"freq": "A", "unit": "CP_MEUR", "coicop": "CP011", "geo": "PT",
          "sinceTimePeriod": str(desde_ano)},
         inicio=str(desde_ano),
+        dim_coicop="coicop",
     )
 
 
@@ -398,6 +478,7 @@ def despesa_total_consumo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
                 {"freq": "A", "unit": "CP_MEUR", "coicop": cod,
                  "geo": geos, "sinceTimePeriod": str(desde_ano)},
                 inicio=str(desde_ano),
+                dim_coicop="coicop",
             )
             if not df.empty:
                 df = df.copy()
@@ -420,6 +501,7 @@ def despesa_alimentar_paises(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
         {"freq": "A", "unit": "CP_MEUR", "coicop": "CP011",
          "geo": geos, "sinceTimePeriod": str(desde_ano)},
         inicio=str(desde_ano),
+        dim_coicop="coicop",
     )
 
 

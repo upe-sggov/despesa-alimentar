@@ -20,6 +20,12 @@ ligações de dados**, com confronto dos valores devolvidos contra a fonte.
 
 ## ✅ Auditoria encerrada a 11.08.2026
 
+> ⚠️ **Esta secção deixou de ser a última palavra.** Uma segunda auditoria, feita no mesmo dia
+> sobre o `app.py`, encontrou **quinze novos itens**, dois deles críticos — a começar por
+> **toda a família de séries de preços estar a ser lida de conjuntos que o Eurostat arquivou
+> em dezembro de 2025**. Os dezassete itens abaixo continuam fechados e as suas correções
+> continuam válidas; o que se segue não os revoga. Ver **[Segunda auditoria — 11.08.2026](#segunda-auditoria--11-de-agosto-de-2026)**, no fim do documento.
+
 **Os dezassete itens estão fechados**, todos verificados em execução: três críticos
 (**A1, A2, A3**), quatro importantes (**B1, B2, B3, B4**), seis de rigor (**C1 … C6**) e quatro
 pressupostos declarados (**D1, D2, D3, D4**). O registo de cada correção está no fim do documento.
@@ -893,6 +899,679 @@ em `src/calculos.py`, e não em `app.py`, para que o teste não tenha de importa
 disparava a recolha de dados e punha a bateria dependente da rede.
 
 A aplicação renderiza sem exceções nas duas âncoras e nos dois caminhos do nível de preços.
+
+---
+
+# Segunda auditoria — 11 de agosto de 2026
+
+**Âmbito:** `app.py` na íntegra (3 671 linhas) e os quatro módulos de que depende — `src/config.py`,
+`src/calculos.py`, `src/eurostat.py`, `src/observatorio.py`.
+**Método:** leitura integral do código; reexecução da bateria de testes; **chamada real a todas as
+ligações de dados**, com confronto contra a fonte; e reconstituição independente, fora da
+aplicação, dos valores que ela apresenta.
+
+**Numeração:** os itens desta segunda auditoria são **E1 a E15**, para não colidirem com os
+A1–D4 da primeira.
+
+> **Conclusão em três linhas.** As correções da primeira auditoria estão todas de pé e voltei a
+> verificá-las uma a uma. Mas a aplicação **está a ler as três séries de preços de conjuntos que o
+> Eurostat arquivou em dezembro de 2025** e substituiu por outros na passagem para a ECOICOP
+> versão 2. Hoje, 11 de agosto de 2026, a aplicação apresenta **dezembro de 2025 como «último mês
+> disponível»** e não dá erro nenhum: seis meses de inflação alimentar estão simplesmente fora do
+> ecrã, e os ponderadores estão uma vaga atrasados.
+
+**Resumo por gravidade:**
+
+| | N.º | Efeito |
+|---|---|---|
+| 🔴 Crítico | 2 | Números desatualizados e nomenclatura errada, sem qualquer sinal ao utilizador |
+| 🟠 Importante | 5 | Erro de método medido, ou rastreabilidade que não cumpre o que promete |
+| 🟡 A corrigir | 7 | Rigor, robustez, reincidências de itens já fechados |
+| ⚪ A declarar | 1 | Pressuposto legítimo que deve estar explícito |
+
+---
+
+## 🔴 E1 · A aplicação lê séries arquivadas: os preços param em dezembro de 2025
+
+**Onde:** `src/eurostat.py` — `ponderadores()`, `indice_precos()`, `indice_classes()`,
+`variacoes()`. Afeta, a jusante, praticamente todo o `app.py`.
+
+**O que se passa.** O Eurostat encerrou a família ECOICOP ver.1 e passou a difundir o IHPC em
+conjuntos novos. Os três que a aplicação usa **deixaram de ser atualizados**. Do próprio catálogo
+do Eurostat, obtido hoje:
+
+| Conjunto usado pela app | Título no catálogo | Última atualização |
+|---|---|---|
+| `prc_hicp_midx` | HICP — monthly data (index) **(1996-2025)** | 06.02.2026 |
+| `prc_hicp_manr` | HICP — monthly data (annual rate of change) **(1997-2025)** | 06.02.2026 |
+| `prc_hicp_inw` | HICP — item weights **(1996-2025)** | 20.08.2025 |
+
+Os intervalos entre parênteses fazem parte do título oficial: o Eurostat **inscreveu o fim da
+série no nome do conjunto**. Os substitutos, na pasta *HICP — ECOICOP ver.2*:
+
+| Conjunto corrente | O que contém | Última atualização |
+|---|---|---|
+| `prc_hicp_minr` | Índice **e** taxas de variação, mensal — substitui `midx` **e** `manr` | 31.07.2026 |
+| `prc_hicp_iw` | Ponderadores por rubrica | 18.07.2026 |
+| `prc_hicp_ainr` | Índice e variação, anual | 17.07.2026 |
+
+**Verificado em execução.** Pedidos reais feitos hoje, para Portugal:
+
+```text
+prc_hicp_midx  CP011  I15   -> ultimo periodo 2025-12
+prc_hicp_manr  CP011  RCH_A -> ultimo periodo 2025-12
+prc_hicp_inw   CP011        -> ultimo ano     2025
+prc_hicp_minr  CP011  I25   -> ultimo periodo 2026-06
+prc_hicp_minr  CP011  RCH_A -> ultimo periodo 2026-06   (agregados: 2026-07)
+prc_hicp_iw    CP011        -> ultimo ano     2026
+```
+
+Não é uma falha da rede nem um atraso de publicação: no mesmo instante, `une_rt_m` devolve
+2026-06, `namq_10_gdp` devolve 2026-Q2 e `earn_mw_cur` devolve 2026-S2. **Só as séries de preços
+que a aplicação usa é que estão paradas** — porque foram arquivadas.
+
+**Consequência, medida.** Reconstituí os dois valores de topo pelas duas vias:
+
+| | App hoje (série arquivada) | Série corrente | Diferença |
+|---|---|---|---|
+| Último mês do índice | **dez/2025** | **jun/2026** | 6 observações |
+| Ponderadores | 2025 | 2026 | uma vaga |
+| Âncora **IDF**, agregado médio | 276,06 €/mês | **281,06 €/mês** | **+5,00 € (+1,81 %)** |
+| Âncora **Contas Nacionais** | 650,25 €/mês | **662,02 €/mês** | **+11,77 € (+1,81 %)** |
+
+E as variações homólogas por classe — que alimentam os nove cartões, o gráfico de contributos e a
+comparação europeia — não são ligeiramente diferentes, são **outras**:
+
+| Classe | dez/2025 (o que a app mostra) | jun/2026 (corrente) |
+|---|---|---|
+| Pão e cereais | 2,8 % | 2,5 % |
+| Carne | **7,7 %** | **4,3 %** |
+| Peixe e marisco | **7,3 %** | **10,7 %** |
+| Leite, queijo e ovos | 2,0 % | 0,4 % |
+| Óleos e gorduras | **−14,5 %** | **−2,0 %** |
+| Fruta | **5,1 %** | **−0,3 %** |
+| Legumes e hortícolas | 1,6 % | 3,8 % |
+| Açúcar e doces | **4,3 %** | **−3,9 %** |
+| Outros alimentos | 1,9 % | 2,7 % |
+
+Três classes mudam de sinal. A carne aparece a subir quase o dobro do que sobe. Os seis meses de
+inflação alimentar que não estão no ecrã são **3,3 · 3,7 · 3,7 · 4,6 · 3,4 · 3,1 %**.
+
+Efeito conjunto no que um utilizador vê, para um casal com a escala OCDE original e a âncora IDF:
+
+| | App hoje | Corrigido |
+|---|---|---|
+| Agregado médio nacional | 276,06 € | **281,06 €** |
+| Despesa do casal | 237,02 € | **241,32 €** |
+| Agravamento nos últimos 12 meses | 7,55 € | **6,96 €** |
+| Inflação alimentar implícita | 3,29 % | **2,97 %** |
+
+**Repare-se no sentido dos dois erros: o nível está subestimado e o agravamento está
+sobrestimado.** Não é um desvio com uma direção só, que se pudesse descrever como conservador.
+
+**O que agrava.** Três coisas, por ordem de gravidade:
+
+1. **A aplicação não dá erro.** A mensagem verde de estado diz «Dados oficiais carregados ·
+   último mês disponível **dez/25** · ponderadores de **2025**». Um leitor lê isto como *o
+   Eurostat ainda não publicou mais nada* — que é exatamente a leitura que o separador
+   Metodologia lhe ensina a fazer: «Se um valor parecer desatualizado, é porque a fonte ainda não
+   publicou — não porque a aplicação não o foi buscar.» Neste caso é o contrário.
+2. **A aplicação previu esta falha e errou a mitigação.** O aviso «Alteração metodológica de
+   fevereiro de 2026», no separador Metodologia, descreve a transição corretamente e conclui: «A
+   aplicação prefere automaticamente a base mais recente disponível, com recuo ordenado para as
+   anteriores.» A preferência implementada é pela **unidade** (`I25` → `I15` → `I05` → `I96`), e o
+   problema não é a unidade — é o conjunto. Em `prc_hicp_midx` **não existe** `I25`; a preferência
+   nunca dispara e o recuo funciona perfeitamente, para a série errada.
+3. **O aviso remata com «se as classes deixarem de responder, é nesta alteração que se deve olhar
+   primeiro».** As classes continuam a responder. Só que respondem com dados de dezembro.
+
+**Correção.** Migrar para `prc_hicp_minr` e `prc_hicp_iw`. Não é uma troca de nomes — há cinco
+pontos onde a migração falha em silêncio se for feita à letra:
+
+- **A dimensão mudou de nome: `coicop` → `coicop18`.** `_via_sdmx` faz
+  `bruto.get("coicop", pd.Series([""] * len(bruto)))` e `_descodifica_jsonstat` devolve sempre a
+  coluna `coicop`. Com o conjunto novo, **as nove classes colapsariam numa coluna vazia** e o
+  `groupby("coicop")` juntaria tudo numa linha só, sem erro. É exatamente o modo de falha que a
+  guarda do parâmetro `extra` foi criada para travar em `ilc_mdes03` — essa guarda tem de deixar
+  de ser um caso especial e passar a ser a regra.
+- **Índice e variação passam a vir do mesmo conjunto**, distinguidos por `unit` (`I25` para o
+  índice, `RCH_A` para a variação homóloga). `indice_precos`, `indice_classes` e `variacoes`
+  passam a partilhar uma função, e a unidade **tem de ir explícita na chave** — sem isso a
+  resposta traz índice e taxas misturados.
+- **`CP00` deixou de existir.** O agregado «Todos os produtos» chama-se agora `TOTAL`. Verificado:
+  `prc_hicp_minr/M.RCH_A.CP00.PT` devolve **HTTP 400**. `COD_AGREGADOS`, em `config.py`, tem
+  `CP00`. Os outros quatro (`FOOD`, `FOOD_NP`, `FOOD_P`, `TOT_X_NRG_FOOD`) respondem sem
+  alteração.
+- **`prc_hicp_iw` tem uma dimensão a mais:** `freq.coicop18.statinfo.geo.time`, com
+  `statinfo = IW`. Chave: `A.{classes}.IW.{geo}`.
+- **Cobertura histórica, confirmada:** `I25` cobre 1996-01 a 2026-06 para `CP011` e 2019-01 a
+  2026-06 para as nove classes; `prc_hicp_iw` cobre 1996 a 2026. A janela do Törnqvist e as duas
+  janelas de indexação das âncoras (ano civil de 2022; fev/2022–jan/2023) ficam **integralmente
+  cobertas** — não se perde nada na migração.
+
+---
+
+## 🔴 E2 · As nove classes mudaram de conteúdo; os rótulos e o mapa do IVA descrevem a nomenclatura antiga
+
+**Onde:** `src/config.py`, `CLASSES` e `IVA_MAPA`.
+
+**O que se passa.** Os códigos `CP0111`–`CP0119` sobreviveram à revisão, mas **o que está dentro
+deles mudou**. Rótulos oficiais, lado a lado, obtidos hoje das duas versões do conjunto:
+
+| Código | ECOICOP ver.1 (rótulo da app) | ECOICOP ver.2 (rótulo atual) |
+|---|---|---|
+| CP0111 | Pão e cereais | Cereais e produtos à base de cereais |
+| CP0112 | Carne | **Animais vivos**, carne e outras partes de animais terrestres abatidos |
+| CP0113 | Peixe e marisco | Peixe e outros produtos do mar |
+| CP0114 | Leite, queijo e ovos | Leite, outros lacticínios e ovos |
+| CP0115 | Óleos e gorduras | Óleos e gorduras |
+| CP0116 | Fruta | Frutos **e frutos de casca rija** |
+| CP0117 | Legumes e hortícolas | Produtos hortícolas, **tubérculos e leguminosas** |
+| CP0118 | Açúcar, doces, mel e chocolate | Açúcar, confeitaria **e sobremesas** |
+| CP0119 | Outros produtos alimentares n.e. | **Refeições prontas** e outros produtos alimentares |
+
+Os ponderadores movem-se em conformidade — não é só o rótulo:
+
+| Classe | 2025 (ver.1) ‰ | 2026 (ver.2) ‰ |
+|---|---|---|
+| CP0113 Peixe | 31,03 | **28,29** |
+| CP0115 Óleos e gorduras | 10,82 | **7,56** |
+| CP0118 Açúcar e doces | 9,86 | **11,72** |
+| CP0119 Outros alimentos | 9,30 | **10,59** |
+| **Soma das nove** | **199,63** | **195,48** |
+
+**Consequência mais material — e é no simulador de IVA.** A classe `CP0119` passou a ser
+encabeçada por **refeições prontas a consumir**, que estão na **Lista II, verba 1.8, a 13 %**. A
+aplicação predefine essa classe a **23 %**, e o `IVA_MAPA` descreve-a como «a das especiarias e
+molhos». Com a nova composição, **a taxa predefinida deixou de ser plausivelmente a
+predominante** — e o teste `test_mapa_do_iva_cobre_as_nove_classes_e_e_coerente`, que compara o
+`IVA_MAPA` com o `CLASSES`, continua a passar porque compara a app consigo própria, não com a
+nomenclatura em vigor.
+
+O mesmo raciocínio aplica-se, em menor grau, a `CP0118` (absorve sobremesas), `CP0116` (absorve
+frutos de casca rija) e `CP0112` (absorve animais vivos, que não são despesa alimentar das
+famílias no sentido corrente).
+
+**Correção.** Refazer, sobre o texto das Listas I e II, o levantamento do D2 — mas contra as
+**definições da ECOICOP ver.2**, e não contra as da ver.1. Rever os nomes portugueses em
+`CLASSES` para que descrevam o que a classe passou a conter. E acrescentar ao teste de coerência
+do `IVA_MAPA` uma verificação que **não seja circular**: confrontar a lista de classes com os
+rótulos devolvidos pela própria API, para que uma revisão futura da nomenclatura dispare o teste.
+
+> ⚠️ **E2 não pode ser aplicado sozinho nem adiado para depois de E1.** Migrar os conjuntos sem
+> rever os rótulos deixa a aplicação a chamar «Carne» a uma classe que inclui animais vivos, e a
+> tributar refeições prontas a 23 %. Rever os rótulos sem migrar os conjuntos põe nomes novos em
+> dados velhos. Vão juntos.
+
+---
+
+## 🟠 E3 · As fontes com API não têm verificação de frescura nenhuma
+
+**Onde:** `src/calculos.py`, `idade_fonte()` — e a ausência de qualquer chamada equivalente para
+as séries do Eurostat.
+
+**O que se passa.** O item **D4** da primeira auditoria criou o `idade_fonte()` e aplicou-o ao
+SOFI e ao Observatório, com este argumento: «Nem o SOFI nem o Observatório têm API: se ninguém os
+atualizar, a aplicação continua a apresentá-los sem nunca dar erro.» A conclusão implícita — que
+as fontes **com** API não têm esse problema, porque a rede avisaria — está errada, e o E1 é a
+demonstração. Uma série arquivada responde com HTTP 200, devolve dados válidos e bem formados, e
+simplesmente não avança.
+
+**A verificação existe, foi bem construída, e foi apontada ao sítio errado.** Não faltava a
+ferramenta: faltava aplicá-la ao caso que efetivamente falhou.
+
+**Correção.** Passar `idade_fonte()` sobre o último período de **cada série obtida**, com limite
+por periodicidade — mensal, 60 dias; semestral, 240; anual, 18 meses — e um aviso destacado no
+topo da aplicação, não escondido no registo de ligações. Uma série mensal cujo último período
+tenha mais de dois meses é, por si só, motivo para não citar os números até alguém confirmar
+porquê.
+
+---
+
+## 🟠 E4 · O Laspeyres e o Törnqvist datam o mesmo dezembro de forma diferente — e 22 % do viés publicado é esse artefacto
+
+**Onde:** `src/calculos.py`, `indices_comparados()`, linhas ~692 e ~701-702.
+
+**O que se passa.** O painel «Cabaz fixo contra cabaz que acompanha o consumo» compara dois
+índices. A correspondência entre ponderadores e momentos está documentada com cuidado, e é
+respeitada no Törnqvist:
+
+```python
+q_ini = quotas.loc[anterior + 1] if (anterior + 1) in quotas.index else quotas.loc[anterior]
+```
+
+O ponderador do ano `y+1` representa dezembro de `y` — é a definição do Documento Metodológico do
+IPC, que o próprio código cita. Mas o Laspeyres de base fixa usa:
+
+```python
+base = anos[0]
+quotas_base = quotas.loc[base]
+```
+
+O ponderador do ano `base` refere-se a dezembro de `base−1`. **O mesmo dezembro-base é
+representado por dois vetores de ponderadores distintos, com um ano de diferença**, nos dois
+índices cuja diferença é precisamente o que se está a medir.
+
+**Verificado, com os dados reais da sessão** (dezembros de 2020 a 2025):
+
+| Ano | Laspeyres com `w(base)` | Laspeyres com `w(base+1)` | Törnqvist |
+|---|---|---|---|
+| 2020 | 100,000 | 100,000 | 100,000 |
+| 2022 | 124,325 | 124,191 | 124,056 |
+| 2024 | 130,670 | 130,473 | 130,291 |
+| **2025** | **135,351** | **135,222** | **134,761** |
+
+Viés acumulado apresentado: **0,590 pontos**. Viés com o ponderador coerente: **0,461 pontos**.
+**A diferença, 0,129 pontos, é 22 % do número que a aplicação publica** — e é o número que
+sustenta a frase «sobre uma subida acumulada de 34,8 %, é residual».
+
+**A conclusão qualitativa aguenta** — 0,46 pontos continua a ser residual, e continua a ser
+verdade que a substituição relevante acontece dentro das classes. Mas o painel existe justamente
+para *medir em vez de afirmar*, e a medida está inflacionada em cerca de um quinto por uma
+incoerência interna de datação.
+
+**Correção.** Uma linha:
+
+```python
+quotas_base = quotas.loc[base + 1] if (base + 1) in quotas.index else quotas.loc[base]
+```
+
+E um teste que fixe a coerência: os dois índices têm de datar o dezembro-base pelo mesmo vetor.
+
+---
+
+## 🟠 E5 · O painel «endereços exatos desta sessão» oferece endereços que devolvem erro
+
+**Onde:** `src/eurostat.py`, `_via_sdmx()` linha ~57 e `_via_stats()`.
+
+**O que se passa.** `_via_sdmx` regista o endereço em `ENDERECOS` **antes** de fazer o pedido:
+
+```python
+ENDERECOS.append((dataset, _completo))
+resp = requests.get(url, params=params, ...)
+```
+
+Se o pedido falhar e a aplicação recorrer à API Statistics, o endereço da tentativa falhada fica
+registado na mesma — e `_via_stats` **nunca regista nada**. O painel «Ver os dados em bruto —
+endereços exatos desta sessão» apresenta-o como sendo a proveniência do número.
+
+**Verificado hoje, e não é hipotético.** Os ponderadores vieram pela API Statistics. O endereço
+que o painel oferece para os verificar é:
+
+```text
+GET .../sdmx/2.1/data/prc_hicp_inw/A..CP0111+...+CP0119.PT?format=SDMX-CSV   ->  HTTP 400
+```
+
+**Consequência.** O texto do painel promete: «Servem para **verificar qualquer valor** sem
+depender da aplicação, e para reproduzir o cálculo em Excel ou noutra ferramenta.» Quem seguir o
+link dos ponderadores recebe um erro. Numa ferramenta cujo argumento central é a rastreabilidade,
+é a promessa mais visível e a que hoje não se cumpre. E note-se que hoje **três** das ligações
+(ponderadores, dimensão do agregado, salário mínimo) vêm pela API Statistics.
+
+**Correção.** Registar depois do sucesso, não antes; registar também a via Statistics, com o
+endereço completo com parâmetros; e marcar no painel a via de cada um. As tentativas falhadas têm
+lugar no registo de diagnóstico, não na lista de verificação.
+
+---
+
+## 🟠 E6 · O cabeçalho de proveniência dos CSV atribui ao Eurostat ficheiros que não são do Eurostat
+
+**Onde:** `app.py`, `csv_com_fonte()`, linhas ~513-523.
+
+**O que se passa.** A função escreve um cabeçalho **fixo**:
+
+```text
+# Fonte dos dados: Eurostat (indice harmonizado de precos no consumidor e contas nacionais)
+# Conjuntos: prc_hicp_midx, prc_hicp_manr, prc_hicp_inw, nama_10_co3_p3, ilc_lvph01
+```
+
+É a mesma função que exporta **oito** ficheiros diferentes, entre os quais:
+
+- **«Descarregar série completa do Observatório»** — dados do **GPP**, recolhidos por script, que
+  nunca passaram pelo Eurostat;
+- **«Descarregar cabaz por quintil»** — níveis do **INE, IDF 2022/2023**;
+- **«Descarregar simulação de IVA»** — cujas taxas e repercussão são parâmetros do utilizador.
+
+A lista fixa de cinco conjuntos omite ainda `ilc_di03`, `earn_mw_cur`, `lfst_hhnhtych`,
+`prc_ppp_ind_1`, `ilc_mdes03` e `nama_10_a10`, todos efetivamente usados.
+
+**Consequência.** São **os ficheiros que saem da aplicação e circulam sozinhos** — precisamente
+aqueles em que o cabeçalho de proveniência é a única coisa que resta. Um CSV do Observatório do
+GPP a declarar-se Eurostat é uma atribuição de fonte errada num documento que pode acabar anexado
+a uma nota.
+
+**Correção.** A fonte passa a parâmetro obrigatório da função; a lista de conjuntos passa a ser
+derivada de `dados["registo"]`, que já sabe quais responderam.
+
+---
+
+## 🟠 E7 · O coeficiente de Engel é documentado como `CP011/CP00` e é calculado como `CP011/TOTAL`
+
+**Onde:** `src/eurostat.py`, `despesa_total_consumo()`; `app.py`, linhas ~2737 e ~2752.
+
+**O que se passa.** A função tenta quatro códigos por ordem — `TOTAL`, `CP00`, `P31_S14`,
+`CP_TOT` — e usa o primeiro que responda. Verificado hoje: responde **`TOTAL`**. Mas a legenda do
+gráfico e o cabeçalho do CSV afirmam:
+
+> Fonte: Contas Nacionais (`nama_10_co3_p3`), rácio **CP011/CP00**.
+
+**Consequência.** É a mesma classe de problema que o **B3** — uma lista de candidatos cujo
+resultado efetivo não chega ao rótulo. No B3 foi resolvido bem: o título do gráfico passou a
+nomear a categoria PPP efetivamente obtida, com aviso quando é a de reserva. Aqui a doutrina não
+foi aplicada. Hoje o valor está certo (16,37 % para Portugal em 2022, que reproduz os 16,4 %
+documentados), mas o leitor que quiser reproduzir o cálculo procura um código que não foi usado.
+
+**Correção.** Devolver o código utilizado, como já se faz para as PPP, e nomeá-lo na legenda e no
+CSV. Se o código de recuo alguma vez for usado, avisar.
+
+---
+
+## 🟡 E8 · O padrão de formatação frágil do C5 sobreviveu num sítio
+
+**Onde:** `app.py`, linhas ~1597-1602.
+
+```python
+st.caption(
+    f"Em {_ano_sev}, **{...} %** entre quem está em risco de pobreza, contra "
+    f"**{...} %** no total — "
+    f"**{_sev_pobres / _sev:.1f}×**".replace(".", ",") + " mais."
+)
+```
+
+Cadeias adjacentes concatenam-se em tempo de compilação: o `.replace(".", ",")` **aplica-se à
+frase inteira**, não ao número. É literalmente o modo de falha que o C5 fechou em nove outros
+sítios. Hoje não parte porque não há nenhum ponto literal no texto; parte na primeira reescrita
+que introduza um «p.p.», um «n.º» ou uma abreviatura.
+
+**Correção.** `pontos()` ou `numero()`, aplicados só ao número, como nos restantes nove.
+
+---
+
+## 🟡 E9 · Números derivados fixados à mão ao lado de números calculados
+
+Reincidência do **C2**, em três sítios:
+
+| Onde | Valor inscrito | Devia ser |
+|---|---|---|
+| ~3230 | «só acima de **3,58 adultos**», «só se anularia com **4,5 adultos**» | resultado de bissecção sobre `ESCALAS_TESTE_RACIO` — calculável |
+| ~1564-1565 | «um problema de **2 %** da população», «são **14 %**» | `_sev` (1,9) e `_sofi_pt` (14,4), que estão na mesma função |
+| ~1071 | «mais **2,3 vezes** de despesa alimentar contra mais **1,7 vezes** de despesa total» | rácios de 2022 entre as duas bases — derivam de constantes existentes |
+
+O argumento do C2 vale sem alteração: aparecem ao lado de números calculados em direto e o leitor
+não os distingue. Os dois últimos casos são **arredondamentos de valores que a app já tem na
+mão** e que deixam de bater certo assim que a fonte for atualizada.
+
+**Correção.** Calcular. Onde o cálculo não compensar, marcar com a data de apuramento.
+
+---
+
+## 🟡 E10 · `decompor` redistribui a despesa em silêncio quando falta um ponderador
+
+**Onde:** `src/calculos.py`, `decompor()`, linha ~178.
+
+```python
+total_pesos = sum(v for v in pesos.values() if v and v > 0)
+```
+
+Se uma classe não vier do Eurostat, o seu peso é 0, sai do denominador, e **as oito restantes
+absorvem 100 % da despesa** — cada uma com uma quota inflacionada, sem aviso nenhum. É o mesmo
+modo de falha que o **C3** fechou no Törnqvist, onde passou a declarar-se quais as classes
+excluídas. Aqui continua aberto, e é o cálculo mais central da aplicação.
+
+**Correção.** Devolver a lista de classes em falta em `df.attrs`, como `indices_comparados` já
+faz, e declará-la na interface.
+
+---
+
+## 🟡 E11 · `cabaz_quintis` compara um agravamento parcial com um orçamento total
+
+**Onde:** `src/calculos.py`, `cabaz_quintis()`, linhas ~534-555.
+
+O `agravamento` soma apenas as classes com variação disponível; o `agravamento_orcamento`
+divide-o pelo orçamento **total** do quintil. Faltando uma classe, o numerador encolhe e o
+denominador não — a coluna «Agravamento / orçamento» subestima, e é justamente a coluna que fecha
+o argumento sobre a regressividade.
+
+**Correção.** A mesma de E10: devolver a cobertura efetiva e declará-la quando não for total.
+
+---
+
+## 🟡 E12 · O nível de preços comparado é apresentado com zero casas decimais
+
+**Onde:** `app.py`, linhas ~2597-2600.
+
+```python
+d1.metric(f"Portugal em {ano_pli}", f"{v:.0f}"...)
+d2.metric("Face à média da UE-27", f"{numero(abs(v - 100))} % {posicao}")
+```
+
+`numero()` tem `casas=0` por omissão. Portugal está em **101,4** e a aplicação escreve **101** e
+**«1 % mais caros»**. A grandeza comunicada é a distância à média europeia: arredondar 1,4 para 1
+perde **quase um terço** dela. O documento da primeira auditoria cita, com razão, «1,4 % acima da
+média europeia» — a aplicação não consegue mostrar esse número.
+
+**Correção.** Uma casa decimal nos dois indicadores.
+
+---
+
+## 🟡 E13 · A vista de inflação parte com uma exceção técnica se o último mês vier vazio
+
+**Onde:** `app.py`, linhas ~2815-2819.
+
+Se nenhum país tiver observação no último período, `pd.DataFrame([])` não tem coluna `geo` e o
+`.map(PAISES)` seguinte levanta `KeyError`. Fica contido pelo `painel()`, mas o utilizador recebe
+um erro técnico em vez de «não há observações para este mês».
+
+**Correção.** Guarda explícita antes de construir o *ranking*.
+
+---
+
+## 🟡 E14 · O ano-base do painel de viés de substituição desliza sozinho em cada 1 de janeiro
+
+**Onde:** `app.py`, `carregar_dados()`, linha ~122.
+
+```python
+desde_indice = f"{ano - anos_historico}-01"      # anos_historico = 6
+```
+
+O ano-base do Törnqvist e do Laspeyres é o primeiro dezembro da janela pedida — hoje, 2020. A 1 de
+janeiro de 2027 passa a 2021, **sem que ninguém decida**, e a métrica «Viés de substituição
+acumulado desde dez/20» passa a medir outro período com o mesmo nome. Uma série que se compara
+entre versões do documento tem de ter base estável.
+
+**Correção.** Ano-base explícito em `config.py`, independente da janela de pedido, com a janela
+dimensionada para o cobrir.
+
+---
+
+## ⚪ E15 · A extrapolação nacional na base Contas Nacionais é um híbrido de dois anos
+
+**Onde:** `app.py`, linhas ~2420-2423 e ~2497-2509.
+
+Na base Contas Nacionais, `media_agregado` resulta da despesa de **2022** dividida pelos agregados
+de **2022**, atualizada a preços correntes — e é depois multiplicada pelos agregados de **2025**.
+Cada passo está certo e cada um está justificado (B2 para o denominador, A3 para o multiplicador),
+mas o produto não é o agregado de 2022 nem uma medição de 2026: é **o consumo real de 2022, a
+preços de hoje, sobre a população de agregados de hoje**.
+
+É a leitura defensável, e é a que a pergunta de política exige. Mas deve estar escrita ao lado do
+número, porque não é o que um leitor infere de «poupança agregada anual».
+
+**Correção.** Uma frase na legenda dos dois cartões nacionais.
+
+---
+
+## O que verifiquei e está correto — segunda auditoria
+
+Para que o âmbito da garantia fique claro. Tudo o que segue foi **reexecutado**, não relido:
+
+- **A bateria de 46 testes passa**, em 1,3 segundos.
+- **As dezassete correções da primeira auditoria estão de pé.** Confirmei uma a uma contra a
+  fonte: `ilc_di03` responde com `MEAN_EI` = 17 239 € e `MED_EI` = 14 564 € (2025); o salário
+  mínimo dá 1 073 € em 2026-S2, que × 12/14 = 920 € legais; a série do EU-LFS devolve os oito
+  anos, 4 182,6 a 4 562,1 mil agregados; `A010101` = 101,4 e a reserva `A0101` = 102,0; a
+  privação alimentar de 2025 dá 1,9 / 5,5 / 1,3.
+- **Os quadros do IDF são internamente coerentes.** A soma das nove classes reproduz o total
+  publicado em quatro dos seis quintis e desvia-se **1 €/ano** nos outros dois — arredondamento do
+  próprio quadro do INE. Os seis pesos orçamentais publicados reproduzem-se todos, a uma casa
+  decimal, a partir dos níveis: 12,02 / 14,80 / 14,08 / 13,62 / 11,99 / 9,12.
+- **O teste das escalas reproduz ao centésimo:** rácios previstos 2,3606 / 1,9524 / 1,6803 e
+  desvios −21,5 % / −5,0 % / **+10,3 %**; o controlo da despesa total inverte o sinal, −10,9 %.
+- **A aritmética do IVA reproduz ao cêntimo**, incluindo o exemplo que a interface apresenta
+  (106 €, de 23 % para 6 %): receita cessante de **−13,82 €** com repercussão nula e **−14,65 €**
+  com repercussão integral, **6,0 %** de amplitude — e independência exata da repercussão na
+  isenção total, como o texto afirma.
+- **A âncora das Contas Nacionais reproduz:** 27 318,5 M€ ÷ 4 102 600 ÷ 12 = **554,90 €**, com o
+  denominador emparelhado no ano da despesa.
+- **O coeficiente de Engel de Portugal reproduz:** 27 318,5 / 166 851,3 = **16,37 %** em 2022.
+- **A decomposição é aditiva** e a soma dos contributos iguala a variação do total.
+- **Todas as vinte e uma ligações respondem** e devolvem valores plausíveis — incluindo as três
+  arquivadas do E1, que é precisamente o problema.
+
+**O que não pude verificar.** A correspondência entre as nove classes da ECOICOP ver.2 e as
+Listas I e II do Código do IVA (E2) exige o texto das Listas confrontado com as **novas**
+definições de classe. Tenho o texto das Listas, do trabalho do D2; falta-me a decomposição da
+despesa pelas novas subclasses, que o Eurostat publica a cinco dígitos — é trabalho a fazer, não
+uma fonte em falta.
+
+---
+
+## Ordem de execução proposta
+
+| # | Item | Gravidade | Porquê nesta posição |
+|---|---|---|---|
+| 1 | **E1 + E2** migração ECOICOP ver.2 | 🔴 | Tudo o resto está a jusante. **Não separar:** conjuntos novos com rótulos velhos é pior do que o estado atual, porque parece correto |
+| 2 | **E3** frescura das séries com API | 🟠 | É o que impede a repetição do E1. Fazer **logo a seguir**, enquanto a causa está à vista |
+| 3 | **E5 + E7** rastreabilidade | 🟠 | Custo quase nulo, e são a promessa central da ferramenta. O E5 tem de ser refeito depois do E1, porque os endereços mudam |
+| 4 | **E4** ponderador-base do Laspeyres | 🟠 | Uma linha; corrige 22 % de um número publicado |
+| 5 | **E6** cabeçalho dos CSV | 🟠 | Ficheiros que circulam sozinhos, com atribuição de fonte errada |
+| 6 | **E10 + E11** cobertura declarada | 🟡 | Mesma correção nos dois sítios; fecha o modo de falha que o C3 só fechou num |
+| 7 | **E8, E9, E12, E13** | 🟡 | Rigor de apresentação, sem dependências |
+| 8 | **E14** ano-base estável | 🟡 | Só se torna visível em janeiro; melhor resolver antes de o esquecer |
+| 9 | **E15** declaração do híbrido | ⚪ | Uma frase |
+
+**Recomendação sobre o uso entretanto.** Enquanto o E1 não estiver aplicado, os números da
+aplicação são de **dezembro de 2025** e não devem ser citados como situação corrente. As
+comparações entre composições, entre escalas, entre quintis e entre bases de âncora **mantêm-se
+válidas** — são rácios internos e não dependem do mês. O que não se pode usar é o nível em euros,
+a variação homóloga e a comparação europeia, apresentados como sendo de hoje.
+
+## O que preciso de si
+
+1. **Autorização para aplicar E1 e E2**, que alteram os números que a aplicação mostra. Está
+   quantificado acima: âncoras +1,8 %, e variações por classe substancialmente diferentes.
+2. **Nomes portugueses das nove classes na ECOICOP ver.2.** Posso traduzir os rótulos oficiais do
+   Eurostat, mas se o INE já publicou a designação portuguesa da nomenclatura revista, é essa que
+   deve ficar — e é fonte que a Inês encontra mais depressa do que eu.
+3. **Confirmação de que se mantém a decisão de usar `CP011`** (produtos alimentares) e não `CP01`
+   (alimentares e bebidas não alcoólicas). Na ver.2 os dois continuam a existir, com ponderadores
+   de 195,47 ‰ e 207,35 ‰; a escolha atual é `CP011` e parece-me a certa, mas passa a valer a pena
+   dizê-lo em texto, porque a nomenclatura nova torna a distinção mais visível.
+
+---
+
+## Registo de aplicação — segunda auditoria
+
+### E1 + E2 · Migração para a ECOICOP versão 2 — 11.08.2026
+
+Aplicados em conjunto, como o diagnóstico exigia.
+
+**O que foi feito, na camada de dados.** `src/eurostat.py` passou de `prc_hicp_midx`,
+`prc_hicp_manr` e `prc_hicp_inw` para **`prc_hicp_minr`** e **`prc_hicp_iw`**. Como o conjunto
+novo traz o índice e as taxas de variação juntos, `indice_precos`, `indice_classes` e `variacoes`
+passaram a partilhar a mesma chamada, distinguidas pela unidade — `I25`/`I15` para os níveis,
+`RCH_A` para a variação homóloga. A unidade vai **explícita na chave**: omiti-la traria níveis e
+taxas empilhados na mesma coluna de valores.
+
+**A guarda que faltava, generalizada.** A dimensão de classificação chama-se `coicop18` no
+conjunto novo. O código antigo lia-a com `bruto.get("coicop", "")` — com o conjunto novo isso
+devolveria uma coluna vazia e as nove classes colapsariam numa só, sem erro. A regra inverteu-se:
+nova função `_coluna_classe()`, o parâmetro `dim_coicop` atravessa `obter`, `_via_sdmx` e
+`_via_stats`, **quem precisa da classificação declara-a, e a ausência é erro**. Deixou de ser um
+caso especial do `ilc_mdes03` e passou a ser a doutrina da camada de acesso.
+
+**`CP00` → `TOTAL`** em `config.py`. O agregado «Todos os produtos» mudou de código; o antigo
+devolve HTTP 400 no conjunto corrente. Antes da correção, a via SDMX falhava e a de reserva
+respondia com uma fatia arbitrária — outra vez o padrão do B1.
+
+**Designações das classes.** Vieram do **anexo do relatório do IDF 2022/2023** — «Classificação
+do Consumo Individual por Objetivo (COICOP, versão 2018)», páginas 54-55 —, fornecido pela Inês.
+Não são tradução desta ferramenta. Cada classe passou a ter dois campos: `nome`, a forma curta
+para cartões e gráficos, que é a que o levantamento de 07.08.2026 já usava no §2.1; e `oficial`,
+a designação do INE, que acompanha a tabela detalhada, o painel do IVA e as exportações.
+
+| Código | Antes (ECOICOP v1) | Agora (forma curta) | Designação oficial do INE |
+|---|---|---|---|
+| CP0111 | Pão e cereais | Cereais e derivados | Cereais e produtos à base de cereais |
+| CP0112 | Carne | Carne | Animais vivos, carne e outras partes de animais terrestres abatidos |
+| CP0113 | Peixe e marisco | Peixe e produtos do mar | Peixe e outros produtos alimentares do mar |
+| CP0114 | Leite, queijo e ovos | Leite, lácteos e ovos | Leite, outros produtos lácteos e ovos |
+| CP0115 | Óleos e gorduras | Óleos e gorduras | Óleos e gorduras |
+| CP0116 | Fruta | Fruta e frutos de casca rija | Fruta e frutos de casca rija |
+| CP0117 | Legumes e hortícolas | Hortícolas, tubérculos e leguminosas | Produtos hortícolas, tubérculos, bananas-pão, bananas para culinária e leguminosas |
+| CP0118 | Açúcar e doces | Açúcar, confeitaria e sobremesas | Açúcar, confeitaria e sobremesas |
+| CP0119 | Outros alimentos | Pré-preparados e outros | Alimentos pré-preparados e outros produtos alimentares n.e. |
+
+**`IVA_MAPA` refeito contra as subclasses da COICOP 2018.** As verbas das Listas I e II não
+mudaram — mudou o que cada classe contém, e portanto o que fica dentro e fora de cada verba. O
+levantamento passou a citar a subclasse concreta (`01.1.5.1`, `01.1.3.4`, …) em vez de descrever
+em geral, o que torna cada atribuição verificável.
+
+> **Correção ao diagnóstico do E2, e é minha.** Escrevi que a classe `CP0119` tinha passado a ser
+> encabeçada por refeições prontas e que, por isso, «a taxa predefinida deixou de ser
+> plausivelmente a predominante». **Está errado, e a predefinição a 23 % mantém-se.** Fui verificar
+> as subclasses das duas versões: a ECOICOP v1 já tinha `CP01194`, refeições prontas, dentro de
+> `CP0119`; o que mudou foi o **rótulo** da classe, que passou a nomeá-las à cabeça, não o
+> conteúdo. E a verba 1.8 da Lista II cobre o pronto a comer e levar e a entrega ao domicílio, que
+> na COICOP caem no grupo **11.1, restauração**, e não em 01.1.9 — a subclasse `01.1.9.1` é
+> pré-preparado de retalho. A conclusão do E2 mantém-se, mas por outra razão: o mapa tinha de ser
+> refeito porque descrevia classes com fronteiras diferentes, não porque a taxa estivesse errada.
+
+**Achado durante a aplicação, e mais interessante do que o item que o gerou.** Ao confrontar os
+níveis do `IDF_CLASSES_QUINTIL` com o quadro da página 44 do relatório do INE, os nove valores
+reproduzem exatamente — 420, 670, 403, 369, 119, 299, 324, 119, 149 — **contra as designações da
+COICOP 2018**. Ou seja: **o IDF 2022/2023 já estava na versão 2018 desde o início, enquanto o
+índice ainda estava na versão 1**. Durante todo esse período a aplicação cruzou as duas: estrutura
+de despesa numa classificação, variação de preços na outra, sob o mesmo rótulo. É uma incoerência
+que ninguém tinha visto — nem eu, na primeira auditoria — e que **a migração fecha por
+consequência**: as duas fontes passaram a estar na mesma classificação. Ficou declarado no
+separador da COICOP.
+
+**Verificado em execução, com dados reais.** A aplicação renderiza **sem uma única exceção** nos
+seis separadores. Os valores movem-se exatamente como o diagnóstico previu:
+
+| | Antes | Depois |
+|---|---|---|
+| Mensagem de estado | último mês **dez/25**, ponderadores de **2025** | último mês **jun/26**, ponderadores de **2026** |
+| Agregado médio nacional (IDF) | 276,06 € | **281,06 €** |
+| Casal, escala OCDE original | 237,02 € | **241,32 €** |
+| Agravamento nos últimos 12 meses | 7,55 € | **6,96 €** |
+| Maior contributo | 🥩 Carne | **🐟 Peixe e produtos do mar**, 3,38 € |
+| Agregados de enquadramento | via de reserva, `CP00` sem resposta | **SDMX 2.1**, série até **jul/26** |
+
+A soma dos nove ponderadores passou de 199,63 ‰ para 195,48 ‰, que é o valor publicado para
+`CP011` em 2026 — bate exatamente, o que confirma que as nove classes cobrem o agregado alimentar
+na nomenclatura nova sem sobreposição nem lacuna.
+
+**Testes de regressão — seis novos, a bateria passa de 46 para 52.** Nenhum repete o que já
+estava coberto:
+
+- `test_dimensao_coicop18_e_normalizada_para_coicop` — a dimensão declarada chega ao resto da
+  aplicação com o nome de sempre;
+- `test_sem_declarar_a_classificacao_as_classes_colapsam` — **exige que a via errada divirja**, e
+  fixa em teste o modo de falha exato do E1: sem declaração, as nove classes ficam numa só;
+- `test_classificacao_declarada_e_ausente_e_erro` — melhor falhar do que juntar;
+- `test_conjuntos_do_ihpc_sao_os_correntes_e_nao_os_arquivados` — proíbe nominalmente os três
+  conjuntos arquivados no código-fonte das quatro funções do IHPC, exige a unidade explícita na
+  chave, e exige que a dimensão seja declarada. É o teste que impede a regressão por distração;
+- `test_agregado_de_enquadramento_usa_o_codigo_da_ecoicop2` — `TOTAL`, nunca `CP00`;
+- `test_classes_tem_designacao_oficial_da_coicop_2018` — toda a classe tem designação oficial, as
+  nove são distintas, duas âncoras verificáveis no anexo do INE, e **os rótulos da versão 1 estão
+  proibidos por nome**.
+
+**O que não fica resolvido por isto.** Nada nesta correção impede que volte a acontecer: um
+conjunto que seja arquivado amanhã continuará a responder com HTTP 200. É o **E3**, o passo
+seguinte.
 
 ---
 
