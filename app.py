@@ -19,18 +19,21 @@ from src import eurostat, observatorio
 from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
                           comparar_ponderadores,
                           composicao_quintis, decompor, despesa_do_agregado,
-                          escala_mais_proxima, indices_comparados,
+                          escala_mais_proxima, idade_fonte, indices_comparados,
                           intervalo_agregado, intervalo_engel,
                           resumo_decomposicao, resumo_iva,
-                          simular_iva, testar_escalas, unidades_equivalentes)
+                          sensibilidade_escalas, simular_iva, testar_escalas,
+                          unidades_equivalentes)
 from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         BASE_POR_DEFEITO, BASES_ANCORA, COD_AGREGADOS,
                         DIMENSAO_RECUO, DIMENSAO_RECUO_FONTE,
-                        ESCALAS_TESTE_FONTE, ESCALAS_TESTE_INTERVALO, ESCALAS_TESTE_RACIO,
+                        ESCALAS_TESTE_COMPOSICAO, ESCALAS_TESTE_FONTE,
+                        ESCALAS_TESTE_INTERVALO, ESCALAS_TESTE_RACIO,
                         IVA_MAPA, IVA_MAPA_FONTE,
                         IDF_ALIMENTAR_ANUAL, IDF_FONTE,
                         IDF_JANELA_FONTE, IDF_JANELA_RECOLHA,
                         IDF_PESO_ALIMENTAR, IDF_QUINTIS,
+                        LIMITE_ANOS_SOFI, LIMITE_DIAS_OBSERVATORIO,
                         SOFI_CUSTO, SOFI_FONTE, SOFI_INCAPACIDADE, SOFI_MILHOES,
                         AZUL, CINZENTO, CLASSES, CODIGOS, COICOP_ALIMENTAR, DOURADO,
                         PAISES, PAISES_POR_DEFEITO, POR_CODIGO, RODAPE,
@@ -1655,6 +1658,19 @@ que não há nada a descontar nem a acrescentar.
         """)
         st.caption(f"Fontes: Eurostat `ilc_mdes03` · {SOFI_FONTE} · INE, IDF 2022/2023 (Q.2.11.b).")
 
+        # Sendo inscrito à mão, o SOFI envelhece sem a aplicação dar erro
+        # (auditoria de 10.08.2026, D4). O ano é tomado como 31 de dezembro,
+        # a leitura mais favorável à fonte.
+        _idade_sofi = idade_fonte(_ano_sofi, LIMITE_ANOS_SOFI * 365)
+        if _idade_sofi["desatualizada"]:
+            _anos_sofi = _idade_sofi["dias"] / 365.25
+            st.error(
+                f"⏳ **O SOFI apresentado é de {_ano_sofi}** — há cerca de "
+                f"{numero(_anos_sofi, 1)} anos. Como é publicado em PDF e inscrito à mão em "
+                "`src/config.py`, é provável que já exista pelo menos uma edição por "
+                "incorporar. **Confirme antes de citar estes valores.**"
+            )
+
         # ------- blocos recolhíveis lado a lado, para reduzir o deslocamento -------
         e1, e2, e3 = st.columns(3)
 
@@ -2072,6 +2088,17 @@ with aba6:
                 f"Recolha de {_obs_meta.get('extraido_em', '—')} · "
                 f"{_obs_meta.get('fonte', 'GPP')}."
             )
+
+            # O Observatório não tem API: se ninguém correr o script de recolha,
+            # a série fica parada sem a aplicação dar erro (auditoria, D4).
+            _idade_obs = idade_fonte(_obs_meta.get("extraido_em"), LIMITE_DIAS_OBSERVATORIO)
+            if _idade_obs["desatualizada"]:
+                st.warning(
+                    f"⏳ **Estes dados têm {_idade_obs['dias']} dias.** O Observatório publica de "
+                    "quatro em quatro semanas e não tem API — a série só avança quando alguém "
+                    "correr `scripts/recolher_observatorio.py`. Acima de "
+                    f"{LIMITE_DIAS_OBSERVATORIO} dias é provável que haja períodos por recolher."
+                )
 
             st.warning("""
     **A diferença entre o preço no consumo e o preço na produção não é a margem de ninguém.**
@@ -2570,7 +2597,7 @@ with aba4:
                     d1.metric(f"Portugal em {ano_pli}", f"{v:.0f}".replace(".", ","),
                               help="Índice: média da UE-27 = 100")
                     d2.metric("Face à média da UE-27",
-                              f"{abs(v - 100):.0f} % {posicao}".replace(".", ","))
+                              f"{numero(abs(v - 100))} % {posicao}")
                     posto = int((pli_ult["geo"] != "EU27_2020").cumsum()[
                         pli_ult["geo"] == "PT"].iloc[0])
                     total = int((pli_ult["geo"] != "EU27_2020").sum())
@@ -2821,7 +2848,8 @@ with aba4:
                 if valor_ue is not None:
                     figc.add_vline(x=valor_ue, line_width=2, line_dash="dash",
                                    line_color="#64748b",
-                                   annotation_text=f"média UE-27: {valor_ue:.1f} %".replace(".", ","),
+                                   annotation_text=("média UE-27: "
+                                                    + percentagem(valor_ue, sinal=False)),
                                    annotation_position="top")
                 figc.update_layout(height=max(330, 34 * len(ordenado)),
                                    margin=dict(t=42, b=40, l=10, r=120),
@@ -3161,6 +3189,48 @@ with aba5:
                         f"privilegie, a subestimação fica entre **{ESCALAS_TESTE_INTERVALO[0]} % e "
                         f"{ESCALAS_TESTE_INTERVALO[1]} %**. O resultado é robusto no sinal e na "
                         f"ordem de grandeza, não no algarismo."
+                    )
+
+                # ---- circularidade do pressuposto, declarada e medida ----
+                _sens = sensibilidade_escalas()
+                if not _sens.empty:
+                    _n_pressuposto = ESCALAS_TESTE_COMPOSICAO[1][0]
+                    st.warning(f"""
+    **Há uma circularidade neste teste, e é preciso dizê-lo.** O grupo «3 ou mais adultos» não tem
+    contagem publicada: os **{numero(_n_pressuposto, 3)} adultos** usados no cálculo foram deduzidos
+    admitindo que o quadro Q.2.8 do INE aplica a **escala OCDE modificada** — que é depois uma das
+    três escalas avaliadas. O teste não é, portanto, inteiramente independente daquilo que avalia.
+                    """)
+                    _tab_s = pd.DataFrame([{
+                        "Adultos no grupo «3 ou +»": (
+                            numero(r.adultos_3mais, 3)
+                            + (" ← pressuposto" if r.e_o_pressuposto else "")),
+                        "Per capita": percentagem(r.desvio_per_capita),
+                        "OCDE original": percentagem(r.desvio_ocde_original),
+                        "OCDE modificada": percentagem(r.desvio_ocde_modificada),
+                        "Mais próxima do observado": ESCALAS[r.mais_proxima]["nome"].split(" (")[0],
+                        "Controlo inverte": "sim" if r.controlo_inverte else "não",
+                    } for r in _sens.itertuples()])
+                    st.dataframe(_tab_s, use_container_width=True, hide_index=True)
+
+                    _todas_subestimam = bool(_sens["modificada_subestima"].all())
+                    _todas_invertem = bool(_sens["controlo_inverte"].all())
+                    _min_d = float(_sens["desvio_ocde_modificada"].min())
+                    _max_d = float(_sens["desvio_ocde_modificada"].max())
+                    _n_original = int((_sens["mais_proxima"] == "ocde_original").sum())
+                    st.caption(
+                        f"**As duas conclusões sobrevivem ao pressuposto.** Em todos os cenários "
+                        f"testados, de 3,0 a 3,7 adultos, a OCDE modificada continua a subestimar "
+                        f"o custo alimentar "
+                        f"{'(sempre)' if _todas_subestimam else '(nem sempre)'} — entre "
+                        f"{percentagem(_min_d)} e {percentagem(_max_d)} — e o controlo da despesa "
+                        f"total continua a inverter o sinal "
+                        f"{'em todos' if _todas_invertem else 'nem sempre'}. A OCDE original é a "
+                        f"mais próxima do observado em {_n_original} dos {len(_sens)} cenários; só "
+                        f"acima de **3,58 adultos em média** é que a modificada passaria à frente, "
+                        f"e o desvio só se anularia com **4,5 adultos** — valor sem sentido para um "
+                        f"grupo «3 ou mais». A direção do resultado não depende do pressuposto; a "
+                        f"magnitude depende."
                     )
 
         with st.expander("💰 Rendimento e salários — o que é bruto, o que é líquido"):

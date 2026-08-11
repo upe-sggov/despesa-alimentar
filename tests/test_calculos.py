@@ -194,6 +194,60 @@ def test_vies_do_agregado_medio_e_sistematico():
     assert racios[0] > 1.0                        # e no sentido de subestimação
 
 
+def test_sensibilidade_das_escalas_ao_pressuposto_circular():
+    """
+    Os 3,288 adultos do grupo «3 ou mais» foram deduzidos assumindo a escala
+    OCDE modificada, que é depois uma das escalas avaliadas. A circularidade é
+    real; o que o teste fixa é que as **conclusões** não dependem dela dentro
+    do intervalo plausível. Auditoria de 10.08.2026, D3.
+    """
+    from src.calculos import sensibilidade_escalas
+
+    df = sensibilidade_escalas()
+    assert not df.empty
+    assert df["e_o_pressuposto"].sum() == 1, "o cenário de base tem de estar assinalado"
+
+    # em todo o intervalo plausível a direção mantém-se
+    plausivel = df[df["adultos_3mais"] <= 3.5]
+    assert plausivel["modificada_subestima"].all()
+    assert plausivel["controlo_inverte"].all()
+    assert (plausivel["mais_proxima"] == "ocde_original").all()
+
+    # e a magnitude é que se move — se não se movesse, o teste não provava nada
+    amplitude = (df["desvio_ocde_modificada"].max()
+                 - df["desvio_ocde_modificada"].min())
+    assert amplitude > 3.0
+
+
+def test_idade_fonte_avisa_so_quando_deve():
+    """
+    O SOFI e o Observatório envelhecem sem a aplicação dar erro. Na dúvida
+    sobre a referência, não se acusa a fonte. Auditoria de 10.08.2026, D4.
+    """
+    from datetime import date
+
+    from src.calculos import idade_fonte
+
+    hoje = date(2026, 8, 11)
+
+    # data ISO, dentro e fora do prazo
+    assert idade_fonte("2026-08-10", 60, hoje)["dias"] == 1
+    assert idade_fonte("2026-08-10", 60, hoje)["desatualizada"] is False
+    assert idade_fonte("2026-05-01", 60, hoje)["desatualizada"] is True
+
+    # ano: tomado como 31 de dezembro, a leitura mais favorável à fonte
+    r = idade_fonte(2025, 730, hoje)
+    assert r["data"] == date(2025, 12, 31)
+    assert r["desatualizada"] is False
+    assert idade_fonte(2023, 730, hoje)["desatualizada"] is True
+
+    # referência ilegível: não acusa
+    for mau in (None, "", "não sei", "2026-13-45"):
+        r = idade_fonte(mau, 60, hoje)
+        assert r["data"] is None
+        assert r["desatualizada"] is False
+
+
 def test_formatadores_nao_estragam_o_texto_a_volta():
     """
     O padrão antigo aplicava `.replace(".", ",")` à frase inteira. Numa etiqueta

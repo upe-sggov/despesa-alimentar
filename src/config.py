@@ -395,6 +395,22 @@ ESCALAS_TESTE_INTERVALO = (10, 13)
 #
 # O SOFI é publicado em PDF, não em API — os valores abaixo são transcritos dos
 # anexos A1.5 e A1.6 e têm de ser atualizados à mão a cada edição.
+# --------------------------------------------------------------------------
+# Prazos de validade das fontes de atualização manual
+# --------------------------------------------------------------------------
+# Nem o SOFI nem o Observatório têm API: se ninguém os atualizar, a aplicação
+# continua a apresentá-los sem nunca dar erro (auditoria de 10.08.2026, D4).
+# Estes limites definem a partir de quando a interface passa a avisar.
+#
+# O Observatório publica períodos de quatro semanas (28 dias). Sessenta dias
+# tolera um período em atraso e apanha o segundo.
+LIMITE_DIAS_OBSERVATORIO = 60
+
+# O SOFI é anual, publicado a meio do ano seguinte ao de referência. Dois anos
+# de distância do último ano da série significa que houve uma edição por
+# incorporar.
+LIMITE_ANOS_SOFI = 2
+
 SOFI_FONTE = ("FAO/FIDA/UNICEF/PAM/OMS, The State of Food Security and Nutrition "
               "in the World 2026, anexos A1.5 e A1.6")
 SOFI_EDICAO = 2026

@@ -21,6 +21,8 @@ repercussão é explícita e ajustável, e o resultado é sempre condicional a e
 
 from __future__ import annotations
 
+from datetime import date as _date, datetime as _datetime
+
 import numpy as np
 import pandas as pd
 
@@ -31,6 +33,56 @@ from .config import (
     IDF_ALIMENTAR_QUINTIL, IDF_CLASSES_QUINTIL, IDF_DESPESA_TOTAL,
     IDF_PESO_ALIMENTAR, IDF_QUINTIS,
 )
+
+
+# --------------------------------------------------------------------------
+# Frescura das fontes que não vêm de API
+# --------------------------------------------------------------------------
+def idade_fonte(referencia, limite_dias: int, hoje=None) -> dict:
+    """
+    Idade de uma fonte cuja atualização é manual, e se já passou do prazo.
+
+    O SOFI (inscrito em `config.py`) e o Observatório (em `dados/`) não têm API.
+    Se ninguém os atualizar, a aplicação continua a mostrá-los sem nunca dar
+    erro — envelhecem em silêncio (auditoria de 10.08.2026, D4). Esta função
+    dá à interface o que ela precisa para o dizer.
+
+    `referencia` aceita uma data (`date`/`datetime`), uma cadeia ISO
+    (`'2026-08-10'`) ou um ano (`2025` ou `'2025'`, tomado como 31 de dezembro
+    desse ano — a data mais favorável à fonte, para não exagerar a idade).
+
+    Devolve `{data, dias, limite_dias, desatualizada}`; `data` é None e
+    `desatualizada` é False se a referência não for interpretável — na dúvida,
+    não se acusa a fonte.
+    """
+    hoje = hoje or _date.today()
+    if isinstance(hoje, _datetime):
+        hoje = hoje.date()
+
+    data = None
+    if isinstance(referencia, _datetime):
+        data = referencia.date()
+    elif isinstance(referencia, _date):
+        data = referencia
+    elif isinstance(referencia, int):
+        data = _date(referencia, 12, 31)
+    elif isinstance(referencia, str):
+        texto = referencia.strip()
+        if texto.isdigit() and len(texto) == 4:
+            data = _date(int(texto), 12, 31)
+        else:
+            try:
+                data = _date.fromisoformat(texto[:10])
+            except ValueError:
+                data = None
+
+    if data is None:
+        return {"data": None, "dias": None, "limite_dias": limite_dias,
+                "desatualizada": False}
+
+    dias = (hoje - data).days
+    return {"data": data, "dias": dias, "limite_dias": limite_dias,
+            "desatualizada": dias > limite_dias}
 
 
 # --------------------------------------------------------------------------
@@ -307,6 +359,62 @@ ESCALAS = {
 }
 
 
+def _racio_previsto(escala: dict, composicao) -> float:
+    """Rácio de despesa entre «2 ou +» e «1 adulto» que a escala prevê."""
+    return sum(fracao * (escala["primeiro"] + escala["adulto"] * (adultos - 1))
+               for adultos, fracao in composicao)
+
+
+def sensibilidade_escalas(cenarios=None) -> pd.DataFrame:
+    """
+    Testa se as conclusões do teste das escalas dependem do pressuposto dos
+    **3,288 adultos** no grupo «3 ou mais».
+
+    Esse número foi deduzido admitindo que o quadro Q.2.8 do IDF usa a escala
+    OCDE modificada — e é depois usado para avaliar as três escalas, incluindo a
+    modificada. A circularidade é real e tem de estar declarada ao lado do
+    resultado, não só num comentário (auditoria de 10.08.2026, D3).
+
+    Declará-la não basta: interessa saber **se as conclusões sobrevivem**. Esta
+    função recalcula tudo para vários valores plausíveis. Uma linha por cenário,
+    com o desvio de cada escala na alimentação, qual delas fica mais próxima do
+    observado, e se o controlo da despesa total continua a inverter o sinal.
+    """
+    if cenarios is None:
+        cenarios = [3.0, 3.1, 3.2, ESCALAS_TESTE_COMPOSICAO[1][0], 3.4, 3.5, 3.7]
+
+    fracao_3mais = ESCALAS_TESTE_COMPOSICAO[1][1]
+    fracao_2 = ESCALAS_TESTE_COMPOSICAO[0][1]
+    linhas = []
+    for n3 in cenarios:
+        comp = [(ESCALAS_TESTE_COMPOSICAO[0][0], fracao_2), (n3, fracao_3mais)]
+        desvios = {}
+        for chave, e in ESCALAS.items():
+            previsto = _racio_previsto(e, comp)
+            if previsto <= 0:
+                continue
+            desvios[chave] = {
+                "alimentar": (ESCALAS_TESTE_RACIO["alimentar"] / previsto - 1) * 100,
+                "total": (ESCALAS_TESTE_RACIO["total"] / previsto - 1) * 100,
+            }
+        if not desvios:
+            continue
+        mais_proxima = min(desvios, key=lambda c: abs(desvios[c]["alimentar"]))
+        mod = desvios.get("ocde_modificada", {})
+        linha = {
+            "adultos_3mais": n3,
+            "e_o_pressuposto": abs(n3 - ESCALAS_TESTE_COMPOSICAO[1][0]) < 1e-9,
+            "mais_proxima": mais_proxima,
+            "modificada_subestima": mod.get("alimentar", 0) > 0,
+            "controlo_inverte": (mod.get("alimentar", 0) > 0
+                                 and mod.get("total", 0) < 0),
+        }
+        for chave, d in desvios.items():
+            linha[f"desvio_{chave}"] = d["alimentar"]
+        linhas.append(linha)
+    return pd.DataFrame(linhas)
+
+
 def testar_escalas() -> pd.DataFrame:
     """
     Confronta o rácio de despesa que cada escala prevê com o observado no IDF,
@@ -315,14 +423,14 @@ def testar_escalas() -> pd.DataFrame:
     Uma linha por escala. `desvio_alimentar` positivo significa que a escala
     **subestima** o custo alimentar de agregados maiores: o observado é maior do
     que o previsto.
+
+    O pressuposto dos 3,288 adultos no grupo «3 ou mais» é circular — ver
+    `sensibilidade_escalas`, que mede se as conclusões dependem dele.
     """
     linhas = []
     for chave, e in ESCALAS.items():
         # Rácio previsto entre «2 ou +» e «1 adulto», para a composição do IDF.
-        previsto = sum(
-            fracao * (e["primeiro"] + e["adulto"] * (adultos - 1))
-            for adultos, fracao in ESCALAS_TESTE_COMPOSICAO
-        )
+        previsto = _racio_previsto(e, ESCALAS_TESTE_COMPOSICAO)
         if previsto <= 0:
             continue
         linhas.append({

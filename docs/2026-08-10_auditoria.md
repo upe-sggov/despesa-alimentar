@@ -18,11 +18,34 @@ ligações de dados**, com confronto dos valores devolvidos contra a fonte.
 | 🟡 A corrigir | 6 | Rigor, rastreabilidade, robustez |
 | ⚪ A declarar | 4 | Pressupostos legítimos que devem estar explícitos |
 
-**Estado a 11.08.2026:** corrigidos e verificados em execução os três críticos (**A1, A2, A3**),
-os quatro importantes (**B1, B2, B3, B4**), os seis de rigor (**C1 … C6**) e os pressupostos **D1**
-e **D2**. Ver «Registo de aplicação» no fim do documento. **Quinze de dezassete fechados**; ficam
-apenas **D3** (circularidade a declarar no teste das escalas) e **D4** (fontes que envelhecem em
-silêncio).
+## ✅ Auditoria encerrada a 11.08.2026
+
+**Os dezassete itens estão fechados**, todos verificados em execução: três críticos
+(**A1, A2, A3**), quatro importantes (**B1, B2, B3, B4**), seis de rigor (**C1 … C6**) e quatro
+pressupostos declarados (**D1, D2, D3, D4**). O registo de cada correção está no fim do documento.
+
+**O que mudou no que a aplicação mostra:**
+
+| | Antes | Depois |
+|---|---|---|
+| Âncora IDF | 255,01 €/mês | **276,06 €/mês** |
+| Rendimento do EU-SILC | ausente, com legenda a descrevê-lo | **2 154,88 €/mês** |
+| Salário mínimo | rotulado «valor legal» | **média de 14 mensalidades**, valor legal citado |
+| Poupança agregada do IVA | variava −14 % a +92 % com a composição | **fixa**, parte do agregado médio |
+| Coeficiente de Engel | 16,4 % ao lado de 12,0 % | **intervalo 12,0 % – 16,4 %** |
+
+**Dois itens dependeram de fontes externas** e foram resolvidos com documentos fornecidos pela
+Inês: o *Boletim Económico* do Banco de Portugal (C1) e o documento metodológico do IDF (D1). Um
+terceiro (D2) foi resolvido com o texto do Código do IVA.
+
+**Três correções foram encontradas durante a aplicação, não no diagnóstico inicial:** o padrão de
+formatação do C5 já estava partido em produção («p,p,» num gráfico), havia um `_milhoes` definido
+duas vezes no mesmo espaço de nomes, e o teste do `IVA_MAPA` apanhou uma incoerência na estrutura
+que eu próprio tinha acabado de escrever.
+
+**A bateria passou de 38 para 46 testes.** Os oito novos não repetem o que já estava coberto: cada
+um trava um dos modos de falha encontrados, e vários verificam também que **a via errada diverge**
+— sem isso, passariam com a correção revertida.
 
 Os dois itens que dependiam de fontes externas — **C1** e **D1** — foram resolvidos com documentos
 fornecidos pela Inês: o *Boletim Económico* do Banco de Portugal de junho de 2026 e o documento
@@ -384,6 +407,8 @@ Recomendo um confronto explícito com a Lista I do CIVA, produto a produto, e o 
 
 ## ⚪ D3 · Circularidade a declarar no teste das escalas
 
+> ✅ **Declarada e medida a 11.08.2026.** Ver «Registo de aplicação», no fim.
+
 `ESCALAS_TESTE_COMPOSICAO = [(2.0, 0.72), (3.288, 0.28)]`. Os **3,288 adultos** do grupo «3 ou mais»
 foram deduzidos assumindo que o Q.2.8 usa a escala OCDE modificada. Esse número é depois usado para
 avaliar **as três escalas, incluindo a modificada**.
@@ -395,6 +420,8 @@ comentário do código.
 ---
 
 ## ⚪ D4 · Duas fontes envelhecem em silêncio
+
+> ✅ **Corrigido a 11.08.2026.** Ver «Registo de aplicação», no fim.
 
 O **SOFI** (em `config.py`) e o **Observatório** (em `dados/`) não vêm de API. Se ninguém os
 atualizar, a aplicação continua a apresentá-los sem nunca dar erro.
@@ -805,9 +832,63 @@ todos os trabalhadores por conta de outrem, que o numerador exclui as contribui�
 e que o valor **não é comparável** com estatísticas de ganho médio convertidas a equivalentes a
 tempo completo.
 
+### D3 · Circularidade no teste das escalas — 11.08.2026
+
+**A circularidade é real.** O grupo «3 ou mais adultos» não tem contagem publicada: os **3,288
+adultos** foram deduzidos admitindo que o quadro Q.2.8 do INE aplica a escala OCDE modificada — que
+é depois uma das três escalas avaliadas.
+
+**Declarar não bastava; interessava saber se as conclusões sobrevivem.** Nova função
+`sensibilidade_escalas()`, que recalcula tudo para sete valores entre 3,0 e 3,7 adultos:
+
+| Adultos «3 ou +» | Per capita | OCDE original | OCDE modificada | Mais próxima |
+|---|---|---|---|---|
+| 3,000 | −18,7 % | −2,2 % | +13,0 % | OCDE original |
+| 3,200 | −20,6 % | −4,2 % | +11,2 % | OCDE original |
+| **3,288** ← pressuposto | −21,5 % | −5,0 % | +10,3 % | OCDE original |
+| 3,500 | −23,4 % | −7,0 % | +8,4 % | OCDE original |
+| 3,700 | −25,1 % | −8,8 % | +6,7 % | OCDE modificada |
+
+**As duas conclusões resistem.** Em todos os cenários a OCDE modificada continua a subestimar o
+custo alimentar (entre +6,7 % e +13,0 %) e o controlo da despesa total continua a inverter o sinal.
+A OCDE original é a mais próxima do observado em seis dos sete cenários. Os pontos de rutura,
+calculados por bissecção: a modificada só passaria à frente acima de **3,58 adultos em média**, e o
+desvio só se anularia com **4,5 adultos** — valor sem sentido para um grupo «3 ou mais».
+
+**A direção do resultado não depende do pressuposto; a magnitude depende.** É isso que passou a
+estar escrito ao lado do resultado, com a tabela à vista, em vez de num comentário do código.
+
+**Teste de regressão.** `test_sensibilidade_das_escalas_ao_pressuposto_circular` fixa a
+invariância das conclusões no intervalo plausível **e** exige que a magnitude se mova mais de
+3 pontos — senão o teste não estaria a testar nada.
+
+### D4 · Fontes que envelhecem em silêncio — 11.08.2026
+
+**O que foi feito.** Nova função pura `calculos.idade_fonte(referencia, limite_dias)`, que aceita
+uma data ISO, um objeto de data ou um ano (tomado como 31 de dezembro — a leitura mais favorável à
+fonte, para não exagerar a idade). Se a referência for ilegível devolve «não desatualizada»: na
+dúvida, não se acusa a fonte.
+
+Dois limites em `config.py`, ambos justificados:
+
+- `LIMITE_DIAS_OBSERVATORIO = 60` — o Observatório publica de 28 em 28 dias; sessenta dias tolera
+  um período em atraso e apanha o segundo;
+- `LIMITE_ANOS_SOFI = 2` — o SOFI é anual, publicado a meio do ano seguinte; dois anos significa
+  que há uma edição por incorporar.
+
+O separador do Observatório passa a avisar com a idade em dias e a lembrar o script de recolha; o
+bloco do SOFI mostra um erro destacado, com a idade em anos e o pedido explícito de confirmação
+antes de citar.
+
+**Estado hoje:** ambas frescas — Observatório recolhido há 1 dia, SOFI de 2025 há 223 dias — pelo
+que nenhum aviso dispara. O caminho contrário está coberto por teste.
+
+**Teste de regressão.** `test_idade_fonte_avisa_so_quando_deve` cobre data dentro e fora do prazo,
+a conversão de ano para 31 de dezembro, e quatro formas de referência ilegível.
+
 ### Estado da bateria de testes
 
-44 testes passam (38 iniciais + 6 novos), em cerca de um segundo. `agregados_do_ano` foi colocada
+46 testes passam (38 iniciais + 8 novos), em cerca de um segundo. `agregados_do_ano` foi colocada
 em `src/calculos.py`, e não em `app.py`, para que o teste não tenha de importar a aplicação — o que
 disparava a recolha de dados e punha a bateria dependente da rede.
 
