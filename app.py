@@ -34,6 +34,7 @@ from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         ESCALAS_TESTE_COMPOSICAO, ESCALAS_TESTE_FONTE,
                         ESCALAS_TESTE_INTERVALO, ESCALAS_TESTE_RACIO,
                         IVA_COMPONENTES, IVA_COMPONENTES_FONTE,
+                        AT_FICHAS,
                         IVA_MAPA, IVA_MAPA_FONTE, IVA_SUBCLASSES,
                         IVA_ZERO_AFETACAO_ORCAMENTAL, IVA_ZERO_INFLACAO_QUINTIL,
                         IVA_ZERO_QUINTIS_FONTE,
@@ -3034,6 +3035,43 @@ with aba3:
                     "não tem verba alguma para eles e a Lista II (1.12) cobre apenas os «flocos "
                     "prensados simples de cereais e leguminosas sem adições de açúcar»."
                 )
+                with st.expander("⚖️ O que a Autoridade Tributária já decidiu — informações "
+                                 "vinculativas"):
+                    st.markdown(
+                        "As informações vinculativas da AT (artigo 68.º do CPPT) são a via para "
+                        "fechar as atribuições que aqui aparecem como **≈ predominante**: são "
+                        "questões de leitura das Listas, não de estatística. Cada ficha decide "
+                        "sobre produtos concretos, e o que decide vincula a Administração.\n"
+                    )
+                    for _f in AT_FICHAS:
+                        st.markdown(
+                            f"**Processo {_f['processo']}** — despacho de {_f['despacho']}, "
+                            f"{_f['orgao']}. *{_f['assunto']}.*"
+                        )
+                        st.dataframe(
+                            pd.DataFrame(
+                                [{"Subclasse": _c, "O que a ficha decide": _t}
+                                 for _c, _t in _f["decide"]]),
+                            use_container_width=True, hide_index=True)
+                    st.caption(
+                        "**Uma tensão que se regista e não se resolve.** A ficha 28176 "
+                        "caracteriza a verba 1.1.1 como abrangendo os cereais «em grão, ou em "
+                        "flocos», o que sugeriria 6 % para os flocos simples. Mas a verba 1.12 "
+                        "da Lista II é texto legal específico para «flocos prensados simples "
+                        "de cereais e leguminosas sem adições de açúcar», a 13 %. Entende-se "
+                        "que o texto específico prevalece, e que a caracterização da ficha é "
+                        "contextual — a decisão que ela toma é sobre *preparados*, não sobre "
+                        "flocos simples. É o único ponto do quadro onde outra leitura é "
+                        "defensável, e por isso está escrito."
+                    )
+                    st.info(
+                        "**Regra geral que explica muitas atribuições à taxa normal.** O artigo "
+                        "18.º, n.º 4 do Código do IVA determina que, num produto composto, se as "
+                        "mercadorias mantêm a sua individualidade se aplica **a taxa mais "
+                        "elevada** de entre as que lhes caberiam; se a perdem, a que "
+                        "corresponder ao produto resultante. É por isso que tantos «preparados» "
+                        "acabam a 23 % mesmo contendo ingredientes que, isolados, estariam a 6 %."
+                    )
                 st.info("""
     **O que a COICOP 2018 permitiu e a anterior não permitia.** Três cortes novos resolvem as
     maiores ambiguidades: **Pão** (`CP011131`) separado de **Outros produtos de padaria**

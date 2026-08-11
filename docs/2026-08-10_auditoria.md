@@ -2615,5 +2615,90 @@ explicação que atribuía a divergência aos turistas.
 
 ---
 
+# I — Doutrina da Autoridade Tributária — 12 de agosto de 2026
+
+A [secção F4](#f4--a-banda-cobria-a-incerteza-pequena-e-escondia-a-grande) concluiu que o que
+faltava para fechar as atribuições «por predominância» **não era estatística, era leitura
+jurídica**, e que a resposta estaria nas informações vinculativas da AT. A Inês forneceu a
+primeira.
+
+**Ficha doutrinária do Processo 28176**, despacho de 2025-06-27 do Diretor de Serviços da DSIVA
+por subdelegação, sobre «diversos produtos para alimentação humana». Vincula a Administração nos
+termos do artigo 68.º do CPPT.
+
+## O que decide, e o que isso fecha aqui
+
+| Subclasse | O que a AT decidiu | Efeito |
+|---|---|---|
+| `CP01114` cereais p.-almoço | Papas de aveia, granolas e cereais de arroz infantis são «preparados»: **não cabem na verba 1.1.1 nem em qualquer outra** | Confirma o extremo superior do intervalo 13–23 % |
+| `CP01191` pré-preparados | Refeições de retalho a que se junta água **não cabem em verba alguma** — não são o «pronto a comer e levar» da verba 1.8 da Lista II | Confirma a atribuição a 23 % |
+| `CP01167` frutos secos | «Frutas desidratadas sem qualquer preparação» **enquadram-se na verba 1.6.4** | Confirma 6 % |
+| `CP01169` fruta moída | A verba 1.6.4 **exclui expressamente** «a moagem, ou laminação em palitos, ou cubos, cobertura» | **Passou de predominante a certa** |
+| `CP01112` farinhas | A verba 1.1.3 cobre farinha **de cereais**; as de fruta e hortícolas ficam a 23 % | Precisa o âmbito |
+| `CP01199` outros | A verba 1.12 só cobre produtos **que tinham glúten** e do qual foi removido; os naturalmente sem glúten ficam a 23 % | Estreita a parcela a 6 % |
+
+## Duas coisas que valem por si
+
+**A verba 1.12 é muito mais estreita do que o seu texto sugere.** «Produtos sem glúten para
+doentes celíacos» parece cobrir a prateleira do sem glúten. Não cobre: a AT só a aplica a géneros
+comercializados com a menção «isento de glúten» que **na formulação original tinham glúten
+superior a 20 mg/kg** e em cuja produção houve redução ou substituição. Barras de fruta e frutos
+secos, que nunca tiveram glúten, ficam à taxa normal. Estava a descrever essa parcela de forma
+demasiado generosa.
+
+**O artigo 18.º, n.º 4 explica metade das atribuições à taxa normal.** Num produto composto, se
+as mercadorias mantêm a sua individualidade aplica-se **a taxa mais elevada** de entre as que lhes
+caberiam; se a perdem, a que corresponder ao produto resultante. É a regra que leva tantos
+«preparados» a 23 % mesmo sendo feitos de ingredientes que, isolados, estariam a 6 %. Passou a
+estar escrita na aplicação, porque é a resposta à pergunta que qualquer leitor faz ao ver granola
+de aveia e fruta a 23 %.
+
+## Uma tensão que se regista e não se resolve
+
+A ficha caracteriza a verba 1.1.1 como abrangendo os cereais «em grão, **ou em flocos** (grão
+inteiro prensado)», o que sugeriria 6 % para os flocos simples — e contradiria a
+[secção G1](#g1--cereais-de-pequeno-almoço-o-valor-central-estava-fora-do-intervalo-legal).
+
+Entende-se que não contradiz, por duas razões: a verba **1.12 da Lista II** é texto legal
+específico para «flocos prensados simples de cereais e leguminosas sem adições de açúcar», e o
+específico prevalece sobre o geral; e a decisão que a ficha toma é sobre **preparados**, não sobre
+flocos simples — a caracterização de 1.1.1 é contextual, não é o dispositivo.
+
+**Fica registada porque é o único ponto do quadro onde outra leitura é defensável**, e quem
+discordar tem de o poder ver escrito em vez de o descobrir.
+
+## Efeito nos números: nenhum
+
+E é o resultado que se espera de uma fonte confirmatória:
+
+| | Antes | Depois |
+|---|---|---|
+| Parcela por predominância | 20,10 % | **19,84 %** |
+| Poupança agregada anual | 1 347,3 M€ | **1 347,3 M€** |
+
+A única alteração é `CP01169` passar de «predominante» a «certa» — a taxa já era 23 %, mudou o
+grau de certeza. **A ficha não move os números; move o que se pode afirmar sobre eles.** Seis
+atribuições deixaram de assentar na minha leitura e passaram a assentar em doutrina vinculativa.
+
+## O que continuaria a fechar a maior banda
+
+A parcela por predominância está em **19,84 %** do cabaz, e a maior fatia continua a ser a
+**pastelaria** (`CP011139`, 7,06 %). Esta ficha não lhe toca. A pergunta permanece a mesma e
+continua a ser a mais valiosa: **se as tostas e o pão torrado contam como pão** para efeitos da
+verba 1.1.5. Uma ficha sobre produtos de padaria fecharia sozinha mais de um terço da banda.
+
+Outras que valeriam a pena, por ordem de peso: preparações de carne (2,45 % — charcutaria e a
+fronteira das alheiras), hortícolas transformados (2,47 %), e a repartição molusco/crustáceo, que
+é a única destas que **não** é jurídica — a lei é clara, faltam os dados.
+
+## Testes
+
+De 95 para **99**. Exigem que cada ficha tenha processo e data, que decida sobre subclasses que
+existem no quadro, que a fonte agregada cite o processo, e — o mais útil — que **a justificação de
+cada subclasse decidida pela AT cite a ficha**: sem isso a doutrina ficaria no `config.py` sem
+chegar a quem lê a aplicação.
+
+---
+
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.
 Não constitui posição oficial.*

@@ -1693,3 +1693,57 @@ def test_a_ancora_das_contas_nao_atribui_a_divergencia_aos_turistas():
     assert "não é sobretudo por causa dos não residentes" in porque
     assert "sub-declaração" in porque
     assert "Pequeno" in CONCEITO_CONTAS_NACIONAIS["efeito_nos_alimentos"]
+
+
+# --------------------- doutrina da AT (informacoes vinculativas), 12.08.2026
+def test_fichas_da_at_estao_identificadas_e_ligadas_a_subclasses():
+    """
+    Uma ficha doutrinaria sem processo e data nao e verificavel, e uma que nao
+    diga sobre que subclasses decide nao serve para auditar o quadro.
+    """
+    from src.config import AT_FICHAS, IVA_COMPONENTES, _codigos_de_componente
+
+    assert AT_FICHAS
+    todos = {c for comps in IVA_COMPONENTES.values() for comp in comps
+             for c in _codigos_de_componente(comp)}
+    for f in AT_FICHAS:
+        assert f["processo"].strip()
+        assert f["despacho"].startswith("20")
+        assert f["decide"], f["processo"]
+        for cod, texto in f["decide"]:
+            assert cod in todos, f"{f['processo']}: {cod} nao existe no quadro"
+            assert len(texto) > 40
+
+
+def test_a_fonte_do_quadro_cita_o_civa_e_as_fichas():
+    from src.config import IVA_COMPONENTES_FONTE
+
+    assert "Listas I e II" in IVA_COMPONENTES_FONTE
+    assert "28176" in IVA_COMPONENTES_FONTE
+    assert "prc_hicp_iw" in IVA_COMPONENTES_FONTE
+
+
+def test_subclasses_decididas_pela_at_citam_a_ficha():
+    """
+    Se a AT decidiu sobre uma subclasse, a justificacao tem de o dizer - senao a
+    doutrina fica no config e nao chega a quem le a aplicacao.
+    """
+    from src.config import AT_FICHAS, IVA_COMPONENTES
+
+    por_codigo = {}
+    for comps in IVA_COMPONENTES.values():
+        for c in comps:
+            chave = c["peso"] if isinstance(c["peso"], str) else c["peso"][0]
+            por_codigo[chave] = c
+    for f in AT_FICHAS:
+        for cod, _ in f["decide"]:
+            assert f["processo"] in por_codigo[cod]["desc"], cod
+
+
+def test_fruta_moida_deixou_de_ser_juizo_e_passou_a_doutrina():
+    """A ficha 28176 e direta: a verba 1.6.4 exclui a moagem."""
+    from src.config import IVA_COMPONENTES
+
+    cp01169 = next(c for c in IVA_COMPONENTES["CP0116"] if c["peso"] == "CP01169")
+    assert cp01169["certeza"] == "certa"
+    assert cp01169["taxa"] == 23

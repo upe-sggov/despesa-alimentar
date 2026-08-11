@@ -276,19 +276,97 @@ IVA_MAPA = {
 CIVA_FONTE = ("Código do IVA, Listas I e II — texto consolidado, versão a "
               "20.05.2026 (Listas em vigor desde 25.05.2026, redação do "
               "Decreto-Lei n.º 97/2026, de 20 de maio)")
+
+# --------------------------------------------------------------------------
+# Doutrina da Autoridade Tributária — informações vinculativas
+# --------------------------------------------------------------------------
+# A auditoria de 12.08.2026 (F4) concluiu que o que faltava para fechar as
+# parcelas atribuídas «por predominância» não era estatística, era **leitura
+# jurídica**, e que a resposta estaria nas informações vinculativas da AT.
+#
+# A ficha do Processo 28176 é a primeira que se pôde confrontar com o quadro.
+# Vincula a AT nos termos do artigo 68.º do CPPT e decide, sobre produtos
+# concretos, questões que estavam em aberto aqui.
+#
+# ---- O que decide, e que importa a este trabalho --------------------------
+# 1. **«Preparados» não cabem na verba 1.1.1.** Papas de aveia, granolas e
+#    cereais de arroz infantis são «preparados» ou «snacks» e «não reúnem
+#    condições de enquadramento na verba 1.1.1 da lista I, nem em qualquer
+#    outra verba das Listas» — **taxa normal**. São o grosso do que se vende
+#    como cereais de pequeno-almoço.
+# 2. **Refeições pré-preparadas de retalho** (risotto ao qual se junta água)
+#    também não cabem em verba alguma — **taxa normal**. Não são o «pronto a
+#    comer e levar» da verba 1.8 da Lista II.
+# 3. **Verba 1.6.4** cobre a fruta que não sofra transformação além da secagem;
+#    exclui expressamente «a moagem, ou laminação em palitos, ou cubos,
+#    cobertura». Frutas desidratadas sem preparação ficam a **6 %**; farinhas
+#    de fruta e de hortícolas ficam a **23 %**.
+# 4. **Verba 1.12 é muito mais estreita do que o seu texto sugere.** Só cobre
+#    géneros comercializados com a menção «isento de glúten» que **na sua
+#    formulação original tinham glúten** e foram reduzidos ou substituídos. Os
+#    produtos **naturalmente** sem glúten não cabem lá — foi o que a AT decidiu
+#    quanto às barras de fruta e frutos secos.
+# 5. **Artigo 18.º, n.º 4**: num produto composto, se as mercadorias mantêm a
+#    sua individualidade aplica-se **a taxa mais elevada** de entre as que lhes
+#    caberiam; se a perdem, a que corresponder ao produto resultante. É a regra
+#    que explica por que tantos preparados acabam na taxa normal.
+#
+# ---- Uma tensão que se regista e não se resolve --------------------------
+# A ficha caracteriza a verba 1.1.1 como abrangendo os cereais «em grão, ou em
+# flocos (grão inteiro prensado)», o que sugeriria 6 % para os flocos simples.
+# Mas a verba **1.12 da Lista II** é texto legal específico para «flocos
+# prensados simples de cereais e leguminosas sem adições de açúcar», a 13 %.
+# Entende-se que o texto específico prevalece, e que a caracterização da ficha é
+# contextual — a decisão que ela toma é sobre *preparados*, não sobre flocos
+# simples. Fica registada porque é o único ponto do quadro onde uma leitura
+# diferente é defensável.
+AT_FICHAS = [
+    {
+        "processo": "28176",
+        "despacho": "2025-06-27",
+        "orgao": "Diretor de Serviços da DSIVA, por subdelegação",
+        "assunto": "IVA — Diversos produtos para alimentação humana",
+        "decide": [
+            ("CP01114", "Papas de aveia, granolas e cereais de arroz infantis são "
+                        "«preparados» ou «snacks»: não cabem na verba 1.1.1 nem em "
+                        "qualquer outra. Taxa normal."),
+            ("CP01191", "Refeições pré-preparadas de retalho (risotto a que se junta "
+                        "água) não cabem em verba alguma. Taxa normal — não são o "
+                        "«pronto a comer e levar» da verba 1.8 da Lista II."),
+            ("CP01167", "Frutas desidratadas sem qualquer preparação enquadram-se na "
+                        "verba 1.6.4. Taxa reduzida."),
+            ("CP01169", "A verba 1.6.4 exclui expressamente a moagem, a laminação em "
+                        "palitos ou cubos e a cobertura. Fruta moída e preparações "
+                        "ficam à taxa normal."),
+            ("CP01112", "A verba 1.1.3 cobre farinha **de cereais**; farinhas obtidas "
+                        "de fruta ou de hortícolas ficam à taxa normal."),
+            ("CP01199", "A verba 1.12 só cobre produtos que tinham glúten na "
+                        "formulação original e do qual foi removido ou substituído. "
+                        "Os naturalmente sem glúten ficam à taxa normal."),
+        ],
+    },
+]
+AT_FICHAS_FONTE = ("Autoridade Tributária e Aduaneira, informações vinculativas "
+                   "(fichas doutrinárias), artigo 68.º do CPPT")
 #
 # **Limitação a declarar:** os ponderadores são do IHPC, que inclui a despesa de
 # não residentes. É a única fonte aberta que desce a este nível — o IDF fica-se
 # pelo quarto dígito. Vale para repartir *dentro* da classe, que é o uso aqui.
-IVA_COMPONENTES_FONTE = (CIVA_FONTE + " · ponderadores por subclasse do "
-                         "Eurostat, prc_hicp_iw (COICOP 2018)")
+IVA_COMPONENTES_FONTE = (
+    CIVA_FONTE + " · " + AT_FICHAS_FONTE + ": "
+    + ", ".join(f"processo {f['processo']} ({f['despacho']})" for f in AT_FICHAS)
+    + " · ponderadores por subclasse do Eurostat, prc_hicp_iw (COICOP 2018)")
 
 IVA_COMPONENTES = {
     "CP0111": [
         {"peso": "CP01111", "taxa": 6, "certeza": "certa",
          "desc": "Cereais (Lista I, 1.1)"},
         {"peso": "CP01112", "taxa": 6, "certeza": "certa",
-         "desc": "Farinhas de cereais (Lista I, 1.1)"},
+         "desc": "Farinhas **de cereais** (Lista I, 1.1.3) — a AT precisou o "
+                 "âmbito: cobre farinha de cereais estreme, mistura, composta, "
+                 "corrigida ou autolevedante, e as lácteas e não lácteas; as "
+                 "farinhas obtidas de fruta ou de hortícolas ficam a 23 % "
+                 "(ficha 28176). A subclasse é a das farinhas de cereais"},
         {"peso": "CP011131", "taxa": 6, "certeza": "certa",
          "desc": "Pão (Lista I, 1.1)"},
         {"peso": "CP011139", "taxa": 23, "certeza": "predominante",
@@ -301,9 +379,12 @@ IVA_COMPONENTES = {
                  "torrado contam como pão para efeitos da verba 1.1.5"},
         {"peso": "CP01114", "taxa": None, "certeza": "mista", "entre": (13, 23),
          "desc": "Cereais para pequeno-almoço — **nunca a 6 %**. A Lista I não "
-                 "tem verba alguma para eles; a Lista II (1.12) cobre os «flocos "
+                 "tem verba para eles; a Lista II (1.12) cobre os «flocos "
                  "prensados simples de cereais e leguminosas sem adições de "
-                 "açúcar» a 13 %, e os restantes ficam a 23 %"},
+                 "açúcar» a 13 %, e os restantes ficam a 23 %. A AT confirmou o "
+                 "extremo superior: papas de aveia, granolas e cereais infantis "
+                 "são «preparados» e não cabem em verba alguma (ficha 28176), o "
+                 "que põe o grosso da subclasse a 23 %"},
         {"peso": "CP01115", "taxa": 6, "certeza": "predominante",
          "desc": "Massas alimentícias — a Lista I cobre as **não recheadas**; "
                  "as recheadas ficam a 23 %"},
@@ -396,12 +477,19 @@ IVA_COMPONENTES = {
          "desc": "Fruta congelada — a Lista I cobre os **frutos vermelhos** "
                  "congelados; a restante fica a 23 %"},
         {"peso": "CP01167", "taxa": 6, "certeza": "certa",
-         "desc": "Frutos secos e desidratados (Lista I, 1.6.4)"},
+         "desc": "Frutos secos e desidratados (Lista I, 1.6.4) — a AT decidiu "
+                 "expressamente que «frutas desidratadas sem qualquer "
+                 "preparação» se enquadram nesta verba (ficha 28176)"},
         {"peso": "CP01168", "taxa": None, "certeza": "mista",
          "desc": "Frutos de casca rija — a Lista I refere as **castanhas** "
                  "nominalmente; amêndoa, noz e avelã ficam a 23 %"},
-        {"peso": "CP01169", "taxa": 23, "certeza": "predominante",
-         "desc": "Fruta em calda, conserva e outras preparações"},
+        {"peso": "CP01169", "taxa": 23, "certeza": "certa",
+         "desc": "Fruta moída e outras preparações — a AT decidiu que a verba "
+                 "1.6.4 exclui expressamente «a moagem, ou laminação em palitos, "
+                 "ou cubos, cobertura», e que há produto novo sempre que a "
+                 "transformação faz a fruta perder a natureza de fruto (ficha "
+                 "28176). A subclasse é, por definição, o que sofreu essa "
+                 "transformação"},
     ],
     "CP0117": [
         {"peso": "CP01171", "taxa": 6, "certeza": "certa", "desc": "Hortícolas de folha ou caule, frescos (Lista I, 1.6)"},
@@ -436,7 +524,11 @@ IVA_COMPONENTES = {
          "desc": "Alimentos pré-preparados **de retalho**. A verba 1.8 da "
                  "Lista II (13 %) cobre o pronto a comer e levar e a entrega ao "
                  "domicílio, que na COICOP caem no grupo 11.1 — restauração — e "
-                 "não aqui"},
+                 "não aqui. A AT confirmou-o: refeições pré-preparadas de "
+                 "retalho, a que se junta água, «não reúnem condições de "
+                 "enquadramento em qualquer verba» e ficam à taxa normal (ficha "
+                 "28176). Fica «predominante» porque a subclasse é larga e "
+                 "abrange formatos que a ficha não apreciou"},
         {"peso": "CP01192", "taxa": 6, "certeza": "certa",
          "desc": "Alimentos para bebés e crianças de pouca idade (Lista I, 1.14)"},
         {"peso": "CP01193", "taxa": None, "certeza": "mista",
@@ -446,11 +538,14 @@ IVA_COMPONENTES = {
          "desc": "Especiarias, ervas aromáticas e sementes para culinária"},
         {"peso": "CP01199", "taxa": None, "certeza": "mista",
          "desc": "Outros produtos alimentares — recolhe várias verbas da Lista I "
-                 "a 6 %: nutrição entérica e produtos sem glúten para celíacos "
-                 "(1.12), seitan, tofu, tempeh e soja texturizada (1.1.6), algas "
-                 "vivas, frescas ou secas (1.6.5), produtos semelhantes a queijo "
-                 "sem leite (1.13) e os substitutos integrais da dieta (1.14). "
-                 "O restante fica a 23 %"},
+                 "a 6 %: nutrição entérica e sem glúten (1.12), seitan, tofu, "
+                 "tempeh e soja texturizada (1.1.6), algas (1.6.5), produtos "
+                 "semelhantes a queijo sem leite (1.13) e substitutos integrais "
+                 "da dieta (1.14). **A verba 1.12 é bem mais estreita do que o "
+                 "seu texto sugere:** a AT só a aplica a produtos que tinham "
+                 "glúten na formulação original e do qual foi removido ou "
+                 "substituído — os naturalmente sem glúten ficam a 23 % (ficha "
+                 "28176). O restante fica a 23 %"},
     ],
 }
 
