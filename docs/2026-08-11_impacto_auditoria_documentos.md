@@ -8,6 +8,8 @@ e `2026-08-07_UPE_Cabaz_DadosNovos.docx`
 > está verificado, não presumido. O que muda são **seis pontos**, dos quais dois são erros a
 > corrigir, dois são atualizações de valores com a mesma conclusão, e dois são ressalvas que passam
 > a ser exigíveis.
+>
+> ✅ **Aplicado a 11.08.2026 nos dois documentos.** Ver «Registo de aplicação», na Parte C.
 
 **Resumo:**
 
@@ -299,18 +301,63 @@ ficar a sugerir trabalho pendente.
 
 ---
 
-## Parte C · Divisão de trabalho
+## Parte C · Registo de aplicação — 11.08.2026
 
-| | Quem aplica |
+**Tudo aplicado**, nos dois documentos, a pedido expresso da Inês («vamos avançar com as correções;
+quero também que faças as alterações no word»). A edição do Word é uma exceção à regra habitual —
+normalmente indico em texto e ela aplica.
+
+**Cópias de segurança feitas antes de qualquer alteração**, na mesma pasta:
+
+- `2026-08-07_UPE_Cabaz_DadosNovos_antes_auditoria_20260811_104622.docx`
+- `2026-07-21_UPE_NG_SETCS_Cabaz_NotaEnquadramento_antes_auditoria_20260811_104622.html`
+
+### Nota de enquadramento (HTML)
+
+| | O que ficou |
 |---|---|
-| **Nota de enquadramento** (A1, A2, A3, A5) | Posso aplicar, ao abrigo da autorização permanente. Aguardo confirmação. |
-| **Word «Dados novos»** (B1 a B7) | Aplicado por si, com o texto acima. |
+| **A1** | §1.4 passa a «39 produtos», com a distinção entre início dos **boletins** (09.2023) e início das **séries** (03.01.2022). Caixa de correção datada acrescentada, no formato das anteriores. |
+| **A2** | Eixo 5 ganhou a nota metodológica sobre qual salário mínimo usar, com a série de confirmação do fator 14/12. |
+| **A3** | Eixo 5 ganhou o fundamento do Banco de Portugal — Kaitz 91 %, P50/P10 1,1, segundo decil sem observações distintas — com as ressalvas de universo. |
+| **A5a** | «IDEF» → «IDF» em todo o documento (10 ocorrências). |
+| **A5b** | Eixo 3 passa a assinalar a restrição: a componente de **procura** é exequível (Q.2.12.a e Q.2.3.a do IDF), a de **oferta retalhista** não foi obtida. Recomenda-se não anunciar o eixo completo sem essa peça garantida. |
 
-**Sugestão de ordem para o Word:** B1 e B2 primeiro (são os dois erros), depois B3 e B4 (que andam
-juntos, por causa do denominador), e por fim B5 e B6, que são acrescentos de ressalva.
+Verificado no fim: 58 `<div>` abertos e 58 fechados, 15 `<li>`, 85 `<td>`, sem `IDEF` remanescente.
+Os dois «26 produtos» que subsistem estão dentro de caixas de correção, a citar a redação original —
+como deve ser.
 
-Fica ainda pendente, de sessão anterior e sem relação com a auditoria, a incorporação dos dados do
-**SOFI** no Word — as instruções em texto foram-lhe enviadas na altura.
+### Word «Dados novos» — 28 alterações
+
+| | O que ficou |
+|---|---|
+| **B1** | §2.4 reescrito: os Censos passam a valor de recuo; explicitados os dois divisores e a diferença de 5,0 % entre universos. |
+| **B2** | §3.2, Leite UHT MG: consumo **+61,8 % → +63,6 %**. |
+| **B3** | §4.1: denominador 4 149 096 → 4 102 600; 549 → **555 €/mês**; 3 351 → **3 389 €/mês**; rácios 2,29 → **2,32** e 1,68 → **1,70**; coberturas 59,4 → **58,8 %** e 44,4 → **43,9 %**. O parágrafo narrativo foi atualizado a par da tabela. |
+| **B4** | §4.1: a frase do intervalo passa a «239 a 555 €/mês», com a ressalva sobre a base temporal do IDF. |
+| **B5** | §3.2: cada produto passa a indicar o número de períodos da sua janela; o rodapé ganhou a ressalva de não comparabilidade e a lista dos três produtos excluídos. |
+| **B6** | §4.2: rodapé ganhou a declaração da circularidade e o intervalo de sensibilidade. |
+| **B7** | §5 passa a «Correções à nota de enquadramento — aplicadas em 08.08.2026». |
+
+Cada substituição validou o conteúdo esperado antes de escrever, e o processo abortaria se algum não
+batesse certo. Verificado no fim: zip íntegro, 36 peças, todos os XML válidos.
+
+**Reproduzi os 44,4 % e 59,4 % do Word antes de os corrigir**, para confirmar que a base era COICOP
+01 (alimentares e bebidas não alcoólicas) e não 01.1 — o que valida os novos 43,9 % e 58,8 % como
+comparáveis com os antigos.
+
+### Uma opção que tomei, e que pode rever
+
+O levantamento propunha **acrescentar duas colunas** ao quadro §3.2. Não o fiz: acrescentar uma
+coluna obriga a mexer no `tblGrid` e na largura de todas as células, e um erro aí estraga a
+maquetação de um documento que segue para o Gabinete. Pus a informação **no nome de cada produto**
+— «Frango inteiro (58 per.)», «Leite UHT MG (45 per., até 07/2025)» — e o detalhe completo no
+rodapé. O leitor fica com a mesma informação e o quadro não corre risco. Se preferir as colunas,
+digo-lhe e faço.
+
+### Fica pendente
+
+A incorporação dos dados do **SOFI** no Word, de sessão anterior e sem relação com a auditoria. As
+instruções em texto foram enviadas na altura.
 
 ---
 
