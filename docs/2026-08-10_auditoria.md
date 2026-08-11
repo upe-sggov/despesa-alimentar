@@ -2345,6 +2345,13 @@ residentes incluídos. Se for esse o caso, **agravaria** o problema dos não res
 resolver. A confirmação está por fazer, e **não se troca a base do número que vai ao Gabinete com
 esta dúvida em aberto**.
 
+> ✅ **Verificado no mesmo dia — ver [secção H](#h--o-conceito-das-contas-nacionais--12-de-agosto-de-2026).**
+> O conceito é, de facto, o **interno**, e ficou provado pela identidade contabilística e pelo
+> colapso da diferença em 2020. Mas a suposição que se segue acima — de que isso «agravaria o
+> problema dos não residentes» — **não se confirmou nos alimentos**: em 2020 a restauração caiu
+> 36,6 % e a alimentação em casa **subiu** 3,1 %. A conclusão de não trocar a base mantém-se; a
+> razão passou a ser que os ~2,3× continuam sem explicação, e não os turistas.
+
 O que ficou registado é o que o confronto revelou: as duas bases **não são uma melhor e outra
 pior — respondem a perguntas diferentes**. Para o *impacto nas famílias*, a base do inquérito é a
 certa. Para o *custo orçamental*, a das contas nacionais é a certa, porque o IVA incide sobre
@@ -2513,6 +2520,98 @@ verificável.
 De 88 para **92**. Os novos fixam o intervalo legal como parte do modelo: que só as parcelas
 indeterminadas o declarem, que só contenha taxas existentes no Código, que os cereais de
 pequeno-almoço nunca caiam a 6 %, e que a fonte legal identifique a versão.
+
+---
+
+# H — O conceito das Contas Nacionais — 12 de agosto de 2026
+
+Fechamento do único item que a [secção F5](#f5--o-teto-do-eurostat-e-porque-é-que-a-base-não-se-troca)
+deixou explicitamente em aberto: se o `nama_10_cp18` está em conceito **interno** (despesa no
+território, não residentes incluídos) ou **nacional** (residentes, onde quer que gastem). A
+distinção decide se a base serve para medir impacto nas famílias residentes.
+
+**Está no conceito interno.** E a verificação, ao prová-lo, encontrou algo que não estava à
+espera: **a explicação que a aplicação dava para a divergência entre as duas âncoras estava
+errada**.
+
+## H1 — A prova do conceito
+
+O conjunto não tem dimensão que declare o conceito — foi por isso que ficou em dúvida. Duas
+provas independentes resolvem.
+
+**Identidade contabilística.** O total da desagregação por COICOP excede sistematicamente o
+`P31_S14` do `nama_10_gdp`, que é o consumo final das famílias no conceito nacional. Se
+estivessem no mesmo conceito, seriam iguais.
+
+| Ano | COICOP (`nama_10_cp18`) | Nacional (`P31_S14`) | Diferença |
+|---|---|---|---|
+| 2017 | 133 646 M€ | 122 128 M€ | +11 518 M€ (9,4 %) |
+| 2019 | 146 691 M€ | 133 188 M€ | +13 503 M€ (10,1 %) |
+| **2020** | **129 986 M€** | **124 709 M€** | **+5 277 M€ (4,2 %)** |
+| 2021 | 140 489 M€ | 133 603 M€ | +6 886 M€ (5,2 %) |
+| 2024 | 192 796 M€ | 171 641 M€ | +21 155 M€ (12,3 %) |
+
+**O ano de 2020.** A diferença desabou **61 %** no ano em que o turismo parou, e recuperou nos
+dois anos seguintes. Nada além do turismo produz esse padrão, e a diferença acompanha o saldo dos
+serviços ao longo de toda a série. O conceito é o interno.
+
+## H2 — A correção que a prova arrastou
+
+A aplicação afirmava, na descrição da âncora das Contas Nacionais:
+
+> «Sobrestima, porque mede o consumo no território e inclui não residentes.»
+
+A primeira metade está certa. **A segunda não explica a divergência** — e é a segunda que um
+leitor usa para decidir em que base confiar.
+
+2020 permite medir o efeito diretamente, porque separa a restauração da alimentação em casa:
+
+| | Variação 2020/2019 |
+|---|---|
+| Restauração (`CP111`) | **−36,6 %** |
+| Alimentação em casa (`CP011`) | **+3,1 %** |
+
+Se a despesa alimentar em casa fosse materialmente de turistas, teria **caído** em 2020. Subiu.
+Os não residentes comem em restaurantes; não cozinham em casa. O efeito existe, mas é pequeno —
+não é o que explica um fator de 2,3.
+
+**Ressalva, que faz parte do resultado.** 2020 teve dois efeitos opostos sobre o `CP011`: os
+residentes substituíram restaurante por casa (a subir) e os turistas desapareceram (a descer). O
+saldo de +3,1 % **não prova que o efeito turista seja nulo** — prova que é menor do que a
+substituição. O limite superior, se os não residentes consumissem alimentos em casa na proporção
+do seu peso no consumo total, seria 12,3 % do `CP011`; a evidência de 2020 diz que o valor real
+está bem abaixo.
+
+## H3 — Citação de fonte obsoleta
+
+`BASES_ANCORA["contas"]["fonte"]` continuava a citar **`nama_10_co3_p3`** — o conjunto arquivado
+com a passagem à COICOP 2018, que a aplicação abandonou a 11.08.2026 nos passos E1/E2. A migração
+tinha mudado o código de acesso e deixado para trás a citação que se oferece ao leitor para
+verificação. Uma fonte parada apresentada como verificação é pior do que nenhuma. Corrigida, e
+travada por teste.
+
+## O que isto muda na conclusão
+
+**A base continua a não se trocar — mas a razão é outra, e é melhor.**
+
+Antes: «as Contas Nacionais estão contaminadas por turistas, logo não servem». Isso está agora
+medido, e é fraco no caso dos alimentos.
+
+Agora: a divergência de cerca de **2,3×** face ao IDF **continua sem explicação completa**. A
+sub-declaração dos inquéritos às despesas é conhecida e esperada, mas não desta ordem de
+grandeza. Uma diferença assim não se adota sem a perceber — e é por isso que a aplicação continua
+a apresentar as duas bases como **intervalo** em vez de escolher uma.
+
+Fica registado como a pergunta seguinte, e é uma pergunta genuína: **o que explica os restantes
+~2,3×?** Candidatos por testar — autoconsumo agrícola, que em Portugal não é desprezável;
+diferenças de cobertura das Contas Nacionais (consumo de instituições sem fins lucrativos);
+e o denominador de agregados, que vem de fontes diferentes das do IDF.
+
+## Testes
+
+De 92 para **95**. Fixam o conceito verificado com a sua data, exigem que a prova cite os dois
+agregados confrontados, impedem o regresso da citação arquivada e impedem o regresso da
+explicação que atribuía a divergência aos turistas.
 
 ---
 

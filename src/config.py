@@ -728,13 +728,76 @@ BASES_ANCORA = {
                   "porque os inquéritos às despesas sub-reportam sistematicamente.",
     },
     "contas": {
+        # `nama_10_co3_p3` foi arquivado com a passagem à COICOP 2018 e a
+        # aplicação migrou para `nama_10_cp18` a 11.08.2026 (E1/E2) — esta
+        # citação tinha ficado para trás, a apontar para um conjunto parado.
         "nome": "Contas Nacionais",
-        "fonte": "Eurostat, nama_10_co3_p3 (Contas Nacionais, compiladas pelo INE)",
+        "fonte": "Eurostat, nama_10_cp18 (Contas Nacionais, COICOP 2018, "
+                 "compiladas pelo INE) — conceito **interno**: despesa no "
+                 "território económico, não residentes incluídos",
         "porque": "Agregado macroeconómico dividido pelo número de agregados. "
-                  "Sobrestima, porque mede o consumo no território e inclui não residentes.",
+                  "Sobrestima — mas **não é sobretudo por causa dos não "
+                  "residentes**: no caso dos alimentos consumidos em casa esse "
+                  "efeito é pequeno (ver CONCEITO_CONTAS_NACIONAIS). O grosso da "
+                  "divergência face ao IDF vem da sub-declaração dos inquéritos "
+                  "e das diferenças de cobertura, e continua por explicar na "
+                  "sua totalidade.",
     },
 }
 BASE_POR_DEFEITO = "idf"
+
+# --------------------------------------------------------------------------
+# Conceito das Contas Nacionais — verificado a 12.08.2026
+# --------------------------------------------------------------------------
+# Ficara em aberto na auditoria de 12.08.2026 (F5) se o `nama_10_cp18` está em
+# conceito **interno** (despesa no território, não residentes incluídos) ou
+# **nacional** (residentes, onde quer que gastem). A distinção decide se a base
+# serve para medir impacto nas famílias residentes.
+#
+# ---- Prova 1: identidade contabilística ------------------------------------
+# O total da desagregação por COICOP excede sistematicamente o `P31_S14` do
+# `nama_10_gdp`, que é o consumo das famílias no conceito nacional. Em 2024:
+# 192 796 contra 171 641 M€ — mais 21 155 M€, ou 12,3 %. Se estivessem no mesmo
+# conceito, seriam iguais.
+#
+# ---- Prova 2: o ano de 2020 ------------------------------------------------
+# A diferença entre os dois desabou em 2020, de 13 503 para 5 277 M€ (−61 %),
+# no ano em que o turismo parou, e recuperou depois. Nada além do turismo
+# produz esse padrão. **O `nama_10_cp18` está no conceito interno.**
+#
+# ---- E quanto contamina os alimentos? --------------------------------------
+# Muito menos do que o total, e isto corrige o que a app afirmava. Em 2020:
+#
+#   CP111 restauração        −36,6 %      (o turismo estava aqui)
+#   CP011 alimentação em casa  +3,1 %      (subiu)
+#
+# Se a despesa alimentar em casa fosse materialmente de turistas, teria caído em
+# 2020. Subiu. Os não residentes comem em restaurantes, não cozinham em casa.
+#
+# **Ressalva honesta:** 2020 teve dois efeitos em sentidos opostos sobre o CP011
+# — os residentes substituíram restaurante por casa (a subir) e os turistas
+# desapareceram (a descer). O saldo foi +3,1 %, o que **não prova que o efeito
+# turista seja nulo**, só que é menor do que a substituição. O limite superior,
+# se os não residentes consumissem alimentos em casa na proporção do seu peso no
+# consumo total, seria 12,3 % do CP011; a evidência de 2020 diz que o valor real
+# está bem abaixo.
+#
+# ---- Consequência ----------------------------------------------------------
+# A base **não se troca**, mas a razão mudou. Não é «as Contas Nacionais estão
+# contaminadas por turistas»: essa contaminação existe e é pequena nos
+# alimentos. É que a divergência de ~2,3× face ao IDF **continua sem explicação
+# completa**, e uma diferença dessa ordem não se adota sem a perceber.
+CONCEITO_CONTAS_NACIONAIS = {
+    "conceito": "interno",
+    "verificado": "2026-08-12",
+    "prova": ("Total COICOP (nama_10_cp18) contra P31_S14 (nama_10_gdp), "
+              "conceito nacional: 192 796 contra 171 641 M€ em 2024. A "
+              "diferença desaba 61 % em 2020, com a paragem do turismo."),
+    "efeito_nos_alimentos": ("Pequeno. Em 2020 a restauração (CP111) caiu "
+                             "36,6 % e a alimentação em casa (CP011) subiu "
+                             "3,1 %. Limite superior de 12,3 %; o valor real "
+                             "está bem abaixo."),
+}
 
 # --------------------------------------------------------------------------
 # IDF 2022/2023 por quintil de rendimento — a base estrutural

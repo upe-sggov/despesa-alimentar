@@ -1654,3 +1654,42 @@ def test_a_fonte_legal_esta_identificada_com_versao():
 
     assert "2026" in CIVA_FONTE
     assert "Lista" in CIVA_FONTE
+
+
+# --------------------- conceito das Contas Nacionais, verificado a 12.08.2026
+def test_fonte_da_ancora_das_contas_nao_aponta_para_conjunto_arquivado():
+    """
+    `nama_10_co3_p3` foi arquivado com a passagem a COICOP 2018. A citacao da
+    fonte tinha ficado a apontar para ele - uma fonte parada oferecida como
+    verificacao e pior do que nenhuma.
+    """
+    from src.config import BASES_ANCORA
+
+    fonte = BASES_ANCORA["contas"]["fonte"]
+    assert "nama_10_cp18" in fonte
+    assert "co3_p3" not in fonte
+
+
+def test_conceito_das_contas_esta_declarado_e_e_o_interno():
+    from src.config import CONCEITO_CONTAS_NACIONAIS as C
+
+    assert C["conceito"] == "interno"
+    assert C["verificado"] == "2026-08-12"
+    # A prova tem de citar os dois agregados confrontados, senao nao e prova.
+    assert "nama_10_cp18" in C["prova"] and "P31_S14" in C["prova"]
+    assert "2020" in C["prova"]
+
+
+def test_a_ancora_das_contas_nao_atribui_a_divergencia_aos_turistas():
+    """
+    A explicacao antiga dizia que as Contas Nacionais sobrestimam por incluirem
+    nao residentes. A verificacao de 2020 mostrou que nos alimentos em casa esse
+    efeito e pequeno - CP111 caiu 36,6 % e CP011 subiu 3,1 %. Este teste impede
+    o regresso da explicacao errada.
+    """
+    from src.config import BASES_ANCORA, CONCEITO_CONTAS_NACIONAIS
+
+    porque = BASES_ANCORA["contas"]["porque"]
+    assert "não é sobretudo por causa dos não residentes" in porque
+    assert "sub-declaração" in porque
+    assert "Pequeno" in CONCEITO_CONTAS_NACIONAIS["efeito_nos_alimentos"]

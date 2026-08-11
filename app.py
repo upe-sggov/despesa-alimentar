@@ -3697,6 +3697,63 @@ with aba5:
     """)
             st.latex(r"\pi(m) = \left[ \frac{I(m,y)}{I(m,y-1)} - 1 \right] \times 100")
 
+        with st.expander("🧭 Em que conceito estão as Contas Nacionais — verificado a 12.08.2026"):
+            st.markdown(f"""
+    As duas bases de âncora divergem por um fator próximo de 2, e a explicação que esta aplicação
+    dava para isso era **incompleta**. Dizia que as Contas Nacionais sobrestimam «porque medem o
+    consumo no território e incluem não residentes». A primeira parte é verdade; a segunda não
+    explica a divergência.
+
+    ##### Primeiro: em que conceito está o conjunto
+
+    O `nama_10_cp18` podia estar em conceito **interno** (despesa no território, turistas
+    incluídos) ou **nacional** (residentes, onde quer que gastem). O conjunto não tem dimensão que
+    o declare. Duas provas resolvem:
+
+    **Identidade contabilística.** O total da desagregação por COICOP excede sistematicamente o
+    `P31_S14` do `nama_10_gdp`, que é o consumo das famílias no conceito nacional:
+
+    | Ano | COICOP (`nama_10_cp18`) | Nacional (`P31_S14`) | Diferença |
+    |---|---|---|---|
+    | 2019 | 146 691 M€ | 133 188 M€ | +13 503 M€ (10,1 %) |
+    | **2020** | **129 986 M€** | **124 709 M€** | **+5 277 M€ (4,2 %)** |
+    | 2024 | 192 796 M€ | 171 641 M€ | +21 155 M€ (12,3 %) |
+
+    **O ano de 2020.** A diferença desabou 61 % no ano em que o turismo parou, e recuperou depois.
+    Nada além do turismo produz esse padrão. **O conjunto está no conceito interno.**
+
+    ##### Segundo: quanto é que isso contamina os alimentos
+
+    Muito menos do que o total — e é aqui que a explicação antiga falhava. Em 2020:
+
+    | | Variação 2020/2019 |
+    |---|---|
+    | 🍽️ Restauração (`CP111`) | **−36,6 %** |
+    | 🛒 Alimentação em casa (`CP011`) | **+3,1 %** |
+
+    Se a despesa alimentar em casa fosse materialmente de turistas, teria **caído** em 2020.
+    Subiu. Os não residentes comem em restaurantes; não cozinham em casa.
+
+    **Ressalva.** 2020 teve dois efeitos opostos sobre a alimentação em casa: os residentes
+    substituíram restaurante por casa (a subir) e os turistas desapareceram (a descer). O saldo
+    foi +3,1 %, o que **não prova que o efeito turista seja nulo** — só que é menor do que a
+    substituição. O limite superior, se os não residentes consumissem alimentos em casa na
+    proporção do seu peso no consumo total, seria 12,3 %; a evidência de 2020 diz que o valor real
+    está bem abaixo disso.
+
+    ##### O que isto muda
+
+    A base **continua a não se trocar**, mas por outra razão. Não é «as Contas Nacionais estão
+    contaminadas por turistas» — essa contaminação existe e é pequena nos alimentos. É que a
+    divergência de cerca de 2,3× face ao IDF **continua sem explicação completa**: a
+    sub-declaração dos inquéritos é conhecida e esperada, mas não desta ordem. Uma diferença
+    assim não se adota sem a perceber, e é por isso que a aplicação continua a apresentar as duas
+    bases como um **intervalo** em vez de escolher uma.
+
+    Corrigiu-se também a citação da fonte, que continuava a apontar para o `nama_10_co3_p3` —
+    arquivado com a passagem à COICOP 2018 e parado desde então.
+            """)
+
         with st.expander("🔢 Os quatro passos desta ferramenta"):
             st.markdown("**1 · Âncora: quanto gasta o agregado médio em alimentação**")
             st.latex(r"\text{Contas Nacionais:}\quad \frac{D(y)}{H \times 12}"
