@@ -75,8 +75,9 @@ POR_CODIGO = {c["cod"]: c for c in CLASSES}
 # A conclusão é que **a taxa predefinida é a predominante, nunca a única**.
 # O simulador continua a aplicar uma taxa por classe — é o que a decomposição
 # permite, porque não há despesa aberta ao nível do produto — mas quem o usa
-# tem de saber o que fica de fora. As parcelas não são quantificáveis com dados
-# abertos: nenhuma fonte pública reparte a despesa da classe por taxa legal.
+# tem de saber o que fica de fora. **Quanto** fica de fora está apurado em
+# `IVA_COMPONENTES`, mais abaixo, a partir dos ponderadores por subclasse da
+# COICOP 2018 — o que a nomenclatura anterior não permitia.
 #
 # `taxas` enumera **todas** as taxas presentes na classe, com o que cai em cada
 # uma. A predefinida é assinalada pela aplicação a partir de `CLASSES`, e não
@@ -226,6 +227,201 @@ IVA_MAPA = {
                 "Continua a ser a classe mais heterogénea das nove.",
     },
 }
+
+# --------------------------------------------------------------------------
+# Quanto de cada classe segue cada taxa — ao nível da subclasse
+# --------------------------------------------------------------------------
+# O `IVA_MAPA`, acima, diz **o quê** dentro de cada classe segue taxa diferente
+# da predefinida. Não diz **quanto** — e a auditoria de 10.08.2026 (D2)
+# concluiu, com razão à data, que «nenhuma fonte pública reparte a despesa da
+# classe por taxa legal».
+#
+# A COICOP 2018 mudou isso. O `prc_hicp_iw` publica ponderadores a **cinco e
+# seis dígitos**, e três desses cortes resolvem as maiores ambiguidades:
+#
+#   CP011131  Pão                     contra  CP011139  Outros produtos de padaria
+#   CP011513  Azeite                  dentro de CP01151  Óleos vegetais
+#   CP01123   Carne seca/salgada      separada de CP01122 Carne fresca
+#
+# `certeza` é o que impede este quadro de prometer mais do que entrega:
+#
+#   «certa»         a subclasse cai inteira numa verba;
+#   «predominante»  a subclasse é maioritariamente de uma taxa, mas não só;
+#   «mista»         a subclasse atravessa taxas em proporção não determinável,
+#                   e o seu peso vai para a parcela **indeterminada**.
+#
+# Um componente é `peso: "CODIGO"` ou `peso: ("PAI", ["FILHO", ...])` — neste
+# caso o peso do pai menos o dos filhos listados, que é como se isola o que não
+# tem código próprio (os óleos vegetais que não são azeite).
+#
+# **Limitação a declarar:** os ponderadores são do IHPC, que inclui a despesa de
+# não residentes. É a única fonte aberta que desce a este nível — o IDF fica-se
+# pelo quarto dígito. Vale para repartir *dentro* da classe, que é o uso aqui.
+IVA_COMPONENTES_FONTE = ("Código do IVA, Listas I e II · ponderadores por "
+                         "subclasse do Eurostat, prc_hicp_iw (COICOP 2018)")
+
+IVA_COMPONENTES = {
+    "CP0111": [
+        {"peso": "CP01111", "taxa": 6, "certeza": "certa",
+         "desc": "Cereais (Lista I, 1.1)"},
+        {"peso": "CP01112", "taxa": 6, "certeza": "certa",
+         "desc": "Farinhas de cereais (Lista I, 1.1)"},
+        {"peso": "CP011131", "taxa": 6, "certeza": "certa",
+         "desc": "Pão (Lista I, 1.1)"},
+        {"peso": "CP011139", "taxa": 23, "certeza": "predominante",
+         "desc": "Outros produtos de padaria — bolos, bolachas, pastelaria, "
+                 "expressamente excluídos da Lista I"},
+        {"peso": "CP01114", "taxa": None, "certeza": "mista",
+         "desc": "Cereais para pequeno-almoço: os flocos prensados simples sem "
+                 "adição de açúcar estão na Lista II (13 %); os restantes a 23 %"},
+        {"peso": "CP01115", "taxa": 6, "certeza": "predominante",
+         "desc": "Massas alimentícias — a Lista I cobre as **não recheadas**; "
+                 "as recheadas ficam a 23 %"},
+        {"peso": "CP01119", "taxa": None, "certeza": "mista",
+         "desc": "Outros produtos da transformação de cereais e leguminosas"},
+    ],
+    "CP0112": [
+        {"peso": "CP01121", "taxa": None, "certeza": "mista",
+         "desc": "Animais terrestres vivos — a Lista I refere carnes e miudezas, "
+                 "não animais vivos"},
+        {"peso": "CP01122", "taxa": 6, "certeza": "certa",
+         "desc": "Carne fresca, refrigerada ou congelada (Lista I, 1.2) — o corte "
+                 "a seis dígitos confirma que as espécies presentes (bovina, "
+                 "suína, ovina, caprina, aves, coelho) estão todas na verba"},
+        {"peso": "CP01123", "taxa": 23, "certeza": "certa",
+         "desc": "Carne seca, salgada, em salmoura ou fumada — a Lista I só "
+                 "cobre fresca ou congelada"},
+        {"peso": "CP01124", "taxa": 6, "certeza": "certa",
+         "desc": "Miudezas frescas, refrigeradas ou congeladas (Lista I, 1.2)"},
+        {"peso": "CP01125", "taxa": 23, "certeza": "predominante",
+         "desc": "Preparações de carne — charcutaria e enchidos a 23 %, com as "
+                 "alheiras a 13 % (Lista II, 1.3.3)"},
+    ],
+    "CP0113": [
+        {"peso": "CP01131", "taxa": 6, "certeza": "certa",
+         "desc": "Peixe vivo, fresco, refrigerado ou congelado (Lista I, 1.3)"},
+        {"peso": "CP01132", "taxa": 6, "certeza": "predominante",
+         "desc": "Peixe seco ou salgado (Lista I, 1.3) — o bacalhau é o grosso; "
+                 "o peixe fumado e o salmão, espadarte e esturjão salgados "
+                 "ficam a 23 %"},
+        {"peso": "CP01133", "taxa": 6, "certeza": "predominante",
+         "desc": "Conservas de peixe com teor superior a 50 % (Lista I, 1.3); "
+                 "as pastas de atum, cavala e sardinha ficam a 23 %"},
+        {"peso": "CP01134", "taxa": None, "certeza": "mista",
+         "desc": "Marisco fresco ou congelado: **moluscos a 6 %, crustáceos a "
+                 "23 %** — a Lista I refere «peixes e moluscos» e não crustáceos. "
+                 "É a divergência que o D2 assinalou e que continua sem repartição"},
+        {"peso": "CP01135", "taxa": None, "certeza": "mista",
+         "desc": "Marisco seco ou salgado — mesma fronteira molusco/crustáceo"},
+        {"peso": "CP01136", "taxa": None, "certeza": "mista",
+         "desc": "Preparações de marisco — as conservas de moluscos estão na "
+                 "Lista II (13 %), as de crustáceos a 23 %"},
+        {"peso": "CP01137", "taxa": None, "certeza": "mista",
+         "desc": "Fígados, ovas e miudezas de peixe e marisco — o caviar fica a 23 %"},
+    ],
+    "CP0114": [
+        {"peso": "CP01141", "taxa": 6, "certeza": "certa", "desc": "Leite cru e inteiro (Lista I, 1.4)"},
+        {"peso": "CP01142", "taxa": 6, "certeza": "certa", "desc": "Leite desnatado (Lista I, 1.4)"},
+        {"peso": "CP01143", "taxa": 6, "certeza": "certa", "desc": "Outro leite e nata (Lista I, 1.4)"},
+        {"peso": "CP01144", "taxa": 6, "certeza": "certa",
+         "desc": "Leite não animal — bebidas de base vegetal (Lista I, 1.4)"},
+        {"peso": "CP01145", "taxa": 6, "certeza": "certa", "desc": "Queijo (Lista I, 1.4)"},
+        {"peso": "CP01146", "taxa": 6, "certeza": "certa", "desc": "Iogurtes (Lista I, 1.4)"},
+        {"peso": "CP01147", "taxa": 23, "certeza": "certa",
+         "desc": "Sobremesas e bebidas à base de leite — a Lista I não as enumera"},
+        {"peso": "CP01148", "taxa": 6, "certeza": "certa", "desc": "Ovos (Lista I, 1.4)"},
+        {"peso": "CP01149", "taxa": None, "certeza": "mista", "desc": "Outros produtos lácteos"},
+    ],
+    "CP0115": [
+        {"peso": "CP011513", "taxa": 6, "certeza": "certa",
+         "desc": "**Azeite** (Lista I, 1.5) — tem código próprio na COICOP 2018"},
+        {"peso": ("CP01151", ["CP011513"]), "taxa": 13, "certeza": "certa",
+         "desc": "**Óleos vegetais que não o azeite** — os óleos alimentares "
+                 "correntes, diretamente comestíveis (Lista II, 1.5.3)"},
+        {"peso": "CP01152", "taxa": 6, "certeza": "certa",
+         "desc": "Manteiga e gorduras derivadas do leite (Lista I, 1.4.3)"},
+        {"peso": "CP01153", "taxa": 6, "certeza": "certa",
+         "desc": "Margarina e creme vegetal para barrar (Lista I, 1.4.3)"},
+        {"peso": "CP01159", "taxa": 6, "certeza": "certa",
+         "desc": "Banha e outras gorduras animais (Lista I, 1.5)"},
+    ],
+    "CP0116": [
+        {"peso": "CP01161", "taxa": 6, "certeza": "certa", "desc": "Frutos tropicais frescos (Lista I, 1.6.4)"},
+        {"peso": "CP01162", "taxa": 6, "certeza": "certa", "desc": "Citrinos frescos (Lista I, 1.6.4)"},
+        {"peso": "CP01163", "taxa": 6, "certeza": "certa", "desc": "Frutas de caroço e de pevide frescas (Lista I, 1.6.4)"},
+        {"peso": "CP01164", "taxa": 6, "certeza": "certa", "desc": "Bagas frescas (Lista I, 1.6.4)"},
+        {"peso": "CP01165", "taxa": 6, "certeza": "certa", "desc": "Outras frutas frescas (Lista I, 1.6.4)"},
+        {"peso": "CP01166", "taxa": None, "certeza": "mista",
+         "desc": "Fruta congelada — a Lista I cobre os **frutos vermelhos** "
+                 "congelados; a restante fica a 23 %"},
+        {"peso": "CP01167", "taxa": 6, "certeza": "certa",
+         "desc": "Frutos secos e desidratados (Lista I, 1.6.4)"},
+        {"peso": "CP01168", "taxa": None, "certeza": "mista",
+         "desc": "Frutos de casca rija — a Lista I refere as **castanhas** "
+                 "nominalmente; amêndoa, noz e avelã ficam a 23 %"},
+        {"peso": "CP01169", "taxa": 23, "certeza": "predominante",
+         "desc": "Fruta em calda, conserva e outras preparações"},
+    ],
+    "CP0117": [
+        {"peso": "CP01171", "taxa": 6, "certeza": "certa", "desc": "Hortícolas de folha ou caule, frescos (Lista I, 1.6)"},
+        {"peso": "CP01172", "taxa": 6, "certeza": "certa", "desc": "Hortícolas de fruto, frescos (Lista I, 1.6)"},
+        {"peso": "CP01173", "taxa": 6, "certeza": "certa", "desc": "Legumes de vagem verde, frescos (Lista I, 1.6)"},
+        {"peso": "CP01174", "taxa": 6, "certeza": "certa", "desc": "Outros hortícolas frescos (Lista I, 1.6)"},
+        {"peso": "CP01175", "taxa": 6, "certeza": "certa", "desc": "Tubérculos e bananas para culinária (Lista I, 1.6)"},
+        {"peso": "CP01176", "taxa": 6, "certeza": "certa", "desc": "Leguminosas secas (Lista I, 1.6)"},
+        {"peso": "CP01177", "taxa": 6, "certeza": "certa", "desc": "Hortícolas secos e desidratados (Lista I, 1.6)"},
+        {"peso": "CP01178", "taxa": 6, "certeza": "certa",
+         "desc": "Hortícolas congelados — a Lista I cobre-os, «ainda que "
+                 "previamente cozidos»"},
+        {"peso": "CP01179", "taxa": 23, "certeza": "predominante",
+         "desc": "Hortícolas moídos e outras preparações — batata frita de "
+                 "pacote, conservas e preparados"},
+    ],
+    "CP0118": [
+        {"peso": "CP01181", "taxa": 23, "certeza": "certa",
+         "desc": "Açúcar de cana e de beterraba — a verba 1.10 da Lista I foi "
+                 "**revogada**"},
+        {"peso": "CP01182", "taxa": 23, "certeza": "certa", "desc": "Outros açúcares e sucedâneos"},
+        {"peso": "CP01183", "taxa": None, "certeza": "mista",
+         "desc": "Doces, geleias, marmeladas **e mel** — só o mel está na "
+                 "Lista I (1.8), e a nomenclatura agrega-os na mesma subclasse"},
+        {"peso": "CP01184", "taxa": 23, "certeza": "certa", "desc": "Purés e manteigas de frutos de casca rija"},
+        {"peso": "CP01185", "taxa": 23, "certeza": "certa", "desc": "Chocolate, cacau e produtos à base de cacau"},
+        {"peso": "CP01186", "taxa": 23, "certeza": "certa", "desc": "Gelo, gelados e sorvetes"},
+        {"peso": "CP01189", "taxa": 23, "certeza": "certa", "desc": "Outra confeitaria e sobremesas de açúcar"},
+    ],
+    "CP0119": [
+        {"peso": "CP01191", "taxa": 23, "certeza": "predominante",
+         "desc": "Alimentos pré-preparados **de retalho**. A verba 1.8 da "
+                 "Lista II (13 %) cobre o pronto a comer e levar e a entrega ao "
+                 "domicílio, que na COICOP caem no grupo 11.1 — restauração — e "
+                 "não aqui"},
+        {"peso": "CP01192", "taxa": 6, "certeza": "certa",
+         "desc": "Alimentos para bebés e crianças de pouca idade (Lista I, 1.14)"},
+        {"peso": "CP01193", "taxa": None, "certeza": "mista",
+         "desc": "Sal, condimentos e molhos — o **sal** está na Lista I (1.9), "
+                 "os condimentos e molhos a 23 %, na mesma subclasse"},
+        {"peso": "CP01194", "taxa": 23, "certeza": "certa",
+         "desc": "Especiarias, ervas aromáticas e sementes para culinária"},
+        {"peso": "CP01199", "taxa": None, "certeza": "mista",
+         "desc": "Outros produtos alimentares — inclui os produtos sem glúten "
+                 "para celíacos e a nutrição entérica, a 6 % (Lista I, 1.12)"},
+    ],
+}
+
+
+def _codigos_de_componente(comp) -> list:
+    """Códigos do Eurostat que um componente do `IVA_COMPONENTES` precisa."""
+    p = comp["peso"]
+    return [p] if isinstance(p, str) else [p[0]] + list(p[1])
+
+
+IVA_SUBCLASSES = sorted({
+    cod
+    for componentes in IVA_COMPONENTES.values()
+    for comp in componentes
+    for cod in _codigos_de_componente(comp)
+})
 
 # Agregado alimentar (soma das nove classes)
 COICOP_ALIMENTAR = "CP011"

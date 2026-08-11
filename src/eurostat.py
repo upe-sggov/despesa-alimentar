@@ -283,6 +283,25 @@ def ponderadores(codigos: Iterable[str]) -> tuple[pd.DataFrame, str]:
     )
 
 
+def ponderadores_subclasses(codigos: Iterable[str]) -> tuple[pd.DataFrame, str]:
+    """
+    Ponderadores das **subclasses** da COICOP 2018 (5 e 6 dígitos).
+
+    É o que permite dizer *quanto* de cada classe segue taxa de IVA diferente da
+    predefinida, e não apenas *o quê* — a lacuna que o D2 deixou em aberto e que
+    a nomenclatura antiga não permitia fechar, por não descer a este nível.
+
+    Mesma estrutura de `ponderadores()`: só muda a lista de códigos pedidos.
+    """
+    codigos = list(codigos)
+    return obter(
+        HICP_PONDERADORES,
+        f"A.{'+'.join(codigos)}.IW.PT",
+        {"freq": "A", "coicop18": codigos, "statinfo": "IW", "geo": "PT"},
+        dim_coicop="coicop18",
+    )
+
+
 def indice_precos(coicop: str, desde: str) -> tuple[pd.DataFrame, str]:
     """Índice de preços mensal (base 2025 = 100 quando disponível)."""
     return indice_classes([coicop], desde)

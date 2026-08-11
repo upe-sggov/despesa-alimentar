@@ -17,13 +17,13 @@ from pathlib import Path
 
 from src import eurostat, observatorio
 from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
-                          comparar_ponderadores,
+                          comparar_ponderadores, composicao_iva,
                           composicao_quintis, decompor, despesa_do_agregado,
                           escala_mais_proxima, frescura_das_series,
                           idade_fonte, indices_comparados,
                           intervalo_agregado, intervalo_engel,
                           pontos_de_rutura_das_escalas,
-                          resumo_decomposicao, resumo_iva,
+                          resumo_composicao_iva, resumo_decomposicao, resumo_iva,
                           sensibilidade_escalas, simular_iva, testar_escalas,
                           unidades_equivalentes)
 from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
@@ -31,7 +31,8 @@ from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         DIMENSAO_RECUO, DIMENSAO_RECUO_FONTE,
                         ESCALAS_TESTE_COMPOSICAO, ESCALAS_TESTE_FONTE,
                         ESCALAS_TESTE_INTERVALO, ESCALAS_TESTE_RACIO,
-                        IVA_MAPA, IVA_MAPA_FONTE,
+                        IVA_COMPONENTES, IVA_COMPONENTES_FONTE,
+                        IVA_MAPA, IVA_MAPA_FONTE, IVA_SUBCLASSES,
                         IDF_ALIMENTAR_ANUAL, IDF_FONTE,
                         IDF_JANELA_FONTE, IDF_JANELA_RECOLHA,
                         IDF_PESO_ALIMENTAR, IDF_QUINTIS,
@@ -141,6 +142,17 @@ def carregar_dados(anos_historico: int = 6):
 
     pesos_df, via1 = eurostat.ponderadores(CODIGOS)
     registo.append(("Ponderadores", via1, len(pesos_df)))
+
+    # Ponderadores das subclasses — é o que permite dizer **quanto** de cada
+    # classe segue cada taxa de IVA, e não apenas o quê. Se falhar, o painel
+    # respetivo não é apresentado e a aplicação continua: não é dependência
+    # de mais nada.
+    try:
+        sub_df, via15 = eurostat.ponderadores_subclasses(IVA_SUBCLASSES + CODIGOS)
+        registo.append(("Ponderadores por subclasse", via15, len(sub_df)))
+    except Exception as exc:                                   # noqa: BLE001
+        sub_df, via15 = pd.DataFrame(), f"indisponível ({exc})"
+        registo.append(("Ponderadores por subclasse", via15, 0))
 
     indice_df, via2 = eurostat.indice_precos(COICOP_ALIMENTAR, desde_indice)
     registo.append(("Índice de preços", via2, len(indice_df)))
@@ -268,6 +280,14 @@ def carregar_dados(anos_historico: int = 6):
     pesos_df = pesos_df.sort_values("time")
     pesos = pesos_df.groupby("coicop")["valor"].last().to_dict()
     ano_pesos = pesos_df["time"].max() if not pesos_df.empty else None
+
+    # --- ponderadores por subclasse, do mesmo ano mais recente ---
+    pesos_sub, ano_pesos_sub = {}, None
+    if not sub_df.empty:
+        sub_df = sub_df.sort_values("time")
+        ano_pesos_sub = sub_df["time"].max()
+        pesos_sub = (sub_df[sub_df["time"] == ano_pesos_sub]
+                     .set_index("coicop")["valor"].to_dict())
 
     # --- variações por classe (Portugal, mês mais recente) ---
     pt_classes = var_df[(var_df["geo"] == "PT") & (var_df["coicop"].isin(CODIGOS))]
@@ -452,6 +472,8 @@ def carregar_dados(anos_historico: int = 6):
         "despesa_milhoes": despesa_valor,
         "privacao": priv_df,
         "pesos": pesos,
+        "pesos_subclasses": pesos_sub,
+        "ano_pesos_subclasses": ano_pesos_sub,
         "pesos_por_ano": pesos_df,
         "indice_classes": idx_classes_df,
         "ano_pesos": ano_pesos,
@@ -2605,6 +2627,89 @@ with aba3:
         c[4].metric("Receita de IVA por mês", euro(res["receita_mes"]),
                     help=f"{euro(res['iva_antes'])} → {euro(res['iva_depois'])}")
 
+        # ---- composição por taxa, apurada ao nível da subclasse ----
+        _comp_iva = composicao_iva(dados.get("pesos_subclasses") or {})
+        _res_iva = resumo_composicao_iva(_comp_iva) if not _comp_iva.empty else {}
+
+        if _res_iva:
+            st.markdown("#### Quanto do cabaz segue cada taxa — apurado, não assumido")
+            st.caption(
+                "A simulação aplica **uma taxa por grupo**, que é o que a decomposição permite. "
+                "Isso equivale a assumir que toda a despesa do grupo segue a taxa predefinida. "
+                f"Os ponderadores por subclasse da COICOP 2018 (`prc_hicp_iw`, "
+                f"{dados.get('ano_pesos_subclasses') or '—'}) permitem medir esse pressuposto pela "
+                "primeira vez."
+            )
+            w1, w2, w3, w4 = st.columns(4)
+            w1.metric("À taxa reduzida (6 %)", f"{_pct(_res_iva['taxa_6_pct'])}",
+                      help="Parcela do cabaz alimentar que está seguramente a 6 %.")
+            w2.metric("À taxa intermédia (13 %)", f"{_pct(_res_iva['taxa_13_pct'])}",
+                      help="Os óleos vegetais que não são azeite (Lista II, 1.5.3).")
+            w3.metric("À taxa normal (23 %)", f"{_pct(_res_iva['taxa_23_pct'])}")
+            w4.metric("Indeterminado", f"{_pct(_res_iva['indeterminado_pct'])}",
+                      help=("Subclasses que atravessam taxas em proporção não repartível — "
+                            "marisco, mel dentro dos doces, sal dentro dos condimentos."))
+
+            _folga = _res_iva["assumido_6_pct"] - _res_iva["apurado_6_max_pct"]
+            st.error(f"""
+    **A simulação sobrestima a base à taxa reduzida — e agora sabe-se quanto.**
+
+    Aplicar uma taxa por grupo equivale a assumir que **{_pct(_res_iva['assumido_6_pct'])}** do
+    cabaz alimentar está a 6 %, porque sete dos nove grupos têm essa predefinição. O apurado ao
+    nível da subclasse é **{_pct(_res_iva['apurado_6_min_pct'])} a
+    {_pct(_res_iva['apurado_6_max_pct'])}** — o limite superior admitindo que **toda** a parcela
+    indeterminada cai na taxa reduzida.
+
+    A diferença é de **{pontos(_folga, casas=1)}** no mínimo. Em termos relativos, a base
+    afetada por uma descida da taxa reduzida está sobrestimada entre
+    **{numero(_res_iva['assumido_6_pct'] / _res_iva['apurado_6_max_pct'] * 100 - 100, 0)} %** e
+    **{numero(_res_iva['assumido_6_pct'] / _res_iva['apurado_6_min_pct'] * 100 - 100, 0)} %**.
+
+    **O que isto significa na prática:** os valores de poupança do simulador, incluindo os
+    agregados nacionais, são **majorantes**. A ordem de grandeza mantém-se; o nível está do lado
+    generoso. Um cenário «cabaz zero» sobre os grupos a 6 % não atinge a despesa que o simulador
+    lhe atribui, porque parte dessa despesa já hoje é tributada a 23 %.
+            """)
+
+            _tab_iva = pd.DataFrame([{
+                "Grupo": f"{r.emoji} {r.classe}",
+                "Predefinida": f"{r.iva_defeito} %",
+                "Na predefinida": r.na_taxa_predefinida_pct,
+                "6 %": r.taxa_6_pct,
+                "13 %": r.taxa_13_pct,
+                "23 %": r.taxa_23_pct,
+                "Indeterminado": r.indeterminado_pct,
+            } for r in _comp_iva.itertuples()])
+            st.dataframe(
+                _tab_iva, use_container_width=True, hide_index=True,
+                column_config={
+                    c: st.column_config.NumberColumn(format="%.1f %%")
+                    for c in ("Na predefinida", "6 %", "13 %", "23 %", "Indeterminado")
+                })
+            st.caption(
+                "**«Na predefinida»** é a fração do grupo que segue efetivamente a taxa que o "
+                "simulador lhe aplica — é a medida da qualidade da aproximação, grupo a grupo. "
+                f"Vai de {_pct(float(_comp_iva['na_taxa_predefinida_pct'].min()))} a "
+                f"{_pct(float(_comp_iva['na_taxa_predefinida_pct'].max()))}. "
+                f"{_pct(_res_iva['por_predominancia_pct'])} do cabaz foi atribuído por "
+                "**predominância** e não com certeza — ver o detalhe por subclasse abaixo."
+            )
+            st.warning(
+                "**Ponderadores do IHPC, que incluem a despesa de não residentes.** É a única "
+                "fonte aberta que desce à subclasse — o IDF fica-se pelo quarto dígito. Serve "
+                "para repartir *dentro* de cada grupo, que é o uso aqui, mas o nível de cada "
+                "parcela herda essa limitação."
+            )
+            st.download_button(
+                "⬇️ Descarregar composição por taxa (CSV)",
+                csv_com_fonte(_comp_iva, "Composicao do cabaz alimentar por taxa de IVA", dados,
+                              fonte=("Codigo do IVA, Listas I e II (leitura da UPE) + Eurostat, "
+                                     "prc_hicp_iw (ponderadores por subclasse)"),
+                              conjuntos=[eurostat.HICP_PONDERADORES],
+                              extra=[("Ano dos ponderadores", dados.get("ano_pesos_subclasses") or "-"),
+                                     ("AVISO", "A parcela indeterminada nao e arbitrada")]),
+                file_name="composicao_iva_por_taxa.csv", mime="text/csv")
+
         with st.expander("⚖️ O que o Código do IVA diz sobre cada grupo — e o que fica de fora"):
             st.markdown(
                 "O Código do IVA classifica **por produto**, nas Listas I (6 %) e II (13 %); a "
@@ -2631,13 +2736,58 @@ with aba3:
                 if _mapa.get("nota"):
                     _linhas.append(f"- *{_mapa['nota']}*")
                 st.markdown("\n".join(_linhas))
-            st.warning(
-                "**As parcelas não são quantificáveis com dados abertos.** Nenhuma fonte pública "
-                "reparte a despesa de cada grupo COICOP pelas taxas legais. Por isso a simulação "
-                "não pode ponderar as taxas dentro do grupo — e por isso os seus resultados são "
-                "ordens de grandeza condicionais à taxa que escolher, não estimativas de receita."
-            )
-            st.caption(f"Fonte: {IVA_MAPA_FONTE}. Levantamento de 10.08.2026.")
+            st.caption(f"Fonte: {IVA_MAPA_FONTE}. Levantamento de 10.08.2026, "
+                       "refeito a 11.08.2026 contra as classes da COICOP 2018.")
+
+        if not _comp_iva.empty:
+            with st.expander("🔍 O apuramento, subclasse a subclasse"):
+                st.markdown(
+                    "Cada linha é uma subclasse da COICOP 2018, com o ponderador que o Eurostat "
+                    "lhe atribui e a verba do Código do IVA que a sustenta. **É aqui que se vê "
+                    "de onde vêm os números do quadro acima** — e onde se vê o que não foi "
+                    "possível determinar."
+                )
+                _pesos_sub = dados.get("pesos_subclasses") or {}
+
+                def _peso_comp(spec):
+                    if isinstance(spec, str):
+                        return float(_pesos_sub.get(spec) or 0.0), spec
+                    pai, filhos = spec
+                    resto = float(_pesos_sub.get(pai) or 0.0) - sum(
+                        float(_pesos_sub.get(f) or 0.0) for f in filhos)
+                    return max(resto, 0.0), f"{pai} menos {', '.join(filhos)}"
+
+                _marca = {"certa": "✅", "predominante": "≈", "mista": "❔"}
+                _linhas_sub = []
+                for _cl in CLASSES:
+                    for _c in IVA_COMPONENTES.get(_cl["cod"], []):
+                        _p, _cod = _peso_comp(_c["peso"])
+                        _linhas_sub.append({
+                            "Grupo": f"{_cl['emoji']} {_cl['nome']}",
+                            "Subclasse": _cod,
+                            "Ponderador (‰)": _p,
+                            "Taxa": ("—" if _c["taxa"] is None else f"{_c['taxa']} %"),
+                            "": _marca.get(_c["certeza"], ""),
+                            "O que sustenta a atribuição": _c["desc"].replace("**", ""),
+                        })
+                st.dataframe(
+                    pd.DataFrame(_linhas_sub), use_container_width=True, hide_index=True,
+                    column_config={"Ponderador (‰)": st.column_config.NumberColumn(format="%.2f")})
+                st.caption(
+                    "✅ a subclasse cai inteira numa verba · ≈ é maioritariamente de uma taxa, "
+                    "mas não só · ❔ atravessa taxas em proporção **não determinável**, e o peso "
+                    "vai para a parcela indeterminada — não é arbitrado.  \n"
+                    f"Fonte: {IVA_COMPONENTES_FONTE}."
+                )
+                st.info("""
+    **O que a COICOP 2018 permitiu e a anterior não permitia.** Três cortes novos resolvem as
+    maiores ambiguidades: **Pão** (`CP011131`) separado de **Outros produtos de padaria**
+    (`CP011139`), o que reparte a maior classe do cabaz; **Azeite** (`CP011513`) separado dos
+    restantes óleos vegetais, o que isola exatamente a verba da Lista II; e **carne seca ou
+    fumada** separada da carne fresca. Na nomenclatura anterior estes produtos partilhavam
+    subclasse, e a repartição era impossível — foi por isso que o levantamento de 10.08.2026
+    concluiu, com razão à data, que as parcelas não eram quantificáveis.
+                """)
 
         # --- sensibilidade à base de cálculo ---
         _despesa_outra = despesa_do_agregado(
@@ -3611,7 +3761,7 @@ with aba5:
 
     | Parâmetro | Origem | Nota |
     |---|---|---|
-    | Taxas de IVA | Predefinidas, editáveis | Limitadas às do Código do IVA. A predefinida é a **predominante** do grupo, não a única: o levantamento das Listas I e II está no separador do IVA |
+    | Taxas de IVA | Predefinidas, editáveis | Limitadas às do Código do IVA. A predefinida é a **predominante** do grupo, não a única — e o levantamento por subclasse, no separador do IVA, diz **quanto** de cada grupo lhe escapa |
     | Adultos com rendimento | Parâmetro do utilizador | Multiplicador dos salários; as crianças não entram |
     | Repercussão | Parâmetro do utilizador | Hipótese de trabalho, não estimativa |
 
@@ -3881,8 +4031,11 @@ Chamar-lhe cabaz seria prometer o que não entrega.
        comparações entre elas.
     5. **Desfasamento das Contas Nacionais.** A âncora assenta num ano com cerca de dois anos de
        desfasamento, atualizado por índice de preços.
-    6. **A correspondência COICOP → taxa de IVA é aproximada.** O Código do IVA classifica por
-       produto (Lista I), não por classe COICOP.
+    6. **A correspondência COICOP → taxa de IVA é aproximada, e o erro está medido.** O Código do
+       IVA classifica por produto, não por classe COICOP. A simulação aplica uma taxa por grupo, o
+       que equivale a assumir que **88,6 %** do cabaz está à taxa reduzida; o apurado ao nível da
+       subclasse é **68,4 % a 74,3 %**. Os valores de poupança do simulador são, por isso,
+       **majorantes** — ver o painel «Quanto do cabaz segue cada taxa» no separador do IVA.
     7. **A repercussão é uma hipótese.** Qualquer resultado do simulador é condicional a esse
        parâmetro e deve ser apresentado como intervalo.
     8. **A extrapolação agregada é ilustrativa.** Não é uma estimativa de custo orçamental.

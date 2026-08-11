@@ -866,6 +866,103 @@ def test_classes_tem_designacao_oficial_da_coicop_2018():
     assert not ({c["nome"] for c in CLASSES} & antigos)
 
 
+# ------------------- composicao por taxa de IVA, ao nivel da subclasse
+def _pesos_sub_sinteticos():
+    """Ponderadores por subclasse com a forma dos reais, incluindo o corte a
+    seis digitos que isola o azeite dentro dos oleos vegetais."""
+    from src.config import IVA_SUBCLASSES
+
+    p = {c: 1.0 for c in IVA_SUBCLASSES}
+    p["CP01151"] = 5.0          # oleos vegetais
+    p["CP011513"] = 4.0         # dos quais azeite -> resto 1.0 a 13 %
+    return p
+
+
+def test_composicao_iva_reparte_a_classe_pelas_taxas():
+    from src.calculos import composicao_iva
+
+    df = composicao_iva(_pesos_sub_sinteticos()).set_index("codigo")
+    # Oleos e gorduras: azeite + manteiga + margarina + banha a 6 %, e o resto
+    # dos oleos vegetais a 13 %.
+    assert df.loc["CP0115", "taxa_6"] == pytest.approx(4.0 + 1.0 + 1.0 + 1.0)
+    assert df.loc["CP0115", "taxa_13"] == pytest.approx(1.0)
+    assert df.loc["CP0115", "indeterminado"] == pytest.approx(0.0)
+
+
+def test_resto_do_pai_nunca_e_negativo():
+    """Se os filhos somarem mais do que o pai — arredondamento —, o resto tem
+    de ser zero e nao um peso negativo."""
+    from src.calculos import composicao_iva
+
+    p = _pesos_sub_sinteticos()
+    p["CP011513"] = 9.0         # filho maior que o pai
+    df = composicao_iva(p).set_index("codigo")
+    assert df.loc["CP0115", "taxa_13"] == pytest.approx(0.0)
+
+
+def test_parcela_indeterminada_nao_e_arbitrada():
+    """As subclasses que atravessam taxas nao podem ser empurradas para uma
+    delas: o valor do apuramento esta em declarar o que nao se sabe."""
+    from src.calculos import composicao_iva
+    from src.config import IVA_COMPONENTES
+
+    df = composicao_iva(_pesos_sub_sinteticos()).set_index("codigo")
+    for cod, componentes in IVA_COMPONENTES.items():
+        mistas = sum(1 for c in componentes if c["taxa"] is None)
+        if mistas:
+            assert df.loc[cod, "indeterminado"] > 0, f"{cod} devia ter parcela mista"
+    # Peixe tem quatro subclasses mistas (marisco): e a classe mais indeterminada.
+    assert df.loc["CP0113", "indeterminado"] == pytest.approx(4.0)
+
+
+def test_componentes_somam_a_classe_e_nao_repetem_pesos():
+    """Um pai listado junto com os filhos contaria duas vezes. A soma dos
+    componentes tem de reproduzir o ponderador publicado da classe."""
+    from src.calculos import composicao_iva
+
+    p = _pesos_sub_sinteticos()
+    # Ponderador publicado de cada classe = soma dos seus componentes.
+    esperado = {}
+    df = composicao_iva(p).set_index("codigo")
+    for cod in df.index:
+        esperado[cod] = df.loc[cod, "peso"]
+        assert df.loc[cod, "peso"] == pytest.approx(
+            df.loc[cod, "taxa_6"] + df.loc[cod, "taxa_13"]
+            + df.loc[cod, "taxa_23"] + df.loc[cod, "indeterminado"])
+    assert len(esperado) == 9
+
+
+def test_resumo_mede_o_erro_do_pressuposto_por_classe():
+    """O ponto do apuramento e este: dizer quanto a simulacao por classe
+    sobrestima a base a taxa reduzida."""
+    from src.calculos import composicao_iva, resumo_composicao_iva
+
+    r = resumo_composicao_iva(composicao_iva(_pesos_sub_sinteticos()))
+    # O assumido tem de exceder o apurado — e por margem, senao o apuramento
+    # nao tinha valido a pena.
+    assert r["assumido_6_pct"] > r["apurado_6_max_pct"]
+    assert r["apurado_6_min_pct"] <= r["apurado_6_max_pct"]
+    # O maximo e o minimo diferem exatamente pela parcela indeterminada.
+    assert (r["apurado_6_max_pct"] - r["apurado_6_min_pct"]) == pytest.approx(
+        r["indeterminado_pct"])
+
+
+def test_todas_as_nove_classes_tem_componentes_com_verba():
+    from src.config import CODIGOS, IVA_COMPONENTES
+
+    assert set(IVA_COMPONENTES) == set(CODIGOS)
+    for cod, componentes in IVA_COMPONENTES.items():
+        assert componentes, cod
+        for c in componentes:
+            assert c["certeza"] in ("certa", "predominante", "mista"), cod
+            assert c["desc"].strip(), cod
+            # Uma subclasse mista nao pode ter taxa, e vice-versa: sao a mesma
+            # afirmacao dita duas vezes, e divergiriam em silencio.
+            assert (c["taxa"] is None) == (c["certeza"] == "mista"), f"{cod} {c['peso']}"
+            if c["taxa"] is not None:
+                assert c["taxa"] in (6, 13, 23), cod
+
+
 # ------------------------- rigor de apresentacao (auditoria E8, E9, E13)
 def test_formatadores_aplicam_se_ao_numero_e_nao_a_frase():
     """As f-strings adjacentes concatenam em tempo de compilacao: um

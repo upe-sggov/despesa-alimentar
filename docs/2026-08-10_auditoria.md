@@ -1887,6 +1887,96 @@ correção revertida.
 diferente da predefinida. O `IVA_MAPA` diz hoje *o quê*; não diz *quanto*. Exige a despesa aberta
 ao nível da subclasse, que o Eurostat publica — é trabalho por fazer, não fonte em falta.
 
+> ✅ **Feito a 11.08.2026.** Ver **«D2 reaberto»**, a secção seguinte. O resultado não é o que eu
+> esperava: a aproximação por classe é **pior do que parecia**, e agora está medida.
+
+---
+
+## 🔴 D2 reaberto · Quanto de cada classe segue cada taxa — 11.08.2026
+
+O **D2** da primeira auditoria concluiu, e cito-me: «as parcelas não são quantificáveis com dados
+abertos: nenhuma fonte pública reparte a despesa da classe por taxa legal». **Era verdade à data,
+e deixou de ser** — não por ter aparecido fonte nova, mas porque a COICOP 2018 desce um nível
+abaixo da nomenclatura anterior.
+
+**O que a nomenclatura nova permite e a anterior não permitia.** O `prc_hicp_iw` publica
+ponderadores a cinco e a seis dígitos. Três cortes resolvem as maiores ambiguidades:
+
+| Corte novo | Ponderador PT, 2026 | Porque importa |
+|---|---|---|
+| `CP011131` **Pão** contra `CP011139` **Outros produtos de padaria** | 18,66 ‰ contra 13,81 ‰ | Reparte a maior classe do cabaz: o pão está na Lista I, a pastelaria não |
+| `CP011513` **Azeite** dentro de `CP01151` Óleos vegetais | 4,01 ‰ de 5,84 ‰ | Isola **exatamente** a verba 1.5.3 da Lista II: o resto, 1,83 ‰, são os óleos correntes a 13 % |
+| `CP01123` **Carne seca ou fumada** separada de `CP01122` carne fresca | 6,48 ‰ contra 28,11 ‰ | A Lista I só cobre fresca ou congelada |
+
+Na nomenclatura anterior estes produtos partilhavam subclasse. Não era falta de fonte: era falta
+de resolução.
+
+**O método, e o que o impede de prometer de mais.** Cada componente do levantamento tem um grau de
+certeza, e a distinção não é decorativa:
+
+- **certa** — a subclasse cai inteira numa verba;
+- **predominante** — é maioritariamente de uma taxa, mas não só;
+- **mista** — atravessa taxas em proporção não repartível, e o peso vai para a parcela
+  **indeterminada**, que **não é arbitrada**.
+
+**O resultado, e é desconfortável.**
+
+| | Ponderador | % do cabaz |
+|---|---|---|
+| À taxa reduzida, 6 % | 133,69 ‰ | **68,4 %** |
+| À taxa intermédia, 13 % | 1,83 ‰ | 0,9 % |
+| À taxa normal, 23 % | 48,50 ‰ | **24,8 %** |
+| Indeterminado | 11,47 ‰ | 5,9 % |
+
+**A simulação por classe assume que 88,6 % do cabaz está a 6 %** — porque sete dos nove grupos têm
+essa predefinição. O apurado é **68,4 % a 74,3 %**, sendo o limite superior o que se obtém
+admitindo que *toda* a parcela indeterminada cai na taxa reduzida.
+
+**A base afetada por uma descida da taxa reduzida está sobrestimada entre 19 % e 30 %.** Os valores
+de poupança do simulador, incluindo os agregados nacionais, são **majorantes**. Um cenário «cabaz
+zero» sobre os grupos a 6 % não atinge a despesa que o simulador lhe atribui, porque uma parte
+dessa despesa já hoje é tributada a 23 %.
+
+**Por grupo, a qualidade da aproximação varia muito:**
+
+| Grupo | Predefinida | Fração do grupo que a segue |
+|---|---|---|
+| Leite, lácteos e ovos | 6 % | **96,8 %** |
+| Açúcar, confeitaria e sobremesas | 23 % | 92,4 % |
+| Fruta e frutos de casca rija | 6 % | 90,4 % |
+| Peixe e produtos do mar | 6 % | 86,3 % |
+| Óleos e gorduras | 6 % | 75,8 % |
+| Hortícolas, tubérculos e leguminosas | 6 % | 72,4 % |
+| Carne | 6 % | 71,4 % |
+| Pré-preparados e outros | 23 % | 61,7 % |
+| **Cereais e derivados** | 6 % | **58,7 %** |
+
+Os cereais são o pior caso e a maior classe: 13,81 ‰ de pastelaria e bolachas a 23 % dentro de uma
+classe predefinida a 6 %. É o corte `CP011131`/`CP011139` que o revela.
+
+**Limitação declarada.** Os ponderadores são do **IHPC**, que inclui a despesa de não residentes.
+É a única fonte aberta que desce à subclasse — o IDF fica-se pelo quarto dígito. Serve para
+repartir *dentro* de cada grupo, que é o uso aqui, mas o nível de cada parcela herda a limitação.
+E 20,1 % do cabaz foi atribuído por **predominância**, não com certeza.
+
+**O que foi feito.** `IVA_COMPONENTES` em `config.py`, com 63 componentes e a verba de cada um;
+`eurostat.ponderadores_subclasses()`; `calculos.composicao_iva()` e `resumo_composicao_iva()`; um
+painel no separador do IVA com o quadro por grupo, o aviso quantificado e o detalhe subclasse a
+subclasse; e a nota de limitações passou a citar o intervalo em vez de dizer apenas «aproximada».
+
+**Testes de regressão — seis novos.** O que mais interessa é
+`test_parcela_indeterminada_nao_e_arbitrada`: o valor deste apuramento está em declarar o que não
+se sabe, e um teste que só verificasse as somas deixaria passar uma versão que empurrasse o
+marisco para os 6 %. Há também um que exige que **o assumido exceda o apurado por margem** — se
+não excedesse, o trabalho não teria valido a pena — e um que trava a incoerência entre `taxa=None`
+e `certeza="mista"`, que são a mesma afirmação dita duas vezes e divergiriam em silêncio.
+
+**Fica em aberto, e é decisão sua.** O simulador continua a aplicar **uma taxa por grupo**. Com o
+apuramento feito, passa a ser possível aplicar a taxa do cenário **apenas à parcela que hoje está
+à taxa de partida** — o que é mais próximo de como uma alteração do IVA é legislada, produto a
+produto. Muda o significado dos resultados e a leitura da tabela editável, pelo que não avancei
+sem decisão. O que está feito é o que permite tomá-la com números à frente.
+
 ---
 
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.

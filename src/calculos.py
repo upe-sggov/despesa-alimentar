@@ -29,7 +29,7 @@ import numpy as np
 import pandas as pd
 
 from .config import (
-    ANO_BASE_VIES, CLASSES, POR_CODIGO,
+    ANO_BASE_VIES, CLASSES, IVA_COMPONENTES, POR_CODIGO,
     ESCALAS_TESTE_COMPOSICAO, ESCALAS_TESTE_RACIO,
     AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
     IDF_ALIMENTAR_QUINTIL, IDF_CLASSES_QUINTIL, IDF_DESPESA_TOTAL,
@@ -903,6 +903,123 @@ def indices_comparados(indice_classes: pd.DataFrame,
     df.attrs["ano_base"] = base
     df.attrs["ano_base_pedido"] = alvo
     return df
+
+
+# --------------------------------------------------------------------------
+# Quanto de cada classe segue cada taxa de IVA
+# --------------------------------------------------------------------------
+def composicao_iva(pesos_sub: dict[str, float]) -> pd.DataFrame:
+    """
+    Reparte o ponderador de cada classe pelas taxas de IVA das suas subclasses.
+
+    Fecha a lacuna que o **D2** deixou aberta. O `IVA_MAPA` diz *o quê* dentro de
+    cada classe segue taxa diferente da predefinida; isto diz *quanto*, usando os
+    ponderadores a cinco e seis dígitos que a COICOP 2018 passou a publicar.
+
+    `pesos_sub` é `{código de subclasse: ponderador}`. Uma linha por classe, com
+    o peso a cada taxa e a parcela **indeterminada** — as subclasses que
+    atravessam taxas em proporção não repartível. Essa parcela não é escondida
+    nem arbitrada: é apresentada como tal.
+
+    Em `df.attrs`, `cobertura` é a fração do ponderador da classe que as
+    subclasses conhecidas explicam — serve para detetar componentes em falta.
+    """
+    def _peso(spec) -> float:
+        if isinstance(spec, str):
+            return float(pesos_sub.get(spec) or 0.0)
+        pai, filhos = spec
+        resto = float(pesos_sub.get(pai) or 0.0) - sum(
+            float(pesos_sub.get(f) or 0.0) for f in filhos)
+        return max(resto, 0.0)
+
+    linhas = []
+    for classe in CLASSES:
+        cod = classe["cod"]
+        componentes = IVA_COMPONENTES.get(cod, [])
+        por_taxa = {6: 0.0, 13: 0.0, 23: 0.0}
+        indeterminado, predominante = 0.0, 0.0
+        for comp in componentes:
+            p = _peso(comp["peso"])
+            if p <= 0:
+                continue
+            if comp["taxa"] is None:
+                indeterminado += p
+                continue
+            por_taxa[comp["taxa"]] = por_taxa.get(comp["taxa"], 0.0) + p
+            if comp["certeza"] == "predominante":
+                predominante += p
+
+        total = sum(por_taxa.values()) + indeterminado
+        publicado = float(pesos_sub.get(cod) or 0.0)
+        linhas.append({
+            "codigo": cod,
+            "classe": classe["nome"],
+            "emoji": classe["emoji"],
+            "iva_defeito": classe["iva"],
+            "peso": total,
+            "peso_publicado": publicado,
+            "taxa_6": por_taxa[6],
+            "taxa_13": por_taxa[13],
+            "taxa_23": por_taxa[23],
+            "indeterminado": indeterminado,
+            "por_predominancia": predominante,
+            # Fração da classe que segue efetivamente a taxa predefinida —
+            # é o número que diz se a predefinição é boa aproximação ou não.
+            "na_taxa_predefinida": por_taxa.get(classe["iva"], 0.0),
+        })
+
+    df = pd.DataFrame(linhas)
+    if df.empty:
+        return df
+    for col in ("taxa_6", "taxa_13", "taxa_23", "indeterminado",
+                "na_taxa_predefinida", "por_predominancia"):
+        df[f"{col}_pct"] = np.where(df["peso"] > 0, df[col] / df["peso"] * 100, np.nan)
+    df.attrs["cobertura"] = (float(df["peso"].sum() / df["peso_publicado"].sum())
+                             if df["peso_publicado"].sum() > 0 else 0.0)
+    return df
+
+
+def resumo_composicao_iva(df: pd.DataFrame) -> dict:
+    """
+    Agrega a composição por taxa ao nível do cabaz alimentar, e confronta-a com
+    o que a simulação por classe assume.
+
+    O simulador aplica **uma taxa por classe** — é o que a decomposição permite.
+    Isso equivale a assumir que toda a despesa da classe segue a taxa
+    predefinida. Este resumo mede o erro dessa aproximação, que é o que faltava
+    para se poder dizer se ela é aceitável.
+    """
+    if df.empty:
+        return {}
+
+    total = float(df["peso"].sum())
+    if total <= 0:
+        return {}
+
+    indet = float(df["indeterminado"].sum())
+    base_defeito = float(
+        df.apply(lambda r: r["peso"] if r["iva_defeito"] == 6 else 0.0, axis=1).sum())
+
+    # Intervalo do que está à taxa reduzida: o mínimo é o apurado; o máximo
+    # admite que toda a parcela indeterminada lá cai.
+    minimo_6 = float(df["taxa_6"].sum())
+    return {
+        "total": total,
+        "taxa_6": minimo_6,
+        "taxa_13": float(df["taxa_13"].sum()),
+        "taxa_23": float(df["taxa_23"].sum()),
+        "indeterminado": indet,
+        "indeterminado_pct": indet / total * 100,
+        "taxa_6_pct": minimo_6 / total * 100,
+        "taxa_13_pct": float(df["taxa_13"].sum()) / total * 100,
+        "taxa_23_pct": float(df["taxa_23"].sum()) / total * 100,
+        # O que a simulação por classe assume estar a 6 %
+        "assumido_6_pct": base_defeito / total * 100,
+        # ... contra o intervalo apurado
+        "apurado_6_min_pct": minimo_6 / total * 100,
+        "apurado_6_max_pct": (minimo_6 + indet) / total * 100,
+        "por_predominancia_pct": float(df["por_predominancia"].sum()) / total * 100,
+    }
 
 
 def comparar_ponderadores(pesos_ihpc: dict[str, float],
