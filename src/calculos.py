@@ -505,6 +505,54 @@ def sensibilidade_escalas(cenarios=None) -> pd.DataFrame:
     return pd.DataFrame(linhas)
 
 
+def pontos_de_rutura_das_escalas(limites=(2.0, 8.0)) -> dict:
+    """
+    Onde é que as conclusões do teste das escalas mudariam, em número de adultos
+    do grupo «3 ou mais».
+
+    Estes dois valores apareciam **inscritos à mão** na interface — «3,58» e
+    «4,5» —, ao lado de números calculados em direto, sem que o leitor os
+    distinguisse. São resultado de bissecção sobre constantes que a aplicação
+    já tem, pelo que não há razão para os fixar (auditoria de 11.08.2026, E9).
+
+    Devolve `{ultrapassagem, anulacao}`, em adultos:
+
+    - `ultrapassagem` — a partir de onde a OCDE modificada passaria a estar mais
+      perto do observado do que a original;
+    - `anulacao` — onde o desvio da modificada se anularia.
+
+    Cada um é None se não houver mudança de sinal dentro de `limites`.
+    """
+    fracao_2, fracao_3mais = (ESCALAS_TESTE_COMPOSICAO[0][1],
+                              ESCALAS_TESTE_COMPOSICAO[1][1])
+    n2 = ESCALAS_TESTE_COMPOSICAO[0][0]
+    observado = ESCALAS_TESTE_RACIO["alimentar"]
+
+    def _desvio(escala, n3):
+        previsto = _racio_previsto(ESCALAS[escala], [(n2, fracao_2), (n3, fracao_3mais)])
+        return (observado / previsto - 1) * 100 if previsto > 0 else float("nan")
+
+    def _bisseccao(f):
+        a, b = limites
+        fa, fb = f(a), f(b)
+        if not (fa < 0 < fb or fb < 0 < fa):
+            return None
+        for _ in range(80):
+            m = (a + b) / 2
+            if (f(a) < 0) == (f(m) < 0):
+                a = m
+            else:
+                b = m
+        return (a + b) / 2
+
+    return {
+        # a modificada passa à frente quando o seu erro absoluto iguala o da original
+        "ultrapassagem": _bisseccao(
+            lambda n: abs(_desvio("ocde_original", n)) - abs(_desvio("ocde_modificada", n))),
+        "anulacao": _bisseccao(lambda n: _desvio("ocde_modificada", n)),
+    }
+
+
 def testar_escalas() -> pd.DataFrame:
     """
     Confronta o rácio de despesa que cada escala prevê com o observado no IDF,

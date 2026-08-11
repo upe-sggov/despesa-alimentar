@@ -22,6 +22,7 @@ from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
                           escala_mais_proxima, frescura_das_series,
                           idade_fonte, indices_comparados,
                           intervalo_agregado, intervalo_engel,
+                          pontos_de_rutura_das_escalas,
                           resumo_decomposicao, resumo_iva,
                           sensibilidade_escalas, simular_iva, testar_escalas,
                           unidades_equivalentes)
@@ -1203,9 +1204,9 @@ with aba1:
                 f"O **{_pct(_eng['idf'])}** da média nacional, na coluna «Peso no orçamento», é o "
                 "limite inferior do intervalo do coeficiente de Engel mostrado em cima. O limite "
                 f"superior, {_pct(_eng['contas'])}, vem das Contas Nacionais: medem o consumo das "
-                "famílias por via macroeconómica e registam, por agregado, mais 2,3 vezes de "
-                "despesa alimentar contra mais 1,7 vezes de despesa total. Nenhuma das duas é a "
-                "resposta certa — ver Metodologia."
+                "famílias por via macroeconómica e registam, por agregado, mais despesa alimentar "
+                "do que o inquérito — e o coeficiente diverge porque **o numerador diverge mais "
+                "do que o denominador**. Nenhuma das duas é a resposta certa — ver Metodologia."
             )
 
         _q1 = df_quintis[df_quintis["quintil"] == "q1"].iloc[0]
@@ -1699,8 +1700,10 @@ que não há nada a descontar nem a acrescentar.
           nenhuma — é <strong>exposição</strong>: quanto do orçamento dos 20 % mais pobres vai
           para comida.<br><br>
           Apresentar apenas o primeiro daria uma leitura indevidamente tranquilizadora: sugeriria
-          um problema de 2 % da população, quando por um limiar nutricionalmente defensável são
-          14 %. <strong>A fome severa recuou; a impossibilidade de comer bem não.</strong>
+          um problema de <strong>{_pct(_sev) if _sev is not None else '≈2 %'}</strong> da
+          população, quando por um limiar nutricionalmente defensável são
+          <strong>{_pct(_sofi_pt)}</strong>.
+          <strong>A fome severa recuou; a impossibilidade de comer bem não.</strong>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1732,11 +1735,14 @@ que não há nada a descontar nem a acrescentar.
                 figp.update_xaxes(gridcolor="#eef1f4")
                 st.plotly_chart(figp, use_container_width=True)
                 if _sev_pobres is not None and _sev:
+                    # O `.replace(".", ",")` aplicava-se à cadeia inteira — as
+                    # f-strings adjacentes concatenam em tempo de compilação —, e
+                    # não ao número. É o padrão que o C5 fechou em nove sítios e
+                    # que sobreviveu neste (auditoria de 11.08.2026, E8).
                     st.caption(
-                        f"Em {_ano_sev}, **{('%.1f' % _sev_pobres).replace('.', ',')} %** entre "
-                        f"quem está em risco de pobreza, contra "
-                        f"**{('%.1f' % _sev).replace('.', ',')} %** no total — "
-                        f"**{_sev_pobres / _sev:.1f}×**".replace(".", ",") + " mais."
+                        f"Em {_ano_sev}, **{_pct(_sev_pobres)}** entre quem está em risco "
+                        f"de pobreza, contra **{_pct(_sev)}** no total — "
+                        f"**{numero(_sev_pobres / _sev, 1)}×** mais."
                     )
 
         with ca2:
@@ -2752,10 +2758,13 @@ with aba4:
                     v = float(pt_pli.iloc[0])
                     posicao = "mais caros" if v > 100 else "mais baratos"
                     d1, d2, d3 = st.columns(3)
-                    d1.metric(f"Portugal em {ano_pli}", f"{v:.0f}".replace(".", ","),
+                    # Uma casa decimal: a grandeza comunicada é a distância à
+                    # média europeia, e arredondar 1,4 para 1 perdia quase um
+                    # terço dela (auditoria de 11.08.2026, E12).
+                    d1.metric(f"Portugal em {ano_pli}", numero(v, 1),
                               help="Índice: média da UE-27 = 100")
                     d2.metric("Face à média da UE-27",
-                              f"{numero(abs(v - 100))} % {posicao}")
+                              f"{numero(abs(v - 100), 1)} % {posicao}")
                     posto = int((pli_ult["geo"] != "EU27_2020").cumsum()[
                         pli_ult["geo"] == "PT"].iloc[0])
                     total = int((pli_ult["geo"] != "EU27_2020").sum())
@@ -2766,7 +2775,7 @@ with aba4:
                     y=pli_ult["pais"], x=pli_ult["valor"], orientation="h",
                     marker_color=[VERDE if g == "PT" else (AZUL if g == "EU27_2020" else "#b7c2ce")
                                   for g in pli_ult["geo"]],
-                    text=[f"{x:.0f}".replace(".", ",") for x in pli_ult["valor"]],
+                    text=[numero(x, 1) for x in pli_ult["valor"]],
                     textposition="outside",
                     hovertemplate="%{y}: %{x:.0f} (UE-27 = 100)<extra></extra>",
                 ))
@@ -2807,7 +2816,8 @@ with aba4:
                     "falhou e porquê."
                 )
             else:
-                st.markdown("""
+                _eng_ue = intervalo_engel((dados.get("engel") or {}).get("PT"))
+                st.markdown(f"""
     **O coeficiente de Engel.** É a fração do consumo total das famílias que vai para alimentação.
     Chama-se assim por **Ernst Engel**, o estatístico que em 1857 formulou a regularidade que ainda
     hoje se verifica: *quanto menor o rendimento, maior a fatia do orçamento gasta em comida*.
@@ -2816,12 +2826,13 @@ with aba4:
     países sem conversão cambial, por ser um rácio.
 
     **Porque é que esta página mostra um valor e o separador «Despesa e composição» mostra um
-    intervalo.** O coeficiente pode medir-se em duas bases, e elas não coincidem: **12,0 %** no IDF
-    2022/2023 do INE, **16,4 %** nas Contas Nacionais. Por agregado e por ano, as Contas Nacionais
-    registam **2,3 vezes** mais despesa alimentar e **1,7 vezes** mais despesa total do que o
-    inquérito — e o coeficiente diverge porque o numerador diverge mais do que o denominador. É a
-    mesma divergência entre bases que leva a aplicação a apresentar a despesa mensal como intervalo,
-    e não como ponto.
+    intervalo.** O coeficiente pode medir-se em duas bases, e elas não coincidem:
+    **{_pct(_eng_ue['idf'])}** no IDF 2022/2023 do INE,
+    **{_pct(_eng_ue['contas']) if _eng_ue['contas'] is not None else '—'}** nas Contas Nacionais
+    de {_eng_ue['ano_contas'] or '—'}. As Contas Nacionais registam, por agregado, mais despesa
+    alimentar do que o inquérito — e o coeficiente diverge porque **o numerador diverge mais do
+    que o denominador**. É a mesma divergência entre bases que leva a aplicação a apresentar a
+    despesa mensal como intervalo, e não como ponto.
 
     Aqui usam-se **as Contas Nacionais**, e só elas, porque são a única base construída da mesma
     maneira em todos os países da UE — o IDF não tem equivalente europeu com esta desagregação. O
@@ -2976,13 +2987,26 @@ with aba4:
                 st.plotly_chart(fig, use_container_width=True)
 
                 ultimo = tempos_b[-1]
-                ranking = pd.DataFrame([
-                    {"geo": g, "valor": v[ultimo]}
-                    for g, v in bench.items() if v.get(ultimo) is not None])
+                # Colunas explícitas: sem observações, `pd.DataFrame([])` não
+                # tem a coluna `geo` e o `.map` seguinte levantava KeyError —
+                # um erro técnico onde devia estar uma explicação
+                # (auditoria de 11.08.2026, E13).
+                ranking = pd.DataFrame(
+                    [{"geo": g, "valor": v[ultimo]}
+                     for g, v in bench.items() if v.get(ultimo) is not None],
+                    columns=["geo", "valor"])
                 ranking["pais"] = ranking["geo"].map(PAISES)
                 ranking = ranking.dropna(subset=["pais"])
                 ue = ranking.loc[ranking["geo"] == "EU27_2020", "valor"]
                 valor_ue = float(ue.iloc[0]) if not ue.empty else None
+
+                if ranking.empty:
+                    st.info(
+                        f"Nenhum dos países selecionados tem observação em "
+                        f"**{mes_pt(ultimo)}**, o mês mais recente da série. O gráfico "
+                        "acima mostra o histórico disponível; a comparação de posições "
+                        "precisa de um mês comum."
+                    )
 
                 st.markdown(f"#### Posição em {mes_pt(ultimo)}")
                 ordenado = ranking.sort_values("valor", ascending=True)
@@ -3384,18 +3408,30 @@ with aba5:
                     _min_d = float(_sens["desvio_ocde_modificada"].min())
                     _max_d = float(_sens["desvio_ocde_modificada"].max())
                     _n_original = int((_sens["mais_proxima"] == "ocde_original").sum())
+                    # Os dois pontos de rutura estavam inscritos à mão, ao lado
+                    # de números calculados em direto (auditoria, E9). São
+                    # bissecção sobre constantes que a aplicação já tem.
+                    _rut = pontos_de_rutura_das_escalas()
+                    _min_c, _max_c = float(_sens["adultos_3mais"].min()), float(_sens["adultos_3mais"].max())
+                    _txt_rut = ""
+                    if _rut["ultrapassagem"] is not None:
+                        _txt_rut = (f"só acima de **{numero(_rut['ultrapassagem'], 2)} adultos em "
+                                    f"média** é que a modificada passaria à frente")
+                        if _rut["anulacao"] is not None:
+                            _txt_rut += (f", e o desvio só se anularia com "
+                                         f"**{numero(_rut['anulacao'], 2)} adultos** — valor sem "
+                                         f"sentido para um grupo «3 ou mais»")
+                        _txt_rut += ". "
                     st.caption(
                         f"**As duas conclusões sobrevivem ao pressuposto.** Em todos os cenários "
-                        f"testados, de 3,0 a 3,7 adultos, a OCDE modificada continua a subestimar "
-                        f"o custo alimentar "
+                        f"testados, de {numero(_min_c, 1)} a {numero(_max_c, 1)} adultos, a OCDE "
+                        f"modificada continua a subestimar o custo alimentar "
                         f"{'(sempre)' if _todas_subestimam else '(nem sempre)'} — entre "
                         f"{percentagem(_min_d)} e {percentagem(_max_d)} — e o controlo da despesa "
                         f"total continua a inverter o sinal "
                         f"{'em todos' if _todas_invertem else 'nem sempre'}. A OCDE original é a "
-                        f"mais próxima do observado em {_n_original} dos {len(_sens)} cenários; só "
-                        f"acima de **3,58 adultos em média** é que a modificada passaria à frente, "
-                        f"e o desvio só se anularia com **4,5 adultos** — valor sem sentido para um "
-                        f"grupo «3 ou mais». A direção do resultado não depende do pressuposto; a "
+                        f"mais próxima do observado em {_n_original} dos {len(_sens)} cenários; "
+                        f"{_txt_rut}A direção do resultado não depende do pressuposto; a "
                         f"magnitude depende."
                     )
 

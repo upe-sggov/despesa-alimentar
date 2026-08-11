@@ -830,6 +830,62 @@ def test_classes_tem_designacao_oficial_da_coicop_2018():
     assert not ({c["nome"] for c in CLASSES} & antigos)
 
 
+# ------------------------- rigor de apresentacao (auditoria E8, E9, E13)
+def test_formatadores_aplicam_se_ao_numero_e_nao_a_frase():
+    """As f-strings adjacentes concatenam em tempo de compilacao: um
+    `.replace(".", ",")` no fim apanha a frase inteira. O C5 fechou nove
+    ocorrencias e uma sobreviveu (auditoria E8)."""
+    from src.config import numero, percentagem
+
+    sev_pobres, sev = 5.5, 1.9
+    etiqueta = (f"Em 2025, **{percentagem(sev_pobres, sinal=False)}** entre quem está em "
+                f"risco de pobreza, contra **{percentagem(sev, sinal=False)}** no total — "
+                f"**{numero(sev_pobres / sev, 1)}×** mais.")
+    assert "5,5 %" in etiqueta and "1,9 %" in etiqueta and "2,9×" in etiqueta
+    # O texto a volta fica intacto: nenhum ponto virou virgula onde nao devia.
+    assert "Em 2025," in etiqueta
+    assert etiqueta.endswith("mais.")
+
+    # E a via antiga tem de estragar mesmo, senao o teste nao prova nada.
+    antiga = (f"Em 2025, risco n.º 1 — **{sev_pobres / sev:.1f}×**".replace(".", ","))
+    assert "n,º" in antiga
+
+
+def test_pontos_de_rutura_das_escalas_sao_calculados():
+    """Estavam inscritos a mao — «3,58» e «4,5» — ao lado de numeros calculados
+    em direto, sem que o leitor os distinguisse (auditoria E9)."""
+    from src.calculos import pontos_de_rutura_das_escalas
+
+    r = pontos_de_rutura_das_escalas()
+    # Reproduzem os valores que estavam fixos na interface.
+    assert r["ultrapassagem"] == pytest.approx(3.58, abs=0.01)
+    assert r["anulacao"] == pytest.approx(4.53, abs=0.02)
+    # E a ordem tem sentido: a modificada passa a frente antes de se anular.
+    assert r["ultrapassagem"] < r["anulacao"]
+
+
+def test_pontos_de_rutura_devolvem_none_quando_nao_ha_mudanca_de_sinal():
+    from src.calculos import pontos_de_rutura_das_escalas
+
+    r = pontos_de_rutura_das_escalas(limites=(2.0, 2.5))
+    assert r["anulacao"] is None
+
+
+def test_ranking_vazio_nao_levanta_keyerror():
+    """`pd.DataFrame([])` nao tem coluna `geo`, e o `.map` seguinte rebentava
+    com um erro tecnico onde devia estar uma explicacao (auditoria E13)."""
+    from src.config import PAISES
+
+    bench = {"PT": {"2026-05": 3.1}}
+    ultimo = "2026-06"                       # nenhum pais tem observacao aqui
+    ranking = pd.DataFrame(
+        [{"geo": g, "valor": v[ultimo]} for g, v in bench.items()
+         if v.get(ultimo) is not None],
+        columns=["geo", "valor"])
+    ranking["pais"] = ranking["geo"].map(PAISES)       # nao pode levantar
+    assert ranking.dropna(subset=["pais"]).empty
+
+
 # --------------------------- cobertura declarada (auditoria E10 e E11)
 def test_decompor_declara_as_classes_sem_ponderador():
     """Faltando um ponderador, as outras oito absorvem 100 % da despesa e cada

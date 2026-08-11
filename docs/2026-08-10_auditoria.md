@@ -1769,6 +1769,34 @@ sem razão.
 que a declaração exista: com uma classe sem ponderador, as outras oito ficam com 1/8 em vez de 1/9;
 com a carne fora, a cobertura dos quintis cai abaixo de 85 % e o agravamento encolhe mesmo.
 
+### E8, E9, E12, E13 · Rigor de apresentação — 11.08.2026
+
+**E8 — a última ocorrência do padrão do C5.** A legenda da privação severa fazia
+`.replace(".", ",")` sobre uma cadeia de f-strings adjacentes, que o Python concatena em tempo de
+compilação: a substituição apanhava a frase inteira, não o número. Passou a usar `percentagem()` e
+`numero()`. O teste inclui a demonstração de que a via antiga **estragaria mesmo** — com um «n.º»
+na frase, o resultado é «n,º».
+
+**E9 — números derivados, calculados em vez de inscritos.** Nova função pura
+`calculos.pontos_de_rutura_das_escalas()`, que apura por bissecção os dois pontos que estavam
+fixos na interface. Reproduzem os valores escritos à mão: **3,578** e **4,529** adultos, contra
+«3,58» e «4,5». No bloco da acessibilidade, os «2 %» e «14 %» passaram a vir de `_sev` e
+`_sofi_pt`. E as frases que citavam «2,3 vezes» e «16,4 %» — desatualizadas pela migração das
+Contas Nacionais — deram lugar à relação qualitativa, que é o que o argumento precisa, com os
+valores a virem do `intervalo_engel` da sessão.
+
+**E12 — nível de preços com uma casa decimal.** Portugal está em 101,4 e a aplicação escrevia
+«101» e «1 % mais caros», perdendo quase um terço da grandeza que a frase comunica. Passa a
+mostrar **101,4** e **1,4 %**, no indicador, no gráfico e nas etiquetas.
+
+**E13 — `ranking` com colunas explícitas.** `pd.DataFrame([])` não tem a coluna `geo`, e o `.map`
+seguinte levantava `KeyError`. Passa a construir-se com `columns=["geo", "valor"]` e a explicar o
+caso em texto. Optou-se por isto e **não** por `st.stop()`, que teria parado a renderização de
+todos os separadores seguintes — a cura seria pior do que a doença.
+
+**Testes de regressão — quatro novos**, incluindo o caso do `ranking` vazio e a verificação de que
+os pontos de rutura calculados coincidem com os que estavam fixos.
+
 ---
 
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.
