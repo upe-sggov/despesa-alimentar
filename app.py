@@ -553,16 +553,37 @@ def ancora_oficial(dados: dict, agregados: int) -> dict | None:
 # ==========================================================================
 # Componentes visuais
 # ==========================================================================
-def csv_com_fonte(df: pd.DataFrame, titulo: str, dados: dict, extra=None) -> bytes:
+# Fonte por omissão dos ficheiros exportados. É **parâmetro obrigatório na
+# prática**: o cabeçalho era fixo e dizia «Fonte dos dados: Eurostat» em todos
+# os ficheiros, incluindo o do Observatório do GPP — que nunca passou pelo
+# Eurostat — e o do cabaz por quintil, cujos níveis são do INE. São ficheiros
+# que saem da aplicação e circulam sozinhos: o cabeçalho é a única coisa que
+# resta a acompanhá-los (auditoria de 11.08.2026, E6).
+FONTE_EUROSTAT = "Eurostat (indice harmonizado de precos e contas nacionais)"
+
+
+def csv_com_fonte(df: pd.DataFrame, titulo: str, dados: dict, extra=None,
+                  fonte: str = FONTE_EUROSTAT, conjuntos=None) -> bytes:
     """
     Exporta em CSV com cabeçalho de proveniência, para que o ficheiro seja
     autoexplicativo fora da aplicação.
+
+    `fonte` identifica quem produziu os dados **deste ficheiro**, e não da
+    aplicação em geral. `conjuntos` restringe a lista de conjuntos declarados;
+    por omissão declaram-se os que responderam nesta sessão, lidos do registo
+    de ligações — em vez de uma lista fixa que envelhecia sem ninguém dar por
+    isso e que omitia mais de metade dos conjuntos usados.
     """
+    if conjuntos is None:
+        vistos = [ds for ds, _url, _via in (dados.get("enderecos") or [])]
+        conjuntos = sorted(dict.fromkeys(vistos))       # únicos, ordem estável
+    conjuntos_txt = ", ".join(conjuntos) if conjuntos else "-"
+
     linhas = [
         f"# {titulo}",
         "# Produzido por: Unidade de Pesquisa e Estatisticas (UPE) - DSSD - Secretaria-Geral do Governo",
-        "# Fonte dos dados: Eurostat (indice harmonizado de precos no consumidor e contas nacionais)",
-        "# Conjuntos: prc_hicp_minr, prc_hicp_iw, nama_10_cp18, ilc_lvph01",
+        f"# Fonte dos dados: {fonte}",
+        f"# Conjuntos consultados nesta sessao: {conjuntos_txt}",
         f"# Ultimo mes disponivel: {dados.get('mes_variacoes') or '-'}",
         f"# Ponderadores de: {dados.get('ano_pesos') or '-'}",
         f"# Ancora das Contas Nacionais: {dados.get('despesa_ano') or '-'} "
@@ -1245,6 +1266,9 @@ with aba1:
         st.download_button(
             "⬇️ Descarregar cabaz por quintil (CSV)",
             csv_com_fonte(df_quintis, "Cabaz alimentar por quintil de rendimento", dados,
+                          fonte=("INE, Inquerito as Despesas das Familias 2022/2023 "
+                                 "(niveis e estrutura) + Eurostat, IHPC (variacoes de preco)"),
+                          conjuntos=[eurostat.HICP_MENSAL],
                           extra=[
                               ("Niveis e ponderacao", "INE, IDF 2022/2023, quadros Q.2.11.a e Q.2.11.b"),
                               ("Variacoes de preco", "Eurostat, prc_hicp_minr (IHPC, ECOICOP v2)"),
@@ -1801,7 +1825,13 @@ que não há nada a descontar nem a acrescentar.
                          })
             st.download_button(
                 "⬇️ CSV", csv_com_fonte(tabela, "Decomposicao por grupo de produto", dados,
-                                        extra=[("Composicao do agregado", composicao),
+                                        # A ancora pode ser do INE (IDF) ou do
+                                        # Eurostat (Contas Nacionais): o cabecalho
+                                        # segue a que estiver ativa.
+                                        fonte=(f"{base_ancora['fonte']} (ancora da despesa) + "
+                                               "Eurostat, IHPC (ponderadores e variacoes)"),
+                                        extra=[("Base de calculo", base_ancora["nome"]),
+                                               ("Composicao do agregado", composicao),
                                                ("Escala", ESCALAS[escala_chave]["nome"])]),
                 f"despesa_alimentar_decomposicao_{date.today()}.csv", "text/csv",
                 use_container_width=True)
@@ -2102,6 +2132,8 @@ with aba2:
             st.download_button(
                 "⬇️ Descarregar comparação de índices (CSV)",
                 csv_com_fonte(_cmp_idx, "Vies de substituicao - cabaz fixo contra Tornqvist", dados,
+                              fonte="Eurostat, IHPC (ECOICOP v2) - calculo da UPE",
+                              conjuntos=[eurostat.HICP_MENSAL, eurostat.HICP_PONDERADORES],
                               extra=[
                                   ("Base", f"dezembro de {_ano_base} = 100"),
                                   ("Series", "prc_hicp_minr (indice por classe) e prc_hicp_iw"),
@@ -2312,6 +2344,9 @@ with aba6:
                 csv_com_fonte(
                     _obs.assign(inicio=_obs["inicio"].dt.strftime("%Y-%m-%d")),
                     "Observatorio de Precos Agroalimentar - producao e consumo", dados,
+                    # Nao e Eurostat: estes dados nunca passaram por la.
+                    fonte="GPP - Gabinete de Planeamento, Politicas e Administracao Geral",
+                    conjuntos=[],
                     extra=[
                         ("Fonte", "GPP - Observatorio de Precos Agroalimentar"),
                         ("Recolha", _obs_meta.get("extraido_em", "-")),
@@ -2610,6 +2645,11 @@ with aba3:
             st.download_button(
                 "⬇️ Descarregar simulação (CSV com fonte)",
                 csv_com_fonte(det.round(2), "Simulacao de alteracao do IVA", dados,
+                              # Despesa oficial, mas taxas e repercussao sao do
+                              # utilizador: o cabecalho tem de o dizer.
+                              fonte=("Eurostat (despesa e precos) + parametros do utilizador "
+                                     "(taxas de IVA e repercussao) - NAO e uma fonte oficial "
+                                     "no seu conjunto"),
                               extra=[("Cenario", CENARIOS[cenario][0]),
                                      ("Repercussao assumida", f"{repercussao*100:.0f}%"),
                                      ("Composicao do agregado", composicao),
@@ -2825,6 +2865,8 @@ with aba4:
                     st.download_button(
                         "⬇️ CSV com fonte",
                         csv_com_fonte(tab_e, "Coeficiente de Engel - esforco alimentar", dados,
+                                      fonte="Eurostat, Contas Nacionais (COICOP 2018)",
+                                      conjuntos=[eurostat.CONTAS_NACIONAIS],
                                       extra=[("Indicador", "Despesa alimentar / consumo total das familias"),
                                              ("Conjunto",
                                               f"{eurostat.CONTAS_NACIONAIS}, "
@@ -2949,6 +2991,8 @@ with aba4:
                     st.download_button(
                         "⬇️ Descarregar comparação (CSV com fonte)",
                         csv_com_fonte(tb, "Comparacao europeia da inflacao alimentar", dados,
+                                      fonte="Eurostat, IHPC (ECOICOP v2)",
+                                      conjuntos=[eurostat.HICP_MENSAL],
                                       extra=[("Mes de referencia", ultimo),
                                              ("Grupo", grupo_sel)]),
                         f"despesa_alimentar_ue27_{date.today()}.csv", "text/csv")

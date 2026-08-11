@@ -1718,6 +1718,29 @@ uma série em que o ponderador do ano-base e o do ano seguinte são quase oposto
 coisas: que o cabaz fixo fique próximo do Törnqvist com o ponderador certo, **e que a via errada
 divirja em mais de 40 pontos**. Sem a segunda metade, o teste passaria com a correção revertida.
 
+### E6 · Proveniência dos ficheiros exportados — 11.08.2026
+
+**O que foi feito.** `csv_com_fonte()` ganhou dois parâmetros: `fonte`, que identifica quem
+produziu os dados **daquele ficheiro**, e `conjuntos`, que por omissão passa a ser **derivado do
+registo de ligações da sessão** em vez de uma lista fixa de cinco nomes. A lista fixa omitia mais
+de metade dos conjuntos usados e, depois da migração, teria ficado a nomear conjuntos arquivados.
+
+As oito exportações foram revistas uma a uma:
+
+| Ficheiro | Fonte declarada |
+|---|---|
+| Observatório de Preços | **GPP** — não passa pelo Eurostat |
+| Cabaz por quintil | **INE, IDF 2022/2023** (níveis) + Eurostat (variações) |
+| Decomposição por grupo | A **âncora ativa** — INE ou Eurostat, conforme a base escolhida — + Eurostat |
+| Simulação de IVA | Eurostat + **parâmetros do utilizador**, com a advertência de que não é fonte oficial no seu conjunto |
+| Coeficiente de Engel | Eurostat, Contas Nacionais (COICOP 2018) |
+| Comparação UE-27, viés de substituição, série do índice | Eurostat, IHPC |
+
+**Testes de regressão.** `test_csv_do_observatorio_nao_se_declara_eurostat` fixa o caso mais
+gritante; `test_csv_declara_os_conjuntos_que_responderam_e_nao_uma_lista_fixa` exige que a lista
+venha do registo, sem repetições, e **proíbe nominalmente** os conjuntos arquivados — que é o modo
+de a lista fixa voltar a envelhecer.
+
 ---
 
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.

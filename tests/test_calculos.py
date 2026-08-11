@@ -830,6 +830,51 @@ def test_classes_tem_designacao_oficial_da_coicop_2018():
     assert not ({c["nome"] for c in CLASSES} & antigos)
 
 
+# ------------------------ proveniencia dos ficheiros exportados (auditoria E6)
+def _csv_com_fonte(*a, **k):
+    """Importa a funcao do app sem disparar a recolha de dados do Streamlit."""
+    import importlib.util
+    import pathlib
+    import sys
+
+    raiz = pathlib.Path(__file__).resolve().parent.parent
+    fonte = (raiz / "app.py").read_text(encoding="utf-8")
+    # A funcao e autonoma: extrai-se o bloco e executa-se isolado, para o teste
+    # nao depender do Streamlit nem da rede.
+    inicio = fonte.index("FONTE_EUROSTAT =")
+    fim = fonte.index("def cartao_classe")
+    espaco = {"pd": pd, "datetime": __import__("datetime").datetime}
+    exec(compile(fonte[inicio:fim], "app.py", "exec"), espaco)
+    return espaco["csv_com_fonte"](*a, **k)
+
+
+def test_csv_do_observatorio_nao_se_declara_eurostat():
+    """O cabecalho era fixo e dizia «Fonte dos dados: Eurostat» em todos os
+    ficheiros — incluindo o do Observatorio do GPP, que nunca passou pelo
+    Eurostat. Sao ficheiros que circulam sozinhos (auditoria E6)."""
+    df = pd.DataFrame({"produto": ["Pescada"], "preco": [5.4]})
+    dados = {"enderecos": [("prc_hicp_minr", "https://x", "SDMX 2.1")]}
+
+    bruto = _csv_com_fonte(df, "Observatorio", dados,
+                           fonte="GPP - Gabinete de Planeamento", conjuntos=[]).decode("utf-8-sig")
+    assert "Fonte dos dados: GPP - Gabinete de Planeamento" in bruto
+    assert "Eurostat" not in bruto.split("\n")[2]
+
+
+def test_csv_declara_os_conjuntos_que_responderam_e_nao_uma_lista_fixa():
+    df = pd.DataFrame({"a": [1]})
+    dados = {"enderecos": [("prc_hicp_minr", "https://x", "SDMX 2.1"),
+                           ("nama_10_cp18", "https://y", "SDMX 2.1"),
+                           ("prc_hicp_minr", "https://z", "SDMX 2.1")]}
+    bruto = _csv_com_fonte(df, "Teste", dados).decode("utf-8-sig")
+    linha = [l for l in bruto.split("\n") if l.startswith("# Conjuntos")][0]
+    assert "prc_hicp_minr" in linha and "nama_10_cp18" in linha
+    assert linha.count("prc_hicp_minr") == 1            # sem repeticoes
+    # E os conjuntos arquivados nao podem reaparecer por lista fixa.
+    assert "prc_hicp_midx" not in bruto
+    assert "nama_10_co3_p3" not in bruto
+
+
 # --------------------------- rastreabilidade dos enderecos (auditoria E5)
 def test_tentativa_falhada_nao_entra_na_lista_de_verificacao():
     """O painel «enderecos exatos desta sessao» promete que servem para
