@@ -23,6 +23,8 @@ from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
                           idade_fonte, indices_comparados,
                           intervalo_agregado, intervalo_engel,
                           pontos_de_rutura_das_escalas,
+                          efeito_mecanico_pct, estimativas_repercussao,
+                          repercussao_banda,
                           resumo_composicao_iva, resumo_decomposicao, resumo_iva,
                           sensibilidade_escalas, simular_iva, taxas_efetivas,
                           testar_escalas, unidades_equivalentes)
@@ -33,6 +35,9 @@ from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         ESCALAS_TESTE_INTERVALO, ESCALAS_TESTE_RACIO,
                         IVA_COMPONENTES, IVA_COMPONENTES_FONTE,
                         IVA_MAPA, IVA_MAPA_FONTE, IVA_SUBCLASSES,
+                        IVA_ZERO_AFETACAO_ORCAMENTAL, IVA_ZERO_INFLACAO_QUINTIL,
+                        IVA_ZERO_QUINTIS_FONTE,
+                        REPERCUSSAO_BANDA, REPERCUSSAO_FONTE, REPERCUSSAO_PADRAO,
                         IDF_ALIMENTAR_ANUAL, IDF_FONTE,
                         IDF_JANELA_FONTE, IDF_JANELA_RECOLHA,
                         IDF_PESO_ALIMENTAR, IDF_QUINTIS,
@@ -2471,8 +2476,13 @@ with aba3:
             )
         with esq:
             st.markdown("**Quanto da descida do imposto chega ao preço na prateleira?**")
+            # O valor de partida é calibrado, não escolhido: vem da avaliação do
+            # Banco de Portugal ao «IVA zero» de 2023. Até 12.08.2026 partia de
+            # 40 %, um parâmetro de trabalho sem fonte portuguesa, que a
+            # evidência contraria por um fator de 2,4 (auditoria, F1).
             repercussao = st.slider(
-                "Fração que chega ao consumidor", 0, 100, 40, 5,
+                "Fração que chega ao consumidor", 0, 100,
+                int(round(REPERCUSSAO_PADRAO * 100)), 5,
                 format="%d %%", label_visibility="collapsed",
             ) / 100
 
@@ -2513,35 +2523,95 @@ with aba3:
             </div>
             """, unsafe_allow_html=True)
 
-        with st.expander("Porque é que este cursor está a 40 % — e porque é o número que mais importa"):
-            st.markdown("""
+        _rho_lo, _rho_central, _rho_hi = repercussao_banda()
+        _est_rho = estimativas_repercussao()
+
+        with st.expander(
+                f"📐 Porque é que este cursor parte de {numero(_rho_central * 100, 0)} % — "
+                "a calibração, e o que ela corrigiu"):
+            st.markdown(f"""
     Quando o Estado baixa o IVA, **não é garantido que o preço na loja desça na mesma medida**.
     Parte da descida pode ficar retida na margem de quem vende. A esse fenómeno chama-se
     *repercussão*, e é o parâmetro que decide se uma descida de IVA beneficia o consumidor ou o
-    operador.
+    operador. **É o número que mais move o resultado desta ferramenta** — entre 0 % e 100 %, a
+    poupança varia 250 %, mais do que todas as outras incertezas somadas.
 
-    A avaliação internacional é **consistentemente cética quanto à repercussão integral**:
+    ##### Portugal já correu esta experiência
 
-    - **França, 2009** — descida do IVA na restauração de 19,6 % para 5,5 %. Estima-se que apenas
-      uma pequena fração tenha chegado ao preço final; a maior parte foi absorvida em margem e
-      salários.
-    - **Suécia** — resultados semelhantes em avaliações do setor alimentar e da restauração.
+    A Lei n.º 17/2023, de 14 de abril, isentou de IVA 46 bens alimentares entre 18.04.2023 e
+    04.01.2024 — a maioria com taxa anterior de 6 %. O **Banco de Portugal** avaliou a
+    repercussão por quatro vias independentes. Não é um caso análogo noutro país e noutro setor:
+    é **a medida idêntica, no mesmo país, no retalho alimentar**.
 
-    Os **40 %** são um **parâmetro de trabalho, não uma estimativa** para Portugal. Servem para
-    que o resultado não seja apresentado como se a descida chegasse toda ao consumidor — o que a
-    evidência não sustenta.
+    ##### Como se extrai a repercussão dos números publicados
 
-    **O que fazer com ele:** mova o cursor e observe a sensibilidade do resultado. Se a conclusão
-    se mantiver entre 20 % e 60 %, é robusta. Se mudar de sinal, o resultado depende inteiramente
-    de uma hipótese — e deve ser apresentado como intervalo, nunca como valor único.
+    O BdP publica a variação **observada** e a variação **mecânica** — a que haveria se a descida
+    chegasse toda ao preço. A repercussão é o quociente das duas:
+    """)
+            st.latex(r"\rho = \frac{\text{variação observada}}{\text{variação mecânica}}"
+                     r"\qquad\text{com}\qquad "
+                     r"\text{mecânica} = \frac{1+t_1}{1+t_0}-1")
+            st.markdown(
+                "| Estimativa | Observado | Mecânico | **ρ implícito** |\n"
+                "|---|---|---|---|\n"
+                + "\n".join(
+                    f"| {r['estimativa']} | −{numero(r['observado'], 1)} % | "
+                    f"−{numero(r['mecanico'], 2)} % | **{numero(r['rho'] * 100, 1)} %** |"
+                    for _, r in _est_rho.iterrows())
+            )
+            st.markdown(f"""
+    **Nenhum destes ρ é citado — todos são calculados aqui**, a partir dos dois números que o BdP
+    publica. A coluna é um cálculo desta aplicação sobre dados do Banco de Portugal.
 
-    Repare ainda num ponto que a simulação torna visível: **a repercussão decide sobretudo quem
-    fica com o dinheiro** — o consumidor ou a margem do operador — e só marginalmente quanto o
-    Estado deixa de cobrar. Numa isenção total a receita cessante é de facto independente da
-    repercussão; numa redução parcial não é, porque uma repercussão menor mantém o preço final
-    mais alto e, com ele, uma base tributável maior. No exemplo de 106 € com descida de 23 %
-    para 6 %, a receita cessante vai de **−13,82 €** (repercussão 0 %) a **−14,65 €**
+    **Verificação de que a nossa aritmética coincide com a deles:** os óleos alimentares estavam a
+    23 %, e o BdP publica um efeito mecânico de −18,7 %. A fórmula desta aplicação dá
+    **{numero(efeito_mecanico_pct(23, 0), 2)} %**. Coincide, e está travado por teste — se não
+    coincidisse, a derivação acima não valeria nada.
+
+    **Porque é que a diluição não estraga o quociente:** as rubricas do IHPC incluem bens não
+    abrangidos pela medida, o que atenua o observado *e* o mecânico. Como atenua os dois na mesma
+    proporção, o quociente sobrevive. É por isso que esta derivação é legítima apesar da
+    granularidade insuficiente que o próprio BdP assinala.
+
+    ##### Porquê {numero(_rho_central * 100, 0)} % e não a média das quatro
+
+    Toma-se a **mais conservadora das duas estimativas de diferença-nas-diferenças**, que são as
+    únicas com contrafactual estatisticamente validado. As duas de preços online medem uma janela
+    de duas semanas e dão acima de 100 %, o que reflete provavelmente concorrência e salivência
+    política, não repercussão pura. A banda apresentada com os indicadores vai de
+    **{numero(_rho_lo * 100, 1)} %** (área do euro) a **{numero(_rho_hi * 100, 0)} %** (integral).
+
+    ##### Ressalvas — fazem parte da estimativa, não são rodapé
+
+    1. O próprio BdP alerta para **desvios-padrão elevados** e recomenda cautela na interpretação.
+    2. Foi uma medida **temporária, taxativa e muito mediática**, com pressões de custo a montante
+       já em queda e acompanhamento público do setor. Uma alteração permanente e discreta pode
+       repercutir-se menos.
+    3. A janela avaliada vai até **agosto de 2023 — quatro meses**. Não há aqui evidência sobre
+       erosão a prazo. Repercussão alta e efeito duradouro são coisas diferentes: no balanço de
+       todo o período o cabaz da DECO tinha **subido 4,71 %**, com a inflação de base a superar a
+       descida do imposto.
+    4. A evidência robusta é sobre cortes **a partir de 6 %**. Para os 23 % há um único produto.
+    5. Não se usa mais de 100 % por defeito, pela razão da ressalva 5 acima.
+
+    ##### O que isto corrigiu
+
+    Até 12.08.2026 este cursor partia de **40 %**, declarados como «parâmetro de trabalho, não
+    estimativa», fundados em França 2009 (restauração) e na Suécia. Nenhuma dessas avaliações é
+    sobre Portugal nem sobre alimentação em retalho. Os 40 % não eram uma hipótese conservadora —
+    eram **contrariados pela única evidência portuguesa sobre a medida idêntica**, e faziam a
+    aplicação subestimar a poupança por um fator de **2,4**.
+
+    ##### E um ponto que a simulação torna visível
+
+    **A repercussão decide sobretudo quem fica com o dinheiro** — o consumidor ou a margem — e só
+    marginalmente quanto o Estado deixa de cobrar. Numa isenção total a receita cessante é
+    independente da repercussão; numa redução parcial não é, porque uma repercussão menor mantém
+    o preço final mais alto e, com ele, uma base tributável maior. No exemplo de 106 € com descida
+    de 23 % para 6 %, a receita cessante vai de **−13,82 €** (repercussão 0 %) a **−14,65 €**
     (repercussão 100 %) — cerca de 6 % de amplitude.
+
+    **Fonte:** {REPERCUSSAO_FONTE}.
             """)
 
         # ---- taxa atual de cada grupo: apurada, não predefinida ----
@@ -2666,6 +2736,20 @@ with aba3:
                     despesa_mensal, vezes_ano, agregados))
             _res_band = sorted(b["poupanca_mes"] for b in _band)
 
+        # Sensibilidade à repercussão: os extremos da banda calibrada com a
+        # avaliação do BdP ao «IVA zero» de 2023 (config, REPERCUSSAO_BANDA).
+        # É a maior das incertezas do simulador, e por isso é a que aparece
+        # primeiro — antes da parcela indeterminada, que move 3,4 vezes menos.
+        _band_rho = sorted(
+            (resumo_iva(simular_iva(df_decomp, taxas_atuais, taxas_cenario, _r),
+                        despesa_mensal, vezes_ano, agregados)["poupanca_mes"],
+             resumo_iva(simular_iva(decompor(media_agregado, dados["pesos"],
+                                             dados["variacoes_classe"]),
+                                    taxas_atuais, taxas_cenario, _r),
+                        media_agregado, vezes_ano,
+                        agregados)["poupanca_agregada_milhoes"])
+            for _r in (_rho_lo, _rho_hi))
+
         c = st.columns(5)
         c[0].metric("Nova despesa mensal", euro(res["novo_valor"]),
                     euro(res["efetivo"]) if abs(res["efetivo"]) > 0.005 else None)
@@ -2676,6 +2760,18 @@ with aba3:
                     f"{(1 - repercussao) * 100:.0f} % do efeito")
         c[4].metric("Receita de IVA por mês", euro(res["receita_mes"]),
                     help=f"{euro(res['iva_antes'])} → {euro(res['iva_depois'])}")
+
+        if abs(_band_rho[1][0] - _band_rho[0][0]) > 0.005:
+            st.caption(
+                f"**Sensibilidade à repercussão — a maior incerteza desta ferramenta.** "
+                f"O cursor parte de **{numero(_rho_central * 100, 0)} %**, calibrado com a "
+                f"avaliação do Banco de Portugal ao «IVA zero» de 2023. Entre os extremos das "
+                f"estimativas publicadas — {numero(_rho_lo * 100, 1)} % (contrafactual da área "
+                f"do euro) e {numero(_rho_hi * 100, 0)} % (repercussão integral) — a poupança "
+                f"mensal fica entre **{euro(_band_rho[0][0])}** e **{euro(_band_rho[1][0])}**, "
+                f"e a agregada anual entre **{milhoes(_band_rho[0][1])}** e "
+                f"**{milhoes(_band_rho[1][1])}**. Mova o cursor para ver qualquer outro valor."
+            )
 
         if _res_band is not None and abs(_res_band[1] - _res_band[0]) > 0.005:
             st.caption(
@@ -2968,6 +3064,81 @@ with aba3:
           não se obtém por multiplicação.
         </div>
         """, unsafe_allow_html=True)
+
+        # ------------------------------------------------------------------
+        # Quem recebe o quê. O simulador diz **quanto**; esta secção diz **a
+        # quem** — e as duas leituras apontam em sentidos opostos, ambas
+        # verdadeiras. Sem isto, a ferramenta responde a metade da pergunta que
+        # uma decisão de política exige (auditoria de 12.08.2026, F3).
+        # ------------------------------------------------------------------
+        st.markdown("#### Quem recebe o quê — a distribuição, medida em 2023")
+        st.caption(
+            "O simulador diz **quanto** vale a medida. Não diz **a quem** chega, e para uma "
+            "decisão de política é a segunda pergunta que decide. O Banco de Portugal mediu as "
+            "duas coisas no «IVA zero» de 2023, e elas apontam em sentidos opostos — sem que "
+            "nenhuma esteja errada."
+        )
+
+        _q1, _q2 = st.columns(2)
+        with _q1:
+            st.markdown("**Alívio na inflação: maior nos mais pobres**")
+            st.caption(
+                "Taxa de variação em cadeia em maio de 2023, em pontos percentuais. A "
+                "alimentação pesa mais no cabaz de quem tem menos rendimento, por isso a mesma "
+                "descida de preços vale-lhe mais."
+            )
+            _inf = pd.DataFrame(
+                IVA_ZERO_INFLACAO_QUINTIL,
+                columns=["Quintil", "Bens alimentares afetados", "Bens alimentares", "IPC total"])
+            st.dataframe(_inf, use_container_width=True, hide_index=True)
+
+        with _q2:
+            st.markdown("**Afetação do dinheiro público: maior nos mais ricos**")
+            st.caption(
+                "Fração do custo orçamental de cada medida de 2023 que chega ao quintil mais "
+                "pobre e ao mais rico. Quem gasta mais em valor absoluto recebe mais de uma "
+                "redução proporcional do imposto."
+            )
+            _afet = pd.DataFrame(IVA_ZERO_AFETACAO_ORCAMENTAL,
+                                 columns=["Medida", "pobres", "ricos"])
+            _fig_af = go.Figure()
+            _fig_af.add_trace(go.Bar(
+                y=_afet["Medida"], x=_afet["pobres"], name="Para os 20 % mais pobres",
+                orientation="h", marker_color=VERDE,
+                hovertemplate="%{y}<br>20 % mais pobres: %{x} %<extra></extra>"))
+            _fig_af.add_trace(go.Bar(
+                y=_afet["Medida"], x=_afet["ricos"], name="Para os 20 % mais ricos",
+                orientation="h", marker_color=DOURADO,
+                hovertemplate="%{y}<br>20 % mais ricos: %{x} %<extra></extra>"))
+            _fig_af.update_layout(
+                barmode="group", height=260, margin=dict(t=30, b=30, l=10, r=10),
+                legend=dict(orientation="h", y=1.2, x=0),
+                xaxis_title="% do custo orçamental da medida", plot_bgcolor="#fff")
+            _fig_af.update_xaxes(gridcolor="#eef1f4")
+            st.plotly_chart(_fig_af, use_container_width=True)
+
+        _iva_pobres, _iva_ricos = next(
+            (p, r) for m, p, r in IVA_ZERO_AFETACAO_ORCAMENTAL if m == "Redução do IVA")
+        st.markdown(f"""
+        <div class="nota perigo">
+          <div class="tt">As duas leituras são verdadeiras ao mesmo tempo</div>
+          A redução do IVA <strong>alivia</strong> proporcionalmente mais os agregados de menor
+          rendimento — −4,4 pp no Q1 contra −3,7 pp no Q5 — porque a alimentação pesa mais no
+          seu cabaz. E ao mesmo tempo <strong>entrega</strong> mais dinheiro aos de maior
+          rendimento: {_iva_ricos} % do custo orçamental vai para os 20 % mais ricos e
+          {_iva_pobres} % para os 20 % mais pobres. O Banco de Portugal é explícito quanto à
+          consequência: as famílias do quintil mais elevado «recebem mais 20 % de recursos
+          públicos do que as do quintil de menores rendimentos, <strong>não contribuindo para
+          uma política focada nos agregados vulneráveis</strong>».
+          <br><br>
+          Das quatro medidas de 2023 avaliadas, a redução do IVA é a <strong>menos
+          focalizada</strong>: o apoio a famílias vulneráveis dirigiu 71 % do seu custo ao
+          quintil mais pobre, contra {_iva_pobres} % desta. Isto não diz que a medida é má —
+          diz que <strong>o instrumento é largo</strong>, e que comparar só o custo total entre
+          medidas ignora metade da questão.
+        </div>
+        """, unsafe_allow_html=True)
+        st.caption(f"**Fonte:** {IVA_ZERO_QUINTIS_FONTE}.")
 
         with st.expander("Ver detalhe da simulação"):
             det = sim[["classe", "valor", "taxa_atual", "taxa_cenario",
@@ -3896,7 +4067,7 @@ with aba5:
     | Taxa **atual** de cada grupo | **Apurada**, não editável | É a **taxa média efetiva**, calculada dos ponderadores por subclasse da COICOP 2018 e das Listas I e II. Não é um parâmetro do utilizador: é um facto medido |
     | Taxa **do cenário** | Parâmetro do utilizador | Limitada às taxas que existem no Código do IVA — isenção, 6 %, 13 % e 23 % |
     | Adultos com rendimento | Parâmetro do utilizador | Multiplicador dos salários; as crianças não entram |
-    | Repercussão | Parâmetro do utilizador | Hipótese de trabalho, não estimativa |
+    | Repercussão | **Calibrada** — @RHO@ % por defeito, ajustável | Já não é uma hipótese de trabalho: é derivada da avaliação do Banco de Portugal ao «IVA zero» de 2023, sobre a medida idêntica no mesmo país. Banda @RHO_LO@ % a @RHO_HI@ % |
 
     **Dois números de agregados, para dois usos diferentes.** O denominador da âncora das Contas
     Nacionais é o número de agregados **do ano da despesa** — hoje 2022. A extrapolação nacional do
@@ -3912,7 +4083,13 @@ with aba5:
     As duas fontes não medem o mesmo universo: o Inquérito ao Emprego é uma amostra e exclui
     alojamentos coletivos, pelo que lê sistematicamente abaixo do recenseamento exaustivo. Em 2021,
     ano em que ambos existem, **3 939 900** contra **4 149 096** — menos 5,0 %.
-            """)
+            """
+            # Os valores da repercussão vêm do `config` e não são escritos à mão:
+            # o bloco não pode ser f-string (contém chavetas literais), por isso
+            # substituem-se por marcador.
+            .replace("@RHO@", numero(REPERCUSSAO_PADRAO * 100, 0))
+            .replace("@RHO_LO@", numero(REPERCUSSAO_BANDA[0] * 100, 1))
+            .replace("@RHO_HI@", numero(REPERCUSSAO_BANDA[1] * 100, 0)))
             st.info(
                 "**Sobre os ponderadores.** Somam 1 000 ‰ sobre **todo** o cabaz do índice — não "
                 "sobre a alimentação. Os nove grupos alimentares somam apenas o peso da alimentação "
@@ -4170,8 +4347,14 @@ Chamar-lhe cabaz seria prometer o que não entrega.
        não com a taxa predominante. Subsiste como aproximação a parcela **indeterminada** do
        apuramento e a atribuição por predominância; a sensibilidade a ambas está apresentada como
        intervalo. Ver o painel «Quanto do cabaz segue cada taxa» no separador do IVA.
-    7. **A repercussão é uma hipótese.** Qualquer resultado do simulador é condicional a esse
-       parâmetro e deve ser apresentado como intervalo.
+    7. **A repercussão está calibrada, mas continua a ser o parâmetro decisivo.** Desde
+       12.08.2026 parte de 95 %, derivado da avaliação do Banco de Portugal ao «IVA zero» de
+       2023 — a medida idêntica, no mesmo país. Antes disso partia de 40 %, um valor de
+       trabalho sem fonte portuguesa, e a aplicação subestimava a poupança por um fator de 2,4.
+       Mesmo calibrado, é o número que mais move o resultado: qualquer valor do simulador é
+       condicional a ele e deve ser apresentado como intervalo. E a estimativa vem de uma medida
+       **temporária e mediática**, avaliada ao longo de quatro meses — uma alteração permanente
+       e discreta pode repercutir-se menos.
     8. **A extrapolação agregada é ilustrativa.** Não é uma estimativa de custo orçamental.
             """)
             st.warning("""

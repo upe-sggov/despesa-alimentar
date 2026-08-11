@@ -445,6 +445,129 @@ COICOP_ALIMENTAR = "CP011"
 ANO_BASE_VIES = 2019
 
 # --------------------------------------------------------------------------
+# Repercussão — a fração da alteração de imposto que chega ao preço final
+# --------------------------------------------------------------------------
+# É **o parâmetro decisivo** do simulador: move o resultado 250 % entre 0 % e
+# 100 %, mais do que todas as outras incertezas somadas (auditoria de
+# 12.08.2026, F1). Até 12.08.2026 o valor por defeito era **40 %**, declarado
+# como «parâmetro de trabalho, não estimativa», fundado em avaliações
+# internacionais de outros setores e outros países — França 2009 (restauração),
+# Suécia. Nenhuma delas sobre Portugal, nenhuma sobre alimentação em retalho.
+#
+# Portugal correu esta experiência. O «IVA zero» da Lei n.º 17/2023, de 14 de
+# abril, isentou 46 bens alimentares entre 18.04.2023 e 04.01.2024, e o Banco de
+# Portugal mediu a repercussão por quatro vias independentes. Os 40 % não são
+# uma hipótese conservadora — são **contrariados pela única evidência
+# portuguesa sobre a medida idêntica**, por um fator de 2,4.
+#
+# ---- Como se extrai a repercussão dos números publicados -------------------
+# O BdP publica o **efeito mecânico** (a variação de preço com repercussão
+# integral) e o **efeito observado**. A repercussão é o quociente dos dois:
+#
+#     ρ = variação observada / variação mecânica
+#
+# O efeito mecânico de passar da taxa t₀ para t₁ é (1+t₁)/(1+t₀) − 1. Para uma
+# isenção a partir de 6 %: 1/1,06 − 1 = −5,66 %. A partir de 23 %: 1/1,23 − 1
+# = −18,70 % — que é exatamente o valor que o BdP publica para os óleos
+# alimentares (WAPP, p. 5). A aritmética de IVA contido desta aplicação
+# reproduz a do Banco de Portugal; isso está travado por teste.
+#
+# ---- Ressalvas, que são parte da estimativa e não uma nota de rodapé -------
+# 1. O próprio BdP alerta para **desvios-padrão elevados** nas estimativas de
+#    diferença-nas-diferenças, e para a granularidade insuficiente do IHPC (as
+#    rubricas afetadas incluem bens não abrangidos, o que dilui observado e
+#    mecânico na mesma proporção — por isso o quociente sobrevive).
+# 2. Foi uma medida **temporária, taxativa e muito mediática**, com pressões de
+#    custo a montante já em queda e acompanhamento público do setor. Uma
+#    alteração permanente e discreta pode repercutir-se menos.
+# 3. A janela avaliada vai até agosto de 2023 — **quatro meses**. Não há aqui
+#    evidência sobre erosão a prazo. O balanço do período completo mostra o
+#    cabaz da DECO a subir 4,71 %: a repercussão foi alta, e mesmo assim o
+#    efeito foi superado pela inflação de base. São coisas diferentes.
+# 4. A evidência robusta é sobre cortes **a partir de 6 %**. Para os 23 % há um
+#    único produto (óleos alimentares).
+# 5. Os valores acima de 100 % refletem provavelmente concorrência e salivência
+#    política, não repercussão pura. Não se usa mais de 1,00 por defeito.
+REPERCUSSAO_FONTE = (
+    "Banco de Portugal, «Impacto do IVA zero sobre os preços», WAPP de "
+    "22.11.2023 (Gouveia, Manteu, Serra e Cabral) · Boletim Económico de "
+    "outubro de 2023, caixa 4"
+)
+
+# (rótulo, observado %, mecânico %, método)
+# O observado e o mecânico são os publicados; o ρ é derivado, não citado.
+REPERCUSSAO_ESTIMATIVAS = [
+    ("IHPC, diferença-nas-diferenças vs. Espanha", 4.0, 4.2,
+     "Regressão de event-study, Portugal como tratamento e Espanha como "
+     "controlo; rubricas com IVA anterior de 6 %; pré-tratamento set/2022 a "
+     "mar/2023. O contrafactual foi estatisticamente confirmado."),
+    ("IHPC, diferença-nas-diferenças vs. área do euro", 3.5, 4.2,
+     "Mesma especificação, com a área do euro como controlo."),
+    ("Preços online, cabaz abrangido", 6.0, 5.66,
+     "Preços diários fixados nas plataformas dos principais retalhistas "
+     "(BPLIM). Semana de 23-29.04 contra a semana anterior à medida. As "
+     "variações concentraram-se entre −5 % e −7 %."),
+    ("Preços online, óleos alimentares (eram 23 %)", 24.5, 18.70,
+     "Único produto do cabaz com taxa anterior de 23 % isolado na publicação. "
+     "Amostra de um: indicativo, não conclusivo."),
+]
+
+# Valor por defeito: a estimativa **mais conservadora das duas robustas** —
+# as duas de diferença-nas-diferenças, que têm contrafactual estatisticamente
+# validado. Escolhe-se 0,95 (Espanha) e não a média das quatro, porque as duas
+# de preços online medem uma janela de duas semanas e dão acima de 100 %.
+REPERCUSSAO_PADRAO = 0.95
+
+# Banda apresentada com os indicadores: da estimativa mais baixa (área do euro,
+# 83 %) à repercussão integral (100 %). Não se estende abaixo de 83 % porque
+# nenhuma estimativa portuguesa o sustenta, nem acima de 100 % pela ressalva 5.
+REPERCUSSAO_BANDA = (0.833, 1.00)
+
+# --------------------------------------------------------------------------
+# Distribuição do IVA zero por quintil de rendimento
+# --------------------------------------------------------------------------
+# A mesma publicação do BdP mede duas coisas que apontam em sentidos opostos, e
+# ambas são verdadeiras:
+#
+#   - o **alívio na inflação** foi maior nos agregados de menor rendimento,
+#     porque a alimentação pesa mais no seu cabaz;
+#   - a **afetação do custo orçamental** foi maior para os agregados de maior
+#     rendimento, porque gastam mais em valor absoluto.
+#
+# Uma ferramenta que só mostre a primeira dá uma leitura incompleta a quem
+# decide. O BdP é explícito: as famílias do quintil mais elevado «recebem mais
+# 20 % de recursos públicos do que as do quintil de menores rendimentos, não
+# contribuindo para uma política focada nos agregados vulneráveis».
+IVA_ZERO_QUINTIS_FONTE = (
+    "Banco de Portugal, WAPP de 22.11.2023, p. 9 · inflação por quintil: "
+    "Boletim Económico de outubro de 2022, caixa «Estimativas de inflação por "
+    "nível de rendimento e escalão etário» · afetação orçamental: simulações "
+    "EUROMOD estendidas a impostos indiretos, sobre EU-SILC e IDF"
+)
+
+# Taxa de variação em cadeia em maio de 2023, em pontos percentuais.
+# (quintil, IPC bens alimentares — rubricas afetadas, IPC bens alimentares, IPC total)
+IVA_ZERO_INFLACAO_QUINTIL = [
+    ("Total de famílias", -4.1, -2.6, -0.7),
+    ("Q1 (mais baixo)", -4.4, -2.9, -0.9),
+    ("Q2", -4.2, -2.8, -0.9),
+    ("Q3", -4.0, -2.6, -0.7),
+    ("Q4", -4.5, -2.8, -0.7),
+    ("Q5 (mais elevado)", -3.7, -2.3, -0.4),
+]
+
+# Fração do custo orçamental de cada medida de 2023 que chega ao quintil mais
+# pobre e ao mais rico. Serve para situar a redução do IVA face às alternativas
+# que o Estado tinha em cima da mesa no mesmo ano.
+# (medida, % para os 20 % mais pobres, % para os 20 % mais ricos)
+IVA_ZERO_AFETACAO_ORCAMENTAL = [
+    ("Redução do IVA", 19, 23),
+    ("Complemento extraordinário ao abono", 35, 1),
+    ("Apoio às rendas", 40, 1),
+    ("Apoio a famílias vulneráveis 2023", 71, 1),
+]
+
+# --------------------------------------------------------------------------
 # Agregados especiais do índice — permitem separar o que é choque conjuntural
 # do que é inflação estrutural, e situar a alimentação no conjunto dos preços.
 # --------------------------------------------------------------------------

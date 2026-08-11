@@ -1410,3 +1410,80 @@ def test_observatorio_sem_dados_devolve_vazio():
     from src.observatorio import variacoes
 
     assert variacoes(pd.DataFrame()).empty
+
+
+# ------------------------------------------- repercussao calibrada (BdP, 2023)
+def test_efeito_mecanico_reproduz_o_publicado_pelo_banco_de_portugal():
+    """
+    O BdP publica -18,7 % como efeito mecanico da isencao dos oleos alimentares,
+    que estavam a 23 % (WAPP de 22.11.2023, p. 5). Se a nossa aritmetica de
+    imposto nao reproduzir esse numero, a derivacao da repercussao nao vale nada.
+    """
+    from src.calculos import efeito_mecanico_pct
+
+    assert efeito_mecanico_pct(23, 0) == pytest.approx(-18.70, abs=0.005)
+    assert efeito_mecanico_pct(6, 0) == pytest.approx(-5.66, abs=0.005)
+    # E o sentido inverso: repor 6 % sobre um bem isento encarece 6 %.
+    assert efeito_mecanico_pct(0, 6) == pytest.approx(6.0)
+
+
+def test_repercussao_derivada_e_nao_citada():
+    """
+    Nenhum rho da tabela e citado do BdP: todos sao o quociente entre a variacao
+    observada e a mecanica, ambas publicadas. Este teste fixa essa derivacao.
+    """
+    from src.calculos import estimativas_repercussao
+
+    df = estimativas_repercussao()
+    assert len(df) == 4
+    for _, r in df.iterrows():
+        assert r["rho"] == pytest.approx(r["observado"] / r["mecanico"])
+    esperado = [4.0 / 4.2, 3.5 / 4.2, 6.0 / 5.66, 24.5 / 18.70]
+    assert list(df["rho"]) == pytest.approx(esperado)
+
+
+def test_repercussao_padrao_tem_suporte_numa_estimativa_portuguesa():
+    """
+    O valor por defeito nao pode voltar a ser um numero de trabalho sem fonte.
+    Tem de coincidir com uma das estimativas de diferenca-nas-diferencas, que
+    sao as que tem contrafactual estatisticamente validado.
+    """
+    from src.calculos import estimativas_repercussao, repercussao_banda
+
+    lo, central, hi = repercussao_banda()
+    did = [r["rho"] for _, r in estimativas_repercussao().iterrows()
+           if "diferenca" in r["estimativa"].lower()
+           or "diferença" in r["estimativa"].lower()]
+    assert len(did) == 2
+    assert central == pytest.approx(max(did), abs=0.005)
+    assert lo == pytest.approx(min(did), abs=0.005)
+    assert lo < central <= hi <= 1.0
+
+
+def test_a_repercussao_antiga_esta_fora_da_banda_com_suporte():
+    """
+    Os 40 % que vigoraram ate 12.08.2026 nao eram conservadores: nenhuma
+    estimativa portuguesa sobre a medida identica os sustenta. Guarda contra o
+    valor antigo regressar por descuido.
+    """
+    from src.calculos import repercussao_banda
+
+    lo, central, _ = repercussao_banda()
+    assert 0.40 < lo
+    assert central / 0.40 == pytest.approx(2.38, abs=0.01)
+
+
+def test_distribuicao_do_iva_zero_e_menos_focalizada_que_as_alternativas():
+    """
+    A conclusao que a aplicacao passa a mostrar: a reducao do IVA entrega mais
+    aos 20 % mais ricos do que aos 20 % mais pobres, e e a menos focalizada das
+    quatro medidas de 2023 avaliadas pelo BdP.
+    """
+    from src.config import IVA_ZERO_AFETACAO_ORCAMENTAL
+
+    por_medida = {m: (pobres, ricos)
+                  for m, pobres, ricos in IVA_ZERO_AFETACAO_ORCAMENTAL}
+    pobres, ricos = por_medida["Redução do IVA"]
+    assert ricos > pobres
+    outras = [p for m, p, _ in IVA_ZERO_AFETACAO_ORCAMENTAL if m != "Redução do IVA"]
+    assert all(p > pobres for p in outras)

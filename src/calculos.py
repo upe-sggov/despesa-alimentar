@@ -34,6 +34,7 @@ from .config import (
     AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
     IDF_ALIMENTAR_QUINTIL, IDF_CLASSES_QUINTIL, IDF_DESPESA_TOTAL,
     IDF_PESO_ALIMENTAR, IDF_QUINTIS,
+    REPERCUSSAO_BANDA, REPERCUSSAO_ESTIMATIVAS, REPERCUSSAO_PADRAO,
 )
 
 
@@ -1093,6 +1094,59 @@ def taxas_efetivas(comp: pd.DataFrame, indeterminado: str = "predefinida") -> di
         # método. O arredondamento pertence à apresentação, não ao cálculo.
         taxas[r["codigo"]] = contido / (1 - contido) * 100 if contido < 1 else 0.0
     return taxas
+
+
+def efeito_mecanico_pct(t0: float, t1: float) -> float:
+    """
+    Variação percentual do preço final com **repercussão integral**, ao passar da
+    taxa `t0` para a taxa `t1` (ambas em pontos percentuais).
+
+        (1 + t₁) / (1 + t₀) − 1
+
+    É a mesma definição que o Banco de Portugal usa para o «impacto mecânico»
+    (WAPP de 22.11.2023, p. 5), e serve para dois fins: derivar a repercussão a
+    partir dos valores publicados, e confirmar que a aritmética de imposto desta
+    aplicação coincide com a do BdP — para os óleos alimentares (23 % → 0 %) tem
+    de dar os −18,70 % que o BdP publica.
+    """
+    return ((1 + t1 / 100) / (1 + t0 / 100) - 1) * 100
+
+
+def estimativas_repercussao() -> pd.DataFrame:
+    """
+    A repercussão implícita em cada estimativa publicada pelo Banco de Portugal
+    sobre o «IVA zero» de 2023.
+
+    O BdP publica a variação **observada** e a variação **mecânica** (a que
+    haveria com repercussão integral). A repercussão é o quociente:
+
+        ρ = variação observada / variação mecânica
+
+    Nenhum dos ρ desta tabela é citado — todos são derivados aqui, dos dois
+    números publicados. A coluna `rho` é, portanto, um cálculo desta aplicação
+    sobre dados do BdP, e não uma estimativa do BdP.
+
+    Nota sobre a diluição: as rubricas do IHPC incluem bens não abrangidos pela
+    medida, o que atenua tanto o observado como o mecânico. Como atenua os dois
+    na mesma proporção, **o quociente sobrevive** — é a razão pela qual esta
+    derivação é legítima apesar da granularidade insuficiente que o BdP assinala.
+    """
+    linhas = []
+    for rot, obs, mec, nota in REPERCUSSAO_ESTIMATIVAS:
+        linhas.append({
+            "estimativa": rot,
+            "observado": obs,
+            "mecanico": mec,
+            "rho": obs / mec if mec else float("nan"),
+            "nota": nota,
+        })
+    return pd.DataFrame(linhas)
+
+
+def repercussao_banda() -> tuple[float, float, float]:
+    """`(mínimo, central, máximo)` da repercussão, tal como calibrada no config."""
+    lo, hi = REPERCUSSAO_BANDA
+    return float(lo), float(REPERCUSSAO_PADRAO), float(hi)
 
 
 def comparar_ponderadores(pesos_ihpc: dict[str, float],

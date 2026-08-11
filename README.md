@@ -566,7 +566,9 @@ efetivamente utilizada.
   a despesa nacional em despesa por agregado.
 - **Valor externo** — quando escolhido em alternativa à âncora oficial.
 - **Taxas de IVA** — predefinidas e editáveis. Ver limitação 4.
-- **Repercussão** — hipótese de trabalho. Ver limitação 5.
+- **Repercussão** — **calibrada**, não é hipótese de trabalho: 95 % por defeito,
+  derivada da avaliação do Banco de Portugal ao «IVA zero» de 2023. Continua
+  ajustável, e continua a ser o parâmetro decisivo. Ver limitação 7.
 
 ---
 
@@ -598,11 +600,49 @@ efeito_real = ρ · efeito_mec                 (o que chega ao consumidor)
 margem      = (1 − ρ) · efeito_mec           (o que fica no operador)
 ```
 
-**A repercussão é o parâmetro decisivo.** A avaliação internacional de reduções
-de IVA na alimentação e na restauração — nomeadamente as experiências francesa
-(2009) e sueca — é consistentemente cética quanto à transmissão integral para o
-preço. O valor por defeito é 40 %, que é um parâmetro de trabalho e não uma
-estimativa: convém sempre testar a sensibilidade do resultado movendo o cursor.
+**A repercussão é o parâmetro decisivo** — move o resultado 250 % entre 0 % e
+100 %, mais do que todas as outras incertezas somadas.
+
+Até 12.08.2026 o valor por defeito era **40 %**, declarado como parâmetro de
+trabalho e fundado nas experiências francesa (2009, restauração) e sueca. Nenhuma
+dessas avaliações é sobre Portugal nem sobre alimentação em retalho.
+
+Portugal correu esta experiência. A Lei n.º 17/2023, de 14 de abril, isentou de
+IVA 46 bens alimentares entre 18.04.2023 e 04.01.2024, e o **Banco de Portugal**
+mediu a repercussão por quatro vias independentes. Como publica o efeito
+**observado** e o efeito **mecânico** — a variação que haveria com transmissão
+integral —, a repercussão extrai-se por divisão:
+
+```
+ρ = variação observada / variação mecânica    com  mecânica = (1+t₁)/(1+t₀) − 1
+```
+
+| Estimativa | Observado | Mecânico | ρ implícito |
+|---|---|---|---|
+| IHPC, dif-nas-dif vs. Espanha | −4,0 pp | −4,2 % | **95,2 %** |
+| IHPC, dif-nas-dif vs. área do euro | −3,5 pp | −4,2 % | **83,3 %** |
+| Preços online, cabaz abrangido | −6,0 % | −5,66 % | **106,0 %** |
+| Preços online, óleos (eram 23 %) | −24,5 % | −18,70 % | **131,0 %** |
+
+Nenhum destes ρ é citado: todos são calculados a partir dos dois números
+publicados. A aritmética coincide com a do BdP — para os óleos, que estavam a
+23 %, a fórmula dá −18,70 %, exatamente o valor que o BdP publica. Está travado
+por teste.
+
+A diluição das rubricas do IHPC (que incluem bens não abrangidos) atenua o
+observado *e* o mecânico na mesma proporção, pelo que **o quociente sobrevive** —
+é o que legitima a derivação apesar da granularidade que o próprio BdP assinala.
+
+**O valor por defeito é 95 %**: a mais conservadora das duas estimativas com
+contrafactual estatisticamente validado. A banda apresentada vai de 83,3 % a
+100 %. Não se usa mais de 100 %, porque os valores acima refletem provavelmente
+concorrência e salivência política, não repercussão pura.
+
+**Ressalvas, que fazem parte da estimativa:** o BdP alerta para desvios-padrão
+elevados; a medida foi temporária, taxativa e muito mediática, com pressões de
+custo a montante já em queda; a janela avaliada é de quatro meses, sem evidência
+sobre erosão a prazo; e a evidência robusta é sobre cortes a partir de 6 %.
+Convém sempre testar a sensibilidade movendo o cursor.
 
 Nota que a simulação torna visível: **a repercussão decide sobretudo quem fica com o
 dinheiro** — o consumidor ou a margem do operador — e só marginalmente a receita
@@ -863,8 +903,15 @@ deve fazer-se acompanhar destas ressalvas:
 6. **A correspondência COICOP → taxa de IVA é aproximada.** O Código do IVA
    classifica por produto (Lista I), não por classe COICOP; uma mesma classe pode
    conter produtos a taxas diferentes.
-7. **A repercussão é uma hipótese.** Qualquer resultado do simulador é condicional
-   a esse parâmetro e deve ser apresentado como intervalo, nunca como valor único.
+7. **A repercussão está calibrada, mas continua a ser o parâmetro decisivo.** Desde
+   12.08.2026 parte de **95 %**, derivado da avaliação do Banco de Portugal ao «IVA
+   zero» de 2023 — a medida idêntica, no mesmo país e no retalho alimentar. Antes
+   partia de 40 %, um valor de trabalho fundado em França 2009 e na Suécia, que
+   fazia a aplicação subestimar a poupança por um fator de **2,4**. Mesmo calibrado,
+   é o número que mais move o resultado: qualquer valor é condicional a ele e deve
+   ser apresentado como intervalo, nunca como valor único. A estimativa vem de uma
+   medida **temporária e mediática**, avaliada ao longo de quatro meses — uma
+   alteração permanente e discreta pode repercutir-se menos.
 8. **Preço de prateleira não é preço pago — e o critério é preciso.** O Documento
    Metodológico do IPC (INE, 2023) determina que os descontos entram no índice
    **«desde que de aplicação generalizada aos consumidores»** (citação literal,
