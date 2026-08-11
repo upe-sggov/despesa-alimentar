@@ -618,6 +618,42 @@ def test_os_dois_indices_datam_o_dezembro_base_pelo_mesmo_ponderador():
     assert errado > r.loc[2022, "laspeyres_fixo"] + 40
 
 
+def test_ano_base_do_vies_e_fixo_e_nao_desliza_com_a_janela():
+    """Era o primeiro ano da janela pedida ao Eurostat, que e `ano - 6`: a 1 de
+    janeiro o ano-base deslizava sozinho e a metrica «vies acumulado desde
+    dez/20» passava a medir outro periodo com o mesmo nome (auditoria E14)."""
+    from src.calculos import indices_comparados
+    from src.config import ANO_BASE_VIES
+
+    anos = [ANO_BASE_VIES - 1, ANO_BASE_VIES, ANO_BASE_VIES + 1, ANO_BASE_VIES + 2]
+    idx = _serie_classes({a: {c: 100.0 + 10 * i for c in CODIGOS}
+                          for i, a in enumerate(anos)})
+    pesos = _serie_pesos({a: {c: 100.0 for c in CODIGOS} for a in anos + [anos[-1] + 1]})
+
+    r = indices_comparados(idx, pesos)
+    # A janela comeca um ano antes, mas a base tem de ser a fixada.
+    assert r.attrs["ano_base"] == ANO_BASE_VIES
+    assert int(r["ano"].iloc[0]) == ANO_BASE_VIES
+    assert r["laspeyres_fixo"].iloc[0] == pytest.approx(100.0)
+    # E o ano anterior fica de fora, senao a base teria deslizado.
+    assert (ANO_BASE_VIES - 1) not in list(r["ano"])
+
+
+def test_ano_base_indisponivel_recua_e_declara():
+    from src.calculos import indices_comparados
+    from src.config import ANO_BASE_VIES
+
+    anos = [ANO_BASE_VIES + 3, ANO_BASE_VIES + 4, ANO_BASE_VIES + 5]
+    idx = _serie_classes({a: {c: 100.0 + 10 * i for c in CODIGOS}
+                          for i, a in enumerate(anos)})
+    pesos = _serie_pesos({a: {c: 100.0 for c in CODIGOS} for a in anos + [anos[-1] + 1]})
+
+    r = indices_comparados(idx, pesos)
+    assert r.attrs["ano_base"] == anos[0]                # recuou
+    assert r.attrs["ano_base_pedido"] == ANO_BASE_VIES   # e diz qual pedia
+    assert r.attrs["ano_base"] != r.attrs["ano_base_pedido"]
+
+
 def test_indices_comparados_sem_dados_devolve_vazio():
     from src.calculos import indices_comparados
 

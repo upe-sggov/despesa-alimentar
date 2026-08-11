@@ -38,6 +38,7 @@ from src.config import (AGREGADOS, AGREGADOS_CENSOS, AGREGADOS_FONTE,
                         LIMITE_ANOS_SOFI, LIMITE_DIAS_OBSERVATORIO,
                         LIMITES_FRESCURA,
                         SOFI_CUSTO, SOFI_FONTE, SOFI_INCAPACIDADE, SOFI_MILHOES,
+                        ANO_BASE_VIES,
                         AZUL, CINZENTO, CLASSES, CLASSES_FONTE, CODIGOS,
                         COICOP_ALIMENTAR, DOURADO,
                         PAISES, PAISES_POR_DEFEITO, POR_CODIGO, RODAPE,
@@ -123,7 +124,11 @@ st.markdown(f"""
 def carregar_dados(anos_historico: int = 6):
     """Obtém tudo o que a aplicação precisa. Em cache durante 6 horas."""
     ano = date.today().year
-    desde_indice = f"{ano - anos_historico}-01"
+    # A janela do índice tem de cobrir o **ano-base do painel de viés**, que é
+    # fixo em `config.py`. Antes era só `ano − anos_historico`, o que fazia o
+    # ano-base deslizar a cada 1 de janeiro (auditoria de 11.08.2026, E14).
+    primeiro_ano = min(ano - anos_historico, ANO_BASE_VIES)
+    desde_indice = f"{primeiro_ano}-01"
     desde_variacao = f"{ano - 3}-01"
 
     # Janela generosa para as fontes anuais e semestrais. Custa pouco em volume
@@ -2060,6 +2065,17 @@ with aba2:
             )
 
             _ano_base = int(_cmp_idx["ano"].iloc[0])
+            # O ano-base é fixo em `config.py`. Se não estiver disponível nos
+            # dados, a série recua — e isso tem de ser dito, porque o valor do
+            # viés depende do ano-base (auditoria de 11.08.2026, E14).
+            if _cmp_idx.attrs.get("ano_base_pedido") != _ano_base:
+                st.warning(
+                    f"**Ano-base substituído.** O painel está fixado em dezembro de "
+                    f"**{_cmp_idx.attrs.get('ano_base_pedido')}**, mas essa observação não está "
+                    f"disponível nesta sessão. Os índices foram encadeados a partir de dezembro "
+                    f"de **{_ano_base}**, pelo que o viés acumulado **não é comparável** com o "
+                    "que consta de versões anteriores deste documento."
+                )
             _ult = _cmp_idx.iloc[-1]
             _ano_fim = int(_ult["ano"])
 
@@ -2666,6 +2682,19 @@ with aba3:
             + "composto dessa maneira. **Estes dois valores não mudam com a composição** — "
             + "só com a âncora e com o cenário de taxas."
         )
+        if base_chave == "contas":
+            # Cada passo está justificado — B2 para o denominador, A3 para o
+            # multiplicador — mas o produto não é nenhum dos dois anos. Tem de
+            # estar escrito ao lado do número (auditoria de 11.08.2026, E15).
+            st.caption(
+                f"⚠️ **O que este número é, exatamente.** Na base Contas Nacionais ele combina "
+                f"três momentos: o **consumo real de {base_ancora['ano_base']}**, a **preços de "
+                f"{_mes_txt}**, sobre a **população de agregados de "
+                f"{dados.get('agregados_ano') or '—'}**. Cada passo está justificado — o "
+                "denominador da âncora tem de ser contemporâneo da despesa, e o que se extrapola "
+                "é o efeito de uma medida sobre o país de hoje —, mas o produto **não é uma "
+                "medição de nenhum ano**. Leia-o como ordem de grandeza, não como estimativa."
+            )
         g1, g2 = st.columns(2)
         g1.metric("Poupança agregada anual",
                   milhoes(res_nac["poupanca_agregada_milhoes"]))

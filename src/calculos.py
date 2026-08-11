@@ -29,7 +29,7 @@ import numpy as np
 import pandas as pd
 
 from .config import (
-    CLASSES, POR_CODIGO,
+    ANO_BASE_VIES, CLASSES, POR_CODIGO,
     ESCALAS_TESTE_COMPOSICAO, ESCALAS_TESTE_RACIO,
     AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
     IDF_ALIMENTAR_QUINTIL, IDF_CLASSES_QUINTIL, IDF_DESPESA_TOTAL,
@@ -798,11 +798,19 @@ def _dezembros(indice_classes: pd.DataFrame) -> pd.DataFrame:
 
 
 def indices_comparados(indice_classes: pd.DataFrame,
-                       pesos_por_ano: pd.DataFrame) -> pd.DataFrame:
+                       pesos_por_ano: pd.DataFrame,
+                       ano_base: int | None = None) -> pd.DataFrame:
     """
-    Uma linha por dezembro, com os três índices em base 100 no primeiro ano
-    comum às duas fontes. Devolve DataFrame vazio se não houver anos que
-    cheguem — são precisos pelo menos dois elos para haver o que comparar.
+    Uma linha por dezembro, com os três índices em base 100 no ano-base.
+    Devolve DataFrame vazio se não houver anos que cheguem — são precisos pelo
+    menos dois elos para haver o que comparar.
+
+    `ano_base` é o dezembro a partir do qual os índices são encadeados. Por
+    omissão usa `ANO_BASE_VIES`, fixado em `config.py`; se esse ano não estiver
+    disponível nos dados, recorre ao primeiro que esteja. Era o primeiro ano da
+    janela pedida ao Eurostat, que desliza a cada 1 de janeiro — e com ele
+    deslizava o valor publicado do viés, sem que ninguém o decidisse
+    (auditoria de 11.08.2026, E14).
     """
     dez = _dezembros(indice_classes)
     if dez.empty or pesos_por_ano.empty:
@@ -845,7 +853,13 @@ def indices_comparados(indice_classes: pd.DataFrame,
     if len(anos) < 2:
         return pd.DataFrame()
 
-    base = anos[0]
+    # Ano-base fixo, e não o primeiro da janela pedida. Se o ano fixado não
+    # estiver nos dados, recorre-se ao primeiro disponível e declara-se.
+    alvo = ANO_BASE_VIES if ano_base is None else int(ano_base)
+    base = alvo if alvo in anos else anos[0]
+    anos = [a for a in anos if a >= base]
+    if len(anos) < 2:
+        return pd.DataFrame()
     # O ponderador que representa **dezembro de `base`** é o do ano `base + 1`,
     # pela mesma definição que o Törnqvist já respeitava algumas linhas abaixo:
     # o Documento Metodológico do IPC fixa que a estrutura de ponderação se
@@ -886,6 +900,8 @@ def indices_comparados(indice_classes: pd.DataFrame,
     # vez de o silenciar.
     df.attrs["classes_usadas"] = completas
     df.attrs["classes_excluidas"] = excluidas
+    df.attrs["ano_base"] = base
+    df.attrs["ano_base_pedido"] = alvo
     return df
 
 

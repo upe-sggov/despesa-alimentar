@@ -231,6 +231,24 @@ IVA_MAPA = {
 COICOP_ALIMENTAR = "CP011"
 
 # --------------------------------------------------------------------------
+# Ano-base do painel de viés de substituição
+# --------------------------------------------------------------------------
+# O painel «cabaz fixo contra Törnqvist» encadeia os dois índices a partir de um
+# dezembro. Esse dezembro era o primeiro da janela pedida ao Eurostat — que é
+# `ano corrente − 6`. A 1 de janeiro deslizava sozinho: a métrica «viés
+# acumulado desde dez/20» passaria a medir outro período com o mesmo nome, sem
+# que ninguém o decidisse (auditoria de 11.08.2026, E14).
+#
+# Uma série que se compara entre versões do documento tem de ter base estável.
+# Fixa-se aqui, e a janela de pedido é dimensionada para a cobrir.
+#
+# 2019 é o primeiro dezembro com série completa das nove classes na ECOICOP
+# versão 2 (`prc_hicp_minr`, unidade I25, verificado a 11.08.2026: as classes
+# começam em 2019-01). Alterar este ano muda o valor publicado do viés — é uma
+# decisão, não um detalhe de implementação.
+ANO_BASE_VIES = 2019
+
+# --------------------------------------------------------------------------
 # Agregados especiais do índice — permitem separar o que é choque conjuntural
 # do que é inflação estrutural, e situar a alimentação no conjunto dos preços.
 # --------------------------------------------------------------------------

@@ -924,10 +924,15 @@ A1–D4 da primeira.
 
 | | N.º | Efeito |
 |---|---|---|
-| 🔴 Crítico | 2 | Números desatualizados e nomenclatura errada, sem qualquer sinal ao utilizador |
+| 🔴 Crítico | 3 | Números desatualizados e nomenclatura errada, sem qualquer sinal ao utilizador |
 | 🟠 Importante | 5 | Erro de método medido, ou rastreabilidade que não cumpre o que promete |
 | 🟡 A corrigir | 7 | Rigor, robustez, reincidências de itens já fechados |
 | ⚪ A declarar | 1 | Pressuposto legítimo que deve estar explícito |
+
+> ✅ **Todos aplicados a 11.08.2026.** O terceiro crítico — **E16** — não constava do diagnóstico
+> inicial: foi encontrado durante a aplicação, pela própria verificação criada no E3. O registo de
+> cada correção está no fim do documento, e o balanço em
+> **[Encerramento da segunda auditoria](#encerramento-da-segunda-auditoria--11082026)**.
 
 ---
 
@@ -1440,15 +1445,19 @@ uma fonte em falta.
 
 | # | Item | Gravidade | Porquê nesta posição |
 |---|---|---|---|
-| 1 | **E1 + E2** migração ECOICOP ver.2 | 🔴 | Tudo o resto está a jusante. **Não separar:** conjuntos novos com rótulos velhos é pior do que o estado atual, porque parece correto |
-| 2 | **E3** frescura das séries com API | 🟠 | É o que impede a repetição do E1. Fazer **logo a seguir**, enquanto a causa está à vista |
-| 3 | **E5 + E7** rastreabilidade | 🟠 | Custo quase nulo, e são a promessa central da ferramenta. O E5 tem de ser refeito depois do E1, porque os endereços mudam |
-| 4 | **E4** ponderador-base do Laspeyres | 🟠 | Uma linha; corrige 22 % de um número publicado |
-| 5 | **E6** cabeçalho dos CSV | 🟠 | Ficheiros que circulam sozinhos, com atribuição de fonte errada |
-| 6 | **E10 + E11** cobertura declarada | 🟡 | Mesma correção nos dois sítios; fecha o modo de falha que o C3 só fechou num |
-| 7 | **E8, E9, E12, E13** | 🟡 | Rigor de apresentação, sem dependências |
-| 8 | **E14** ano-base estável | 🟡 | Só se torna visível em janeiro; melhor resolver antes de o esquecer |
-| 9 | **E15** declaração do híbrido | ⚪ | Uma frase |
+| 1 | ✅ **E1 + E2** migração ECOICOP ver.2 | 🔴 | Tudo o resto está a jusante. **Não separar:** conjuntos novos com rótulos velhos é pior do que o estado atual, porque parece correto |
+| 2 | ✅ **E3** frescura das séries com API | 🟠 | É o que impede a repetição do E1. Fazer **logo a seguir**, enquanto a causa está à vista — e foi aqui que apareceu o **E16** |
+| 3 | ✅ **E5 + E7** rastreabilidade | 🟠 | Custo quase nulo, e são a promessa central da ferramenta. O E5 tem de ser refeito depois do E1, porque os endereços mudam |
+| 4 | ✅ **E4** ponderador-base do Laspeyres | 🟠 | Uma linha; corrige 29 % de um número publicado |
+| 5 | ✅ **E6** cabeçalho dos CSV | 🟠 | Ficheiros que circulam sozinhos, com atribuição de fonte errada |
+| 6 | ✅ **E10 + E11** cobertura declarada | 🟡 | Mesma correção nos dois sítios; fecha o modo de falha que o C3 só fechou num |
+| 7 | ✅ **E8, E9, E12, E13** | 🟡 | Rigor de apresentação, sem dependências |
+| 8 | ✅ **E14** ano-base estável | 🟡 | Só se torna visível em janeiro; melhor resolver antes de o esquecer |
+| 9 | ✅ **E15** declaração do híbrido | ⚪ | Uma frase |
+
+**A ordem aguentou-se, com uma correção.** O E7 acabou por ser feito no passo 2 e não no 3: a
+migração das Contas Nacionais obrigava a tocar exatamente no código da lista de candidatos. E o
+valor do E4, estimado em 22 %, ficou em **29 %** depois de recalculado sobre os dados migrados.
 
 **Recomendação sobre o uso entretanto.** Enquanto o E1 não estiver aplicado, os números da
 aplicação são de **dezembro de 2025** e não devem ser citados como situação corrente. As
@@ -1796,6 +1805,87 @@ todos os separadores seguintes — a cura seria pior do que a doença.
 
 **Testes de regressão — quatro novos**, incluindo o caso do `ranking` vazio e a verificação de que
 os pontos de rutura calculados coincidem com os que estavam fixos.
+
+### E14 · Ano-base estável do painel de viés — 11.08.2026
+
+**O que foi feito.** `ANO_BASE_VIES = 2019` em `config.py`, com a razão escrita ao lado: é o
+primeiro dezembro com série completa das nove classes na ECOICOP versão 2. `indices_comparados()`
+passou a aceitar `ano_base`, a usar a constante por omissão, e a **descartar os anos anteriores**
+— antes o ano-base era simplesmente o primeiro da janela pedida, que é `ano corrente − 6` e
+deslizava a cada 1 de janeiro. A janela de pedido passou a ser `min(ano − 6, ANO_BASE_VIES)`, para
+garantir que cobre a base.
+
+Se o ano fixado não estiver disponível, a série recua para o primeiro que esteja **e a interface
+diz que recuou**, avisando que o viés deixa de ser comparável com versões anteriores do documento.
+
+**Efeito.** O painel passa a encadear a partir de dezembro de 2019, com as nove classes, e o viés
+acumulado é de **0,325 pontos em seis anos**. Deixa de haver um número publicado cujo período de
+referência muda sozinho na passagem de ano.
+
+**Testes de regressão — dois.** Um exige que o ano anterior ao fixado **fique de fora** — sem isso
+a base teria deslizado; o outro cobre o recuo e verifica que o ano pedido e o usado ficam ambos
+registados, para a interface os poder confrontar.
+
+---
+
+### E15 · O híbrido da extrapolação nacional, declarado — 11.08.2026
+
+**O que foi feito.** Uma nota sob os dois cartões nacionais, apenas na base Contas Nacionais, a
+dizer o que o número é: o **consumo real de 2024**, a **preços de junho de 2026**, sobre a
+**população de agregados de 2025**. Cada passo está justificado — o denominador da âncora tem de
+ser contemporâneo da despesa (B2), e o que se extrapola é o efeito de uma medida sobre o país de
+hoje (A3) —, mas o produto não é uma medição de nenhum desses anos, e um leitor não infere isso
+de «poupança agregada anual».
+
+---
+
+## Encerramento da segunda auditoria — 11.08.2026
+
+**Os dezasseis itens estão fechados.** Quinze do diagnóstico inicial (E1 … E15) e um encontrado
+durante a aplicação (**E16**), pela verificação de frescura criada no E3.
+
+| Passo | Itens | Efeito principal |
+|---|---|---|
+| 1 | ✅ **E1 + E2** | Migração para a ECOICOP v2. Sete meses de dados repostos |
+| 2 | ✅ **E3 + E16** (e **E7**) | Vigilância de frescura — e a segunda série arquivada que ela apanhou |
+| 3 | ✅ **E5** | Endereços de verificação que respondem todos |
+| 4 | ✅ **E4** | 29 % do viés publicado era artefacto de datação |
+| 5 | ✅ **E6** | Cada CSV declara a fonte que é a sua |
+| 6 | ✅ **E10 + E11** | Cobertura declarada em vez de silenciosa |
+| 7 | ✅ **E8, E9, E12, E13** | Rigor de apresentação |
+| 8 | ✅ **E14** | Ano-base que deixa de deslizar |
+| 9 | ✅ **E15** | Declaração do híbrido |
+
+**O que mudou no que a aplicação mostra:**
+
+| | Antes | Depois |
+|---|---|---|
+| Último mês | dez/2025 | **jun/2026** |
+| Ponderadores | 2025 (ECOICOP v1) | **2026 (ECOICOP v2)** |
+| Âncora IDF | 276,06 €/mês | **281,06 €/mês** |
+| Âncora Contas Nacionais | 650,25 €/mês (base 2022) | **652,22 €/mês (base 2024)** |
+| Coeficiente de Engel | 12,0 % a 16,4 % | **12,0 % a 17,1 %** |
+| Viés de substituição | 0,590 pontos (base móvel) | **0,325 pontos (base fixa em 2019)** |
+| Nomenclatura | ECOICOP v1, rótulos desatualizados | **COICOP 2018, designações do INE** |
+
+**A bateria passou de 46 para 69 testes.** Os vinte e três novos travam cada um dos modos de falha
+encontrados, e vários verificam também que **a via errada diverge** — sem isso passariam com a
+correção revertida.
+
+**Três coisas que aprendi e que ficam inscritas no código:**
+
+1. **Uma série que responde não é uma série que avança.** Foi o erro de fundo do E1 e do E16, e é
+   agora uma verificação automática.
+2. **Quem precisa de uma dimensão declara-a; a ausência é erro.** A guarda que existia só para o
+   `ilc_mdes03` passou a ser a regra da camada de acesso, e foi ela que tornou a migração segura.
+3. **Uma lista de candidatos esconde o que foi usado.** Valia para as categorias das PPP (B3), para
+   o código do total (E7) e para os endereços de verificação (E5) — em todos os casos a correção é
+   a mesma: escolher um, verificá-lo, e nomeá-lo na interface.
+
+**O que fica por fazer, e é de fundo:** confrontar as Listas I e II do Código do IVA com as
+**subclasses de cinco dígitos** da COICOP 2018, para saber quanto de cada classe segue taxa
+diferente da predefinida. O `IVA_MAPA` diz hoje *o quê*; não diz *quanto*. Exige a despesa aberta
+ao nível da subclasse, que o Eurostat publica — é trabalho por fazer, não fonte em falta.
 
 ---
 
