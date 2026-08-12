@@ -191,6 +191,85 @@ def _via_stats(dataset: str, filtros: dict, extra: str | None = None,
 
 
 # --------------------------------------------------------------------------
+# Estrutura verificada de cada conjunto — a guarda que fecha o K3 e o K4
+# --------------------------------------------------------------------------
+# Três erros da mesma família sobreviveram a três auditorias, e nenhum deu
+# sinal de vida porque a via de recurso os tapava:
+#
+#   K3  a chave SDMX tinha um segmento a mais  -> HTTP 400 em todas as sessões
+#   K4  o filtro da via de recurso usava nomes de dimensão que já não existem
+#   K10 uma lista de candidatos que não podia discriminar entre si
+#
+# A causa comum é a chave SDMX ser **posicional** e o filtro da via Statistics
+# ser **nominal**: os dois podem divergir da estrutura real, e um do outro, sem
+# que nada o assinale. A COICOP 2018 renomeou dimensões em três conjuntos
+# distintos — `coicop`→`coicop18` no IHPC (E1), o mesmo nas Contas Nacionais
+# (E16), `ppp_cat`→`ppp_cat18` nas PPP (K4) — e de cada vez só se descobriu por
+# acidente.
+#
+# Passa a haver uma tabela da estrutura **verificada contra a API**, e o `obter`
+# recusa-se a fazer um pedido que não bata certo com ela. É a mesma doutrina do
+# E1, aplicada uma camada acima: quem pede declara a estrutura, e a divergência
+# é erro — não silêncio salvo por uma via alternativa.
+#
+# Verificado contra a API a 12.08.2026. A ordem é a da própria chave SDMX.
+DIMENSOES = {
+    "prc_hicp_iw":    ("freq", "coicop18", "statinfo", "geo"),
+    "prc_hicp_minr":  ("freq", "unit", "coicop18", "geo"),
+    "nama_10_cp18":   ("freq", "unit", "coicop18", "geo"),
+    "nama_10_a10":    ("freq", "unit", "nace_r2", "na_item", "geo"),
+    "nama_10_a10_e":  ("freq", "unit", "nace_r2", "na_item", "geo"),
+    "ilc_lvph01":     ("freq", "unit", "geo"),
+    "ilc_di03":       ("freq", "age", "sex", "statinfo", "unit", "geo"),
+    "ilc_mdes03":     ("freq", "hhcomp", "rskpovth", "unit", "geo"),
+    "lfst_hhnhtych":  ("freq", "agechild", "n_child", "phhcomp", "unit", "geo"),
+    "prc_ppp_ind_1":  ("freq", "indic_ppp", "ppp_cat18", "geo"),
+    "earn_mw_cur":    ("freq", "currency", "geo"),
+}
+DIMENSOES_VERIFICADAS_EM = "2026-08-12"
+
+# Parâmetros que não são dimensões e por isso não entram na verificação.
+_NAO_DIMENSOES = {"sinceTimePeriod", "untilTimePeriod", "lastTimePeriod",
+                  "format", "lang"}
+
+
+def _verificar_estrutura(dataset: str, chave: str, filtros: dict) -> None:
+    """
+    Recusa um pedido cuja chave ou cujos filtros não batam certo com a estrutura
+    verificada do conjunto. **Melhor falhar do que ser salvo por acaso.**
+    """
+    if dataset not in DIMENSOES:
+        raise ErroEurostat(
+            f"{dataset}: conjunto sem estrutura declarada em DIMENSOES. "
+            "Verifique as dimensões contra a API e registe-as — sem isso, uma "
+            "chave errada volta a ser salva em silêncio pela via de recurso.")
+
+    dims = DIMENSOES[dataset]
+    segmentos = chave.split(".")
+    if len(segmentos) != len(dims):
+        raise ErroEurostat(
+            f"{dataset}: a chave «{chave}» tem {len(segmentos)} segmento(s) e o "
+            f"conjunto tem {len(dims)} dimensões ({'.'.join(dims)}). "
+            "A chave SDMX é posicional: o Eurostat devolveria "
+            "INVALID_QUERY_NB_FILTERS.")
+
+    nomes = set(filtros) - _NAO_DIMENSOES
+    desconhecidos = sorted(nomes - set(dims))
+    if desconhecidos:
+        raise ErroEurostat(
+            f"{dataset}: filtro(s) {desconhecidos} não são dimensões deste "
+            f"conjunto ({'.'.join(dims)}). A via de recurso devolveria "
+            "INVALID_QUERY_DIMENSION.")
+
+    em_falta = sorted(set(dims) - nomes)
+    if em_falta:
+        raise ErroEurostat(
+            f"{dataset}: filtro(s) {em_falta} em falta. A via de recurso é "
+            "nominal: uma dimensão não filtrada devolve todas as suas "
+            "categorias empilhadas, e a aplicação escolheria uma ao acaso.")
+
+
+# --------------------------------------------------------------------------
 # Interface pública
 # --------------------------------------------------------------------------
 def obter(dataset: str, chave: str, filtros: dict,
@@ -208,7 +287,13 @@ def obter(dataset: str, chave: str, filtros: dict,
     `dim_coicop` é o nome que a dimensão de classificação tem **neste conjunto**:
     `coicop` nas Contas Nacionais, `coicop18` na ECOICOP versão 2. Quem precisa
     dela tem de a declarar; a ausência é erro, não silêncio.
+
+    Antes de qualquer pedido, a chave e os filtros são confrontados com a
+    estrutura verificada do conjunto (`DIMENSOES`). Um pedido malformado falha
+    **aqui**, e não silenciosamente na via de recurso.
     """
+    _verificar_estrutura(dataset, chave, filtros)
+
     erros = []
     try:
         df, url = _via_sdmx(dataset, chave, inicio, extra, dim_coicop)
@@ -502,12 +587,21 @@ def nivel_precos(geos, categoria: str, desde_ano: int) -> tuple[pd.DataFrame, st
     for apresentado como «nível de preços dos alimentos». O conjunto tem 64
     categorias, quase todas não alimentares, e nada na resposta assinala a
     diferença — o valor devolvido tem sempre o mesmo aspeto.
+
+    Dimensões: ``freq.indic_ppp.ppp_cat18.geo``.
+
+    **Os nomes das dimensões mudaram com a COICOP 2018**, tal como no IHPC
+    (E1) e nas Contas Nacionais (E16): `na_item` passou a `indic_ppp` e
+    `ppp_cat` a `ppp_cat18`. A chave SDMX é posicional e por isso continuou a
+    funcionar; os filtros da via de recurso são nominais e não. A via
+    alternativa devolvia `INVALID_QUERY_DIMENSION` e esta ligação ficou, sem
+    ninguém dar por isso, com **um só caminho** (auditoria de 12.08.2026, K4).
     """
     geos = list(geos)
     return obter(
         "prc_ppp_ind_1",
         f"A.PLI_EU27_2020.{categoria}.{'+'.join(geos)}",
-        {"freq": "A", "na_item": "PLI_EU27_2020", "ppp_cat": categoria,
+        {"freq": "A", "indic_ppp": "PLI_EU27_2020", "ppp_cat18": categoria,
          "geo": geos, "sinceTimePeriod": str(desde_ano)},
         inicio=str(desde_ano),
     )
@@ -556,6 +650,12 @@ def despesa_alimentar_paises(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     )
 
 
+# Agregados europeus que o `earn_mw_cur` não tem — e não por lacuna: o salário
+# mínimo é fixado por cada Estado-Membro e não existe valor europeu. Um geo
+# inexistente não é ignorado pelo Eurostat: invalida o **pedido inteiro**.
+AGREGADOS_SEM_SALARIO_MINIMO = {"EU27_2020", "EU28", "EA19", "EA20", "EA"}
+
+
 def salario_minimo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     """
     Salário mínimo nacional mensal, em euros (semestral).
@@ -581,8 +681,19 @@ def salario_minimo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     candidatos esconde o que foi usado» —, já corrigido nas categorias das PPP
     (B3), no código do total (E7) e nos endereços de verificação (E5), e que
     aqui tinha sobrevivido (auditoria de 12.08.2026, K3 e K10).
+
+    **Não há salário mínimo europeu.** O `earn_mw_cur` só tem países; não tem
+    `EU27_2020`, e não é lacuna — é o conceito que não existe. Pedi-lo devolve
+    `INVALID_QUERY_DIMENSION_VALUE` e **invalida o pedido inteiro**, incluindo
+    os onze países que existem. Era a segunda razão para esta ligação nunca
+    chegar à via preferida, encontrada ao aplicar a correção do K3: a chave já
+    estava certa e continuava a cair na via de recurso.
     """
-    geos = list(geos)
+    geos = [g for g in geos if g not in AGREGADOS_SEM_SALARIO_MINIMO]
+    if not geos:
+        raise ErroEurostat(
+            "earn_mw_cur — nenhum dos países pedidos tem salário mínimo "
+            "nacional publicado (os agregados europeus não têm).")
     return obter(
         "earn_mw_cur",
         f"S.EUR.{'+'.join(geos)}",

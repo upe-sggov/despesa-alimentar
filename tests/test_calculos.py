@@ -1267,7 +1267,11 @@ def test_tentativa_falhada_nao_entra_na_lista_de_verificacao():
     try:
         eurostat._via_sdmx, eurostat._via_stats = _sdmx_falha, _stats_ok
         eurostat.ENDERECOS.clear()
-        eurostat.obter("conjunto_x", "CHAVE", {"geo": "PT"})
+        # Conjunto real, com chave e filtros validos: desde a guarda estrutural
+        # do K4, um pedido malformado falha antes de chegar as vias, e este
+        # teste e sobre o registo do endereco, nao sobre a estrutura.
+        eurostat.obter("ilc_lvph01", "A.AVG.PT",
+                       {"freq": "A", "unit": "AVG", "geo": "PT"})
         registados = list(eurostat.ENDERECOS)
     finally:
         eurostat._via_sdmx, eurostat._via_stats = originais[0], originais[1]
@@ -1275,7 +1279,7 @@ def test_tentativa_falhada_nao_entra_na_lista_de_verificacao():
 
     assert len(registados) == 1
     conjunto, url, via = registados[0]
-    assert conjunto == "conjunto_x"
+    assert conjunto == "ilc_lvph01"
     assert via == "API Statistics"          # a via que produziu o numero
     assert url == "https://exemplo/stats?x=1"
     assert "sdmx" not in url.lower()        # a tentativa falhada nao entra
@@ -1910,14 +1914,6 @@ def _pedido(funcao, *args, **kwargs):
     return apanhado["dataset"], apanhado["chave"], apanhado["filtros"]
 
 
-# Estrutura real de cada conjunto, verificada contra a API a 12.08.2026.
-# A chave SDMX e posicional: um segmento a mais ou a menos da HTTP 400.
-DIMENSOES_VERIFICADAS = {
-    "ilc_lvph01": ("freq", "unit", "geo"),
-    "earn_mw_cur": ("freq", "currency", "geo"),
-}
-
-
 def test_chave_da_dimensao_do_agregado_tem_os_filtros_certos():
     """
     `A.AVG.TOTAL.PT` tinha um segmento a mais e devolvia HTTP 400 em todas as
@@ -1928,11 +1924,9 @@ def test_chave_da_dimensao_do_agregado_tem_os_filtros_certos():
     ds, chave, filtros = _pedido(eurostat.dimensao_agregado, 2018)
     assert ds == "ilc_lvph01"
     assert chave == "A.AVG.PT"
-    assert len(chave.split(".")) == len(DIMENSOES_VERIFICADAS[ds])
     # A via de recurso tem de declarar todas as dimensoes: sem `unit`, o dia em
     # que o conjunto tiver duas unidades devolve duas series empilhadas.
-    for dim in DIMENSOES_VERIFICADAS[ds]:
-        assert dim in filtros, f"filtro «{dim}» em falta em {ds}"
+    assert "unit" in filtros
 
 
 def test_chave_do_salario_minimo_tem_os_filtros_certos():
@@ -1941,11 +1935,27 @@ def test_chave_do_salario_minimo_tem_os_filtros_certos():
     ds, chave, filtros = _pedido(eurostat.salario_minimo, ["PT", "ES"], 2018)
     assert ds == "earn_mw_cur"
     assert chave == "S.EUR.PT+ES"
-    assert len(chave.split(".")) == len(DIMENSOES_VERIFICADAS[ds])
-    for dim in DIMENSOES_VERIFICADAS[ds]:
-        assert dim in filtros, f"filtro «{dim}» em falta em {ds}"
+    assert "freq" in filtros
     # A frequencia e `S`, nao `S1` — era o outro erro das tres candidatas.
     assert chave.startswith("S.")
+
+
+def test_salario_minimo_nao_pede_agregados_europeus():
+    """
+    Nao ha salario minimo europeu, e um geo inexistente **invalida o pedido
+    inteiro** — nao e ignorado. Era a segunda razao para esta ligacao nunca
+    chegar a via preferida, encontrada ao aplicar o K3.
+    """
+    from src import eurostat
+
+    _ds, chave, filtros = _pedido(
+        eurostat.salario_minimo, ["PT", "EU27_2020", "ES"], 2018)
+    assert "EU27_2020" not in chave
+    assert "EU27_2020" not in filtros["geo"]
+    assert chave == "S.EUR.PT+ES"
+    # E se so vierem agregados, e erro explicito e nao um pedido vazio.
+    with pytest.raises(eurostat.ErroEurostat):
+        eurostat.salario_minimo(["EU27_2020"], 2018)
 
 
 def test_salario_minimo_nao_e_uma_lista_de_candidatos():
@@ -1963,3 +1973,80 @@ def test_salario_minimo_nao_e_uma_lista_de_candidatos():
     corpo = fonte[i:fonte.index("\ndef ", i + 10)]
     assert "for chave in" not in corpo, (
         "salario_minimo voltou a percorrer candidatos; usar uma chave verificada")
+
+
+# ---- K4 · a guarda estrutural que fecha a classe -------------------------
+def test_todas_as_ligacoes_batem_certo_com_a_estrutura_declarada():
+    """
+    Percorre **todas** as funcoes de acesso e confronta o pedido que cada uma
+    faria com `DIMENSOES`. E o teste que apanha a familia inteira: chave com o
+    numero errado de segmentos (K3), filtro com nomes de dimensao que ja nao
+    existem (K4), dimensao nao filtrada.
+    """
+    from src import eurostat
+
+    chamadas = [
+        (eurostat.ponderadores, (["CP0111"],), {}),
+        (eurostat.ponderadores_subclasses, (["CP01111"],), {}),
+        (eurostat.indice_classes, (["CP0111"], "2019-01"), {}),
+        (eurostat.indice_precos, ("CP011", "2019-01"), {}),
+        (eurostat.variacoes, (["CP011"], ["PT"], "2023-01"), {}),
+        (eurostat.despesa_alimentar, (2018,), {}),
+        (eurostat.despesa_total_consumo, (["PT"], 2018), {}),
+        (eurostat.despesa_alimentar_paises, (["PT"], 2018), {}),
+        (eurostat.dimensao_agregado, (2018,), {}),
+        (eurostat.numero_agregados, (2018,), {}),
+        (eurostat.privacao_alimentar, (["PT"], 2018), {}),
+        (eurostat.nivel_precos, (["PT"], "A010101", 2018), {}),
+        (eurostat.salario_minimo, (["PT"], 2018), {}),
+        (eurostat.rendimento, (["PT"], 2018), {}),
+    ]
+    for funcao, args, kwargs in chamadas:
+        ds, chave, filtros = _pedido(funcao, *args, **kwargs)
+        dims = eurostat.DIMENSOES.get(ds)
+        assert dims is not None, f"{funcao.__name__}: {ds} nao esta em DIMENSOES"
+        assert len(chave.split(".")) == len(dims), (
+            f"{funcao.__name__}: chave «{chave}» tem {len(chave.split('.'))} "
+            f"segmentos, {ds} tem {len(dims)} dimensoes")
+        nomes = set(filtros) - {"sinceTimePeriod"}
+        assert nomes == set(dims), (
+            f"{funcao.__name__}: filtros {sorted(nomes)} != dimensoes "
+            f"{sorted(dims)} de {ds}")
+
+
+def test_a_guarda_trava_os_erros_que_existiam():
+    """
+    Exige que a **via errada seja recusada**. Sem esta metade, a guarda podia
+    ser removida sem que nenhum teste desse por isso.
+    """
+    from src import eurostat
+
+    maus = [
+        # K3 — chave com um segmento a mais
+        ("ilc_lvph01", "A.AVG.TOTAL.PT", {"freq": "A", "unit": "AVG", "geo": "PT"}),
+        # K3 — a frequencia era S1 e havia um segmento a mais
+        ("earn_mw_cur", "S1.EUR.MW.PT", {"freq": "S", "currency": "EUR", "geo": "PT"}),
+        # K4 — nomes de dimensao anteriores a COICOP 2018
+        ("prc_ppp_ind_1", "A.PLI_EU27_2020.A010101.PT",
+         {"freq": "A", "na_item": "PLI_EU27_2020", "ppp_cat": "A010101", "geo": "PT"}),
+        # dimensao nao filtrada: a via de recurso devolveria tudo empilhado
+        ("ilc_lvph01", "A.AVG.PT", {"freq": "A", "geo": "PT"}),
+        # conjunto arquivado, sem estrutura declarada
+        ("prc_hicp_midx", "M.I15.CP011.PT",
+         {"freq": "M", "unit": "I15", "coicop": "CP011", "geo": "PT"}),
+    ]
+    for ds, chave, filtros in maus:
+        with pytest.raises(eurostat.ErroEurostat):
+            eurostat._verificar_estrutura(ds, chave, filtros)
+
+
+def test_conjuntos_arquivados_nao_tem_estrutura_declarada():
+    """
+    A tabela `DIMENSOES` e tambem uma lista branca: um conjunto arquivado nao
+    pode voltar a ser pedido sem alguem o declarar de proposito.
+    """
+    from src import eurostat
+
+    for arquivado in ("prc_hicp_midx", "prc_hicp_manr", "prc_hicp_inw",
+                      "nama_10_co3_p3"):
+        assert arquivado not in eurostat.DIMENSOES
