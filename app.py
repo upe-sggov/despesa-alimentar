@@ -302,9 +302,26 @@ def carregar_dados(anos_historico: int = 6):
                             f"indisponível ({exc})", 0))
 
     # --- ponderadores: ano mais recente de cada classe ---
+    #
+    # Cada classe contribui com a **sua** última observação, mas o rótulo que a
+    # aplicação mostra é o máximo de todas. Se uma classe ficar um ano atrás, a
+    # aplicação combina ponderadores de anos diferentes e anuncia um só
+    # (auditoria de 12.08.2026, K13).
+    #
+    # **Não se filtra pelo período comum**, ao contrário do que o diagnóstico
+    # recomendava — e a razão é que a alternativa é pior. Deixar cair a classe
+    # tira-lhe o ponderador, e as oito restantes absorvem 100 % da despesa: cada
+    # quota inflacionada em cerca de 1/8. Usar o ponderador do ano anterior para
+    # uma classe introduz um erro de segunda ordem, porque os ponderadores
+    # mudam pouco de ano para ano. Mantém-se o recuo, **declara-se o
+    # desalinhamento**, que era o que faltava.
     pesos_df = pesos_df.sort_values("time")
     pesos = pesos_df.groupby("coicop")["valor"].last().to_dict()
     ano_pesos = pesos_df["time"].max() if not pesos_df.empty else None
+    pesos_desalinhados = {
+        c: str(p) for c, p in pesos_df.groupby("coicop")["time"].last().items()
+        if str(p) != str(ano_pesos)
+    }
 
     # --- ponderadores por subclasse, do mesmo ano mais recente ---
     pesos_sub, ano_pesos_sub = {}, None
@@ -319,6 +336,13 @@ def carregar_dados(anos_historico: int = 6):
     pt_classes = pt_classes.sort_values("time")
     variacoes_classe = pt_classes.groupby("coicop")["valor"].last().to_dict()
     mes_variacoes = pt_classes["time"].max() if not pt_classes.empty else None
+    # Mesma questão dos ponderadores, e mesma decisão: uma classe que fique um
+    # mês atrás entra com a taxa desse mês em vez de sair do cálculo, mas o
+    # desalinhamento passa a ser declarado (auditoria de 12.08.2026, K13).
+    variacoes_desalinhadas = {
+        c: str(p) for c, p in pt_classes.groupby("coicop")["time"].last().items()
+        if str(p) != str(mes_variacoes)
+    }
 
     # --- séries globais de Portugal ---
     if not indice_df.empty:
@@ -533,8 +557,10 @@ def carregar_dados(anos_historico: int = 6):
         "pesos_por_ano": pesos_df,
         "indice_classes": idx_classes_df,
         "ano_pesos": ano_pesos,
+        "pesos_desalinhados": pesos_desalinhados,
         "variacoes_classe": variacoes_classe,
         "mes_variacoes": mes_variacoes,
+        "variacoes_desalinhadas": variacoes_desalinhadas,
         "indice_pt": indice_pt,
         "var_pt": var_pt,
         "bench": bench,
@@ -1077,6 +1103,34 @@ st.success(
     f"atualizado às {dados['momento'].strftime('%H:%M de %d/%m/%Y')}"
 )
 
+# --- classes cujo período não é o que a mensagem acima anuncia ---
+# Cada classe entra com a sua última observação, e o rótulo é o máximo de todas.
+# Hoje coincidem; quando não coincidirem, tem de ser dito em vez de assumido
+# (auditoria de 12.08.2026, K13).
+_desal_p = dados.get("pesos_desalinhados") or {}
+_desal_v = dados.get("variacoes_desalinhadas") or {}
+if _desal_p or _desal_v:
+    def _lista_desal(mapa, rotulo_global):
+        return ", ".join(
+            f"**{POR_CODIGO[c]['nome'] if c in POR_CODIGO else c}** ({p} em vez de "
+            f"{rotulo_global})" for c, p in sorted(mapa.items()))
+
+    _partes = []
+    if _desal_p:
+        _partes.append("Ponderadores: " + _lista_desal(_desal_p, dados["ano_pesos"]))
+    if _desal_v:
+        _partes.append("Variações homólogas: "
+                       + _lista_desal(_desal_v, dados["mes_variacoes"]))
+    st.warning(
+        "**Nem todas as classes têm o mesmo período.** A mensagem acima mostra o "
+        "período mais recente do conjunto, mas há classes cuja última observação é "
+        "anterior — entram com essa, e não são excluídas do cálculo, porque deixá-las "
+        "cair distorceria mais (as restantes absorveriam a totalidade da despesa).\n\n"
+        + "\n\n".join(f"- {p}" for p in _partes)
+        + "\n\nO efeito é de segunda ordem, mas os números deixam de se referir todos "
+        "ao mesmo momento."
+    )
+
 # --- decomposição base, usada por vários separadores ---
 df_decomp = decompor(despesa_mensal, dados["pesos"], dados["variacoes_classe"])
 resumo = resumo_decomposicao(df_decomp, despesa_mensal)
@@ -1301,13 +1355,23 @@ with aba1:
             )
 
         if not _eng["so_idf"]:
+            # `intervalo_engel` devolve min e max sem presumir qual das bases é
+            # a maior — e há um teste que o exige. A prosa presumia, e invertia-se
+            # sozinha se as Contas Nacionais alguma vez descessem abaixo do IDF
+            # (auditoria de 12.08.2026, K14). Os rótulos derivam do intervalo.
+            _idf_e_inferior = _eng["idf"] <= _eng["contas"]
+            _pos_idf = "inferior" if _idf_e_inferior else "superior"
+            _pos_cn = "superior" if _idf_e_inferior else "inferior"
+            _mais_ou_menos = "mais" if _idf_e_inferior else "menos"
             st.caption(
-                f"O **{percentagem(_eng['idf'], sinal=False)}** da média nacional, na coluna «Peso no orçamento», é o "
-                "limite inferior do intervalo do coeficiente de Engel mostrado em cima. O limite "
-                f"superior, {percentagem(_eng['contas'], sinal=False)}, vem das Contas Nacionais: medem o consumo das "
-                "famílias por via macroeconómica e registam, por agregado, mais despesa alimentar "
-                "do que o inquérito — e o coeficiente diverge porque **o numerador diverge mais "
-                "do que o denominador**. Nenhuma das duas é a resposta certa — ver Metodologia."
+                f"O **{percentagem(_eng['idf'], sinal=False)}** da média nacional, na coluna "
+                f"«Peso no orçamento», é o limite **{_pos_idf}** do intervalo do coeficiente de "
+                f"Engel mostrado em cima. O limite **{_pos_cn}**, "
+                f"{percentagem(_eng['contas'], sinal=False)}, vem das Contas Nacionais: medem o "
+                f"consumo das famílias por via macroeconómica e registam, por agregado, "
+                f"**{_mais_ou_menos}** despesa alimentar do que o inquérito — e o coeficiente "
+                "diverge porque **o numerador diverge mais do que o denominador**. Nenhuma das "
+                "duas é a resposta certa — ver Metodologia."
             )
 
         _q1 = df_quintis[df_quintis["quintil"] == "q1"].iloc[0]

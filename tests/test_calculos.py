@@ -2287,3 +2287,61 @@ def test_a_vigilancia_cobre_as_series_que_alimentam_a_aplicacao():
     from src.config import LIMITES_FRESCURA
     assert LIMITES_FRESCURA["variacoes"][0] == 60
     assert LIMITES_FRESCURA["ponderadores"][0] == 450
+
+
+# ---- K13 · classes com periodos diferentes, declaradas ------------------
+def test_o_desalinhamento_de_periodos_e_detectado_e_declarado():
+    """
+    Cada classe entra com a sua ultima observacao, mas o rotulo mostrado e o
+    maximo de todas. O desalinhamento nao era detectado (auditoria K13).
+
+    **Nao se filtra pelo periodo comum**, ao contrario do que o diagnostico
+    recomendava: deixar cair uma classe tira-lhe o ponderador e as oito
+    restantes absorvem 100 % da despesa — pior do que usar o ponderador do ano
+    anterior, que muda pouco. Mantem-se o recuo e declara-se.
+    """
+    fonte = _fonte_viva("app.py")
+    assert "pesos_desalinhados" in fonte
+    assert "variacoes_desalinhadas" in fonte
+    # ... e chegam a interface, nao ficam so no dicionario de dados.
+    assert 'dados.get("pesos_desalinhados")' in fonte
+    assert 'dados.get("variacoes_desalinhadas")' in fonte
+
+    # A logica em si, reproduzida: uma classe um mes atras tem de ser apanhada.
+    linhas = pd.DataFrame([
+        {"coicop": "CP0111", "time": "2026-06", "valor": 2.5},
+        {"coicop": "CP0112", "time": "2026-06", "valor": 4.3},
+        {"coicop": "CP0113", "time": "2026-05", "valor": 9.9},   # ficou atras
+    ]).sort_values("time")
+    mes = linhas["time"].max()
+    desalinhadas = {c: str(p) for c, p
+                    in linhas.groupby("coicop")["time"].last().items()
+                    if str(p) != str(mes)}
+    assert desalinhadas == {"CP0113": "2026-05"}
+    # E a classe **continua no calculo**, com o valor que tem.
+    valores = linhas.groupby("coicop")["valor"].last().to_dict()
+    assert len(valores) == 3 and valores["CP0113"] == 9.9
+
+
+# ---- K14 · a prosa do Engel nao assume a ordem dos extremos --------------
+def test_a_legenda_do_engel_deriva_a_ordem_em_vez_de_a_assumir():
+    """
+    `intervalo_engel` devolve min e max sem presumir qual das bases e a maior —
+    ha um teste que o exige desde o B4. A prosa por baixo da tabela presumia
+    (auditoria de 12.08.2026, K14).
+    """
+    fonte = _fonte_viva("app.py")
+    assert '_idf_e_inferior = _eng["idf"] <= _eng["contas"]' in fonte
+    # As palavras «inferior» e «superior» deixam de estar fixas na frase.
+    i = fonte.index("_idf_e_inferior =")
+    trecho = fonte[i:i + 900]
+    assert "{_pos_idf}" in trecho and "{_pos_cn}" in trecho
+
+    # E a funcao continua a nao assumir, nos dois sentidos.
+    from src.calculos import intervalo_engel
+    from src.config import IDF_PESO_ALIMENTAR
+    idf = float(IDF_PESO_ALIMENTAR["total"])
+    acima = intervalo_engel({"ano": "2024", "quota": idf + 5})
+    assert (acima["minimo"], acima["maximo"]) == (idf, idf + 5)
+    abaixo = intervalo_engel({"ano": "2024", "quota": idf - 5})
+    assert (abaixo["minimo"], abaixo["maximo"]) == (idf - 5, idf)
