@@ -387,11 +387,18 @@ def dimensao_agregado(desde_ano: int) -> tuple[pd.DataFrame, str]:
 
     Necessária para saber a quantas pessoas corresponde a despesa média por
     agregado e para converter entre despesa por agregado e despesa por pessoa.
+
+    Dimensões: ``freq.unit.geo``, com ``unit = AVG``. A chave anterior —
+    ``A.AVG.TOTAL.PT`` — tinha um segmento a mais e devolvia **HTTP 400 em todas
+    as sessões**, com `INVALID_QUERY_NB_FILTERS`. Nunca funcionou: o que
+    respondia era sempre a via de recurso, e o filtro dela não declarava a
+    unidade — funcionava só porque `unit` tem hoje um único valor. É o padrão do
+    B1, e no B1 acabou em 443,5 mil agregados (auditoria de 12.08.2026, K3).
     """
     return obter(
         "ilc_lvph01",
-        "A.AVG.TOTAL.PT",
-        {"freq": "A", "geo": "PT", "sinceTimePeriod": str(desde_ano)},
+        "A.AVG.PT",
+        {"freq": "A", "unit": "AVG", "geo": "PT", "sinceTimePeriod": str(desde_ano)},
         inicio=str(desde_ano),
     )
 
@@ -549,10 +556,6 @@ def despesa_alimentar_paises(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     )
 
 
-# Códigos candidatos para o salário mínimo mensal em euros.
-SM_CANDIDATOS = ["S1.EUR.MW", "S1.MW.EUR", "S1.EUR.NAT"]
-
-
 def salario_minimo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     """
     Salário mínimo nacional mensal, em euros (semestral).
@@ -563,23 +566,30 @@ def salario_minimo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     — confirmado em toda a série: 957 → 820 (2024), 1015 → 870 (2025),
     1073 → 920 (2026). Quem precisar do valor legal divide por 14/12 e
     arredonda ao euro (auditoria de 10.08.2026, A2).
+
+    Dimensões: ``freq.currency.geo``, com ``freq = S`` (semestral).
+
+    Havia aqui uma lista de três chaves candidatas — ``S1.EUR.MW``,
+    ``S1.MW.EUR``, ``S1.EUR.NAT`` — e **as três estavam erradas**: tinham um
+    segmento a mais e a frequência era `S1` em vez de `S`. Devolviam HTTP 400
+    todas as vezes, e o que respondia era sempre a via de recurso.
+
+    A lista não podia sequer discriminar entre elas: os filtros da via
+    Statistics **não dependem da chave**, pelo que a primeira iteração devolvia
+    sempre resultado e as outras duas eram inalcançáveis. É o anti-padrão que o
+    encerramento da segunda auditoria inscreveu como lição — «uma lista de
+    candidatos esconde o que foi usado» —, já corrigido nas categorias das PPP
+    (B3), no código do total (E7) e nos endereços de verificação (E5), e que
+    aqui tinha sobrevivido (auditoria de 12.08.2026, K3 e K10).
     """
     geos = list(geos)
-    ultimo = None
-    for chave in SM_CANDIDATOS:
-        try:
-            df, via = obter(
-                "earn_mw_cur",
-                f"{chave}.{'+'.join(geos)}",
-                {"currency": "EUR", "geo": geos, "sinceTimePeriod": str(desde_ano)},
-                inicio=str(desde_ano),
-            )
-            if not df.empty:
-                return df, via
-        except Exception as exc:                             # noqa: BLE001
-            ultimo = exc
-            continue
-    raise ErroEurostat(f"earn_mw_cur — nenhuma chave respondeu ({ultimo})")
+    return obter(
+        "earn_mw_cur",
+        f"S.EUR.{'+'.join(geos)}",
+        {"freq": "S", "currency": "EUR", "geo": geos,
+         "sinceTimePeriod": str(desde_ano)},
+        inicio=str(desde_ano),
+    )
 
 
 # Códigos da dimensão `statinfo` do ilc_di03. Não há chaves alternativas: uma

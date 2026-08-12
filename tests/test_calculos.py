@@ -1882,3 +1882,84 @@ def test_dependencias_tem_limite_superior():
     # numpy e usado em src/calculos.py e era dependencia implicita do pandas.
     assert any(l.startswith("numpy") for l in linhas), (
         "numpy e importado em src/calculos.py e tem de estar declarado")
+
+
+# ---- K3 + K10 · chaves SDMX e listas de candidatos -----------------------
+def _pedido(funcao, *args, **kwargs):
+    """
+    Captura o pedido que uma funcao de acesso **faria**, sem tocar na rede.
+
+    Substitui `eurostat.obter` e devolve `(dataset, chave, filtros)`. E a forma
+    de testar a chave sem depender do Eurostat estar de pe — e sem depender de
+    a via de recurso a salvar, que foi exactamente o que escondeu o K3.
+    """
+    from src import eurostat
+
+    apanhado = {}
+
+    def espia(dataset, chave, filtros, **kw):
+        apanhado.update(dataset=dataset, chave=chave, filtros=filtros)
+        return pd.DataFrame({"geo": ["PT"], "time": ["2026"], "valor": [1.0]}), "espia"
+
+    original = eurostat.obter
+    eurostat.obter = espia
+    try:
+        funcao(*args, **kwargs)
+    finally:
+        eurostat.obter = original
+    return apanhado["dataset"], apanhado["chave"], apanhado["filtros"]
+
+
+# Estrutura real de cada conjunto, verificada contra a API a 12.08.2026.
+# A chave SDMX e posicional: um segmento a mais ou a menos da HTTP 400.
+DIMENSOES_VERIFICADAS = {
+    "ilc_lvph01": ("freq", "unit", "geo"),
+    "earn_mw_cur": ("freq", "currency", "geo"),
+}
+
+
+def test_chave_da_dimensao_do_agregado_tem_os_filtros_certos():
+    """
+    `A.AVG.TOTAL.PT` tinha um segmento a mais e devolvia HTTP 400 em todas as
+    sessoes (auditoria de 12.08.2026, K3).
+    """
+    from src import eurostat
+
+    ds, chave, filtros = _pedido(eurostat.dimensao_agregado, 2018)
+    assert ds == "ilc_lvph01"
+    assert chave == "A.AVG.PT"
+    assert len(chave.split(".")) == len(DIMENSOES_VERIFICADAS[ds])
+    # A via de recurso tem de declarar todas as dimensoes: sem `unit`, o dia em
+    # que o conjunto tiver duas unidades devolve duas series empilhadas.
+    for dim in DIMENSOES_VERIFICADAS[ds]:
+        assert dim in filtros, f"filtro «{dim}» em falta em {ds}"
+
+
+def test_chave_do_salario_minimo_tem_os_filtros_certos():
+    from src import eurostat
+
+    ds, chave, filtros = _pedido(eurostat.salario_minimo, ["PT", "ES"], 2018)
+    assert ds == "earn_mw_cur"
+    assert chave == "S.EUR.PT+ES"
+    assert len(chave.split(".")) == len(DIMENSOES_VERIFICADAS[ds])
+    for dim in DIMENSOES_VERIFICADAS[ds]:
+        assert dim in filtros, f"filtro «{dim}» em falta em {ds}"
+    # A frequencia e `S`, nao `S1` — era o outro erro das tres candidatas.
+    assert chave.startswith("S.")
+
+
+def test_salario_minimo_nao_e_uma_lista_de_candidatos():
+    """
+    As tres candidatas nao podiam discriminar entre si: os filtros da via
+    Statistics nao dependem da chave, pelo que a primeira iteracao devolvia
+    sempre e as outras duas eram inalcancaveis (auditoria de 12.08.2026, K10).
+    """
+    from src import eurostat
+
+    assert not hasattr(eurostat, "SM_CANDIDATOS"), (
+        "a lista de candidatos do salario minimo voltou")
+    fonte = _fonte("src/eurostat.py")
+    i = fonte.index("def salario_minimo(")
+    corpo = fonte[i:fonte.index("\ndef ", i + 10)]
+    assert "for chave in" not in corpo, (
+        "salario_minimo voltou a percorrer candidatos; usar uma chave verificada")
