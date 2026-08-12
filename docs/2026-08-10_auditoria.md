@@ -3452,5 +3452,107 @@ estar resolvido ou a recolha atualizada.
 
 ---
 
+## Registo de aplicação — quarta auditoria, 12.08.2026
+
+**Treze dos catorze itens estão fechados.** Falta o **K1**, que é uma decisão da Inês e não uma
+correção — está descrito no fim desta secção.
+
+| Passo | Itens | Commit | Efeito principal |
+|---|---|---|---|
+| 1 | ✅ **K11** | `c5fa6dd` | 44 usos de API depreciada substituídos; dependências com limite superior |
+| 2 | ✅ **K3 + K10** | `8a83bae` | Quatro chaves SDMX que nunca funcionaram, e a lista que não escolhia |
+| 3 | ✅ **K4** | `8a7f919` | O nível de preços volta a ter duas vias — e a classe de erro fica fechada |
+| 4 | ✅ **K2** | `06ffba1` | O aviso do Observatório passa a disparar, e diz de quem é a falha |
+| 5 | ✅ **K5** | `247b043` | A truncagem de ontem fechada no gráfico onde ficara aberta |
+| 6 | ✅ **K6** | `2c86144` | O isolamento entre separadores passa a ser real |
+| 7 | ✅ **K7, K8, K9, K12** | `c9fa134` | Texto que envelheceu, números à mão, um rótulo e três séries |
+| 8 | ✅ **K13, K14** | `5a313b4` | Períodos que se misturavam em silêncio, e uma ordem que era assumida |
+| — | ⏳ **K1** | — | **A aguardar decisão** |
+
+**A bateria passou de 106 para 130 testes.** Os vinte e quatro novos travam cada um dos modos de
+falha encontrados, e vários exigem também que **a via errada divirja** — sem isso passariam com a
+correção revertida.
+
+### O que mudou no que a aplicação mostra
+
+**Nada.** E é o resultado que se esperava: nenhum dos catorze itens era um erro de cálculo. Os dez
+valores de topo foram confrontados um a um, antes e depois, e são idênticos ao cêntimo:
+
+| | Antes | Depois |
+|---|---|---|
+| Despesa mensal (casal, IDF) | 241,32 € | 241,32 € |
+| Agregado médio nacional | 281,06 € | 281,06 € |
+| Agravamento em 12 meses | 6,96 € | 6,96 € |
+| Coeficiente de Engel | 12,0 % a 17,1 % | 12,0 % a 17,1 % |
+| Poupança mensal (cabaz zero, ρ=95 %) | 21,13 € | 21,13 € |
+| Poupança agregada anual | 1 347,3 M€ | 1 347,3 M€ |
+| Nível de preços, Portugal | 101,4 | 101,4 |
+| Viés de substituição | +0,32 pontos | +0,32 pontos |
+
+O que mudou foi **o que a aplicação diz sobre si própria**, e a probabilidade de continuar a
+dizê-lo bem.
+
+### Três coisas que apareceram durante a aplicação
+
+**1. Uma segunda razão para o salário mínimo nunca usar a via preferida.** Com a chave do K3
+corrigida, a ligação continuava a cair na via de recurso. A causa é outra e não estava no
+diagnóstico: **não há salário mínimo europeu**. O `earn_mw_cur` só tem países, e pedir `EU27_2020`
+devolve `INVALID_QUERY_DIMENSION_VALUE` que **invalida o pedido inteiro**, incluindo os onze países
+que existem. Não é lacuna do conjunto — é o conceito que não existe.
+
+**2. Afastei-me da correção que eu próprio tinha recomendado, no K13.** Escrevi «filtrar pelo
+período comum, como se faz nas subclasses». Ao aplicar, vi que a alternativa é pior: deixar cair
+uma classe tira-lhe o ponderador e as oito restantes absorvem 100 % da despesa — cada quota
+inflacionada em cerca de 1/8. Usar o ponderador do ano anterior para uma classe é um erro de
+segunda ordem, porque os ponderadores mudam pouco de ano para ano. Ficou o recuo, e passou a haver
+o que faltava, que era **a deteção e a declaração**.
+
+**3. Um teste que apanhava a explicação em vez da ocorrência.** A primeira versão do teste do K8
+proibia os números inscritos à mão pelo nome — e falhou, porque os comentários deste projeto
+**citam de propósito** os valores errados que foram corrigidos. Novo auxiliar `_fonte_viva()`, que
+lê a fonte sem as linhas de comentário: proíbe-se o número no que a aplicação **mostra**, não na
+memória de porque deixou de lá estar.
+
+### O que ficou mais robusto, e não estava no diagnóstico
+
+Três correções deixaram atrás de si um mecanismo que impede a **classe** de erro, e não apenas a
+ocorrência:
+
+- **`DIMENSOES`, em `src/eurostat.py`** — a estrutura verificada dos onze conjuntos. O `obter()`
+  recusa um pedido cuja chave ou cujos filtros não batam certo, e a tabela é também uma lista
+  branca: um conjunto arquivado não pode voltar a ser pedido sem alguém o declarar de propósito.
+  É a doutrina do E1 uma camada acima. Fecha o K3, o K4 e o K10 de uma vez.
+- **`test_todas_as_series_filtradas_pelo_cursor_usam_a_mesma_janela`** — a regra que faltava desde
+  o E14, quando a janela do cursor passou a ser fixada noutro ficheiro por outra razão.
+- **`test_nenhum_separador_usa_nome_definido_noutro`** — percorre a árvore sintática e exige que
+  nenhuma função definida dentro de um separador seja usada noutro. Verifiquei que não passa em
+  vazio e que apanharia o bug do K6, reintroduzindo-o em memória para o confirmar.
+
+### Verificação final
+
+- **130 testes passam**, em 2,3 s.
+- **As dezoito ligações respondem, e todas passam agora pela via preferida (SDMX 2.1).** Antes,
+  três vinham pela via de recurso.
+- **A aplicação renderiza sem uma única exceção** nas duas âncoras, nas composições 1a, 2a, 5a,
+  3a+2c e 10a+10c, e nas três escalas. Na base Contas Nacionais o agregado médio dá **652,22 €**,
+  que coincide ao cêntimo com a reconstituição independente.
+- **Zero avisos de depreciação** na renderização; antes havia um por elemento e por execução.
+- **O aviso do Observatório dispara**, com os números certos: não publica desde 18/05/2026, há
+  86 dias, cerca de três períodos em falta, e a recolha é de há dois dias — pelo que correr o
+  script não resolve.
+- **Catorze séries vigiadas**, contra onze antes, todas dentro do prazo.
+
+### O que falta: K1
+
+É a única decisão, e continua a ser a que está descrita na secção **K1**: qual dos dois números
+deve estar no cartão de capa — a taxa oficial do `CP011` ou a reconstituída da decomposição, com a
+oficial declarada ao lado.
+
+Enquanto não estiver decidido, mantém-se a ressalva: o cartão «Agravamento nos últimos 12 meses»
+mostra **+3,0 %**, e o índice oficial do `CP011` dá **3,1 %** para o mesmo mês. Os dois números
+continuam ambos no ecrã, a dois separadores de distância, sem se relacionarem.
+
+---
+
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.
 Não constitui posição oficial.*
