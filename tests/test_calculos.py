@@ -2345,3 +2345,68 @@ def test_a_legenda_do_engel_deriva_a_ordem_em_vez_de_a_assumir():
     assert (acima["minimo"], acima["maximo"]) == (idf, idf + 5)
     abaixo = intervalo_engel({"ano": "2024", "quota": idf - 5})
     assert (abaixo["minimo"], abaixo["maximo"]) == (idf - 5, idf)
+
+
+# ---- K1 · a taxa de capa e a oficial, e a aditividade fica declarada -----
+def test_a_taxa_de_capa_e_a_oficial_do_cp011():
+    """
+    Decisao da Ines, 12.08.2026: numa ferramenta que apoia o Gabinete em debate
+    publico, o numero de capa tem de ser o que qualquer pessoa pode verificar no
+    INE. A capa mostrava uma taxa **reconstituida** da decomposicao, que difere
+    da oficial em cerca de 0,15 p.p. (auditoria de 12.08.2026, K1).
+    """
+    vivo = _fonte_viva("app.py")
+    # A taxa oficial e obtida e chega ao dicionario de dados...
+    assert '"variacao_oficial": variacao_oficial' in vivo
+    # ... e e ela que vai para o indicador de topo.
+    assert '_var_of = dados.get("variacao_oficial")' in vivo
+    assert "percentagem(_taxa_capa)" in vivo
+    # A reconstituida deixou de ser o que o indicador mostra.
+    assert 'percentagem(resumo["variacao_implicita"]),' not in vivo
+
+
+def test_a_taxa_oficial_e_do_mesmo_mes_das_variacoes_por_classe():
+    """
+    Comparar a oficial de um mes com contributos de outro seria pior do que o
+    problema que se corrigiu.
+    """
+    vivo = _fonte_viva("app.py")
+    i = vivo.index("variacao_oficial, mes_var_oficial = None, None")
+    trecho = vivo[i:i + 420]
+    assert "mes_variacoes" in trecho, trecho
+
+
+def test_a_divergencia_entre_as_duas_agregacoes_esta_declarada():
+    """
+    A aditividade continua a valer, mas a taxa que ela implica nao e a oficial.
+    Tem de estar escrito onde os contributos aparecem, e nao so no tooltip.
+    """
+    vivo = _fonte_viva("app.py")
+    assert "Os nove contributos somam exatamente" in vivo
+    assert "de há um ano" in vivo and "período corrente" in vivo
+
+
+def test_a_reconstituida_pondera_pelos_valores_de_ha_um_ano():
+    """
+    A explicacao dada ao leitor tem de ser verdadeira, e e verificavel: a taxa
+    implicita da decomposicao **e** a media das taxas ponderada pelos valores do
+    periodo anterior. Se deixasse de ser, a nota na interface passava a mentir.
+    """
+    from src.calculos import decompor, resumo_decomposicao
+
+    pesos = {"CP0111": 40.0, "CP0112": 40.0, "CP0113": 20.0}
+    variacoes = {"CP0111": 2.5, "CP0112": 4.3, "CP0113": 10.7}
+    df = decompor(300.0, pesos, variacoes)
+    r = resumo_decomposicao(df, 300.0)
+
+    com = df.dropna(subset=["contributo"])
+    num = sum(l.valor / (1 + l.variacao / 100) * l.variacao for l in com.itertuples())
+    den = sum(l.valor / (1 + l.variacao / 100) for l in com.itertuples())
+    assert r["variacao_implicita"] == pytest.approx(num / den)
+
+    # E **diverge** da media ponderada pelos valores correntes, que e a
+    # construcao da taxa oficial. Sem esta metade, o teste nao mostrava que as
+    # duas agregacoes sao mesmo diferentes.
+    corrente = sum(l.quota * l.variacao for l in com.itertuples())
+    assert corrente > r["variacao_implicita"]
+    assert abs(corrente - r["variacao_implicita"]) > 0.05

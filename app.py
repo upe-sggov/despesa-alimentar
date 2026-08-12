@@ -380,6 +380,19 @@ def carregar_dados(anos_historico: int = 6):
         var_pt = var_df[(var_df["geo"] == "PT") &
                         (var_df["coicop"] == COICOP_ALIMENTAR)].sort_values("time")
 
+    # --- variação homóloga **oficial** do agregado alimentar (CP011) ---
+    # É o número que o INE publica e que qualquer pessoa encontra ao verificar.
+    # A aplicação apresentava na capa uma taxa **reconstituída** da decomposição,
+    # que difere desta em cerca de 0,15 p.p. (auditoria de 12.08.2026, K1).
+    # Toma-se o mesmo mês das variações por classe, para que a comparação entre
+    # as duas seja do mesmo momento.
+    variacao_oficial, mes_var_oficial = None, None
+    if not var_pt.empty:
+        _cand = var_pt[var_pt["time"] == mes_variacoes] if mes_variacoes else var_pt
+        _linha_of = (_cand if not _cand.empty else var_pt).sort_values("time").iloc[-1]
+        variacao_oficial = float(_linha_of["valor"])
+        mes_var_oficial = str(_linha_of["time"])
+
     # --- comparação europeia: todos os grupos, todos os países ---
     bench_todos = var_df.sort_values("time")
     bench = var_df[var_df["coicop"] == COICOP_ALIMENTAR].sort_values("time")
@@ -561,6 +574,8 @@ def carregar_dados(anos_historico: int = 6):
         "variacoes_classe": variacoes_classe,
         "mes_variacoes": mes_variacoes,
         "variacoes_desalinhadas": variacoes_desalinhadas,
+        "variacao_oficial": variacao_oficial,
+        "mes_variacao_oficial": mes_var_oficial,
         "indice_pt": indice_pt,
         "var_pt": var_pt,
         "bench": bench,
@@ -1209,10 +1224,38 @@ with aba1:
                           "quando troca a base entre IDF e Contas Nacionais: o que muda é o "
                           "valor em euros, porque a mesma taxa aplicada a uma despesa maior "
                           "dá mais euros.")
+            # A taxa apresentada é a **oficial** do CP011, e não a reconstituída
+            # da decomposição. Decisão da Inês, 12.08.2026 (auditoria, K1): numa
+            # ferramenta que vai apoiar o Gabinete em debate público, o número de
+            # capa tem de ser o que qualquer pessoa pode ir verificar ao INE.
+            # Um número de capa que não bate certo com o publicado é fácil de
+            # atacar e difícil de neutralizar, e o risco reputacional é
+            # assimétrico.
+            #
+            # Os euros continuam a ser a **soma dos nove contributos**, que é a
+            # propriedade que a decomposição promete e que está travada por
+            # teste. As duas grandezas correspondem a taxas ligeiramente
+            # diferentes, e é isso que o tooltip diz — e a legenda por baixo dos
+            # gráficos de decomposição.
+            _var_of = dados.get("variacao_oficial")
+            _taxa_capa = _var_of if _var_of is not None else resumo["variacao_implicita"]
+            _nota_capa = ""
+            if _var_of is not None and resumo["variacao_implicita"] is not None:
+                _nota_capa = (
+                    f"\n\n**A percentagem é a taxa oficial** do agregado alimentar "
+                    f"(`CP011`, {mes_pt(dados.get('mes_variacao_oficial'))}) — o número "
+                    "publicado pelo INE, que se pode verificar diretamente na fonte. "
+                    "**Os euros são a soma dos nove contributos** apresentados abaixo, "
+                    "que corresponde a "
+                    f"{percentagem(resumo['variacao_implicita'], sinal=False)}: essa "
+                    "agregação pondera as nove taxas pelos valores de há um ano, e a "
+                    "oficial pelos do período corrente. A diferença é de décimas de "
+                    "ponto — ver a nota sob os gráficos.")
             colunas[1].metric("Agravamento nos últimos 12 meses", euro(resumo["contributo_total"]),
-                              percentagem(resumo["variacao_implicita"]),
+                              percentagem(_taxa_capa),
                               help="Subida da despesa alimentar face ao mesmo mês do ano "
-                                   f"anterior, à composição de consumo atual. {_nota_taxa}")
+                                   f"anterior, à composição de consumo atual. {_nota_taxa}"
+                                   f"{_nota_capa}")
             colunas[2].metric("Despesa há 12 meses", euro(resumo["valor_ha_um_ano"]),
                               help="A mesma despesa deflacionada pela variação homóloga de "
                                    "cada classe. Escala com a base escolhida.")
@@ -1312,6 +1355,36 @@ with aba1:
                                   xaxis_title="Euros", plot_bgcolor="#fff")
                 fig.update_xaxes(gridcolor="#eef1f4", zerolinecolor="#cbd5e1")
                 st.plotly_chart(fig, width="stretch")
+
+        # A aditividade é a propriedade central da decomposição, e continua a
+        # valer — mas a taxa que ela implica não é exatamente a oficial que está
+        # na capa. Isso tem de estar escrito onde os contributos aparecem, e não
+        # só no tooltip do indicador (auditoria de 12.08.2026, K1).
+        if (resumo["contributo_total"] is not None
+                and resumo["variacao_implicita"] is not None
+                and dados.get("variacao_oficial") is not None):
+            _dif_k1 = dados["variacao_oficial"] - resumo["variacao_implicita"]
+            st.caption(
+                f"**Os nove contributos somam exatamente "
+                f"{euro(resumo['contributo_total'])}** — é a propriedade que esta "
+                "decomposição garante, e está verificada por teste automático. Essa "
+                "soma corresponde a uma subida de "
+                f"**{percentagem(resumo['variacao_implicita'], sinal=False)}**, "
+                f"enquanto o índice oficial do agregado alimentar (`CP011`) regista "
+                f"**{percentagem(dados['variacao_oficial'], sinal=False)}** em "
+                f"{mes_pt(dados.get('mes_variacao_oficial'))} — uma diferença de "
+                f"{pontos(abs(_dif_k1), casas=2, sinal=False)}\n\n"
+                "**Não é discrepância: são duas agregações da mesma coisa.** Para os "
+                "nove contributos somarem ao total, a taxa que deles resulta pondera "
+                "as nove classes pelos seus valores **de há um ano**; a oficial "
+                "pondera-as pelos do **período corrente**. Verificado: ponderando "
+                "pelos valores correntes obtêm-se "
+                f"{percentagem(sum(r.quota * r.variacao for r in df_decomp.itertuples() if r.variacao is not None), sinal=False)}, "
+                "que reproduz a oficial. Sobre 90 meses de série, a diferença tem "
+                "média absoluta de 0,15 p.p. e nunca chegou a 1 p.p. **A percentagem "
+                "no indicador de topo é a oficial**, para que seja verificável na "
+                "fonte; os euros são os desta decomposição."
+            )
 
         # ---- cabaz por quintil de rendimento ----
         st.divider()

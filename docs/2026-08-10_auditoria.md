@@ -3542,15 +3542,92 @@ ocorrência:
   script não resolve.
 - **Catorze séries vigiadas**, contra onze antes, todas dentro do prazo.
 
-### O que falta: K1
+### K1 · A taxa de capa passa a ser a oficial — 12.08.2026
 
-É a única decisão, e continua a ser a que está descrita na secção **K1**: qual dos dois números
-deve estar no cartão de capa — a taxa oficial do `CP011` ou a reconstituída da decomposição, com a
-oficial declarada ao lado.
+**Decisão da Inês:** o cartão de capa mostra a **variação homóloga oficial do `CP011`**.
 
-Enquanto não estiver decidido, mantém-se a ressalva: o cartão «Agravamento nos últimos 12 meses»
-mostra **+3,0 %**, e o índice oficial do `CP011` dá **3,1 %** para o mesmo mês. Os dois números
-continuam ambos no ecrã, a dois separadores de distância, sem se relacionarem.
+**O argumento, e é o certo.** Numa ferramenta que vai apoiar o Gabinete em debate público, um
+número de capa que não é o número do INE é fácil de atacar e difícil de neutralizar: «porque é que
+este número não bate certo com o que o INE publica?» é uma pergunta que se faz em três segundos.
+A Nota de Enquadramento desta unidade já identifica o risco reputacional como **assimétrico** — se
+sair mais baixo, é lido como manipulação; se sair mais alto, é usado contra o Governo. Um número
+de capa não citável somava um terceiro flanco, sem necessidade. **A aditividade é uma propriedade
+interna, não uma promessa ao leitor da capa**; importa a quem lê a decomposição, e é aí que passa a
+estar explicada.
+
+**A ressalva que acompanhava a decisão está respondida, e era a pergunta certa.** Foi pedido que se
+confirmasse a magnitude do desvio antes de fechar: se fosse de décimas, a nota de rodapé chegaria;
+se fosse de um ponto percentual ou mais, seria sinal de que a própria reconstituição precisava de
+ser percebida antes de publicar seja o que for. Medido sobre **toda a série, 90 meses desde 2019**:
+
+| | |
+|---|---|
+| Desvio absoluto **médio** | **0,153 p.p.** |
+| Desvio absoluto **máximo** | **0,711 p.p.** |
+| Meses acima de 0,5 p.p. | 3 em 90 |
+| Meses acima de **1,0 p.p.** | **nenhum** |
+
+Está no regime das décimas. É o caso fácil.
+
+**E a explicação metodológica não precisa de ser pedida ao INE — é aritmética, e verifiquei-a.**
+Não há divergência de fonte nem de dados: são duas maneiras de agregar as mesmas nove taxas.
+
+- A taxa **reconstituída** é, por construção, a média das nove taxas ponderada pelos valores **de
+  há um ano** — é isso que faz os nove contributos somarem exatamente ao total. Confirmado ao
+  décimo-nono algarismo: `Σ(Vᵢ/(1+gᵢ))·gᵢ ÷ Σ(Vᵢ/(1+gᵢ))` = 2,969157 %, idêntico ao que a
+  decomposição produz.
+- Ponderando as mesmas nove taxas pelos valores **do período corrente**: **3,1088 %**, contra os
+  **3,1000 %** oficiais. **Bate a 0,009 p.p.**
+
+Ou seja: a diferença é inteiramente *que ponderadores* a agregação usa, e a construção oficial
+reproduz-se a partir dos dados que a aplicação já tem. Não é preciso confiar na explicação — ela é
+verificável no próprio ecrã, e ficou travada por teste.
+
+> **Nota sobre o que não fiz.** A sugestão de confirmar com o INE se existe explicação metodológica
+> publicada para esta divergência não foi seguida, por duas razões: o contacto institucional está
+> fora do âmbito desta ferramenta, que trabalha só com dados abertos; e a explicação não é uma
+> questão em aberto — é uma identidade algébrica que se demonstra com os números da própria sessão.
+
+**O que foi feito.**
+
+- O indicador de topo passa a mostrar a **taxa oficial** do `CP011`, do **mesmo mês** das variações
+  por classe — comparar a oficial de um mês com contributos de outro seria pior do que o problema
+  que se corrigiu.
+- **Os euros continuam a ser a soma dos nove contributos.** É a propriedade que a decomposição
+  promete e que está verificada por teste desde a primeira auditoria; não se toca nela.
+- O *tooltip* do indicador diz que a percentagem é a oficial e que os euros são a soma dos nove,
+  com a taxa que essa soma implica.
+- **Uma nota nova, por baixo dos gráficos de decomposição** — que é onde a aditividade vive —
+  explica as duas agregações, quantifica a diferença do mês, mostra que ponderar pelos valores
+  correntes reproduz a oficial, e cita a estatística dos 90 meses.
+
+**O que mudou no ecrã:** o cartão «Agravamento nos últimos 12 meses» passa de **+3,0 %** para
+**+3,1 %**, que é agora o mesmo número que o separador Histórico mostra em «Variação mais recente».
+Os euros mantêm-se em 6,96 €. Deixou de haver dois números para a mesma grandeza sem relação entre
+si.
+
+**Testes — quatro novos.** O que sustenta a decisão é
+`test_a_reconstituida_pondera_pelos_valores_de_ha_um_ano`: verifica que a explicação dada ao leitor
+é verdadeira, e exige também que **as duas agregações divirjam mesmo** — sem essa metade, a nota na
+interface podia passar a mentir sem que nada o assinalasse.
+
+---
+
+## Encerramento da quarta auditoria — 12.08.2026
+
+**Os catorze itens estão fechados.** Treze eram correções; o K1 era uma decisão, e foi tomada.
+
+**A bateria passou de 106 para 134 testes.** A aplicação renderiza sem uma única exceção nas duas
+âncoras, em cinco composições e nas três escalas. As dezoito ligações respondem e **todas passam
+pela via preferida**, quando antes três dependiam da via de recurso. Nenhum valor de topo se
+alterou, com uma exceção deliberada: a taxa de inflação da capa, que passou a ser a oficial.
+
+**O que esta ronda mostrou, e vale mais do que qualquer dos itens.** Nenhum dos catorze era um erro
+de cálculo — os cálculos foram todos reconstituídos por via independente e nenhum falhou. O que
+falhava era outra coisa: **quatro chaves de acesso que nunca funcionaram e viviam de uma via de
+recurso que ninguém sabia estar a ser usada**, um aviso que media a coisa errada, e texto que
+envelheceu sem ninguém reparar. É o tipo de defeito que não dá erro, não muda um número, e só
+aparece quando se vai verificar — que é precisamente por isso que se faz auditoria.
 
 ---
 
