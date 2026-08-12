@@ -190,9 +190,16 @@ def carregar_dados(anos_historico: int = 6):
     registo.append(("Variações e UE-27", via3, len(var_df)))
 
     # Agregados especiais: separam choque conjuntural de inflação estrutural.
+    #
+    # A janela é a **do índice**, e não `ano − anos_historico`. É o índice que
+    # define as opções do cursor no separador Histórico, e este gráfico é
+    # filtrado por esse cursor: pedi-lo com uma janela mais curta deixava doze
+    # meses do intervalo escolhido sem dados, em silêncio. É o mesmo defeito que
+    # foi corrigido ontem na linha da variação homóloga e que ficou aberto no
+    # gráfico logo abaixo (auditoria de 12.08.2026, K5).
     try:
         agr_esp_df, via12 = eurostat.variacoes(
-            COD_AGREGADOS, ["PT", "EU27_2020"], f"{ano - anos_historico}-01")
+            COD_AGREGADOS, ["PT", "EU27_2020"], desde_indice)
         registo.append(("Agregados especiais do índice", via12, len(agr_esp_df)))
     except Exception as exc:                                   # noqa: BLE001
         agr_esp_df, via12 = pd.DataFrame(), f"indisponível ({exc})"
@@ -2076,6 +2083,20 @@ with aba2:
             meses_esp = sorted(pt_esp["time"].unique())
             if inicio_sel is not None:
                 meses_esp = [m for m in meses_esp if inicio_sel <= m <= fim_sel]
+                # Se a série não cobrir todo o intervalo escolhido, isso tem de
+                # ser dito — não descoberto por o gráfico começar mais tarde.
+                _esperados = [p for p in periodos if inicio_sel <= p <= fim_sel]
+                if meses_esp and len(meses_esp) < len(_esperados):
+                    st.warning(
+                        f"Estes agregados só cobrem {mes_pt(meses_esp[0])} a "
+                        f"{mes_pt(meses_esp[-1])} — {len(meses_esp)} dos "
+                        f"{len(_esperados)} meses do intervalo escolhido. O índice recua "
+                        "mais do que a série disponível nesta sessão."
+                    )
+                elif not meses_esp:
+                    st.warning(
+                        "Não há observações destes agregados no intervalo escolhido."
+                    )
 
             so_alim = st.toggle(
                 "Mostrar também os agregados de enquadramento", value=False,

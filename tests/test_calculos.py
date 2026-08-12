@@ -2121,3 +2121,45 @@ def test_o_separador_do_observatorio_usa_a_ultima_observacao():
     assert "_fim" in trecho, trecho
     # E a chamada antiga, que media so a recolha, nao pode voltar.
     assert 'idade_fonte(_obs_meta.get("extraido_em")' not in fonte
+
+
+# ---- K5 · tudo o que o cursor filtra usa a janela do cursor --------------
+def test_os_agregados_especiais_usam_a_janela_do_indice():
+    """
+    O cursor do separador Historico e definido pela janela do **indice**, que
+    desde o E14 recua ate ANO_BASE_VIES. Este grafico e filtrado por esse
+    cursor e era pedido com `ano - anos_historico`: doze meses do intervalo
+    escolhido ficavam sem dados, sem aviso (auditoria de 12.08.2026, K5).
+    """
+    fonte = _fonte("app.py")
+    i = fonte.index("agr_esp_df, via12")
+    trecho = fonte[i:i + 220]
+    assert "desde_indice" in trecho, trecho
+    assert "anos_historico" not in trecho, trecho
+
+
+def test_todas_as_series_filtradas_pelo_cursor_usam_a_mesma_janela():
+    """
+    A regra geral, que e o que impede a proxima ocorrencia: as series que o
+    cursor filtra pedem-se com `desde_indice`. A janela curta
+    (`desde_variacao`) so serve a comparacao europeia, que nao tem cursor.
+    """
+    fonte = _fonte("app.py")
+    inicio = fonte.index("def carregar_dados(")
+    corpo = fonte[inicio:fonte.index("def _atualizar_por_indice", inicio)]
+
+    # As duas series de Portugal que o cursor filtra.
+    for marca in ("var_pt_longo, via16", "agr_esp_df, via12"):
+        j = corpo.index(marca)
+        assert "desde_indice" in corpo[j:j + 220], marca
+
+    # `desde_variacao` existe uma vez so, no pedido largo da comparacao europeia.
+    assert corpo.count("desde_variacao") == 2      # a atribuicao e um uso
+    j = corpo.index("var_df, via3")
+    assert "desde_variacao" in corpo[j:j + 200]
+
+
+def test_o_grafico_dos_agregados_avisa_quando_nao_cobre_o_intervalo():
+    """A truncagem tem de ser dita, como ja acontece na variacao homologa."""
+    fonte = _fonte("app.py")
+    assert "len(meses_esp) < len(_esperados)" in fonte
