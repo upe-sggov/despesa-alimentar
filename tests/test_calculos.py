@@ -2050,3 +2050,74 @@ def test_conjuntos_arquivados_nao_tem_estrutura_declarada():
     for arquivado in ("prc_hicp_midx", "prc_hicp_manr", "prc_hicp_inw",
                       "nama_10_co3_p3"):
         assert arquivado not in eurostat.DIMENSOES
+
+
+# ---- K2 · frescura do Observatorio medida na ultima observacao -----------
+def test_frescura_do_observatorio_mede_a_serie_e_nao_a_recolha():
+    """
+    A verificacao media a data em que o script correu. Correr o script sobre
+    uma fonte que nao publicou nao torna os dados recentes — e era exactamente
+    esse o estado real: recolha de 2 dias, serie de 86, limite de 60, e nenhum
+    aviso (auditoria de 12.08.2026, K2).
+    """
+    from datetime import date
+
+    from src.calculos import frescura_do_observatorio
+
+    hoje = date(2026, 8, 12)
+    f = frescura_do_observatorio("2026-05-18", "2026-08-10", 60, hoje=hoje)
+    assert f["serie"]["dias"] == 86
+    assert f["recolha"]["dias"] == 2
+    assert f["parada"] is True
+    assert f["fonte_parou"] is True
+    assert f["periodos_em_falta"] == 3
+
+    # E a via antiga — medir a recolha — **nao** teria disparado. Sem esta
+    # metade, o teste passaria com a correcao revertida.
+    from src.calculos import idade_fonte
+    assert idade_fonte("2026-08-10", 60, hoje=hoje)["desatualizada"] is False
+
+
+def test_frescura_do_observatorio_distingue_de_quem_e_a_falha():
+    """
+    A resposta e diferente conforme a causa: se ninguem recolheu, correr o
+    script resolve; se a fonte parou, nao resolve nada.
+    """
+    from datetime import date
+
+    from src.calculos import frescura_do_observatorio
+
+    hoje = date(2026, 8, 12)
+
+    em_dia = frescura_do_observatorio("2026-08-01", "2026-08-10", 60, hoje=hoje)
+    assert not em_dia["parada"] and not em_dia["recolha_velha"]
+
+    ninguem_recolhe = frescura_do_observatorio("2026-05-18", "2026-05-20", 60, hoje=hoje)
+    assert ninguem_recolhe["parada"] and ninguem_recolhe["recolha_velha"]
+    assert ninguem_recolhe["fonte_parou"] is False      # a falha e de quem recolhe
+
+    fonte_parou = frescura_do_observatorio("2026-05-18", "2026-08-10", 60, hoje=hoje)
+    assert fonte_parou["fonte_parou"] is True           # a falha e da fonte
+
+    so_recolha = frescura_do_observatorio("2026-08-01", "2026-05-20", 60, hoje=hoje)
+    assert so_recolha["recolha_velha"] and not so_recolha["parada"]
+
+
+def test_frescura_do_observatorio_nao_acusa_o_que_nao_percebe():
+    """Na duvida nao se acusa a fonte — como em `idade_fonte`."""
+    from src.calculos import frescura_do_observatorio
+
+    f = frescura_do_observatorio(None, "nao e data", 60)
+    assert f["parada"] is False
+    assert f["fonte_parou"] is False
+    assert f["periodos_em_falta"] is None
+
+
+def test_o_separador_do_observatorio_usa_a_ultima_observacao():
+    """A app tem de passar a data da serie, nao a da recolha."""
+    fonte = _fonte("app.py")
+    i = fonte.index("frescura_do_observatorio(")
+    trecho = fonte[i:i + 160]
+    assert "_fim" in trecho, trecho
+    # E a chamada antiga, que media so a recolha, nao pode voltar.
+    assert 'idade_fonte(_obs_meta.get("extraido_em")' not in fonte

@@ -20,6 +20,7 @@ from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
                           comparar_ponderadores, composicao_iva,
                           composicao_quintis, decompor, despesa_do_agregado,
                           escala_mais_proxima, frescura_das_series,
+                          frescura_do_observatorio,
                           idade_fonte, indices_comparados,
                           intervalo_agregado, intervalo_engel,
                           pontos_de_rutura_das_escalas,
@@ -2338,20 +2339,50 @@ with aba6:
             o4.metric("Última observação", _fim.strftime("%d/%m/%Y"))
 
             st.caption(
-                f"Série de {_ini.strftime('%d/%m/%Y')} a {_fim.strftime('%d/%m/%Y')}. "
-                f"Recolha de {_obs_meta.get('extraido_em', '—')} · "
-                f"{_obs_meta.get('fonte', 'GPP')}."
+                f"Série de {_ini.strftime('%d/%m/%Y')} a **{_fim.strftime('%d/%m/%Y')}** "
+                f"— é esta a data que conta. Recolhido em "
+                f"{_obs_meta.get('extraido_em', '—')} · {_obs_meta.get('fonte', 'GPP')}."
             )
 
-            # O Observatório não tem API: se ninguém correr o script de recolha,
-            # a série fica parada sem a aplicação dar erro (auditoria, D4).
-            _idade_obs = idade_fonte(_obs_meta.get("extraido_em"), LIMITE_DIAS_OBSERVATORIO)
-            if _idade_obs["desatualizada"]:
+            # O Observatório não tem API. A verificação media a data em que o
+            # **script correu**, não a da última observação — e as duas divergem
+            # justamente no caso que interessa: correr o script sobre uma fonte
+            # que não publicou não torna os dados recentes
+            # (auditoria de 10.08.2026, D4; corrigido a 12.08.2026, K2).
+            _fresc_obs = frescura_do_observatorio(
+                _fim, _obs_meta.get("extraido_em"), LIMITE_DIAS_OBSERVATORIO)
+
+            if _fresc_obs["fonte_parou"]:
+                # Recolha fresca, série parada: a falha não é de quem recolhe.
+                st.error(
+                    f"⛔ **O Observatório não publica desde "
+                    f"{_fim.strftime('%d/%m/%Y')}** — há "
+                    f"**{numero(_fresc_obs['serie']['dias'])} dias**, quando o normal seria no "
+                    f"máximo {numero(LIMITE_DIAS_OBSERVATORIO)}. Faltam cerca de "
+                    f"**{_fresc_obs['periodos_em_falta']} períodos** de quatro semanas.\n\n"
+                    f"A recolha é recente — de {_obs_meta.get('extraido_em', '—')}, há "
+                    f"{numero(_fresc_obs['recolha']['dias'])} dias —, pelo que **correr de novo "
+                    "o script não resolve**: é a fonte que não avançou. Confirme em "
+                    "observatorioagroalimentar.gov.pt antes de citar estes números como "
+                    "situação corrente.\n\n"
+                    "As comparações entre produtos e entre fases mantêm-se válidas — são "
+                    "janelas de vários anos e não dependem do último período."
+                )
+            elif _fresc_obs["parada"]:
+                # A série está velha e a recolha também: falta correr o script.
                 st.warning(
-                    f"⏳ **Estes dados têm {_idade_obs['dias']} dias.** O Observatório publica de "
+                    f"⏳ **A última observação é de {_fim.strftime('%d/%m/%Y')}** — há "
+                    f"**{numero(_fresc_obs['serie']['dias'])} dias**, cerca de "
+                    f"{_fresc_obs['periodos_em_falta']} períodos. A recolha também tem "
+                    f"{numero(_fresc_obs['recolha']['dias'])} dias: o Observatório publica de "
                     "quatro em quatro semanas e não tem API — a série só avança quando alguém "
-                    "correr `scripts/recolher_observatorio.py`. Acima de "
-                    f"{LIMITE_DIAS_OBSERVATORIO} dias é provável que haja períodos por recolher."
+                    "correr `scripts/recolher_observatorio.py`."
+                )
+            elif _fresc_obs["recolha_velha"]:
+                st.warning(
+                    f"⏳ **A recolha tem {numero(_fresc_obs['recolha']['dias'])} dias.** A série "
+                    f"está em dia até {_fim.strftime('%d/%m/%Y')}, mas convém correr "
+                    "`scripts/recolher_observatorio.py` para apanhar o período seguinte."
                 )
 
             st.warning("""

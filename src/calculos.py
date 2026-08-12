@@ -88,6 +88,50 @@ def idade_fonte(referencia, limite_dias: int, hoje=None) -> dict:
             "desatualizada": dias > limite_dias}
 
 
+def frescura_do_observatorio(ultima_observacao, recolhido_em, limite_dias: int,
+                             cadencia_dias: int = 28, hoje=None) -> dict:
+    """
+    Se o Observatório ainda está a avançar — e, se não está, de quem é a falha.
+
+    A verificação anterior media **a data em que o script correu**, não a data da
+    última observação. As duas coisas divergem, e a divergência é precisamente o
+    caso que interessa: hoje a recolha tem 2 dias e a última observação tem 86,
+    com um limite de 60. O aviso não disparava (auditoria de 12.08.2026, K2).
+
+    É a lição do E1 — «uma série que responde não é uma série que avança» —
+    aplicada à fonte que deu origem à verificação, e que tinha ficado de fora.
+    Correr o script sobre uma fonte que não publicou não torna os dados
+    recentes.
+
+    Distinguem-se dois casos, porque a resposta é diferente:
+
+    - **a recolha está velha** → ninguém correu o script; correr resolve;
+    - **a recolha está fresca e a série parada** → a fonte é que não publicou,
+      e correr o script não resolve nada.
+
+    Devolve `serie` e `recolha` (ambos como `idade_fonte`), `periodos_em_falta`,
+    e os três sinalizadores `parada`, `recolha_velha` e `fonte_parou`.
+    """
+    serie = idade_fonte(ultima_observacao, limite_dias, hoje=hoje)
+    recolha = idade_fonte(recolhido_em, limite_dias, hoje=hoje)
+
+    periodos = None
+    if serie["dias"] is not None and cadencia_dias > 0:
+        periodos = max(int(serie["dias"] // cadencia_dias), 0)
+
+    return {
+        "serie": serie,
+        "recolha": recolha,
+        "periodos_em_falta": periodos,
+        "cadencia_dias": cadencia_dias,
+        "parada": bool(serie["desatualizada"]),
+        "recolha_velha": bool(recolha["desatualizada"]),
+        # A recolha é recente e a série está parada: a falha é da fonte, não de
+        # quem recolhe. É o caso de hoje, e o que o aviso antigo não via.
+        "fonte_parou": bool(serie["desatualizada"] and not recolha["desatualizada"]),
+    }
+
+
 def fim_do_periodo(periodo):
     """
     Último dia do período, na codificação do Eurostat.
