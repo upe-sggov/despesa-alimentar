@@ -2163,3 +2163,54 @@ def test_o_grafico_dos_agregados_avisa_quando_nao_cobre_o_intervalo():
     """A truncagem tem de ser dita, como ja acontece na variacao homologa."""
     fonte = _fonte("app.py")
     assert "len(meses_esp) < len(_esperados)" in fonte
+
+
+# ---- K6 · o isolamento entre separadores tem de ser real -----------------
+def test_nao_ha_formatadores_locais_duplicados():
+    """
+    `_pct` era `percentagem(v, sinal=False)` e `_num` era `numero(v, 1)`:
+    formatadores redundantes, definidos a meio de um separador. O `_pct` era
+    usado por mais dois separadores, o que fazia uma falha no primeiro arrastar
+    os outros (auditoria de 12.08.2026, K6).
+    """
+    fonte = _fonte("app.py")
+    assert "def _pct(" not in fonte
+    assert "def _num(" not in fonte
+    # E as chamadas foram convertidas, nao apagadas.
+    assert fonte.count("sinal=False") >= 20
+
+
+def test_nenhum_separador_usa_nome_definido_noutro():
+    """
+    A regra geral, e o que impede a proxima ocorrencia. O `painel()` promete que
+    «os restantes separadores continuam a funcionar»; uma funcao definida a meio
+    de um separador e usada noutro torna essa promessa falsa, com um NameError
+    que nao explica nada a quem o ve.
+    """
+    import ast
+
+    arvore = ast.parse(_fonte("app.py"))
+
+    # Os blocos `with abaN:` de primeiro nivel.
+    blocos = []
+    for no in arvore.body:
+        if isinstance(no, ast.With):
+            alvos = [i.context_expr for i in no.items]
+            if any(isinstance(a, ast.Name) and a.id.startswith("aba") for a in alvos):
+                blocos.append(no)
+    assert len(blocos) >= 5, "nao encontrei os blocos dos separadores"
+
+    for bloco in blocos:
+        fim = max(getattr(n, "end_lineno", bloco.lineno) for n in ast.walk(bloco))
+        definidas = {n.name: n.lineno for n in ast.walk(bloco)
+                     if isinstance(n, ast.FunctionDef)}
+        for nome, linha_def in definidas.items():
+            usos = [n.lineno for n in ast.walk(arvore)
+                    if isinstance(n, ast.Name) and n.id == nome
+                    and isinstance(n.ctx, ast.Load)]
+            fora = [l for l in usos if not (bloco.lineno <= l <= fim)]
+            assert not fora, (
+                f"«{nome}», definida na linha {linha_def} dentro do separador que "
+                f"comeca na linha {bloco.lineno}, e usada fora dele nas linhas "
+                f"{fora}. Formatadores e auxiliares partilhados pertencem a "
+                f"src/config.py — ver K6.")

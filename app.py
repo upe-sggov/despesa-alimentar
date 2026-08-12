@@ -1175,19 +1175,16 @@ with aba1:
         eng_pt = (dados.get("engel") or {}).get("PT")
         _eng = intervalo_engel(eng_pt)
 
-        def _pct(v):
-            return f"{v:.1f} %".replace(".", ",")
-
         if eng_pt:
             # Intervalo, e não ponto: as duas bases oficiais divergem, e é a
             # mesma divergência que já leva a âncora a ser apresentada como
             # intervalo. O extremo inferior é o número do INE que aparece na
             # tabela por quintil logo abaixo (auditoria de 10.08.2026, B4).
             r3.metric("Do que as famílias gastam, vai para comida",
-                      f"{_pct(_eng['minimo'])} a {_pct(_eng['maximo'])}",
+                      f"{percentagem(_eng['minimo'], sinal=False)} a {percentagem(_eng['maximo'], sinal=False)}",
                       help=("Coeficiente de Engel nas duas bases oficiais: "
-                            f"{_pct(_eng['idf'])} no IDF 2022/2023 (agregados residentes) "
-                            f"e {_pct(_eng['contas'])} nas Contas Nacionais de "
+                            f"{percentagem(_eng['idf'], sinal=False)} no IDF 2022/2023 (agregados residentes) "
+                            f"e {percentagem(_eng['contas'], sinal=False)} nas Contas Nacionais de "
                             f"{_eng['ano_contas']} (conceito macroeconómico). Divergem "
                             "porque a despesa alimentar por agregado difere entre bases "
                             "mais do que a despesa total — o mesmo motivo por que a "
@@ -1274,7 +1271,7 @@ with aba1:
         if _cob_q < 0.999:
             _falta_q = df_quintis.attrs.get("classes_sem_variacao") or []
             st.warning(
-                f"**Cobertura parcial: {_pct(_cob_q * 100)} da despesa alimentar.** "
+                f"**Cobertura parcial: {percentagem(_cob_q * 100, sinal=False)} da despesa alimentar.** "
                 f"{len(_falta_q)} classe(s) sem variação homóloga nesta sessão — "
                 f"{_nomes_classes(_falta_q)}. As colunas **Inflação 12m** e "
                 "**Agravamento** medem só as classes cobertas, mas a coluna "
@@ -1284,9 +1281,9 @@ with aba1:
 
         if not _eng["so_idf"]:
             st.caption(
-                f"O **{_pct(_eng['idf'])}** da média nacional, na coluna «Peso no orçamento», é o "
+                f"O **{percentagem(_eng['idf'], sinal=False)}** da média nacional, na coluna «Peso no orçamento», é o "
                 "limite inferior do intervalo do coeficiente de Engel mostrado em cima. O limite "
-                f"superior, {_pct(_eng['contas'])}, vem das Contas Nacionais: medem o consumo das "
+                f"superior, {percentagem(_eng['contas'], sinal=False)}, vem das Contas Nacionais: medem o consumo das "
                 "famílias por via macroeconómica e registam, por agregado, mais despesa alimentar "
                 "do que o inquérito — e o coeficiente diverge porque **o numerador diverge mais "
                 "do que o denominador**. Nenhuma das duas é a resposta certa — ver Metodologia."
@@ -1299,10 +1296,6 @@ with aba1:
         if not _infs.empty:
             _amplitude = float(_infs.max() - _infs.min())
 
-        def _num(valor, casas=1):
-            """Número com vírgula decimal, sem tocar no resto do texto."""
-            return f"{valor:.{casas}f}".replace(".", ",")
-
         _racio = _q1.peso_orcamento / _q5.peso_orcamento
         _frase_taxa = ""
         if _amplitude is not None:
@@ -1310,7 +1303,7 @@ with aba1:
             _nome_alto = df_quintis.loc[_mais_alto, "nome"]
             _frase_taxa = (
                 f"A <em>taxa</em> de inflação, essa, quase não difere entre quintis: a amplitude "
-                f"é de <strong>{_num(_amplitude, 2)} p.p.</strong>, e o valor mais alto está no "
+                f"é de <strong>{numero(_amplitude, 2)} p.p.</strong>, e o valor mais alto está no "
                 f"<strong>{_nome_alto}</strong>. "
             )
 
@@ -1322,19 +1315,19 @@ with aba1:
                 f"(<strong>{euro(_q5.agravamento)}</strong> contra "
                 f"<strong>{euro(_q1.agravamento)}</strong>), simplesmente porque gasta mais em "
                 f"comida. Medido contra o orçamento de cada um, inverte-se: "
-                f"<strong>{_num(_q1.agravamento_orcamento, 2)} %</strong> do orçamento do "
-                f"1.º quintil contra <strong>{_num(_q5.agravamento_orcamento, 2)} %</strong> "
+                f"<strong>{numero(_q1.agravamento_orcamento, 2)} %</strong> do orçamento do "
+                f"1.º quintil contra <strong>{numero(_q5.agravamento_orcamento, 2)} %</strong> "
                 f"do 5.º. "
             )
 
         st.markdown(f"""
         <div class="nota">
           <div class="tt">O efeito regressivo está na exposição, não na taxa</div>
-          A alimentação absorve <strong>{_num(_q1.peso_orcamento)} %</strong> do orçamento do
-          quintil mais pobre e <strong>{_num(_q5.peso_orcamento)} %</strong> do mais rico — um
-          rácio de <strong>{_num(_racio, 2)}</strong>. {_frase_taxa}Concluir daí que a inflação
+          A alimentação absorve <strong>{numero(_q1.peso_orcamento, 1)} %</strong> do orçamento do
+          quintil mais pobre e <strong>{numero(_q5.peso_orcamento, 1)} %</strong> do mais rico — um
+          rácio de <strong>{numero(_racio, 2)}</strong>. {_frase_taxa}Concluir daí que a inflação
           alimentar é distributivamente neutra seria um erro de leitura: o mesmo aumento
-          percentual incide sobre uma fatia do orçamento <strong>{_num(_racio, 1)} vezes
+          percentual incide sobre uma fatia do orçamento <strong>{numero(_racio, 1)} vezes
           maior</strong> em baixo da distribuição, e sobre um orçamento total que é menos de
           metade.<br><br>{_frase_esforco}É por isto que nenhuma destas colunas deve ser lida
           isoladamente: a taxa sozinha sugere neutralidade, os euros sozinhos sugerem o
@@ -1783,9 +1776,9 @@ que não há nada a descontar nem a acrescentar.
           nenhuma — é <strong>exposição</strong>: quanto do orçamento dos 20 % mais pobres vai
           para comida.<br><br>
           Apresentar apenas o primeiro daria uma leitura indevidamente tranquilizadora: sugeriria
-          um problema de <strong>{_pct(_sev) if _sev is not None else '≈2 %'}</strong> da
+          um problema de <strong>{percentagem(_sev, sinal=False) if _sev is not None else '≈2 %'}</strong> da
           população, quando por um limiar nutricionalmente defensável são
-          <strong>{_pct(_sofi_pt)}</strong>.
+          <strong>{percentagem(_sofi_pt, sinal=False)}</strong>.
           <strong>A fome severa recuou; a impossibilidade de comer bem não.</strong>
         </div>
         """, unsafe_allow_html=True)
@@ -1823,8 +1816,8 @@ que não há nada a descontar nem a acrescentar.
                     # não ao número. É o padrão que o C5 fechou em nove sítios e
                     # que sobreviveu neste (auditoria de 11.08.2026, E8).
                     st.caption(
-                        f"Em {_ano_sev}, **{_pct(_sev_pobres)}** entre quem está em risco "
-                        f"de pobreza, contra **{_pct(_sev)}** no total — "
+                        f"Em {_ano_sev}, **{percentagem(_sev_pobres, sinal=False)}** entre quem está em risco "
+                        f"de pobreza, contra **{percentagem(_sev, sinal=False)}** no total — "
                         f"**{numero(_sev_pobres / _sev, 1)}×** mais."
                     )
 
@@ -2916,7 +2909,7 @@ with aba3:
         if _res_band_pred is not None and abs(_res_band_pred[1] - _res_band_pred[0]) > 0.005:
             st.caption(
                 f"**Sensibilidade às atribuições por predominância — limite exterior.** "
-                f"{_pct(_res_iva['por_predominancia_pct'])} do cabaz está em subclasses cuja "
+                f"{percentagem(_res_iva['por_predominancia_pct'], sinal=False)} do cabaz está em subclasses cuja "
                 "taxa foi atribuída por **juízo sobre a rubrica**, e não por leitura inequívoca "
                 "das Listas — o **pão** a 6 %, onde a AT excluiu o pré-cozido congelado; o "
                 "bacalhau seco a 6 %, onde o fumado fica a 23 %; os pré-preparados a 23 %. Se "
@@ -2931,7 +2924,7 @@ with aba3:
         if _res_band is not None and abs(_res_band[1] - _res_band[0]) > 0.005:
             st.caption(
                 f"**Sensibilidade à parcela indeterminada.** "
-                f"{_pct(_res_iva['indeterminado_pct'])} do cabaz está em subclasses que "
+                f"{percentagem(_res_iva['indeterminado_pct'], sinal=False)} do cabaz está em subclasses que "
                 "atravessam taxas em proporção não repartível. Levando essa parcela toda à taxa "
                 f"reduzida ou toda à normal, a poupança mensal fica entre "
                 f"**{euro(_res_band[0])}** e **{euro(_res_band[1])}**. Os valores acima usam, "
@@ -2950,12 +2943,12 @@ with aba3:
                 "primeira vez."
             )
             w1, w2, w3, w4 = st.columns(4)
-            w1.metric("À taxa reduzida (6 %)", f"{_pct(_res_iva['taxa_6_pct'])}",
+            w1.metric("À taxa reduzida (6 %)", f"{percentagem(_res_iva['taxa_6_pct'], sinal=False)}",
                       help="Parcela do cabaz alimentar que está seguramente a 6 %.")
-            w2.metric("À taxa intermédia (13 %)", f"{_pct(_res_iva['taxa_13_pct'])}",
+            w2.metric("À taxa intermédia (13 %)", f"{percentagem(_res_iva['taxa_13_pct'], sinal=False)}",
                       help="Os óleos vegetais que não são azeite (Lista II, 1.5.3).")
-            w3.metric("À taxa normal (23 %)", f"{_pct(_res_iva['taxa_23_pct'])}")
-            w4.metric("Indeterminado", f"{_pct(_res_iva['indeterminado_pct'])}",
+            w3.metric("À taxa normal (23 %)", f"{percentagem(_res_iva['taxa_23_pct'], sinal=False)}")
+            w4.metric("Indeterminado", f"{percentagem(_res_iva['indeterminado_pct'], sinal=False)}",
                       help=("Subclasses que atravessam taxas em proporção não repartível — "
                             "marisco (moluscos a 6 %, crustáceos a 23 %), o mel dentro dos "
                             "doces, o sal dentro dos condimentos, os leites aromatizados "
@@ -2972,9 +2965,9 @@ with aba3:
     **Porque é que a taxa atual de cada grupo não é a taxa predefinida — e o que isso mudou.**
 
     Até 11.08.2026 a simulação aplicava a cada grupo a sua taxa **predefinida**: 6 % a sete grupos,
-    23 % a dois. Isso equivalia a assumir que **{_pct(_res_iva['assumido_6_pct'])}** do cabaz está
+    23 % a dois. Isso equivalia a assumir que **{percentagem(_res_iva['assumido_6_pct'], sinal=False)}** do cabaz está
     à taxa reduzida. O apuramento por subclasse diz que são
-    **{_pct(_res_iva['apurado_6_min_pct'])} a {_pct(_res_iva['apurado_6_max_pct'])}**.
+    **{percentagem(_res_iva['apurado_6_min_pct'], sinal=False)} a {percentagem(_res_iva['apurado_6_max_pct'], sinal=False)}**.
 
     A diferença não era pequena nem tinha sinal único. Medida sobre o **IVA contido** na despesa
     alimentar do agregado médio, que é o que determina a poupança:
@@ -3052,9 +3045,9 @@ with aba3:
             st.caption(
                 "**«Na predefinida»** é a fração do grupo que segue efetivamente a taxa que o "
                 "simulador lhe aplica — é a medida da qualidade da aproximação, grupo a grupo. "
-                f"Vai de {_pct(float(_comp_iva['na_taxa_predefinida_pct'].min()))} a "
-                f"{_pct(float(_comp_iva['na_taxa_predefinida_pct'].max()))}. "
-                f"{_pct(_res_iva['por_predominancia_pct'])} do cabaz foi atribuído por "
+                f"Vai de {percentagem(float(_comp_iva['na_taxa_predefinida_pct'].min()), sinal=False)} a "
+                f"{percentagem(float(_comp_iva['na_taxa_predefinida_pct'].max()), sinal=False)}. "
+                f"{percentagem(_res_iva['por_predominancia_pct'], sinal=False)} do cabaz foi atribuído por "
                 "**predominância** e não com certeza — ver o detalhe por subclasse abaixo."
             )
             st.warning(
@@ -3527,8 +3520,8 @@ with aba4:
 
     **Porque é que esta página mostra um valor e o separador «Despesa e composição» mostra um
     intervalo.** O coeficiente pode medir-se em duas bases, e elas não coincidem:
-    **{_pct(_eng_ue['idf'])}** no IDF 2022/2023 do INE,
-    **{_pct(_eng_ue['contas']) if _eng_ue['contas'] is not None else '—'}** nas Contas Nacionais
+    **{percentagem(_eng_ue['idf'], sinal=False)}** no IDF 2022/2023 do INE,
+    **{percentagem(_eng_ue['contas'], sinal=False) if _eng_ue['contas'] is not None else '—'}** nas Contas Nacionais
     de {_eng_ue['ano_contas'] or '—'}. As Contas Nacionais registam, por agregado, mais despesa
     alimentar do que o inquérito — e o coeficiente diverge porque **o numerador diverge mais do
     que o denominador**. É a mesma divergência entre bases que leva a aplicação a apresentar a
