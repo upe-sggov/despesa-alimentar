@@ -2881,5 +2881,576 @@ que o método consegue observar.
 
 ---
 
+# K — Quarta auditoria: aplicação, dados, cálculos e ligações — 12 de agosto de 2026
+
+**Âmbito:** `app.py` na íntegra (4 683 linhas) e os quatro módulos de que depende — `src/config.py`,
+`src/calculos.py`, `src/eurostat.py`, `src/observatorio.py` —, mais `dados/` e `tests/`.
+**Método:** leitura integral do código; execução da bateria de testes; **chamada real às dezoito
+ligações de dados**, com confronto da estrutura de cada conjunto contra a chave que a aplicação
+usa; reconstituição independente de todos os valores de topo, fora da aplicação; e **renderização
+efetiva** da aplicação nas duas âncoras, em cinco composições e nas três escalas.
+
+**Numeração:** os itens desta ronda são **K1 a K14**, para não colidirem com os anteriores.
+
+> **Conclusão em quatro linhas.** Os cálculos estão certos — reconstituí-os todos por via
+> independente e nenhum falhou. O que a auditoria encontrou está noutro sítio: **três chaves SDMX
+> estão erradas desde sempre e só funcionam porque a via de recurso as salva**; **a via de recurso
+> do nível de preços está morta**; **a vigilância de frescura do Observatório mede a coisa errada e
+> deixou passar três períodos em falta**; e a aplicação **publica dois números diferentes para a
+> inflação alimentar**, a dois separadores de distância, sem os relacionar.
+
+**Resumo por gravidade:**
+
+| | N.º | Efeito |
+|---|---|---|
+| 🔴 Crítico | 1 | Dois números publicados para a mesma grandeza, sem reconciliação |
+| 🟠 Importante | 5 | Ligação frágil, aviso que não dispara, isolamento que não isola |
+| 🟡 A corrigir | 6 | Rigor, rastreabilidade, texto desatualizado, risco operacional |
+| ⚪ A declarar | 2 | Pressupostos legítimos que devem estar explícitos |
+
+---
+
+## O que verifiquei e está correto
+
+Começo por aqui, porque delimita o que segue. **Tudo o que se lista foi reexecutado, não relido.**
+
+- **A bateria de 106 testes passa**, em 2,35 s.
+- **A aplicação renderiza sem uma única exceção** — nas duas âncoras, nas composições 1a, 2a, 5a,
+  3a+2c e 10a+10c, e nas três escalas de equivalência.
+- **As dezoito ligações respondem**, e as onze séries vigiadas estão **todas dentro do prazo**:
+  índice e variação em 2026-06 (43 dias), ponderadores 2026, Contas Nacionais 2024, EU-SILC 2025,
+  salário mínimo 2026-S2, PPP 2025.
+- **As duas âncoras reproduzem ao cêntimo, por cálculo independente:**
+  IDF `2 872 / 12 × 1,1744` (média do índice na janela fev/2022–jan/2023, 12 meses) = **281,06 €**;
+  Contas Nacionais `33 037,8 M€ / 4 473 300 (2024) / 12 × 1,0597` = **652,22 €**.
+- **A decomposição é exatamente aditiva.** A soma das nove quotas dá 1,0000000000; a soma dos
+  contributos coincide com `V − Σ Vᵢ/(1+gᵢ)` **a zero absoluto** (diferença 0,00e+00).
+- **A identidade da taxa média efetiva confirma-se** em nove combinações de cenário e repercussão,
+  com desvio máximo de **1,4 × 10⁻¹⁴** face à simulação escalão a escalão reconstruída de raiz a
+  partir do `IVA_COMPONENTES`. O método está certo.
+- **A aritmética do IVA coincide com a do Banco de Portugal:** `efeito_mecanico_pct(23, 0)` dá
+  **−18,6992 %**, contra os −18,7 % publicados. Os quatro ρ derivam corretamente: 95,2 % · 83,3 % ·
+  106,0 % · 131,0 %.
+- **A composição por taxa fecha contra o publicado.** A soma dos componentes de cada classe
+  reproduz o ponderador publicado com desvio máximo de **0,01 ‰** (arredondamento do Eurostat);
+  cobertura global 1,000051. As 72 subclasses pedidas foram todas devolvidas, nenhuma em falta.
+- **Os quadros do IDF são internamente coerentes:** a soma das nove classes reproduz o total
+  publicado em quatro dos seis quintis e desvia-se 1 €/ano nos outros dois; os seis pesos
+  orçamentais reproduzem-se a uma casa decimal.
+- **O viés de substituição reproduz:** 0,3247 pontos, base fixa em dez/2019, com as **nove** classes
+  incluídas e nenhuma excluída.
+- **O teste das escalas reproduz** (−21,5 / −5,0 / +10,3 %) e os pontos de rutura calculados —
+  3,578 e 4,529 adultos — coincidem com os valores que a interface mostra.
+- **O coeficiente de Engel reproduz:** 33 037,8 / 192 795,9 = **17,136 %** em 2024.
+- **O salário mínimo confirma-se:** 1 073 € em 2026-S2, que × 12/14 dá exatamente os 920 € legais.
+
+---
+
+## 🔴 K1 · A aplicação publica dois números para a inflação alimentar, e não os relaciona
+
+**Onde:** `app.py` linha ~1130 (capa) contra linha ~2043 (Histórico) e ~3971 (Metodologia).
+
+**O que se passa.** Três sítios apresentam a subida dos preços alimentares nos últimos doze meses,
+por três construções diferentes:
+
+| Separador | Rótulo | Hoje | Como é obtido |
+|---|---|---|---|
+| **Despesa e composição** | «Agravamento nos últimos 12 meses» | **+3,0 %** | `variacao_implicita` — reconstituída dos nove contributos |
+| **Histórico** | «Variação mais recente» | **+3,1 %** | a variação homóloga **oficial** do `CP011` |
+| **Metodologia** | «Inflação alimentar, ponderação IHPC» | **3,1 %** | média aritmética das nove taxas, ponderada |
+
+O primeiro é o **indicador de capa**, e é o que difere. Não é arredondamento: medido sobre os
+últimos catorze meses, o desvio entre a taxa da capa e a oficial **vai de −0,13 a +0,22 p.p. e muda
+de sinal**:
+
+| Mês | Oficial `CP011` | Capa da aplicação | Diferença |
+|---|---|---|---|
+| 2025-07 | 3,7 % | 3,92 % | **+0,22 p.p.** |
+| 2025-10 | 3,5 % | 3,66 % | +0,16 p.p. |
+| 2026-02 | 3,7 % | 3,70 % | 0,00 p.p. |
+| 2026-04 | 4,6 % | 4,48 % | −0,12 p.p. |
+| **2026-06** | **3,1 %** | **2,97 %** | **−0,13 p.p.** |
+
+**Porque diverge.** A capa agrega as nove taxas pela fórmula do contributo, `Σ Vᵢ·gᵢ/(1+gᵢ)`, com
+quotas de valor do **período corrente** — uma agregação de tipo Paasche. O índice oficial é um
+Laspeyres encadeado com os ponderadores de cada ano. Acresce que a aplicação usa os ponderadores de
+**2026** para reconstituir tanto o valor de hoje como o de há um ano, quando o valor de há um ano
+foi medido com os de 2025.
+
+**Isto não é um erro de cálculo.** A taxa da capa é exata *dada* a reconstituição, e a aditividade
+— que é a propriedade que se quis garantir — depende dela. O problema é de **publicação**: a
+ferramenta cuja doutrina é «quando duas fontes oficiais discordam, mostra-se o intervalo e não se
+arbitra» arbitra aqui em silêncio, e apresenta o número derivado como se fosse o oficial. Um leitor
+que cite «+3,0 %» de inflação alimentar em junho de 2026 estará a citar um número que o INE não
+publicou.
+
+**Correção.** Duas vias, e recomendo a segunda:
+
+1. Mostrar a variação **oficial** do `CP011` no cartão da capa, e manter a implícita apenas como
+   base da decomposição em euros.
+2. **Manter a implícita** — porque é ela que torna os nove contributos somáveis — e acrescentar ao
+   `help` do indicador a taxa oficial ao lado, com uma frase: «taxa reconstituída da decomposição;
+   o índice oficial do `CP011` dá X % no mesmo mês. Divergem por serem agregações diferentes.» É a
+   mesma doutrina que a aplicação já usa para a âncora e para o Engel.
+
+Em qualquer dos casos, **rotular explicitamente** o número da Metodologia como uma terceira
+construção, para que os três se distingam.
+
+---
+
+## 🟠 K2 · O Observatório está três períodos atrasado e o aviso não dispara
+
+**Onde:** `app.py`, linha ~2348 — `idade_fonte(_obs_meta.get("extraido_em"), LIMITE_DIAS_OBSERVATORIO)`.
+
+**O que se passa.** A verificação de frescura do Observatório mede **a data em que o script correu**,
+não a data da última observação. Medido hoje:
+
+| | Data | Idade | Aviso |
+|---|---|---|---|
+| Recolha — **o que a aplicação mede** | 10/08/2026 | **2 dias** | não dispara |
+| Última observação — **o que devia medir** | 18/05/2026 | **86 dias** | **devia disparar** |
+
+O limite está em 60 dias, justificado no `config.py` por o Observatório publicar de 28 em 28 dias.
+Com 86 dias, faltam cerca de **três períodos**. O aviso não dispara porque alguém correu o script
+há dois dias — e correr o script sobre uma fonte que não avançou não torna os dados recentes.
+
+**É exatamente a lição do E1, aplicada ao contrário.** O E3 inscreveu no código que «uma série que
+responde não é uma série que avança» e criou a vigilância para as séries com API. A fonte que deu
+origem à verificação — o Observatório, no D4 — ficou a ser medida pela data da recolha.
+
+A aplicação até **mostra** o problema: o indicador «Última observação» diz *18/05/2026*. Mas
+mostra-o como facto neutro, ao lado de uma legenda que diz «Recolha de 2026-08-10», o que sugere
+atualidade.
+
+**Correção.** Passar `idade_fonte` sobre `_obs["inicio"].max()` em vez de `extraido_em`, e manter a
+data da recolha apenas como informação de proveniência. Quando as duas divergirem, dizer as duas:
+«recolhido há 2 dias; a fonte não publica desde 18/05/2026 — 3 períodos em falta».
+
+> ⚠️ **Enquanto isto não estiver resolvido**, o separador «Da produção ao consumo» apresenta
+> variações que terminam em maio de 2026 sem o assinalar. As conclusões qualitativas mantêm-se —
+> são janelas de quatro anos —, mas o separador não deve ser citado como situação corrente.
+
+---
+
+## 🟠 K3 · Três chaves SDMX estão erradas desde sempre; a via de recurso é que as salva
+
+**Onde:** `src/eurostat.py`, `dimensao_agregado()` linha ~391 e `SM_CANDIDATOS` linha ~553.
+
+**O que se passa.** Confrontei **todas** as quinze chaves SDMX da aplicação com a estrutura real de
+cada conjunto. Doze estão certas. Quatro devolvem **HTTP 400 em todas as sessões**, e sempre pela
+mesma razão — número de filtros errado:
+
+| Função | Chave usada | Partes | Dimensões reais | Resultado |
+|---|---|---|---|---|
+| `dimensao_agregado` | `ilc_lvph01/A.AVG.TOTAL.PT` | 4 | `freq.unit.geo` (3) | **400** |
+| `salario_minimo` cand. 1 | `earn_mw_cur/S1.EUR.MW.PT` | 4 | `freq.currency.geo` (3) | **400** |
+| `salario_minimo` cand. 2 | `earn_mw_cur/S1.MW.EUR.PT` | 4 | idem | **400** |
+| `salario_minimo` cand. 3 | `earn_mw_cur/S1.EUR.NAT.PT` | 4 | idem | **400** |
+
+O erro do Eurostat é explícito: `INVALID_QUERY_NB_FILTERS: Incorrect number of filters`. Nenhuma
+das quatro pode funcionar — o `TOTAL` e o `MW` são segmentos a mais, e a frequência do
+`earn_mw_cur` é `S`, não `S1`.
+
+**Porque não explodiu.** A via Statistics responde e os valores estão certos — 2,4 pessoas e
+1 073 €, ambos confirmados. **É o padrão exato do B1**: uma chave errada, salva por uma via de
+recurso, com a lógica preferida a nunca correr.
+
+**O que torna isto mais do que cosmético.** Os filtros da via de recurso estão **incompletos**:
+`dimensao_agregado` não filtra `unit`, `salario_minimo` não filtra `freq`. Funcionam hoje porque
+essas dimensões têm um único valor. No dia em que o Eurostat acrescentar uma segunda unidade ao
+`ilc_lvph01` — ou uma segunda frequência ao `earn_mw_cur` —, a resposta traz duas séries empilhadas
+e o `.iloc[-1]` escolhe uma **arbitrariamente**. Foi assim que o B1 devolveu 443,5 mil agregados.
+
+**Correção — verificada na API:**
+
+```python
+# eurostat.py, dimensao_agregado()
+"A.AVG.PT",                                   # em vez de "A.AVG.TOTAL.PT"
+{"freq": "A", "unit": "AVG", "geo": "PT", ...}   # acrescentar unit
+
+# eurostat.py, salario_minimo() — chave única, sem lista de candidatos
+f"S.EUR.{'+'.join(geos)}",
+{"freq": "S", "currency": "EUR", "geo": geos, ...}   # acrescentar freq
+```
+
+Confirmei as duas em execução: `ilc_lvph01/A.AVG.PT` → HTTP 200, 22 observações, 2025 = 2,4;
+`earn_mw_cur/S.EUR.PT` → HTTP 200, 56 observações, 2026-S2 = 1 073.
+
+**Teste de regressão sugerido.** Um teste que, para cada função de acesso, conte os segmentos da
+chave e os confronte com as dimensões declaradas pela API. É o único que apanha esta família de
+erro sem depender de a via de recurso falhar também.
+
+---
+
+## 🟠 K4 · A via de recurso do nível de preços está morta — a ligação tem um só caminho
+
+**Onde:** `src/eurostat.py`, `nivel_precos()`, linha ~500.
+
+**O que se passa.** O `prc_ppp_ind_1` seguiu a mesma revisão de nomenclatura que o IHPC e as Contas
+Nacionais, e **renomeou as suas dimensões**:
+
+| A aplicação envia | O conjunto tem |
+|---|---|
+| `na_item` | **`indic_ppp`** |
+| `ppp_cat` | **`ppp_cat18`** |
+
+A chave SDMX é **posicional** e por isso continua a funcionar. Os filtros da via Statistics são
+**nominais**, e não. Verificado hoje, com os filtros exatos da aplicação:
+
+```text
+GET .../statistics/1.0/data/prc_ppp_ind_1?na_item=PLI_EU27_2020&ppp_cat=A010101&geo=PT
+-> HTTP 400  INVALID_QUERY_DIMENSION: Dimension "PPP_CAT" is not defined
+```
+
+**Consequência.** A arquitetura de duas vias — que o módulo documenta como o seu mecanismo de
+resiliência — não existe para esta ligação. Se a via SDMX falhar por qualquer razão, o painel «Quão
+caros são os alimentos» desaparece por inteiro, e a `carregar_dados` percorre em silêncio as duas
+categorias candidatas antes de desistir. E note-se que **três ligações desta aplicação já dependem
+hoje da via Statistics** — não é um caminho hipotético.
+
+**Há aqui um alívio que vale a pena registar**, porque eu esperava pior: os nomes errados produzem
+**erro**, não uma fatia arbitrária. Se o Eurostat os ignorasse em vez de os rejeitar, a resposta
+traria as 64 categorias empilhadas e a aplicação apresentaria o nível de preços de outra coisa sob
+o título «nível de preços dos alimentos» — que é precisamente o B3. Não acontece.
+
+**Correção.** `{"freq": "A", "indic_ppp": "PLI_EU27_2020", "ppp_cat18": categoria, "geo": geos}`.
+Verificado: HTTP 200, Portugal 2025 = **101,4**, o mesmo valor que a via SDMX devolve.
+
+**E uma recomendação de fundo.** Esta é a **terceira** vez que uma renomeação de dimensão da
+COICOP 2018 atinge a aplicação — `coicop`→`coicop18` no IHPC (E1), outra vez nas Contas Nacionais
+(E16), e agora `ppp_cat`→`ppp_cat18`. A guarda criada no E1 protege a dimensão de classificação;
+não protege os **filtros da via de recurso**, que continuam a ser cadeias de texto sem verificação.
+Vale a pena validar os nomes dos filtros contra as dimensões da API, uma vez por sessão.
+
+---
+
+## 🟠 K5 · A truncagem corrigida ontem ficou aberta no gráfico seguinte
+
+**Onde:** `app.py`, `carregar_dados()` linha ~194, e o painel «O que está por trás da subida»,
+linha ~2077.
+
+**O que se passa.** O commit de ontem corrigiu um bug relatado pela Inês: o cursor do separador
+Histórico oferecia períodos que a série da variação homóloga não cobria, e a linha vermelha
+aparecia truncada sem aviso. A correção pediu a série de Portugal à parte, com a janela do índice.
+
+**O gráfico imediatamente abaixo tem o mesmo defeito, e não foi corrigido.** Os agregados especiais
+— «Alimentos não transformados», «Transformados», «Todos os produtos», «Subjacente» — são pedidos
+desde `ano − anos_historico`, enquanto o cursor é definido pela janela do índice, que é
+`min(ano − 6, ANO_BASE_VIES)`:
+
+```python
+primeiro_ano   = min(ano - anos_historico, ANO_BASE_VIES)   # 2019
+desde_indice   = f"{primeiro_ano}-01"                       # "2019-01"  <- define o cursor
+...
+agr_esp_df, via12 = eurostat.variacoes(
+    COD_AGREGADOS, ["PT", "EU27_2020"], f"{ano - anos_historico}-01")   # "2020-01"  <- não cobre
+```
+
+**Verificado em execução:**
+
+```text
+índice (define o cursor)      : 2019-01 .. 2026-06   (90 períodos)
+variação PT (corrigida ontem) : 2019-01 .. 2026-06   -> cobre
+agregados especiais           : 2020-01 .. 2026-07   -> NÃO cobre
+meses do cursor sem agregados especiais: 12
+```
+
+Arrastando o cursor até ao início, o gráfico dos agregados especiais e a tabela que o acompanha
+mostram doze meses a menos do que o intervalo escolhido, **sem qualquer aviso**. Confirmei por
+renderização: zero exceções, zero avisos.
+
+**Correção.** Uma linha — pedir os agregados especiais com `desde_indice` em vez de
+`f"{ano - anos_historico}-01"`. São cinco códigos e dois países: o pedido é barato, tal como o da
+série longa de Portugal. Em alternativa, o aviso de cobertura que o commit de ontem já introduziu
+para a variação homóloga deve ser estendido a este gráfico.
+
+**A lição, que é a mais útil desta ronda:** a janela do cursor passou a ser `ANO_BASE_VIES`, fixada
+noutro ficheiro por outra razão (E14). **Qualquer série que o cursor filtre tem de ser pedida com
+essa janela**, e hoje isso não está garantido em lado nenhum — nem por convenção nem por teste.
+
+---
+
+## 🟠 K6 · O isolamento entre separadores não isola — demonstrado
+
+**Onde:** `app.py`, `_pct` definida na linha 1170 (dentro do separador 1) e usada nas linhas
+2867–3005 (separador do IVA) e 3478–3479 (separador UE-27).
+
+**O que se passa.** O gestor de contexto `painel()` promete, na sua própria *docstring*:
+
+> «Se algo falhar […] o erro fica contido nesse separador […] em vez de derrubar a aplicação
+> inteira.»
+
+Não fica. A função auxiliar `_pct` é definida a meio do primeiro separador e usada por mais dois.
+Se o primeiro separador falhar **antes da linha 1170**, os outros dois falham também — com um
+`NameError` que não explica nada a quem o vê.
+
+**Verificado por injeção de falha.** Forcei uma exceção em `intervalo_engel()`, que corre na linha
+1168 — duas linhas antes da definição:
+
+```text
+st.error emitidos: 3
+  -> **Não foi possível apresentar «Despesa e composição».**
+     causa: `RuntimeError: falha simulada no separador 1`
+  -> **Não foi possível apresentar «Simulador de IVA».**
+     causa: `NameError: name '_pct' is not defined`
+```
+
+Uma falha localizada tornou-se duas, e a segunda mensagem manda o utilizador «recarregar do
+Eurostat» para um problema que não é de dados. O separador UE-27 escapou apenas porque a vista por
+omissão não usa `_pct`; a vista do coeficiente de Engel usa.
+
+**Correção.** `_pct` é um formatador de duas linhas: pertence a `config.py`, ao lado de `euro()`,
+`percentagem()`, `numero()`, `milhoes()` e `pontos()` — que existem precisamente por esta razão. Na
+prática é `percentagem(v, casas=1, sinal=False)`, pelo que provavelmente nem precisa de existir.
+
+**E uma verificação que falta.** Nada impede que isto se repita. Vale a pena uma regra explícita —
+e um teste que a trave — de que **nenhum nome definido dentro de um separador é usado noutro**. Os
+candidatos atuais são `_pct` e `_num` (linha 1294); `_mes_txt` e `_fresc` estão fora dos
+separadores e são legítimos.
+
+---
+
+## 🟡 K7 · A Metodologia afirma um ano que já não é o da despesa
+
+**Onde:** `app.py`, linha ~4318.
+
+> «O denominador da âncora das Contas Nacionais é o número de agregados **do ano da despesa** —
+> **hoje 2022**. […] Dividir uma despesa de **2022** pelos agregados de 2025 baixaria a âncora
+> **9,1 %** […]»
+
+**A despesa das Contas Nacionais é hoje de 2024**, desde a migração para o `nama_10_cp18` (E16). O
+texto ficou para trás. E não é uma inconsistência escondida: a **barra de estado da própria
+aplicação** diz «âncora de despesa de **2024**», e a barra lateral diz «Base de **2024** — 2 anos de
+atraso». O separador que existe para explicar o método contradiz o que o ecrã mostra.
+
+Os «9,1 %» são igualmente da configuração anterior — foram medidos com a despesa de 2022 contra os
+agregados de 2025.
+
+**Correção.** Derivar o ano do `dados["despesa_ano"]`, como o resto da aplicação já faz, em vez de o
+inscrever. O parágrafo pode manter o argumento sem citar o número: é a explicação que interessa, não
+a aritmética de um ano concreto.
+
+---
+
+## 🟡 K8 · Números derivados inscritos à mão, outra vez
+
+**Onde:** `app.py`, linhas ~3241–3244 — a caixa «Isto não é uma estimativa de custo orçamental».
+
+```text
+A base deste simulador — {calculado} agregados × {calculado}/mês — dá cerca
+de 15 400 M€/ano de despesa alimentar. O consumo […] foi de 28 188 M€ em 2022
+e 33 038 M€ em 2024 — entre 1,8 e 2,1 vezes mais.
+```
+
+Quatro números fixos, todos deriváveis dos dados da sessão, e **dois deles no meio de números
+calculados em direto** — que é exatamente a objeção do **C2** e do **E9**, agora pela terceira vez.
+
+Confirmei que hoje estão certos: 4 562 100 × 281,06 × 12 = **15 387 M€**; a aplicação tem
+`dados["despesa_milhoes"]` = **33 037,8** e o rácio dá 2,15. Mas o `33 038 M€ em 2024` é
+precisamente o valor que a aplicação lê da API — está inscrito ao lado do sítio de onde poderia
+vir —, e deixa de bater certo no dia em que o Eurostat publicar 2025.
+
+**Correção.** Calcular os três: o produto está em `agregados × media_agregado × 12`, e o valor das
+Contas Nacionais em `dados["despesa_milhoes"]`, com o ano em `dados["despesa_ano"]`. O valor de 2022
+é histórico e pode ficar, com a data de apuramento ao lado.
+
+---
+
+## 🟡 K9 · «Receita de IVA por mês» rotula uma variação como se fosse um nível
+
+**Onde:** `app.py`, linha ~2831.
+
+O indicador mostra hoje **−22,24 €** sob o rótulo «Receita de IVA por mês». O valor é
+`iva_depois − iva_antes`, ou seja, a **variação** da receita; o nível é o que está no `help`
+(25,88 € → 3,64 €). Lido de relance, sugere uma receita negativa.
+
+O contraste está a dois cartões de distância: o indicador agregado, que calcula a mesma grandeza,
+chama-lhe corretamente «**Variação** de receita implícita».
+
+**Correção.** «Variação da receita de IVA por mês», por coerência com o cartão agregado. Custo nulo.
+
+---
+
+## 🟡 K10 · Uma lista de candidatos que não pode discriminar
+
+**Onde:** `src/eurostat.py`, `salario_minimo()`, linhas ~553 e ~569.
+
+As três chaves de `SM_CANDIDATOS` são percorridas em ciclo, mas **os filtros da via Statistics não
+dependem da chave**: são o mesmo dicionário `{"currency": "EUR", "geo": geos, …}` nas três
+iterações. Como a via SDMX falha sempre (K3) e a Statistics responde sempre, **a primeira iteração
+devolve resultado e as outras duas são inalcançáveis**. A lista não escolhe nada.
+
+É o anti-padrão que o encerramento da segunda auditoria inscreveu como lição — «uma lista de
+candidatos esconde o que foi usado» — sobrevivendo no único sítio onde não foi procurado. Foi
+corrigido para as categorias das PPP (B3), para o código do total (E7) e para os endereços de
+verificação (E5).
+
+**Correção.** É a mesma da K3: uma chave única, `S.EUR.{geos}`, verificada e nomeada.
+
+---
+
+## 🟡 K11 · Dependência não fixada, sobre uma API cujo prazo de remoção já passou
+
+**Onde:** `requirements.txt` e 44 ocorrências em `app.py`.
+
+```text
+requirements.txt:  streamlit>=1.40     (sem limite superior)
+```
+
+O Streamlit instalado é o 1.61.1, e emite este aviso em cada renderização:
+
+> `Please replace use_container_width with width. use_container_width will be removed after
+> 2025-12-31.`
+
+**A data de remoção anunciada passou há mais de sete meses.** A aplicação usa o parâmetro em
+**44 sítios** — todos os `st.dataframe` e `st.plotly_chart`. Continua a funcionar por tolerância da
+biblioteca, não por garantia.
+
+**A conjugação é que preocupa:** um requisito sem limite superior mais uma API depreciada além do
+prazo significa que **uma reinstalação num ambiente limpo pode partir a aplicação sem que ninguém
+tenha alterado uma linha de código** — e o Streamlit Community Cloud reinstala a cada arranque.
+Para uma ferramenta que vai ser usada pelo Governo, é o risco operacional mais concreto que
+encontrei.
+
+**Correção, por esta ordem:**
+
+1. **Fixar** as versões: `streamlit>=1.40,<2`, e idealmente fixar a versão exata testada.
+2. Substituir `use_container_width=True` por `width="stretch"` e `use_container_width=False` por
+   `width="content"` — 44 substituições mecânicas.
+
+---
+
+## 🟡 K12 · A vigilância de frescura não cobre três das séries obtidas
+
+**Onde:** `app.py`, a lista `vigilancia`, linha ~462.
+
+Onze séries são vigiadas. Três das obtidas ficam de fora:
+
+| Série | Conjunto | Porque importa |
+|---|---|---|
+| Variação homóloga PT, série longa | `prc_hicp_minr` | é a que alimenta **todo** o separador Histórico desde ontem |
+| Agregados especiais do índice | `prc_hicp_minr` | alimenta o painel «O que está por trás da subida» |
+| Ponderadores por subclasse | `prc_hicp_iw` | alimenta **todas** as taxas efetivas do simulador de IVA |
+
+As três vêm de conjuntos que já estão vigiados por outras séries, o que atenua o risco — mas não o
+elimina: um conjunto pode continuar a publicar um agregado e parar uma classe. E a terceira é a base
+de todo o apuramento do IVA.
+
+**Correção.** Acrescentar as três à lista, com os limites das séries do mesmo conjunto (60 dias para
+as mensais, 450 para os ponderadores).
+
+---
+
+## ⚪ K13 · O «último de cada série» pode misturar períodos em silêncio
+
+**Onde:** `app.py`, linhas ~298 e ~312.
+
+```python
+pesos     = pesos_df.groupby("coicop")["valor"].last().to_dict()
+ano_pesos = pesos_df["time"].max()          # rótulo: o máximo global
+variacoes_classe = pt_classes.groupby("coicop")["valor"].last().to_dict()
+mes_variacoes    = pt_classes["time"].max() # rótulo: o máximo global
+```
+
+Cada classe contribui com a **sua** última observação, mas o rótulo apresentado ao utilizador é o
+**máximo de todas**. Se uma classe ficar um mês atrás das outras, a aplicação combina uma variação
+de maio com oito de junho e anuncia «último mês disponível **jun/26**».
+
+**Verifiquei que hoje não acontece:** as nove classes têm ponderador de 2026 e variação de 2026-06,
+e as 72 subclasses são todas de 2026. O modo de falha é latente, não ativo.
+
+Vale a pena notar que os ponderadores por subclasse **já fazem a coisa certa** — filtram
+`sub_df["time"] == ano_pesos_sub`, um único ano. As duas linhas acima não. É a mesma decisão tomada
+de duas maneiras no mesmo ficheiro.
+
+**Correção.** Filtrar pelo período comum, como se faz nas subclasses, e declarar quando uma classe
+ficar de fora — a infraestrutura já existe em `df.attrs["classes_sem_variacao"]` e no aviso que o
+E10 criou.
+
+---
+
+## ⚪ K14 · A prosa do coeficiente de Engel assume uma ordem que a função não assume
+
+**Onde:** `app.py`, linhas ~1277–1285.
+
+`intervalo_engel()` devolve `min` e `max` sem presumir qual das bases é maior — e há um teste que
+exige precisamente isso. A legenda por baixo da tabela por quintil presume:
+
+> «O **12,0 %** da média nacional […] é o limite **inferior** […] O limite **superior**, 17,1 %, vem
+> das Contas Nacionais»
+
+Se as Contas Nacionais alguma vez descerem abaixo do IDF, a frase inverte-se sem que nada a corrija.
+É improvável — a divergência é de 2,3× e estrutural — mas é uma afirmação inscrita onde a função
+subjacente foi deliberadamente construída para a não fazer.
+
+**Correção.** Derivar os rótulos de `_eng["minimo"]`/`_eng["maximo"]` e nomear a base de cada
+extremo, em vez de os atribuir por escrito.
+
+---
+
+## Ordem de execução proposta
+
+| # | Item | Gravidade | Porquê nesta posição |
+|---|---|---|---|
+| 1 | **K11** dependências e API depreciada | 🟡 | É o único que pode partir a aplicação sem ninguém lhe tocar. Custo mecânico |
+| 2 | **K3 + K10** chaves SDMX e lista de candidatos | 🟠 | Mesma correção, mesmo ficheiro. Repõe a via preferida e fecha o padrão B1 |
+| 3 | **K4** filtros do nível de preços | 🟠 | Custo nulo; devolve a segunda via a uma ligação que hoje tem uma só |
+| 4 | **K2** frescura do Observatório | 🟠 | Há um aviso que devia estar a disparar hoje |
+| 5 | **K5** janela dos agregados especiais | 🟠 | Uma linha; fecha o bug relatado ontem no gráfico onde ficou aberto |
+| 6 | **K6** `_pct` para o `config.py` | 🟠 | Duas linhas; torna verdadeira uma promessa que a aplicação já faz |
+| 7 | **K1** as duas taxas de inflação | 🔴 | Está em primeiro na gravidade e em sétimo na ordem **porque é uma decisão da Inês**, não uma correção — ver abaixo |
+| 8 | **K7, K8, K9, K12** | 🟡 | Rigor e rastreabilidade, sem dependências |
+| 9 | **K13, K14** | ⚪ | Declarações e robustez preventiva |
+
+---
+
+## O que preciso de si
+
+Uma só decisão, e é a do **K1**. As restantes treze são correções com resposta certa, e posso
+aplicá-las sem lhe perguntar nada.
+
+**Qual dos dois números deve estar no cartão de capa?**
+
+- A **taxa oficial do `CP011`** — é o que o INE publica e o que qualquer pessoa encontra se
+  verificar. Mas deixa de coincidir com a soma dos nove contributos apresentados logo abaixo, e essa
+  aditividade é uma propriedade que a ferramenta anuncia e testa.
+- A **taxa reconstituída**, como hoje, com a oficial declarada ao lado. Preserva a aditividade e
+  cumpre a doutrina da casa — mostrar as duas em vez de arbitrar — mas mantém um número de capa que
+  não é citável como oficial.
+
+**Recomendo a segunda**, por coerência com o que já se faz na âncora e no Engel. Mas o número da
+capa é o que sai da ferramenta numa reunião, e a escolha é sua.
+
+---
+
+## Resposta à pergunta que abriu esta auditoria
+
+A pergunta era se a aplicação está a funcionar corretamente, se os dados e os cálculos estão certos
+e se as ligações funcionam bem.
+
+**Os cálculos estão certos.** Reconstituí todos por via independente, alguns de raiz: a aditividade
+da decomposição fecha a zero absoluto, a identidade da taxa efetiva fecha a 10⁻¹⁴, as duas âncoras,
+o Engel, os quintis, o Törnqvist, as escalas e os quatro ρ do Banco de Portugal reproduzem todos.
+Não encontrei um único erro de aritmética ou de método.
+
+**Os dados estão certos e são os correntes** — com uma exceção: o Observatório está três períodos
+atrasado e a aplicação não o diz (K2).
+
+**As ligações funcionam, mas quatro das quinze chaves estão erradas** e vivem da via de recurso, e
+uma das ligações ficou sem via de recurso nenhuma (K3, K4). Nada disto afeta os valores de hoje;
+afeta a probabilidade de a aplicação partir, ou de passar a mostrar outra coisa, sem aviso.
+
+**O que impede a aplicação de estar isenta de erro, hoje, é o K1** — e não porque um número esteja
+mal calculado, mas porque estão publicados dois para a mesma grandeza sem se dizer porquê. Numa
+ferramenta cujo argumento inteiro é a rastreabilidade, é a diferença entre um número que se defende
+e um número que se explica depois.
+
+**Sobre o uso entretanto.** Os separadores «Despesa e composição», «Histórico», «Simulador de IVA» e
+«Comparação UE-27» podem ser usados e citados, com a ressalva do K1 quanto à taxa de inflação de
+capa. O separador «Da produção ao consumo» não deve ser citado como situação corrente até o K2
+estar resolvido ou a recolha atualizada.
+
+---
+
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.
 Não constitui posição oficial.*

@@ -1,4 +1,22 @@
-streamlit>=1.40
-pandas>=2.2
-plotly>=5.24
-requests>=2.32
+# Limite superior em todas as dependências, por decisão de auditoria (K11, 12.08.2026).
+#
+# Havia só limite inferior — `streamlit>=1.40`. Com `use_container_width` já para lá da
+# data de remoção anunciada pelo próprio Streamlit («will be removed after 2025-12-31»),
+# uma reinstalação num ambiente limpo podia partir a aplicação sem que ninguém tivesse
+# alterado uma linha de código. O Streamlit Community Cloud reinstala a cada arranque.
+#
+# O parâmetro foi migrado para `width` em 44 sítios; os limites superiores ficam como
+# segunda linha de defesa, para que uma alteração maior da biblioteca seja uma decisão
+# e não uma surpresa.
+#
+# Versões verificadas em execução a 12.08.2026: streamlit 1.61.1, pandas 3.0.5,
+# plotly 6.9.0, requests 2.34.2, numpy 2.5.1.
+
+# O limite inferior do streamlit é a versão em que `width` foi **verificada em execução**,
+# e não a versão em que terá sido introduzida — que não confirmei. Na dúvida, o limite é o
+# que se testou.
+streamlit>=1.61,<2
+pandas>=2.2,<4
+plotly>=5.24,<7
+requests>=2.32,<3
+numpy>=1.26,<3          # usado em src/calculos.py (Törnqvist); era dependência implícita

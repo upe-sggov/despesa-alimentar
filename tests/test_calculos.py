@@ -1841,3 +1841,44 @@ def test_o_grafico_avisa_quando_a_variacao_nao_cobre_o_intervalo():
     fonte = io.open(Path(__file__).resolve().parent.parent / "app.py",
                     encoding="utf-8-sig").read()
     assert "len(var_sel) < len(idx_sel)" in fonte
+
+
+# ==========================================================================
+# Quarta auditoria — 12.08.2026
+# ==========================================================================
+def _fonte(nome):
+    """Codigo-fonte de um ficheiro do projeto, para os testes de doutrina."""
+    import io
+    from pathlib import Path
+    return io.open(Path(__file__).resolve().parent.parent / nome,
+                   encoding="utf-8-sig").read()
+
+
+# ---- K11 · dependencias fixadas e API depreciada -------------------------
+def test_nao_ha_api_depreciada_do_streamlit():
+    """
+    `use_container_width` tem data de remocao anunciada — «after 2025-12-31» —
+    que ja passou. Enquanto la esteve, a aplicacao dependia da tolerancia da
+    biblioteca e nao de uma garantia (auditoria de 12.08.2026, K11).
+    """
+    fonte = _fonte("app.py")
+    assert "use_container_width" not in fonte, (
+        "use_container_width voltou ao app.py; usar width='stretch'/'content'")
+    # E a substituicao tem de ter sido feita, nao apagada:
+    assert fonte.count('width="stretch"') >= 40
+
+
+def test_dependencias_tem_limite_superior():
+    """
+    Sem limite superior, uma reinstalacao num ambiente limpo pode partir a
+    aplicacao sem ninguem lhe tocar — e o Community Cloud reinstala a cada
+    arranque (auditoria de 12.08.2026, K11).
+    """
+    linhas = [l.strip() for l in _fonte("requirements.txt").splitlines()
+              if l.strip() and not l.strip().startswith("#")]
+    assert linhas, "requirements.txt sem dependencias"
+    for l in linhas:
+        assert "<" in l, f"dependencia sem limite superior: {l!r}"
+    # numpy e usado em src/calculos.py e era dependencia implicita do pandas.
+    assert any(l.startswith("numpy") for l in linhas), (
+        "numpy e importado em src/calculos.py e tem de estar declarado")

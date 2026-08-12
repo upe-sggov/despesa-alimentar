@@ -936,7 +936,7 @@ with st.sidebar:
                                  f"{ESCALAS[k]['crianca']:.1f}".replace(".", ","),
                  "Despesa (€)": round(faixa["por_escala"][k], 2)}
                 for k in ESCALAS
-            ]), use_container_width=True, hide_index=True)
+            ]), width="stretch", hide_index=True)
 
         st.markdown(f"""
 **Porque é que a escala com coeficientes menores dá aqui um valor {'menor' if maior_que_media else 'maior'}?**
@@ -1008,7 +1008,7 @@ está **{'acima' if maior_que_media else 'abaixo'}** dela.
 
     st.divider()
     st.caption("**Atualização dos dados**")
-    if st.button("🔄 Recarregar do Eurostat", use_container_width=True):
+    if st.button("🔄 Recarregar do Eurostat", width="stretch"):
         st.cache_data.clear()
         st.rerun()
 
@@ -1214,7 +1214,7 @@ with aba1:
         with esq:
             st.markdown("**Peso de cada grupo na despesa**")
             st.caption("Fração da despesa alimentar mensal que vai para cada tipo de produto.")
-            st.plotly_chart(grafico_donut(df_decomp), use_container_width=True)
+            st.plotly_chart(grafico_donut(df_decomp), width="stretch")
         with dir_:
             st.markdown("**Quanto cada grupo pesou no agravamento**")
             st.caption("Euros de aumento nos últimos 12 meses atribuíveis a cada grupo.")
@@ -1231,7 +1231,7 @@ with aba1:
                 fig.update_layout(height=380, margin=dict(t=10, b=30, l=10, r=10),
                                   xaxis_title="Euros", plot_bgcolor="#fff")
                 fig.update_xaxes(gridcolor="#eef1f4", zerolinecolor="#cbd5e1")
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
 
         # ---- cabaz por quintil de rendimento ----
         st.divider()
@@ -1257,7 +1257,7 @@ with aba1:
                 f"{r.agravamento_orcamento:.2f} %".replace(".", ",")
                 if r.agravamento_orcamento is not None else "—"),
         } for r in df_quintis.itertuples()])
-        st.dataframe(tab_q, use_container_width=True, hide_index=True)
+        st.dataframe(tab_q, width="stretch", hide_index=True)
 
         # O agravamento só soma as classes com variação; o orçamento é sempre o
         # total. Faltando classes, a coluna «Agravamento / orçamento»
@@ -1354,7 +1354,7 @@ with aba1:
                                yaxis_title="% da despesa alimentar", plot_bgcolor="#fff",
                                legend=dict(font=dict(size=10)))
             figq.update_yaxes(gridcolor="#eef1f4", range=[0, 100])
-            st.plotly_chart(figq, use_container_width=True)
+            st.plotly_chart(figq, width="stretch")
         with cq2:
             st.markdown("**Onde a diferença é maior**")
             st.caption("Variação da quota entre o 1.º e o 5.º quintil, em pontos percentuais.")
@@ -1374,7 +1374,7 @@ with aba1:
             figd.update_layout(height=420, margin=dict(t=10, b=30, l=10, r=10),
                                xaxis_title="p.p. (Q5 − Q1)", plot_bgcolor="#fff")
             figd.update_xaxes(gridcolor="#eef1f4", zerolinecolor="#cbd5e1")
-            st.plotly_chart(figd, use_container_width=True)
+            st.plotly_chart(figd, width="stretch")
 
         st.caption(
             "**Níveis do IDF tal como medidos** — não são reescalados para a base de cálculo "
@@ -1503,7 +1503,7 @@ with aba1:
                 "Natureza": r["natureza"],
                 "Detalhe": r["detalhe"],
             } for r in refs])
-            st.dataframe(tab_r, use_container_width=True, hide_index=True)
+            st.dataframe(tab_r, width="stretch", hide_index=True)
 
             figR = go.Figure(go.Bar(
                 y=[r["ref"] for r in refs],
@@ -1518,7 +1518,7 @@ with aba1:
                                xaxis_title="Fatia do rendimento absorvida pela alimentação (%)",
                                plot_bgcolor="#fff", showlegend=False)
             figR.update_xaxes(gridcolor="#eef1f4")
-            st.plotly_chart(figR, use_container_width=True)
+            st.plotly_chart(figR, width="stretch")
 
             st.info(
                 "**Sobre o cenário do salário mínimo.** Não é o agregado típico — é o **limiar "
@@ -1629,7 +1629,7 @@ reserva.
                                             .replace(".", ",") if _rend_mes else "—")
                         _linhas_esc.append(_linha)
                     st.dataframe(pd.DataFrame(_linhas_esc),
-                                 use_container_width=True, hide_index=True)
+                                 width="stretch", hide_index=True)
                     st.caption(
                         f"Calculado com os dados desta sessão: âncora "
                         f"**{base_ancora['nome']}** ({euro(media_agregado)}/mês para o agregado "
@@ -1695,7 +1695,7 @@ a partir dessa referência. Por isso **as três cruzam-se exatamente nessa dimen
                                    hovermode="x unified", plot_bgcolor="#fff")
                 figS.update_xaxes(gridcolor="#eef1f4")
                 figS.update_yaxes(gridcolor="#eef1f4")
-                st.plotly_chart(figS, use_container_width=True)
+                st.plotly_chart(figS, width="stretch")
 
                 st.success("""
 **A leitura do gráfico — é isto que responde à dúvida.**
@@ -1808,7 +1808,7 @@ que não há nada a descontar nem a acrescentar.
                                    legend=dict(orientation="h", y=-0.2))
                 figp.update_yaxes(gridcolor="#eef1f4", rangemode="tozero")
                 figp.update_xaxes(gridcolor="#eef1f4")
-                st.plotly_chart(figp, use_container_width=True)
+                st.plotly_chart(figp, width="stretch")
                 if _sev_pobres is not None and _sev:
                     # O `.replace(".", ",")` aplicava-se à cadeia inteira — as
                     # f-strings adjacentes concatenam em tempo de compilação —, e
@@ -1841,7 +1841,7 @@ que não há nada a descontar nem a acrescentar.
                                legend=dict(orientation="h", y=-0.2))
             figc.update_yaxes(gridcolor="#eef1f4")
             figc.update_xaxes(gridcolor="#eef1f4", dtick=1)
-            st.plotly_chart(figc, use_container_width=True)
+            st.plotly_chart(figc, width="stretch")
 
         _custo_pt = SOFI_CUSTO["Portugal"][_ano_sofi]
         _custo_es = SOFI_CUSTO["Espanha"][_ano_sofi]
@@ -1926,7 +1926,7 @@ que não há nada a descontar nem a acrescentar.
                     "Mín. (€)": round(iv["minimo"], 2),
                     "Máx. (€)": round(iv["maximo"], 2),
                 })
-            st.dataframe(pd.DataFrame(linhas_c), use_container_width=True, hide_index=True)
+            st.dataframe(pd.DataFrame(linhas_c), width="stretch", hide_index=True)
             st.caption(
                 f"Agregado médio nacional: {('%.2f' % dm).replace('.', ',')} pessoas. "
                 "O intervalo resulta das diferentes escalas de equivalência."
@@ -1938,7 +1938,7 @@ que não há nada a descontar nem a acrescentar.
             tabela.columns = ["Código", "Grupo", "Designação COICOP 2018",
                               "Ponderador (‰)", "Quota",
                               "Valor (€)", "Variação (%)", "Contributo (€)"]
-            st.dataframe(tabela, use_container_width=True, hide_index=True,
+            st.dataframe(tabela, width="stretch", hide_index=True,
                          column_config={
                              "Quota": st.column_config.ProgressColumn(
                                  "Quota", format="%.1f%%", min_value=0, max_value=1),
@@ -1958,7 +1958,7 @@ que não há nada a descontar nem a acrescentar.
                                                ("Composicao do agregado", composicao),
                                                ("Escala", ESCALAS[escala_chave]["nome"])]),
                 f"despesa_alimentar_decomposicao_{date.today()}.csv", "text/csv",
-                use_container_width=True)
+                width="stretch")
 
     # ==========================================================================
     # ABA 2 — Histórico
@@ -2023,7 +2023,7 @@ with aba2:
 
             st.plotly_chart(
                 grafico_historico(idx_sel, var_sel, len(idx_sel)),
-                use_container_width=True,
+                width="stretch",
             )
 
             if len(idx_sel) >= 2:
@@ -2102,7 +2102,7 @@ with aba2:
                                    hovermode="x unified", plot_bgcolor="#fff")
                 figA.update_xaxes(showgrid=False)
                 figA.update_yaxes(gridcolor="#eef1f4", zerolinecolor="#cbd5e1")
-                st.plotly_chart(figA, use_container_width=True)
+                st.plotly_chart(figA, width="stretch")
                 if so_alim:
                     st.caption("A tracejado, os agregados de enquadramento — não são alimentação.")
 
@@ -2124,7 +2124,7 @@ with aba2:
                         "Para que serve": a["porque"],
                     })
                 if linhas_a:
-                    st.dataframe(pd.DataFrame(linhas_a), use_container_width=True, hide_index=True)
+                    st.dataframe(pd.DataFrame(linhas_a), width="stretch", hide_index=True)
                     st.caption(
                         f"Variação homóloga em {mes_pt(ult_esp)}. 🍽️ componentes da alimentação · "
                         "📊 agregados de enquadramento, que não são alimentação."
@@ -2215,7 +2215,7 @@ with aba2:
                                legend=dict(orientation="h", y=-0.18))
             figt.update_yaxes(gridcolor="#eef1f4")
             figt.update_xaxes(gridcolor="#eef1f4", dtick=1)
-            st.plotly_chart(figt, use_container_width=True)
+            st.plotly_chart(figt, width="stretch")
 
             st.info(f"""
     **O resultado não é o que a crítica ao cabaz fixo faria esperar — e isso importa.**
@@ -2403,7 +2403,7 @@ with aba6:
                                    plot_bgcolor="#fff",
                                    legend=dict(orientation="h", y=-0.08))
                 figo.update_xaxes(gridcolor="#eef1f4", zerolinecolor="#cbd5e1")
-                st.plotly_chart(figo, use_container_width=True)
+                st.plotly_chart(figo, width="stretch")
 
                 _tab_o = pd.DataFrame([{
                     "Produto": r.produto,
@@ -2419,7 +2419,7 @@ with aba6:
                         if pd.notna(r.diferenca_var) else "—"),
                     "Padrão": r.padrao,
                 } for r in _com_prod.itertuples()])
-                st.dataframe(_tab_o, use_container_width=True, hide_index=True)
+                st.dataframe(_tab_o, width="stretch", hide_index=True)
                 st.caption(
                     "**De que é esta percentagem.** É a variação do **preço em euros por "
                     "unidade** em cada fase, entre o primeiro e o último período da coluna "
@@ -2493,7 +2493,7 @@ with aba6:
                     legend=dict(orientation="h", y=-0.16))
                 figd2.update_yaxes(gridcolor="#eef1f4", rangemode="tozero")
                 figd2.update_xaxes(gridcolor="#eef1f4")
-                st.plotly_chart(figd2, use_container_width=True)
+                st.plotly_chart(figd2, width="stretch")
 
                 if not _linha["tem_producao"]:
                     st.info(
@@ -2751,7 +2751,7 @@ with aba3:
         # A chave do editor tem de variar com o cenário: caso contrário o Streamlit
         # mantém o estado do widget e as taxas do cenário nunca chegam à tabela.
         editado = st.data_editor(
-            editor, use_container_width=True, hide_index=True,
+            editor, width="stretch", hide_index=True,
             key=f"editor_iva_{cenario}",
             # A taxa atual **não é editável**: é apurada, não escolhida.
             disabled=["Grupo", "Valor (€)", "Taxa média efetiva (%)"],
@@ -2992,7 +2992,7 @@ with aba3:
                 "Indeterminado": r.indeterminado_pct,
             } for r in _comp_iva.itertuples()])
             st.dataframe(
-                _tab_iva, use_container_width=True, hide_index=True,
+                _tab_iva, width="stretch", hide_index=True,
                 column_config={
                     c: st.column_config.NumberColumn(format="%.1f %%")
                     for c in ("Na predefinida", "6 %", "13 %", "23 %", "Indeterminado")
@@ -3087,7 +3087,7 @@ with aba3:
                             "O que sustenta a atribuição": _c["desc"].replace("**", ""),
                         })
                 st.dataframe(
-                    pd.DataFrame(_linhas_sub), use_container_width=True, hide_index=True,
+                    pd.DataFrame(_linhas_sub), width="stretch", hide_index=True,
                     column_config={"Ponderador (‰)": st.column_config.NumberColumn(format="%.2f")})
                 st.caption(
                     "✅ a subclasse cai inteira numa verba · ≈ é maioritariamente de uma taxa, "
@@ -3122,7 +3122,7 @@ with aba3:
                             pd.DataFrame(
                                 [{"Subclasse": _c, "O que a ficha decide": _t}
                                  for _c, _t in _f["decide"]]),
-                            use_container_width=True, hide_index=True)
+                            width="stretch", hide_index=True)
                     st.success(
                         "**O princípio que sustenta este quadro**, na formulação da ficha "
                         f"24929: «{PRINCIPIO_LISTA_TAXATIVA}»\n\n"
@@ -3188,7 +3188,7 @@ with aba3:
         fig_rep = grafico_reparticao(sim)
         if fig_rep is not None:
             st.markdown("#### Como se reparte o benefício")
-            st.plotly_chart(fig_rep, use_container_width=True)
+            st.plotly_chart(fig_rep, width="stretch")
         else:
             st.info("Defina um cenário diferente das taxas atuais para ver a repartição.")
 
@@ -3278,7 +3278,7 @@ with aba3:
             _inf = pd.DataFrame(
                 IVA_ZERO_INFLACAO_QUINTIL,
                 columns=["Quintil", "Bens alimentares afetados", "Bens alimentares", "IPC total"])
-            st.dataframe(_inf, use_container_width=True, hide_index=True)
+            st.dataframe(_inf, width="stretch", hide_index=True)
 
         with _q2:
             st.markdown("**Afetação do dinheiro público: maior nos mais ricos**")
@@ -3303,7 +3303,7 @@ with aba3:
                 legend=dict(orientation="h", y=1.2, x=0),
                 xaxis_title="% do custo orçamental da medida", plot_bgcolor="#fff")
             _fig_af.update_xaxes(gridcolor="#eef1f4")
-            st.plotly_chart(_fig_af, use_container_width=True)
+            st.plotly_chart(_fig_af, width="stretch")
 
         _iva_pobres, _iva_ricos = next(
             (p, r) for m, p, r in IVA_ZERO_AFETACAO_ORCAMENTAL if m == "Redução do IVA")
@@ -3334,7 +3334,7 @@ with aba3:
             det.columns = ["Classe", "Valor (€)", "Taxa média efetiva (%)", "Taxa cenário (%)",
                            "Base sem IVA (€)", "Efeito mecânico (€)",
                            "Efeito efetivo (€)", "Margem (€)", "Novo valor (€)"]
-            st.dataframe(det.round(2), use_container_width=True, hide_index=True)
+            st.dataframe(det.round(2), width="stretch", hide_index=True)
             st.download_button(
                 "⬇️ Descarregar simulação (CSV com fonte)",
                 csv_com_fonte(det.round(2), "Simulacao de alteracao do IVA", dados,
@@ -3435,7 +3435,7 @@ with aba4:
                                                 "(média UE-27 = 100)"),
                                    plot_bgcolor="#fff", showlegend=False)
                 figp.update_xaxes(gridcolor="#eef1f4")
-                st.plotly_chart(figp, use_container_width=True)
+                st.plotly_chart(figp, width="stretch")
                 st.caption(
                     "Barras à direita da linha: alimentos mais caros do que a média europeia. "
                     "À esquerda: mais baratos. Portugal a verde. Fonte: programa de Paridades de "
@@ -3547,7 +3547,7 @@ with aba4:
                                    xaxis_title="Fatia do consumo das famílias gasta em alimentação (%)",
                                    plot_bgcolor="#fff", showlegend=False)
                 figE.update_xaxes(gridcolor="#eef1f4")
-                st.plotly_chart(figE, use_container_width=True)
+                st.plotly_chart(figE, width="stretch")
                 st.caption(
                     "Barras mais longas significam **maior esforço alimentar**: mais do orçamento "
                     "familiar absorvido por comida, menos disponível para tudo o resto. "
@@ -3563,7 +3563,7 @@ with aba4:
                         tab_e["Fatia do consumo em alimentação (%)"].round(1)
                     st.dataframe(tab_e.sort_values("Fatia do consumo em alimentação (%)",
                                                    ascending=False),
-                                 use_container_width=True, hide_index=True)
+                                 width="stretch", hide_index=True)
                     st.download_button(
                         "⬇️ CSV com fonte",
                         csv_com_fonte(tab_e, "Coeficiente de Engel - esforco alimentar", dados,
@@ -3632,7 +3632,7 @@ with aba4:
                                   hovermode="x unified", plot_bgcolor="#fff")
                 fig.update_xaxes(showgrid=False)
                 fig.update_yaxes(gridcolor="#eef1f4", zerolinecolor="#cbd5e1")
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
 
                 ultimo = tempos_b[-1]
                 # Colunas explícitas: sem observações, `pd.DataFrame([])` não
@@ -3692,7 +3692,7 @@ with aba4:
                                    xaxis_title="Variação homóloga dos preços alimentares (%)",
                                    plot_bgcolor="#fff", showlegend=False)
                 figc.update_xaxes(gridcolor="#eef1f4", zerolinecolor="#cbd5e1")
-                st.plotly_chart(figc, use_container_width=True)
+                st.plotly_chart(figc, width="stretch")
                 st.caption(
                     "A linha tracejada é a média da UE-27: à direita, inflação mais rápida do que na "
                     "UE; à esquerda, mais lenta. Entre parênteses, a distância em pontos percentuais."
@@ -3779,7 +3779,7 @@ with aba5:
                 {"Índice": "IHPC — Índice Harmonizado",
                  "Para que serve": "Comparação entre Estados-Membros e política monetária do BCE",
                  "Âmbito": "Consumo monetário no território (inclui não residentes); exclui rendas imputadas"},
-            ]), use_container_width=True, hide_index=True)
+            ]), width="stretch", hide_index=True)
             st.markdown(
                 "As diferenças de âmbito produzem valores próximos mas não idênticos. "
                 "**Esta ferramenta usa o IHPC** por ser a única base que permite comparar Portugal "
@@ -3981,7 +3981,7 @@ with aba5:
                 _dv.columns = ["Grupo", "Quota IHPC (%)", "Quota IDF (%)", "Desvio (p.p.)"]
                 st.dataframe(
                     _dv.sort_values("Desvio (p.p.)", key=abs, ascending=False),
-                    use_container_width=True, hide_index=True,
+                    width="stretch", hide_index=True,
                     column_config={
                         "Quota IHPC (%)": st.column_config.NumberColumn(format="%.1f"),
                         "Quota IDF (%)": st.column_config.NumberColumn(format="%.1f"),
@@ -4022,7 +4022,7 @@ with aba5:
                  "Adulto adicional": ESCALAS[k]["adulto"], "Criança (<14)": ESCALAS[k]["crianca"],
                  "Nota": ESCALAS[k]["nota"]}
                 for k in ESCALAS
-            ]), use_container_width=True, hide_index=True)
+            ]), width="stretch", hide_index=True)
             st.latex(r"eq(A,C) = 1 + \alpha \cdot (A - 1) + \beta \cdot C")
 
             st.markdown("""
@@ -4067,7 +4067,7 @@ with aba5:
                     "Desvio na despesa total": r.desvio_total,
                 } for r in _te.itertuples()])
                 st.dataframe(
-                    _tab_e, use_container_width=True, hide_index=True,
+                    _tab_e, width="stretch", hide_index=True,
                     column_config={
                         "Desvio na alimentação": st.column_config.NumberColumn(format="%+.1f %%"),
                         "Desvio na despesa total": st.column_config.NumberColumn(format="%+.1f %%"),
@@ -4128,7 +4128,7 @@ with aba5:
                         "Mais próxima do observado": ESCALAS[r.mais_proxima]["nome"].split(" (")[0],
                         "Controlo inverte": "sim" if r.controlo_inverte else "não",
                     } for r in _sens.itertuples()])
-                    st.dataframe(_tab_s, use_container_width=True, hide_index=True)
+                    st.dataframe(_tab_s, width="stretch", hide_index=True)
 
                     _todas_subestimam = bool(_sens["modificada_subestima"].all())
                     _todas_invertem = bool(_sens["controlo_inverte"].all())
@@ -4451,7 +4451,7 @@ repartição de um valor total por essas proporções. É por isso que a tabela 
                     "Prazo (dias)": r.limite_dias,
                     "Porquê este prazo": r.porque,
                 } for r in _fresc.itertuples()])
-                st.dataframe(_tab_f, use_container_width=True, hide_index=True)
+                st.dataframe(_tab_f, width="stretch", hide_index=True)
                 st.caption(
                     "⛔ parou · ✅ dentro do prazo · ❔ período não interpretável — não é "
                     "acusação, mas também não é confirmação. A idade conta a partir do **fim** "
@@ -4462,7 +4462,7 @@ repartição de um valor total por essas proporções. É por isso que a tabela 
             st.dataframe(pd.DataFrame(dados["registo"],
                                       columns=["Dados pedidos", "Via de acesso usada",
                                                "N.º de observações"]),
-                         use_container_width=True, hide_index=True)
+                         width="stretch", hide_index=True)
             st.info("""
     **«SDMX» não é um método de ponderação — é a via de acesso aos dados.**
 
@@ -4530,7 +4530,7 @@ Chamar-lhe cabaz seria prometer o que não entrega.
                  "Forma curta": f"{c['emoji']} {c['nome']}",
                  "Designação oficial (INE, COICOP 2018)": c["oficial"]}
                 for c in CLASSES
-            ]), use_container_width=True, hide_index=True)
+            ]), width="stretch", hide_index=True)
             st.caption(f"Fonte das designações: {CLASSES_FONTE}.")
             st.info("""
     **A revisão mudou o conteúdo das classes, não só os nomes.** Os códigos `CP0111` a `CP0119`
