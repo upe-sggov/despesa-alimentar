@@ -466,6 +466,16 @@ def carregar_dados(anos_historico: int = 6):
             _ult_rend = _ind["PT"]["ano"]
             break
 
+    # Três séries obtidas ficavam de fora da vigilância (auditoria de 12.08.2026,
+    # K12). Vêm de conjuntos já vigiados por outras séries, o que atenua o risco
+    # mas não o elimina: um conjunto pode continuar a publicar um agregado e
+    # parar uma classe. E a terceira é a base de todo o apuramento do IVA.
+    _ult_var_longa = (str(var_pt_longo["time"].max())
+                      if not var_pt_longo.empty else None)
+    _ult_agr_esp = (str(agr_esp_df["time"].max())
+                    if not agr_esp_df.empty else None)
+    _ult_sub = str(ano_pesos_sub) if ano_pesos_sub is not None else None
+
     vigilancia = []
     for chave, nome, conjunto, cadencia, periodo in [
         ("indice", "Índice de preços", eurostat.HICP_MENSAL, "mensal", _ult_indice),
@@ -485,6 +495,12 @@ def carregar_dados(anos_historico: int = 6):
         ("salario_medio", "Salário médio", "nama_10_a10", "anual",
          (salario_med.get("PT") or {}).get("ano")),
         ("nivel_precos", "Nível de preços comparado", "prc_ppp_ind_1", "anual", _ult_pli),
+        ("variacoes", "Variação homóloga PT (série longa)", eurostat.HICP_MENSAL,
+         "mensal", _ult_var_longa),
+        ("variacoes", "Agregados especiais do índice", eurostat.HICP_MENSAL,
+         "mensal", _ult_agr_esp),
+        ("ponderadores", "Ponderadores por subclasse", eurostat.HICP_PONDERADORES,
+         "anual", _ult_sub),
     ]:
         if periodo is None:
             continue                       # série indisponível — já consta do registo
@@ -978,6 +994,11 @@ está **{'acima' if maior_que_media else 'abaixo'}** dela.
     _agr_txt = numero(agregados)
     _mes_txt = mes_pt(ancora["mes"]) if ancora["mes"] else "—"
     _den = base_ancora.get("denominador")
+    # O denominador da âncora das Contas Nacionais, independentemente da base
+    # escolhida: a Metodologia explica-o sempre, e o `_den` acima é None quando
+    # a base ativa é a do IDF, que não passa por divisão nenhuma.
+    _den_contas = ancora["bases"]["contas"].get("denominador") or {
+        "valor": agregados, "ano": dados.get("agregados_ano") or "—"}
     with st.expander("De onde vem este valor"):
         if base_chave == "contas":
             _den_txt = numero(_den["valor"]) if _den else _agr_txt
@@ -2873,8 +2894,14 @@ with aba3:
         c[2].metric("Poupança anual por agregado", euro(res["poupanca_ano"]))
         c[3].metric("Capturado na margem", euro(res["margem"]),
                     f"{(1 - repercussao) * 100:.0f} % do efeito")
-        c[4].metric("Receita de IVA por mês", euro(res["receita_mes"]),
-                    help=f"{euro(res['iva_antes'])} → {euro(res['iva_depois'])}")
+        # O valor e a **variacao** da receita, nao o seu nivel. O rotulo dizia
+        # «Receita de IVA por mês» e mostrava −22,24 €, o que sugeria uma receita
+        # negativa. O cartão agregado, dois abaixo, já lhe chamava «Variação de
+        # receita implícita» (auditoria de 12.08.2026, K9).
+        c[4].metric("Variação da receita de IVA por mês", euro(res["receita_mes"]),
+                    help=(f"Imposto contido na despesa deste agregado: "
+                          f"{euro(res['iva_antes'])} → {euro(res['iva_depois'])}. "
+                          "O valor apresentado é a diferença entre os dois."))
 
         if abs(_band_rho[1][0] - _band_rho[0][0]) > 0.005:
             st.caption(
@@ -2957,8 +2984,6 @@ with aba3:
                             "de pequeno-almoço estão entre 13 % e 23 %."))
 
             _iva_mod = _res_iva["iva_modelo_pct"] / 100 * media_agregado
-            _iva_ap = (_res_iva["iva_modelo_pct"], _res_iva["iva_apurado_min_pct"],
-                       _res_iva["iva_apurado_max_pct"])
             _sub_min = _res_iva["iva_apurado_min_pct"] / _res_iva["iva_modelo_pct"] * 100 - 100
             _sub_max = _res_iva["iva_apurado_max_pct"] / _res_iva["iva_modelo_pct"] * 100 - 100
             st.success(f"""
@@ -3270,9 +3295,32 @@ with aba3:
                   milhoes(res_nac["receita_agregada_milhoes"]))
 
         # A ressalva antiga dizia «não é custo orçamental» sem dizer porquê nem
-        # quanto. Confrontar as duas bases dá a ordem de grandeza do desvio —
-        # 1,8 a 2,1 vezes — e mostra que não são uma melhor e outra pior: são
-        # bases de perguntas diferentes (auditoria de 12.08.2026, F5).
+        # quanto. Confrontar as duas bases dá a ordem de grandeza do desvio e
+        # mostra que não são uma melhor e outra pior: são bases de perguntas
+        # diferentes (auditoria de 12.08.2026, F5).
+        #
+        # Os quatro números deste bloco estavam **inscritos à mão** — 15 400 M€,
+        # 28 188 M€, 33 038 M€ e «1,8 a 2,1 vezes» —, dois deles ao lado de
+        # números calculados em direto, e o valor das Contas Nacionais estava
+        # escrito ao lado do sítio de onde podia vir. Deixavam de bater certo no
+        # dia em que o Eurostat publicasse outro ano (auditoria, K8; é a terceira
+        # ocorrência do padrão do C2 e do E9).
+        _base_sim_milhoes = agregados * media_agregado * 12 / 1e6
+        _cn_milhoes = dados.get("despesa_milhoes")
+        _cn_ano = dados.get("despesa_ano") or "—"
+        if _cn_milhoes and _base_sim_milhoes > 0:
+            _racio_bases = _cn_milhoes / _base_sim_milhoes
+            _frase_bases = (
+                f"O consumo das famílias em produtos alimentares nas Contas Nacionais "
+                f"(<code>{eurostat.CONTAS_NACIONAIS}</code>, CP011) foi de "
+                f"<strong>{milhoes(_cn_milhoes, 0)} em {_cn_ano}</strong> — "
+                f"<strong>{numero(_racio_bases, 1)} vezes mais</strong>."
+            )
+        else:
+            _frase_bases = (
+                "A despesa alimentar das Contas Nacionais não está disponível nesta "
+                "sessão, pelo que a comparação entre as duas bases não é apresentada."
+            )
         st.markdown(f"""
         <div class="nota perigo">
           <div class="tt">Isto não é uma estimativa de custo orçamental — e a diferença é grande</div>
@@ -3282,14 +3330,13 @@ with aba3:
           cobrado sobre transações reais, que são o que as Contas Nacionais medem.
           <br><br>
           <strong>As duas bases não estão perto uma da outra.</strong> A base deste
-          simulador — {numero(agregados)} agregados × {euro(media_agregado)}/mês — dá cerca
-          de <strong>15 400 M€/ano</strong> de despesa alimentar. O consumo das famílias em
-          produtos alimentares nas Contas Nacionais (<code>nama_10_cp18</code>, CP011) foi
-          de <strong>28 188 M€ em 2022</strong> e <strong>33 038 M€ em 2024</strong> — entre
-          <strong>1,8 e 2,1 vezes mais</strong>. Parte da diferença é conhecida (os
+          simulador — {numero(agregados)} agregados × {euro(media_agregado)}/mês — dá
+          <strong>{milhoes(_base_sim_milhoes, 0)}/ano</strong> de despesa alimentar.
+          {_frase_bases} Parte da diferença é conhecida (os
           inquéritos subdeclaram a despesa alimentar), parte não está explicada, e o
-          conceito das Contas Nacionais poderá incluir a despesa de não residentes no
-          território. <strong>Enquanto isso não estiver resolvido, não se troca a base</strong>
+          conceito das Contas Nacionais é o <strong>interno</strong> — despesa no
+          território, não residentes incluídos, verificado a 12.08.2026.
+          <strong>Enquanto isso não estiver resolvido, não se troca a base</strong>
           — mas ninguém deve ler os valores acima como uma verba de Orçamento.
           <br><br>
           E mesmo com a base certa faltaria o resto: o cabaz alimentar doméstico
@@ -4360,11 +4407,12 @@ with aba5:
     | Repercussão | **Calibrada** — @RHO@ % por defeito, ajustável | Já não é uma hipótese de trabalho: é derivada da avaliação do Banco de Portugal ao «IVA zero» de 2023, sobre a medida idêntica no mesmo país. Banda @RHO_LO@ % a @RHO_HI@ % |
 
     **Dois números de agregados, para dois usos diferentes.** O denominador da âncora das Contas
-    Nacionais é o número de agregados **do ano da despesa** — hoje 2022. A extrapolação nacional do
-    simulador de IVA usa o **ano mais recente**, porque o que se extrapola é o efeito de uma medida
-    sobre o país de hoje. Dividir uma despesa de 2022 pelos agregados de 2025 baixaria a âncora
-    9,1 % por razão nenhuma: os agregados cresceram, a despesa não os acompanhou porque é de outro
-    ano.
+    Nacionais é o número de agregados **do ano da despesa** — hoje @ANO_DESPESA@, e é por isso que
+    a aplicação usa @AGREG_ANCORA@ agregados nesse cálculo. A extrapolação nacional do simulador de
+    IVA usa o **ano mais recente**, @ANO_AGREGADOS@, com @AGREG_RECENTE@ agregados, porque o que se
+    extrapola é o efeito de uma medida sobre o país de hoje. Usar o número mais recente também no
+    denominador da âncora baixá-la-ia por razão nenhuma: os agregados cresceram, e a despesa não os
+    acompanhou porque é de outro ano.
 
     **Recuo do n.º de agregados:** se o conjunto anual do Eurostat não estiver disponível ou
     devolver um valor implausível, a aplicação usa o valor censitário — **4 149 096** agregados
@@ -4379,7 +4427,17 @@ with aba5:
             # substituem-se por marcador.
             .replace("@RHO@", numero(REPERCUSSAO_PADRAO * 100, 0))
             .replace("@RHO_LO@", numero(REPERCUSSAO_BANDA[0] * 100, 1))
-            .replace("@RHO_HI@", numero(REPERCUSSAO_BANDA[1] * 100, 0)))
+            .replace("@RHO_HI@", numero(REPERCUSSAO_BANDA[1] * 100, 0))
+            # O ano da despesa estava inscrito à mão — «hoje 2022» — e a migração
+            # para o `nama_10_cp18` (E16) deixou-o para trás: passou a ser 2024, e
+            # este parágrafo contradizia a barra de estado da própria aplicação
+            # (auditoria de 12.08.2026, K7).
+            # O denominador é sempre o da âncora das Contas Nacionais, seja qual
+            # for a base escolhida na barra lateral: é dela que o parágrafo fala.
+            .replace("@ANO_DESPESA@", str(dados.get("despesa_ano") or "—"))
+            .replace("@ANO_AGREGADOS@", str(dados.get("agregados_ano") or "—"))
+            .replace("@AGREG_ANCORA@", numero(_den_contas["valor"]))
+            .replace("@AGREG_RECENTE@", numero(agregados)))
             st.info(
                 "**Sobre os ponderadores.** Somam 1 000 ‰ sobre **todo** o cabaz do índice — não "
                 "sobre a alimentação. Os nove grupos alimentares somam apenas o peso da alimentação "

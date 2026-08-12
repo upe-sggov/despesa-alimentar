@@ -1858,6 +1858,19 @@ def _fonte(nome):
                    encoding="utf-8-sig").read()
 
 
+def _fonte_viva(nome):
+    """
+    O mesmo, **sem as linhas de comentario**.
+
+    Os comentarios deste projeto citam de proposito os valores errados que
+    foram corrigidos — e um teste que proiba um numero pelo nome apanharia a
+    explicacao em vez da ocorrencia. O que se proibe e o numero **no que a
+    aplicacao mostra**, nao na memoria de porque deixou de la estar.
+    """
+    return "\n".join(l for l in _fonte(nome).splitlines()
+                     if not l.lstrip().startswith("#"))
+
+
 # ---- K11 · dependencias fixadas e API depreciada -------------------------
 def test_nao_ha_api_depreciada_do_streamlit():
     """
@@ -2214,3 +2227,63 @@ def test_nenhum_separador_usa_nome_definido_noutro():
                 f"comeca na linha {bloco.lineno}, e usada fora dele nas linhas "
                 f"{fora}. Formatadores e auxiliares partilhados pertencem a "
                 f"src/config.py — ver K6.")
+
+
+# ---- K7 + K8 · nenhum numero derivado inscrito a mao ---------------------
+def test_o_ano_da_despesa_nao_esta_inscrito_a_mao():
+    """
+    A Metodologia dizia «o ano da despesa — hoje 2022» quando a migracao para o
+    nama_10_cp18 (E16) o tinha passado a 2024. Contradizia a barra de estado da
+    propria aplicacao (auditoria de 12.08.2026, K7).
+    """
+    vivo = _fonte_viva("app.py")
+    assert "hoje 2022" not in vivo
+    assert "@ANO_DESPESA@" in vivo             # o marcador existe...
+    assert '.replace("@ANO_DESPESA@"' in vivo  # ...e e substituido
+
+
+def test_a_comparacao_entre_bases_e_calculada():
+    """
+    Os quatro numeros do bloco «isto nao e custo orcamental» estavam inscritos a
+    mao, dois deles ao lado de numeros calculados em directo — e o valor das
+    Contas Nacionais estava escrito ao lado do sitio de onde podia vir. E a
+    terceira ocorrencia do padrao do C2 e do E9 (auditoria de 12.08.2026, K8).
+    """
+    vivo = _fonte_viva("app.py")
+    for inscrito in ("15 400 M€", "28 188 M€", "33 038 M€", "1,8 e 2,1 vezes"):
+        assert inscrito not in vivo, f"numero inscrito a mao: {inscrito}"
+    assert "_base_sim_milhoes = agregados * media_agregado * 12 / 1e6" in vivo
+    assert "_racio_bases = _cn_milhoes / _base_sim_milhoes" in vivo
+
+
+# ---- K9 · a variacao da receita nao e a receita --------------------------
+def test_a_receita_de_iva_e_rotulada_como_variacao():
+    """
+    O indicador mostra `iva_depois - iva_antes` — uma variacao — sob um rotulo
+    que se lia como nivel. O cartao agregado ja lhe chamava «Variacao de receita
+    implicita» (auditoria de 12.08.2026, K9).
+    """
+    fonte = _fonte("app.py")
+    assert 'c[4].metric("Variação da receita de IVA por mês"' in fonte
+    assert 'c[4].metric("Receita de IVA por mês"' not in fonte
+
+
+# ---- K12 · a vigilancia cobre todas as series obtidas --------------------
+def test_a_vigilancia_cobre_as_series_que_alimentam_a_aplicacao():
+    """
+    Tres series obtidas ficavam de fora: a serie longa de PT (que alimenta todo
+    o separador Historico desde 11.08), os agregados especiais, e os
+    ponderadores por subclasse — que sao a base de **todo** o apuramento do IVA
+    (auditoria de 12.08.2026, K12).
+    """
+    fonte = _fonte("app.py")
+    i = fonte.index("vigilancia = []")
+    bloco = fonte[i:fonte.index("return {", i)]
+    for serie in ("Variação homóloga PT (série longa)",
+                  "Agregados especiais do índice",
+                  "Ponderadores por subclasse"):
+        assert serie in bloco, f"serie fora da vigilancia: {serie}"
+    # As tres tem de reutilizar limites ja justificados em config.py.
+    from src.config import LIMITES_FRESCURA
+    assert LIMITES_FRESCURA["variacoes"][0] == 60
+    assert LIMITES_FRESCURA["ponderadores"][0] == 450
