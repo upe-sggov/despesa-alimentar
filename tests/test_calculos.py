@@ -1795,3 +1795,49 @@ def test_ha_fichas_de_mais_do_que_um_ano_e_todas_ligadas():
     assert len(AT_FICHAS) >= 4
     anos = {f["despacho"][:4] for f in AT_FICHAS}
     assert len(anos) >= 3
+
+
+# ------------- janela da variacao homologa acompanha a do indice (12.08.2026)
+def test_variacao_de_portugal_pedida_na_mesma_janela_do_indice():
+    """
+    O cursor do separador Historico oferece as opcoes do **indice**, que recua
+    ate ao ano-base do vies. Se a variacao for pedida numa janela mais curta, a
+    linha vermelha aparece truncada sem aviso - eram 48 meses sem linha.
+
+    Este teste le a fonte porque a ligacao entre as duas janelas e uma decisao
+    de quem pede os dados, e nao ha forma de a observar sem rede.
+    """
+    import io
+    from pathlib import Path
+
+    fonte = io.open(Path(__file__).resolve().parent.parent / "app.py",
+                    encoding="utf-8-sig").read()
+    assert "var_pt_longo" in fonte
+    # A serie longa de PT tem de usar a janela do indice, nao a da variacao.
+    i = fonte.index("var_pt_longo, via16")
+    trecho = fonte[i:i + 260]
+    assert "desde_indice" in trecho, trecho
+    assert "desde_variacao" not in trecho
+
+
+def test_ha_recurso_se_a_serie_longa_falhar():
+    """Se o pedido extra falhar, o grafico tem de continuar a funcionar."""
+    import io
+    from pathlib import Path
+
+    fonte = io.open(Path(__file__).resolve().parent.parent / "app.py",
+                    encoding="utf-8-sig").read()
+    i = fonte.index("if not var_pt_longo.empty:")
+    trecho = fonte[i:i + 420]
+    assert "else:" in trecho
+    assert "var_df[" in trecho
+
+
+def test_o_grafico_avisa_quando_a_variacao_nao_cobre_o_intervalo():
+    """A linha truncada tem de ser dita, nao descoberta."""
+    import io
+    from pathlib import Path
+
+    fonte = io.open(Path(__file__).resolve().parent.parent / "app.py",
+                    encoding="utf-8-sig").read()
+    assert "len(var_sel) < len(idx_sel)" in fonte

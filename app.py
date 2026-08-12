@@ -175,6 +175,17 @@ def carregar_dados(anos_historico: int = 6):
     var_df, via3 = eurostat.variacoes(
         [COICOP_ALIMENTAR] + CODIGOS, list(PAISES.keys()), desde_variacao
     )
+
+    # Série longa de Portugal, para o gráfico do histórico acompanhar o cursor
+    # em toda a janela do índice. Um grupo, um país: pedido barato. Se falhar, a
+    # aplicação recorre à série curta e o gráfico continua a funcionar.
+    try:
+        var_pt_longo, via16 = eurostat.variacoes(
+            [COICOP_ALIMENTAR], ["PT"], desde_indice)
+        registo.append(("Variação homóloga PT (série longa)", via16, len(var_pt_longo)))
+    except Exception as exc:                                   # noqa: BLE001
+        var_pt_longo = pd.DataFrame()
+        registo.append(("Variação homóloga PT (série longa)", f"indisponível ({exc})", 0))
     registo.append(("Variações e UE-27", via3, len(var_df)))
 
     # Agregados especiais: separam choque conjuntural de inflação estrutural.
@@ -319,8 +330,23 @@ def carregar_dados(anos_historico: int = 6):
     else:
         indice_pt, base_indice = indice_df, None
 
-    var_pt = var_df[(var_df["geo"] == "PT") &
-                    (var_df["coicop"] == COICOP_ALIMENTAR)].sort_values("time")
+    # A variação de Portugal tem de cobrir **a mesma janela do índice**, porque é
+    # o índice que define as opções do cursor de intervalo no separador Histórico.
+    # Vinha de `var_df`, pedido para três anos e muitos países por questão de
+    # volume — resultado: arrastar o cursor para trás de janeiro do ano−3 mostrava
+    # a linha do índice sem a linha vermelha da variação, sem qualquer aviso
+    # (relatado pela utilizadora, 12.08.2026).
+    #
+    # A série de PT sozinha — um grupo, um país — é barata, e é pedida à parte
+    # com a janela do índice. O pedido largo continua a servir a comparação
+    # europeia, onde três anos chegam.
+    if not var_pt_longo.empty:
+        var_pt = var_pt_longo[
+            (var_pt_longo["geo"] == "PT")
+            & (var_pt_longo["coicop"] == COICOP_ALIMENTAR)].sort_values("time")
+    else:
+        var_pt = var_df[(var_df["geo"] == "PT") &
+                        (var_df["coicop"] == COICOP_ALIMENTAR)].sort_values("time")
 
     # --- comparação europeia: todos os grupos, todos os países ---
     bench_todos = var_df.sort_values("time")
@@ -1091,14 +1117,30 @@ with aba1:
         colunas = st.columns(5)
         colunas[0].metric(f"Despesa mensal — {composicao}", euro(despesa_mensal), help=origem)
         if resumo["contributo_total"] is not None:
+            # A percentagem é uma **taxa de variação de preços** e não depende da
+            # base de despesa: mudar de IDF para Contas Nacionais muda os euros,
+            # não a taxa. Sem esta nota parece que a app ignorou a mudança de base
+            # (relatado pela utilizadora, 12.08.2026).
+            _nota_taxa = ("A percentagem é uma **taxa de variação de preços** — vem do índice "
+                          "e dos ponderadores, não do nível de despesa. Por isso **não muda** "
+                          "quando troca a base entre IDF e Contas Nacionais: o que muda é o "
+                          "valor em euros, porque a mesma taxa aplicada a uma despesa maior "
+                          "dá mais euros.")
             colunas[1].metric("Agravamento nos últimos 12 meses", euro(resumo["contributo_total"]),
-                              percentagem(resumo["variacao_implicita"]))
-            colunas[2].metric("Despesa há 12 meses", euro(resumo["valor_ha_um_ano"]))
+                              percentagem(resumo["variacao_implicita"]),
+                              help="Subida da despesa alimentar face ao mesmo mês do ano "
+                                   f"anterior, à composição de consumo atual. {_nota_taxa}")
+            colunas[2].metric("Despesa há 12 meses", euro(resumo["valor_ha_um_ano"]),
+                              help="A mesma despesa deflacionada pela variação homóloga de "
+                                   "cada classe. Escala com a base escolhida.")
             if resumo["maior"]:
                 maior = resumo["maior"]
                 colunas[3].metric(f"{maior['emoji']} Maior contributo",
                                   euro(maior["contributo"]),
-                                  percentagem(maior["variacao"]))
+                                  percentagem(maior["variacao"]),
+                                  help="A classe que mais pesou no agravamento — em euros, "
+                                       "combinando a sua subida de preços com o seu peso no "
+                                       f"cabaz. {_nota_taxa}")
         colunas[4].metric("Equivalente anual", euro(despesa_mensal * vezes_ano))
 
         st.markdown(f"""
@@ -1964,6 +2006,21 @@ with aba2:
                 (dados["var_pt"]["time"] >= inicio_sel) &
                 (dados["var_pt"]["time"] <= fim_sel)]
 
+            # Se a série da variação não cobrir todo o intervalo escolhido, a linha
+            # vermelha aparece truncada — e isso tem de ser dito, não descoberto.
+            if not var_sel.empty and len(var_sel) < len(idx_sel):
+                st.warning(
+                    f"A linha da **variação homóloga** só cobre "
+                    f"{mes_pt(var_sel['time'].min())} a {mes_pt(var_sel['time'].max())} — "
+                    f"{len(var_sel)} dos {len(idx_sel)} meses do intervalo escolhido. O índice "
+                    "recua mais do que a série de variação disponível nesta sessão."
+                )
+            elif var_sel.empty:
+                st.warning(
+                    "Não há variação homóloga publicada para o intervalo escolhido: o gráfico "
+                    "mostra apenas o índice."
+                )
+
             st.plotly_chart(
                 grafico_historico(idx_sel, var_sel, len(idx_sel)),
                 use_container_width=True,
@@ -2353,14 +2410,26 @@ with aba6:
                     "Janela medida": (f"{r.inicio.strftime('%m/%Y')} – "
                                       f"{r.fim.strftime('%m/%Y')}"),
                     "Períodos": int(r.n_periodos),
-                    "Produção": f"{r.producao_var:+.1f} %".replace(".", ","),
-                    "Consumo": f"{r.consumo_var:+.1f} %".replace(".", ","),
+                    "Preço na produção: variação na janela": (
+                        f"{r.producao_var:+.1f} %".replace(".", ",")),
+                    "Preço no consumo: variação na janela": (
+                        f"{r.consumo_var:+.1f} %".replace(".", ",")),
                     "Diferença consumo−produção": (
                         f"{r.diferenca_var:+.1f} %".replace(".", ",")
                         if pd.notna(r.diferenca_var) else "—"),
                     "Padrão": r.padrao,
                 } for r in _com_prod.itertuples()])
                 st.dataframe(_tab_o, use_container_width=True, hide_index=True)
+                st.caption(
+                    "**De que é esta percentagem.** É a variação do **preço em euros por "
+                    "unidade** em cada fase, entre o primeiro e o último período da coluna "
+                    "«Janela medida» — que é a janela **comum às duas fases**, para que as duas "
+                    "colunas sejam comparáveis entre si. Não é uma quota nem uma fatia de nada: "
+                    "*+20 %* significa que o preço nessa fase está 20 % acima do que estava no "
+                    "início da janela. A última coluna é a variação da **diferença** entre as "
+                    "duas pontas — e vale a ressalva do topo do separador: essa diferença não é "
+                    "a margem de ninguém."
+                )
 
             # ---- o que os padrões significam ----
             _contagem = _var["padrao"].value_counts()
