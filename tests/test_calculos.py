@@ -271,9 +271,13 @@ def test_formatadores_nao_estragam_o_texto_a_volta():
     assert pontos(0.5, sinal=False) == "0,50 p.p."
     assert pontos(3.0, sufixo=" pontos") == "+3,00 pontos"
 
+    # O símbolo cola ao número (Livro de Estilo da SGGov, E.3), mas o sufixo dos
+    # pontos percentuais mantém o espaço: são abreviaturas, não símbolos.
+    assert percentagem(25.0, sinal=False) == "25,0%"
+
     # o caso que o padrão antigo estragava
     etiqueta = f"{percentagem(101.4, sinal=False)}  ({pontos(1.4, casas=1)})"
-    assert etiqueta == "101,4 %  (+1,4 p.p.)"
+    assert etiqueta == "101,4%  (+1,4 p.p.)"
     assert "p,p," not in etiqueta
 
 
@@ -1099,7 +1103,7 @@ def test_formatadores_aplicam_se_ao_numero_e_nao_a_frase():
     etiqueta = (f"Em 2025, **{percentagem(sev_pobres, sinal=False)}** entre quem está em "
                 f"risco de pobreza, contra **{percentagem(sev, sinal=False)}** no total — "
                 f"**{numero(sev_pobres / sev, 1)}×** mais.")
-    assert "5,5 %" in etiqueta and "1,9 %" in etiqueta and "2,9×" in etiqueta
+    assert "5,5%" in etiqueta and "1,9%" in etiqueta and "2,9×" in etiqueta
     # O texto a volta fica intacto: nenhum ponto virou virgula onde nao devia.
     assert "Em 2025," in etiqueta
     assert etiqueta.endswith("mais.")
@@ -1881,8 +1885,19 @@ def test_nao_ha_api_depreciada_do_streamlit():
     fonte = _fonte("app.py")
     assert "use_container_width" not in fonte, (
         "use_container_width voltou ao app.py; usar width='stretch'/'content'")
-    # E a substituicao tem de ter sido feita, nao apagada:
-    assert fonte.count('width="stretch"') >= 40
+    # E a substituicao tem de ter sido feita, nao apagada. O limiar era 40
+    # quando cada `st.plotly_chart` trazia o seu `width="stretch"`. O redesign
+    # de 12.08.2026 encaminhou os graficos por um unico ajudante `grafico()`,
+    # que aplica a linguagem visual comum e chama `st.plotly_chart` uma so vez
+    # — o parametro passou a estar la, e nao em catorze sitios. O limiar
+    # acompanha essa centralizacao; o que o teste guarda continua a ser o
+    # mesmo: que a migracao nao foi desfeita por apagamento.
+    assert fonte.count('width="stretch"') >= 25
+    # E que os graficos continuam a passar todos pelo ajudante, em vez de
+    # voltarem a chamar o Streamlit diretamente com a API antiga.
+    assert fonte.count("st.plotly_chart(") == 1, (
+        "os graficos devem ser apresentados por `grafico()`, que centraliza "
+        "o estilo e a chamada a st.plotly_chart")
 
 
 def test_dependencias_tem_limite_superior():
@@ -2252,8 +2267,19 @@ def test_a_comparacao_entre_bases_e_calculada():
     vivo = _fonte_viva("app.py")
     for inscrito in ("15 400 M€", "28 188 M€", "33 038 M€", "1,8 e 2,1 vezes"):
         assert inscrito not in vivo, f"numero inscrito a mao: {inscrito}"
-    assert "_base_sim_milhoes = agregados * media_agregado * 12 / 1e6" in vivo
-    assert "_racio_bases = _cn_milhoes / _base_sim_milhoes" in vivo
+
+    # O confronto numerico entre a base do simulador e a despesa das Contas
+    # Nacionais saiu da nota «isto nao e custo orcamental» a 13.08.2026: era
+    # aparelho metodologico no meio de uma advertencia que tem de se ler em
+    # tres segundos. Com ele saiu o calculo que o alimentava.
+    #
+    # O que este teste guardava eram duas coisas, e so uma delas desapareceu.
+    # A proibicao dos numeros inscritos a mao **fica**, e e a que interessa: se
+    # o confronto voltar, tem de voltar calculado. A exigencia de que as duas
+    # linhas de calculo existam passa a ser condicional a o bloco existir.
+    if "_base_sim_milhoes" in vivo:
+        assert "_base_sim_milhoes = agregados * media_agregado * 12 / 1e6" in vivo
+        assert "_racio_bases = _cn_milhoes / _base_sim_milhoes" in vivo
 
 
 # ---- K9 · a variacao da receita nao e a receita --------------------------
@@ -2262,10 +2288,16 @@ def test_a_receita_de_iva_e_rotulada_como_variacao():
     O indicador mostra `iva_depois - iva_antes` — uma variacao — sob um rotulo
     que se lia como nivel. O cartao agregado ja lhe chamava «Variacao de receita
     implicita» (auditoria de 12.08.2026, K9).
+
+    O que o K9 fixou foi o **rotulo**, e e so isso que se exige aqui. A
+    assercao prendia tambem a posicao do indicador na fila (`c[4]`), e passou a
+    falhar quando o redesenho visual de 14.08.2026 promoveu a nova despesa a
+    indicador de capa e a fila passou de cinco para quatro. A posicao e materia
+    de apresentacao; o rotulo e que era o defeito.
     """
     fonte = _fonte("app.py")
-    assert 'c[4].metric("Variação da receita de IVA por mês"' in fonte
-    assert 'c[4].metric("Receita de IVA por mês"' not in fonte
+    assert '.metric("Variação da receita de IVA por mês"' in fonte
+    assert '.metric("Receita de IVA por mês"' not in fonte
 
 
 # ---- K12 · a vigilancia cobre todas as series obtidas --------------------

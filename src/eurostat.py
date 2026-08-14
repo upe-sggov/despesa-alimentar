@@ -6,14 +6,14 @@ Porque é que isto corre no servidor e não no navegador
 Uma página HTML aberta no computador não consegue ler dados de outro domínio:
 o navegador bloqueia-o por política de mesma origem (*same-origin policy*), e
 as redes institucionais reforçam essa restrição. Ao correr em Python do lado do
-servidor, essa limitação não existe — os pedidos são feitos por HTTP normal.
+servidor, essa limitação não existe, os pedidos são feitos por HTTP normal.
 
 São usadas duas vias independentes, por ordem de preferência:
 
-1. **SDMX 2.1** — o filtro segue no próprio caminho do endereço
+1. **SDMX 2.1**, o filtro segue no próprio caminho do endereço
    (`.../prc_hicp_minr/M.RCH_A.CP011.PT`), pelo que a seleção é
    obrigatoriamente feita no servidor do Eurostat. Devolve SDMX-CSV.
-2. **API Statistics** — filtros por parâmetro, resposta em JSON-stat.
+2. **API Statistics**, filtros por parâmetro, resposta em JSON-stat.
 
 Ambas são públicas, sem chave nem registo.
 """
@@ -40,7 +40,7 @@ class ErroEurostat(RuntimeError):
 
 
 # --------------------------------------------------------------------------
-# Dimensão de classificação — não se chama «coicop» em todos os conjuntos
+# Dimensão de classificação, não se chama “coicop” em todos os conjuntos
 # --------------------------------------------------------------------------
 # Na passagem para a ECOICOP versão 2 o Eurostat renomeou a dimensão de
 # classificação de `coicop` para `coicop18`. O código antigo lia-a com
@@ -51,25 +51,25 @@ class ErroEurostat(RuntimeError):
 # A regra passa a ser a inversa da anterior: quem precisa da classificação
 # **declara-a**, e a ausência é erro. Quem não precisa passa `None` e recebe a
 # coluna vazia de propósito. É a mesma doutrina da guarda do parâmetro `extra`,
-# generalizada — deixou de ser um caso especial do `ilc_mdes03`.
+# generalizada, deixou de ser um caso especial do `ilc_mdes03`.
 def _coluna_classe(dataset: str, bruto, dim: str | None, via: str):
     """Extrai a dimensão de classificação e normaliza o seu nome para `coicop`."""
     if dim is None:
         return pd.Series([""] * len(bruto), index=getattr(bruto, "index", None))
     if dim not in bruto.columns:
         raise ErroEurostat(
-            f"{dataset}: dimensão de classificação «{dim}» ausente da resposta {via} "
+            f"{dataset}: dimensão de classificação “{dim}” ausente da resposta {via} "
             f"(dimensões presentes: {', '.join(map(str, bruto.columns))}). "
             "Sem ela as classes colapsam numa só, em silêncio.")
     return bruto[dim]
 
 
 # --------------------------------------------------------------------------
-# Via 1 — SDMX 2.1 (chave no caminho)
+# Via 1, SDMX 2.1 (chave no caminho)
 # --------------------------------------------------------------------------
 # Registo dos endereços **efetivamente usados**, para rastreabilidade. É lido
 # pela aplicação e apresentado no separador Metodologia, sob a promessa de que
-# servem para «verificar qualquer valor sem depender da aplicação».
+# servem para “verificar qualquer valor sem depender da aplicação”.
 #
 # Durante muito tempo não serviram. O endereço era registado **antes** do
 # pedido, pelo que uma tentativa falhada ficava listada como se fosse a
@@ -109,16 +109,16 @@ def _via_sdmx(dataset: str, chave: str, inicio: str | None = None,
     if extra:
         if extra not in bruto.columns:
             # Sem esta guarda, várias séries colapsavam numa só coluna, sem
-            # forma de as distinguir — erro silencioso e difícil de detetar.
+            # forma de as distinguir, erro silencioso e difícil de detetar.
             raise ErroEurostat(
-                f"{dataset}: dimensão «{extra}» ausente da resposta SDMX "
+                f"{dataset}: dimensão “{extra}” ausente da resposta SDMX "
                 f"(colunas: {', '.join(bruto.columns)}).")
         df[extra] = bruto[extra]
     return df.dropna(subset=["valor"]).reset_index(drop=True), resp.url
 
 
 # --------------------------------------------------------------------------
-# Via 2 — API Statistics (JSON-stat)
+# Via 2, API Statistics (JSON-stat)
 # --------------------------------------------------------------------------
 def _descodifica_jsonstat(js: dict, extra: str | None = None,
                           dim_coicop: str | None = None,
@@ -168,7 +168,7 @@ def _descodifica_jsonstat(js: dict, extra: str | None = None,
     df["time"] = df.get("time", "").astype(str)
     if extra and extra not in df.columns:
         raise ErroEurostat(
-            f"dimensão «{extra}» ausente da resposta JSON-stat "
+            f"dimensão “{extra}” ausente da resposta JSON-stat "
             f"(dimensões: {', '.join(ids)}).")
     return df[colunas]
 
@@ -191,7 +191,7 @@ def _via_stats(dataset: str, filtros: dict, extra: str | None = None,
 
 
 # --------------------------------------------------------------------------
-# Estrutura verificada de cada conjunto — a guarda que fecha o K3 e o K4
+# Estrutura verificada de cada conjunto, a guarda que fecha o K3 e o K4
 # --------------------------------------------------------------------------
 # Três erros da mesma família sobreviveram a três auditorias, e nenhum deu
 # sinal de vida porque a via de recurso os tapava:
@@ -203,14 +203,14 @@ def _via_stats(dataset: str, filtros: dict, extra: str | None = None,
 # A causa comum é a chave SDMX ser **posicional** e o filtro da via Statistics
 # ser **nominal**: os dois podem divergir da estrutura real, e um do outro, sem
 # que nada o assinale. A COICOP 2018 renomeou dimensões em três conjuntos
-# distintos — `coicop`→`coicop18` no IHPC (E1), o mesmo nas Contas Nacionais
-# (E16), `ppp_cat`→`ppp_cat18` nas PPP (K4) — e de cada vez só se descobriu por
+# distintos, `coicop`→`coicop18` no IHPC (E1), o mesmo nas Contas Nacionais
+# (E16), `ppp_cat`→`ppp_cat18` nas PPP (K4), e de cada vez só se descobriu por
 # acidente.
 #
 # Passa a haver uma tabela da estrutura **verificada contra a API**, e o `obter`
 # recusa-se a fazer um pedido que não bata certo com ela. É a mesma doutrina do
 # E1, aplicada uma camada acima: quem pede declara a estrutura, e a divergência
-# é erro — não silêncio salvo por uma via alternativa.
+# é erro, não silêncio salvo por uma via alternativa.
 #
 # Verificado contra a API a 12.08.2026. A ordem é a da própria chave SDMX.
 DIMENSOES = {
@@ -241,14 +241,14 @@ def _verificar_estrutura(dataset: str, chave: str, filtros: dict) -> None:
     if dataset not in DIMENSOES:
         raise ErroEurostat(
             f"{dataset}: conjunto sem estrutura declarada em DIMENSOES. "
-            "Verifique as dimensões contra a API e registe-as — sem isso, uma "
+            "Verifique as dimensões contra a API e registe-as, sem isso, uma "
             "chave errada volta a ser salva em silêncio pela via de recurso.")
 
     dims = DIMENSOES[dataset]
     segmentos = chave.split(".")
     if len(segmentos) != len(dims):
         raise ErroEurostat(
-            f"{dataset}: a chave «{chave}» tem {len(segmentos)} segmento(s) e o "
+            f"{dataset}: a chave “{chave}” tem {len(segmentos)} segmento(s) e o "
             f"conjunto tem {len(dims)} dimensões ({'.'.join(dims)}). "
             "A chave SDMX é posicional: o Eurostat devolveria "
             "INVALID_QUERY_NB_FILTERS.")
@@ -281,8 +281,8 @@ def obter(dataset: str, chave: str, filtros: dict,
     Levanta ErroEurostat se ambas falharem.
 
     `extra` preserva uma dimensão adicional para lá de `unit`, `coicop` e `geo`.
-    Sem isso, um conjunto com uma dimensão própria — como o nível de pobreza em
-    `ilc_mdes03` — devolveria várias séries empilhadas e indistinguíveis.
+    Sem isso, um conjunto com uma dimensão própria, como o nível de pobreza em
+    `ilc_mdes03`, devolveria várias séries empilhadas e indistinguíveis.
 
     `dim_coicop` é o nome que a dimensão de classificação tem **neste conjunto**:
     `coicop` nas Contas Nacionais, `coicop18` na ECOICOP versão 2. Quem precisa
@@ -313,34 +313,34 @@ def obter(dataset: str, chave: str, filtros: dict,
     except Exception as exc:                              # noqa: BLE001
         erros.append(f"API Statistics: {exc}")
 
-    raise ErroEurostat(f"{dataset} — " + " | ".join(erros))
+    raise ErroEurostat(f"{dataset}, " + " | ".join(erros))
 
 
 # --------------------------------------------------------------------------
-# IHPC — ECOICOP versão 2
+# IHPC, ECOICOP versão 2
 # --------------------------------------------------------------------------
 # O Eurostat encerrou a família ECOICOP ver.1 na passagem para a ECOICOP ver.2 e
 # **inscreveu o fim da série no próprio título** dos conjuntos antigos:
 #
-#   prc_hicp_midx   «HICP - monthly data (index) (1996-2025)»          arquivado
-#   prc_hicp_manr   «HICP - monthly data (annual rate of change) (…-2025)» arquivado
-#   prc_hicp_inw    «HICP - item weights (1996-2025)»                   arquivado
+#   prc_hicp_midx   “HICP - monthly data (index) (1996-2025)”          arquivado
+#   prc_hicp_manr   “HICP - monthly data (annual rate of change) (…-2025)” arquivado
+#   prc_hicp_inw    “HICP - item weights (1996-2025)”                   arquivado
 #
-# Os três continuavam a responder com HTTP 200 e dados bem formados — apenas
+# Os três continuavam a responder com HTTP 200 e dados bem formados, apenas
 # tinham deixado de avançar. A aplicação apresentou dezembro de 2025 como
-# «último mês disponível» durante sete meses, sem dar erro nenhum
+# “último mês disponível” durante sete meses, sem dar erro nenhum
 # (auditoria de 11.08.2026, E1).
 #
 # Os conjuntos correntes:
 #
-#   prc_hicp_minr   índice **e** taxas de variação — substitui midx e manr
+#   prc_hicp_minr   índice **e** taxas de variação, substitui midx e manr
 #   prc_hicp_iw     ponderadores por rubrica
 #
 # Três diferenças que quebram uma migração feita à letra:
 #
 #   1. a dimensão de classificação chama-se `coicop18`, não `coicop`;
 #   2. índice e variação partilham o conjunto e distinguem-se pela `unit`, pelo
-#      que a unidade **tem de ir explícita na chave** — sem isso a resposta traz
+#      que a unidade **tem de ir explícita na chave**, sem isso a resposta traz
 #      níveis e taxas misturados na mesma coluna;
 #   3. `prc_hicp_iw` tem uma dimensão a mais, `statinfo`, com o valor `IW`.
 HICP_MENSAL = "prc_hicp_minr"
@@ -353,8 +353,8 @@ HICP_UNIDADE_VARIACAO = "RCH_A"
 
 # Cobertura verificada a 11.08.2026 (Portugal): I25 vai de 1996-01 a 2026-06
 # para CP011 e de 2019-01 a 2026-06 para as nove classes; os ponderadores vão
-# de 1996 a 2026. As duas janelas de indexação das âncoras — o ano civil de 2022
-# e a janela de recolha do IDF, fev/2022 a jan/2023 — ficam cobertas.
+# de 1996 a 2026. As duas janelas de indexação das âncoras, o ano civil de 2022
+# e a janela de recolha do IDF, fev/2022 a jan/2023, ficam cobertas.
 
 
 def ponderadores(codigos: Iterable[str]) -> tuple[pd.DataFrame, str]:
@@ -373,7 +373,7 @@ def ponderadores_subclasses(codigos: Iterable[str]) -> tuple[pd.DataFrame, str]:
     Ponderadores das **subclasses** da COICOP 2018 (5 e 6 dígitos).
 
     É o que permite dizer *quanto* de cada classe segue taxa de IVA diferente da
-    predefinida, e não apenas *o quê* — a lacuna que o D2 deixou em aberto e que
+    predefinida, e não apenas *o quê*, a lacuna que o D2 deixou em aberto e que
     a nomenclatura antiga não permitia fechar, por não descer a este nível.
 
     Mesma estrutura de `ponderadores()`: só muda a lista de códigos pedidos.
@@ -394,7 +394,7 @@ def indice_precos(coicop: str, desde: str) -> tuple[pd.DataFrame, str]:
 
 def indice_classes(codigos: Iterable[str], desde: str) -> tuple[pd.DataFrame, str]:
     """
-    Índice de preços mensal por classe COICOP — a matéria-prima do Törnqvist.
+    Índice de preços mensal por classe COICOP, a matéria-prima do Törnqvist.
 
     É preciso o índice em nível, e não a variação homóloga, porque um índice
     superlativo encadeia relativos de preço entre dois momentos. A unidade vai
@@ -428,20 +428,20 @@ def variacoes(coicops: Iterable[str], geos: Iterable[str],
 
 
 # --------------------------------------------------------------------------
-# Contas Nacionais — COICOP 2018
+# Contas Nacionais, COICOP 2018
 # --------------------------------------------------------------------------
 # Segunda ocorrência do mesmo defeito do E1, encontrada pela verificação de
-# frescura criada no E3 — que é a melhor demonstração de que a verificação
+# frescura criada no E3, que é a melhor demonstração de que a verificação
 # fazia falta. O catálogo do Eurostat distingue-os pelo título:
 #
-#   nama_10_co3_p3  «Household final consumption expenditure by purpose
-#                    (COICOP 1999)»   — parado em 2022 para todos os países
-#   nama_10_cp18    «Household final consumption expenditure by purpose
-#                    (COICOP 2018)»   — atualizado, série até 2024/2025
+#   nama_10_co3_p3  “Household final consumption expenditure by purpose
+#                    (COICOP 1999)”, parado em 2022 para todos os países
+#   nama_10_cp18    “Household final consumption expenditure by purpose
+#                    (COICOP 2018)”, atualizado, série até 2024/2025
 #
 # O conjunto antigo continuava a responder. Todos os outros conjuntos anuais da
 # aplicação estavam em 2025; só este ficara em 2022, o que não era desfasamento
-# normal de publicação — era uma série que tinha parado
+# normal de publicação, era uma série que tinha parado
 # (auditoria de 11.08.2026, E16).
 #
 # A dimensão volta a chamar-se `coicop18`, como no IHPC.
@@ -451,14 +451,14 @@ CONTAS_NACIONAIS = "nama_10_cp18"
 def despesa_alimentar(desde_ano: int) -> tuple[pd.DataFrame, str]:
     """
     Despesa final das famílias em produtos alimentares (COICOP 01.1),
-    a preços correntes, em milhões de euros — Contas Nacionais.
+    a preços correntes, em milhões de euros, Contas Nacionais.
 
     É a âncora oficial em euros: o índice de preços dá variações, nunca níveis.
     Publicação anual, com cerca de ano e meio de desfasamento.
     """
     return obter(
         CONTAS_NACIONAIS,
-        f"A.CP_MEUR.CP011.PT",
+        "A.CP_MEUR.CP011.PT",
         {"freq": "A", "unit": "CP_MEUR", "coicop18": "CP011", "geo": "PT",
          "sinceTimePeriod": str(desde_ano)},
         inicio=str(desde_ano),
@@ -473,11 +473,11 @@ def dimensao_agregado(desde_ano: int) -> tuple[pd.DataFrame, str]:
     Necessária para saber a quantas pessoas corresponde a despesa média por
     agregado e para converter entre despesa por agregado e despesa por pessoa.
 
-    Dimensões: ``freq.unit.geo``, com ``unit = AVG``. A chave anterior —
-    ``A.AVG.TOTAL.PT`` — tinha um segmento a mais e devolvia **HTTP 400 em todas
+    Dimensões: ``freq.unit.geo``, com ``unit = AVG``. A chave anterior,
+    ``A.AVG.TOTAL.PT``, tinha um segmento a mais e devolvia **HTTP 400 em todas
     as sessões**, com `INVALID_QUERY_NB_FILTERS`. Nunca funcionou: o que
     respondia era sempre a via de recurso, e o filtro dela não declarava a
-    unidade — funcionava só porque `unit` tem hoje um único valor. É o padrão do
+    unidade, funcionava só porque `unit` tem hoje um único valor. É o padrão do
     B1, e no B1 acabou em 443,5 mil agregados (auditoria de 12.08.2026, K3).
     """
     return obter(
@@ -496,17 +496,17 @@ def numero_agregados(desde_ano: int) -> tuple[pd.DataFrame, str]:
     Se não estiver disponível, a aplicação recorre ao valor dos Censos.
 
     Dimensões: ``freq.agechild.n_child.phhcomp.unit.geo``, unidade ``THS_HH``
-    (milhares de agregados). A chave anterior — ``A.THS.TOTAL.TOTAL.PT`` — não
+    (milhares de agregados). A chave anterior (``A.THS.TOTAL.TOTAL.PT``) não
     correspondia a esta estrutura: a via SDMX falhava e a alternativa devolvia
     uma fatia arbitrária de 443,5 mil agregados, um décimo do valor real. Só
     não contaminou a aplicação porque a verificação de plausibilidade em
-    `app.py` a rejeitava — o que, por sua vez, tornava esta função inútil
+    `app.py` a rejeitava, o que, por sua vez, tornava esta função inútil
     (auditoria de 10.08.2026, B1).
 
     **Não é o mesmo universo dos Censos.** O EU-LFS é um inquérito por amostra e
     exclui os alojamentos coletivos; lê sistematicamente abaixo do recenseamento
     exaustivo. Em 2021, ano em que ambos existem: 3 939,9 mil contra 4 149 096
-    dos Censos, menos 5,0 %. Trocar de fonte muda o nível, mesmo no mesmo ano.
+    dos Censos, menos 5,0%. Trocar de fonte muda o nível, mesmo no mesmo ano.
     """
     return obter(
         "lfst_hhnhtych",
@@ -520,17 +520,17 @@ def numero_agregados(desde_ano: int) -> tuple[pd.DataFrame, str]:
 def privacao_alimentar(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     """
     Percentagem que não consegue pagar uma refeição com carne, frango ou peixe
-    (ou equivalente vegetariano) de dois em dois dias — EU-SILC, `ilc_mdes03`.
+    (ou equivalente vegetariano) de dois em dois dias, EU-SILC, `ilc_mdes03`.
 
     É o limiar mais baixo dos três indicadores de acessibilidade da aplicação:
-    mede privação **severa**, quase fome. Nunca deve ser apresentado sozinho —
+    mede privação **severa**, quase fome. Nunca deve ser apresentado sozinho,
     ver a nota em `config.py`.
 
     Devolve as três populações: total, abaixo e acima do limiar de pobreza.
     """
     geos = list(geos)
-    # Dimensões: freq.hhcomp.rskpovth.unit.geo.time — `rskpovth` é o risco de
-    # pobreza (limiar dos 60 % da mediana), não o grupo de rendimento.
+    # Dimensões: freq.hhcomp.rskpovth.unit.geo.time, `rskpovth` é o risco de
+    # pobreza (limiar dos 60% da mediana), não o grupo de rendimento.
     niveis = ["TOTAL", "B_60", "A_60"]
     return obter(
         "ilc_mdes03",
@@ -557,8 +557,8 @@ PRIVACAO_NIVEIS = {
 # candidatas têm de ser alimentares.** A lista anterior incluía `E011` (consumo
 # final das famílias, 86,6) e `A01` (consumo individual efetivo, 85,3), que não
 # são alimentação: bastava a primeira falhar para a aplicação mostrar o nível
-# de preços de *todo* o consumo sob o título «nível de preços dos alimentos», e
-# a conclusão invertia-se de «1,4 % acima da UE-27» para «13,4 % abaixo».
+# de preços de *todo* o consumo sob o título “nível de preços dos alimentos”, e
+# a conclusão invertia-se de “1,4% acima da UE-27” para “13,4% abaixo”.
 # Continha ainda `CP011` e `0101`, que não existem no conjunto.
 # Auditoria de 10.08.2026, B3.
 #
@@ -577,16 +577,16 @@ PPP_CATEGORIA_PREFERIDA = "A010101"
 
 def nivel_precos(geos, categoria: str, desde_ano: int) -> tuple[pd.DataFrame, str]:
     """
-    Índice de nível de preços (EU27 = 100) — quanto custa o mesmo cabaz de bens
+    Índice de nível de preços (EU27 = 100), quanto custa o mesmo cabaz de bens
     em cada país, corrigido pelo câmbio. Responde à pergunta que a inflação não
     responde: *são mais caros aqui?*
 
     Fonte: programa de Paridades de Poder de Compra Eurostat-OCDE.
 
     `categoria` deve pertencer a `PPP_CATEGORIAS_ALIMENTOS` quando o resultado
-    for apresentado como «nível de preços dos alimentos». O conjunto tem 64
+    for apresentado como “nível de preços dos alimentos”. O conjunto tem 64
     categorias, quase todas não alimentares, e nada na resposta assinala a
-    diferença — o valor devolvido tem sempre o mesmo aspeto.
+    diferença, o valor devolvido tem sempre o mesmo aspeto.
 
     Dimensões: ``freq.indic_ppp.ppp_cat18.geo``.
 
@@ -608,7 +608,7 @@ def nivel_precos(geos, categoria: str, desde_ano: int) -> tuple[pd.DataFrame, st
 
 
 # Código do agregado de todos os fins no `nama_10_cp18`. Era uma lista de
-# candidatos — `TOTAL`, `CP00`, `P31_S14`, `CP_TOT` — e usava-se o primeiro que
+# candidatos (`TOTAL`, `CP00`, `P31_S14`, `CP_TOT`) e usava-se o primeiro que
 # respondesse, sem que o código efetivamente obtido chegasse a lado nenhum. Um
 # só, declarado, verificado na API e nomeado na interface: é a doutrina que o B3
 # fixou para as categorias das PPP e que aqui não tinha sido aplicada
@@ -638,7 +638,7 @@ def despesa_total_consumo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
 
 
 def despesa_alimentar_paises(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
-    """Despesa alimentar (CP011) por país — o numerador do coeficiente de Engel."""
+    """Despesa alimentar (CP011) por país, o numerador do coeficiente de Engel."""
     geos = list(geos)
     return obter(
         CONTAS_NACIONAIS,
@@ -650,7 +650,7 @@ def despesa_alimentar_paises(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     )
 
 
-# Agregados europeus que o `earn_mw_cur` não tem — e não por lacuna: o salário
+# Agregados europeus que o `earn_mw_cur` não tem, e não por lacuna: o salário
 # mínimo é fixado por cada Estado-Membro e não existe valor europeu. Um geo
 # inexistente não é ignorado pelo Eurostat: invalida o **pedido inteiro**.
 AGREGADOS_SEM_SALARIO_MINIMO = {"EU27_2020", "EU28", "EA19", "EA20", "EA"}
@@ -663,27 +663,27 @@ def salario_minimo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     **Não é o valor legal.** O Eurostat converte o mínimo nacional em
     duodécimos do total anual, para comparar países com número diferente de
     mensalidades. Em Portugal, que paga 14, o valor difundido é o legal × 14/12
-    — confirmado em toda a série: 957 → 820 (2024), 1015 → 870 (2025),
+, confirmado em toda a série: 957 → 820 (2024), 1015 → 870 (2025),
     1073 → 920 (2026). Quem precisar do valor legal divide por 14/12 e
     arredonda ao euro (auditoria de 10.08.2026, A2).
 
     Dimensões: ``freq.currency.geo``, com ``freq = S`` (semestral).
 
-    Havia aqui uma lista de três chaves candidatas — ``S1.EUR.MW``,
-    ``S1.MW.EUR``, ``S1.EUR.NAT`` — e **as três estavam erradas**: tinham um
+    Havia aqui uma lista de três chaves candidatas, ``S1.EUR.MW``,
+    ``S1.MW.EUR``, ``S1.EUR.NAT``, e **as três estavam erradas**: tinham um
     segmento a mais e a frequência era `S1` em vez de `S`. Devolviam HTTP 400
     todas as vezes, e o que respondia era sempre a via de recurso.
 
     A lista não podia sequer discriminar entre elas: os filtros da via
     Statistics **não dependem da chave**, pelo que a primeira iteração devolvia
     sempre resultado e as outras duas eram inalcançáveis. É o anti-padrão que o
-    encerramento da segunda auditoria inscreveu como lição — «uma lista de
-    candidatos esconde o que foi usado» —, já corrigido nas categorias das PPP
+    encerramento da segunda auditoria inscreveu como lição, “uma lista de
+    candidatos esconde o que foi usado”, já corrigido nas categorias das PPP
     (B3), no código do total (E7) e nos endereços de verificação (E5), e que
     aqui tinha sobrevivido (auditoria de 12.08.2026, K3 e K10).
 
     **Não há salário mínimo europeu.** O `earn_mw_cur` só tem países; não tem
-    `EU27_2020`, e não é lacuna — é o conceito que não existe. Pedi-lo devolve
+    `EU27_2020`, e não é lacuna, é o conceito que não existe. Pedi-lo devolve
     `INVALID_QUERY_DIMENSION_VALUE` e **invalida o pedido inteiro**, incluindo
     os onze países que existem. Era a segunda razão para esta ligação nunca
     chegar à via preferida, encontrada ao aplicar a correção do K3: a chave já
@@ -692,7 +692,7 @@ def salario_minimo(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     geos = [g for g in geos if g not in AGREGADOS_SEM_SALARIO_MINIMO]
     if not geos:
         raise ErroEurostat(
-            "earn_mw_cur — nenhum dos países pedidos tem salário mínimo "
+            "earn_mw_cur, nenhum dos países pedidos tem salário mínimo "
             "nacional publicado (os agregados europeus não têm).")
     return obter(
         "earn_mw_cur",
@@ -714,10 +714,10 @@ def rendimento(geos, desde_ano: int, indicador: str = "MEAN_EI") -> tuple[pd.Dat
     Rendimento monetário líquido **equivalente** das famílias, em euros (EU-SILC).
 
     `indicador` (dimensão ``statinfo`` do ``ilc_di03``):
-      - ``MEAN_EI`` — média (*mean equivalised net income*)
-      - ``MED_EI`` — mediana
+      - ``MEAN_EI``, média (*mean equivalised net income*)
+      - ``MED_EI``, mediana
 
-    «Equivalente» significa que já vem dividido pelas unidades de consumo do
+    “Equivalente” significa que já vem dividido pelas unidades de consumo do
     agregado, segundo a escala OCDE modificada. Multiplicando pelas unidades
     equivalentes de um agregado obtém-se o rendimento desse agregado.
 
@@ -727,7 +727,7 @@ def rendimento(geos, desde_ano: int, indicador: str = "MEAN_EI") -> tuple[pd.Dat
     mediano misturaria duas medidas de tendência central diferentes e inflaria
     o rácio, porque a mediana do rendimento é inferior à média.
 
-    A dimensão ``age`` é ``Y_GE16`` — a população com 16 ou mais anos, que é o
+    A dimensão ``age`` é ``Y_GE16``, a população com 16 ou mais anos, que é o
     universo em que o EU-SILC publica o rendimento equivalente. Não é um
     recorte etário da despesa: o rendimento equivalente é o mesmo para todos os
     membros do agregado, por construção da escala.
@@ -738,7 +738,7 @@ def rendimento(geos, desde_ano: int, indicador: str = "MEAN_EI") -> tuple[pd.Dat
     geos = list(geos)
     if indicador not in RENDIMENTO_INDICADORES:
         raise ErroEurostat(
-            f"ilc_di03 — indicador «{indicador}» não existe; "
+            f"ilc_di03, indicador “{indicador}” não existe; "
             f"os códigos válidos são {sorted(RENDIMENTO_INDICADORES)}")
     return obter(
         "ilc_di03",
@@ -749,8 +749,17 @@ def rendimento(geos, desde_ano: int, indicador: str = "MEAN_EI") -> tuple[pd.Dat
     )
 
 
-# Casos-tipo do conjunto de remunerações líquidas anuais. O primeiro que
-# responda serve de referência para o «trabalhador médio».
+# Combinações de (massa salarial, emprego) das Contas Nacionais, por ordem de
+# preferência. **Não é o anti-padrão do K10**: aqui as candidatas diferem no
+# `na_item`, que vai tanto na chave SDMX como no filtro nominal, pelo que a via
+# de recurso não devolve a mesma coisa para todas, cada tentativa é
+# discriminável. A primeira é a preferida (D11, remunerações e salários, sobre
+# trabalhadores por conta de outrem declarados); as outras existem porque o
+# Eurostat já descontinuou códigos de emprego nesta família.
+#
+# O comentário anterior dizia “conjunto de remunerações **líquidas** anuais”, o
+# que é o contrário do que a função devolve, é uma remuneração **bruta**, e a
+# aplicação inteira assenta nessa distinção (auditoria de 12.08.2026, L5).
 def salario_medio(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     """
     Remuneração média anual dos trabalhadores por conta de outrem, **bruta**.
@@ -759,7 +768,7 @@ def salario_medio(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
     e salários) dividida pelo número de trabalhadores por conta de outrem. Tem
     duas vantagens sobre as séries de remunerações líquidas: os códigos são
     estáveis, e fica na **mesma base estatística** da despesa alimentar usada
-    como âncora — o que evita a mistura de universos apontada em auditoria.
+    como âncora, o que evita a mistura de universos apontada em auditoria.
 
     É bruta: antes de imposto e contribuições do trabalhador. Comparável com o
     salário mínimo, que também é bruto; **não** comparável com o rendimento
@@ -800,4 +809,4 @@ def salario_medio(geos, desde_ano: int) -> tuple[pd.DataFrame, str]:
             ultimo = exc
             continue
     raise ErroEurostat(
-        f"nama_10_a10 — não foi possível calcular a remuneração média ({ultimo})")
+        f"nama_10_a10, não foi possível calcular a remuneração média ({ultimo})")

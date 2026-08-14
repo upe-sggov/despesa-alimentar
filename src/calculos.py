@@ -6,12 +6,12 @@ Notas metodológicas
 **Decomposição.** Não existe fonte pública com o preço dos produtos individuais.
 O que se faz aqui é imputar o valor total pelas nove classes
 COICOP, usando os ponderadores oficiais do IHPC, e aplicar a cada classe a sua
-variação oficial. É uma reconstituição defensável e replicável — não é a
+variação oficial. É uma reconstituição defensável e replicável, não é a
 observação produto a produto.
 
 **Contributo homólogo.** Se uma classe vale hoje Vᵢ e cresceu gᵢ %, há um ano
 valia Vᵢ/(1+gᵢ). O acréscimo absoluto é Vᵢ·gᵢ/(1+gᵢ). A soma destes acréscimos
-iguala exatamente a variação do total — a decomposição é aditiva.
+iguala exatamente a variação do total, a decomposição é aditiva.
 
 **Simulação de IVA.** O parâmetro decisivo não é a taxa, é a repercussão: a
 avaliação internacional (França 2009, Suécia) é consistentemente cética quanto
@@ -29,7 +29,7 @@ import numpy as np
 import pandas as pd
 
 from .config import (
-    ANO_BASE_VIES, CLASSES, IVA_COMPONENTES, POR_CODIGO,
+    ANO_BASE_VIES, CLASSES, IVA_COMPONENTES,
     ESCALAS_TESTE_COMPOSICAO, ESCALAS_TESTE_RACIO,
     AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
     IDF_ALIMENTAR_QUINTIL, IDF_CLASSES_QUINTIL, IDF_DESPESA_TOTAL,
@@ -47,15 +47,15 @@ def idade_fonte(referencia, limite_dias: int, hoje=None) -> dict:
 
     O SOFI (inscrito em `config.py`) e o Observatório (em `dados/`) não têm API.
     Se ninguém os atualizar, a aplicação continua a mostrá-los sem nunca dar
-    erro — envelhecem em silêncio (auditoria de 10.08.2026, D4). Esta função
+    erro, envelhecem em silêncio (auditoria de 10.08.2026, D4). Esta função
     dá à interface o que ela precisa para o dizer.
 
     `referencia` aceita uma data (`date`/`datetime`), uma cadeia ISO
     (`'2026-08-10'`) ou um ano (`2025` ou `'2025'`, tomado como 31 de dezembro
-    desse ano — a data mais favorável à fonte, para não exagerar a idade).
+    desse ano, a data mais favorável à fonte, para não exagerar a idade).
 
     Devolve `{data, dias, limite_dias, desatualizada}`; `data` é None e
-    `desatualizada` é False se a referência não for interpretável — na dúvida,
+    `desatualizada` é False se a referência não for interpretável, na dúvida,
     não se acusa a fonte.
     """
     hoje = hoje or _date.today()
@@ -91,14 +91,14 @@ def idade_fonte(referencia, limite_dias: int, hoje=None) -> dict:
 def frescura_do_observatorio(ultima_observacao, recolhido_em, limite_dias: int,
                              cadencia_dias: int = 28, hoje=None) -> dict:
     """
-    Se o Observatório ainda está a avançar — e, se não está, de quem é a falha.
+    Se o Observatório ainda está a avançar, e, se não está, de quem é a falha.
 
     A verificação anterior media **a data em que o script correu**, não a data da
     última observação. As duas coisas divergem, e a divergência é precisamente o
     caso que interessa: hoje a recolha tem 2 dias e a última observação tem 86,
     com um limite de 60. O aviso não disparava (auditoria de 12.08.2026, K2).
 
-    É a lição do E1 — «uma série que responde não é uma série que avança» —
+    É a lição do E1, “uma série que responde não é uma série que avança”,
     aplicada à fonte que deu origem à verificação, e que tinha ficado de fora.
     Correr o script sobre uma fonte que não publicou não torna os dados
     recentes.
@@ -137,8 +137,8 @@ def fim_do_periodo(periodo):
     Último dia do período, na codificação do Eurostat.
 
     Aceita `'2026'` (anual), `'2026-06'` ou `'2026M06'` (mensal), `'2026-S1'`
-    (semestral) e `'2026-Q2'` (trimestral). Devolve None se não reconhecer —
-    e quem chama trata isso como «não sei», nunca como «está velho».
+    (semestral) e `'2026-Q2'` (trimestral). Devolve None se não reconhecer,
+    e quem chama trata isso como “não sei”, nunca como “está velho”.
 
     Toma-se o **fim** do período, e não o início, por ser a leitura mais
     favorável à fonte: uma série mensal de junho não é acusada de ter trinta
@@ -171,7 +171,7 @@ def frescura_das_series(series, hoje=None) -> pd.DataFrame:
     Diz, para cada série obtida por API, se ela ainda está a avançar.
 
     O **D4** criou `idade_fonte()` e aplicou-o ao SOFI e ao Observatório, com o
-    argumento de que são as fontes sem API — as que ninguém atualiza se ninguém
+    argumento de que são as fontes sem API, as que ninguém atualiza se ninguém
     se lembrar. A conclusão implícita, de que as fontes com API não têm esse
     problema porque a rede avisaria, estava errada: uma série **arquivada**
     responde com HTTP 200, devolve dados bem formados e simplesmente não avança.
@@ -180,7 +180,7 @@ def frescura_das_series(series, hoje=None) -> pd.DataFrame:
 
     `series` é uma lista de dicionários com `serie`, `periodo`, `limite_dias`,
     `cadencia` e `conjunto`. O limite de cada uma é o seu **desfasamento normal
-    de publicação mais um ciclo** — não um prazo uniforme, que acusaria de velhas
+    de publicação mais um ciclo**, não um prazo uniforme, que acusaria de velhas
     as fontes que são lentas por construção, como as Contas Nacionais.
     """
     linhas = []
@@ -210,10 +210,10 @@ def intervalo_engel(engel_cn: dict | None) -> dict:
     """
     Coeficiente de Engel nas duas bases oficiais, como intervalo.
 
-    A aplicação tinha os dois valores no mesmo ecrã sem os relacionar: 16,4 %
-    das Contas Nacionais no cartão, 12,0 % do IDF na tabela por quintil logo
+    A aplicação tinha os dois valores no mesmo ecrã sem os relacionar: 16,4%
+    das Contas Nacionais no cartão, 12,0% do IDF na tabela por quintil logo
     abaixo (auditoria de 10.08.2026, B4). São a mesma grandeza conceptual
-    medida em duas bases que divergem — a mesma divergência que já leva a
+    medida em duas bases que divergem, a mesma divergência que já leva a
     aplicação a apresentar a âncora como intervalo, e não como ponto.
 
     Não é uma discrepância pequena. Por agregado e por ano, em 2022:
@@ -227,8 +227,8 @@ def intervalo_engel(engel_cn: dict | None) -> dict:
 
     O Engel diverge porque o numerador diverge **mais** do que o denominador.
 
-    O limite inferior é a constante publicada pelo INE — a mesma que alimenta a
-    coluna «Peso no orçamento» da tabela por quintil —, para que o número da
+    O limite inferior é a constante publicada pelo INE, a mesma que alimenta a
+    coluna “Peso no orçamento” da tabela por quintil, para que o número da
     tabela seja reconhecível como o extremo do intervalo em vez de o contrariar.
 
     `engel_cn` é a entrada de `dados["engel"]["PT"]`, ou None se a ligação
@@ -254,15 +254,15 @@ def agregados_do_ano(serie: dict, ano) -> dict:
     Número de agregados familiares a usar como denominador para um dado ano.
 
     O denominador tem de ser do **mesmo ano do numerador**. A despesa das Contas
-    Nacionais é de 2022; dividi-la pelos agregados de 2025 dá um valor 9,1 %
-    mais baixo por razão nenhuma — a população de agregados cresceu, a despesa
+    Nacionais é de 2022; dividi-la pelos agregados de 2025 dá um valor 9,1%
+    mais baixo por razão nenhuma, a população de agregados cresceu, a despesa
     não a acompanhou porque é de outro ano (auditoria de 10.08.2026, B2).
 
     `serie` é um dicionário ano (texto) → número de agregados. Prefere o ano
     pedido; se não existir, o mais próximo, declarando o desfasamento. Sem série
     disponível, recorre aos Censos.
 
-    Devolve `{valor, ano, fonte, desfasamento}` — `desfasamento` em anos, para
+    Devolve `{valor, ano, fonte, desfasamento}`, `desfasamento` em anos, para
     que a interface o possa mostrar.
     """
     alvo = str(ano) if ano is not None else None
@@ -294,7 +294,7 @@ def decompor(valor_total: float,
     Devolve um DataFrame com uma linha por classe.
 
     **Cobertura declarada.** Se uma classe não vier do Eurostat, o seu peso é
-    zero, sai do denominador, e as restantes absorvem 100 % da despesa — cada
+    zero, sai do denominador, e as restantes absorvem 100% da despesa, cada
     uma com uma quota inflacionada, e sem aviso nenhum. É o mesmo modo de falha
     que o C3 fechou no Törnqvist, e continuava aberto no cálculo mais central da
     aplicação (auditoria de 11.08.2026, E10). As classes em falta ficam em
@@ -362,7 +362,14 @@ def resumo_decomposicao(df: pd.DataFrame, valor_total: float) -> dict:
 
         com_dados = df.dropna(subset=["contributo"])
         if not com_dados.empty:
-            resultado["maior"] = com_dados.loc[com_dados["contributo"].idxmax()].to_dict()
+            # A classe que **mais pesou**, em valor absoluto, e não a de maior
+            # contributo com sinal. Num período de deflação alimentar todos os
+            # contributos são negativos, e o `idxmax` devolvia a classe que
+            # menos contribuiu para a descida, apresentada como “Maior
+            # contributo” (auditoria de 12.08.2026, M2). Com todos positivos, o
+            # resultado é o mesmo de antes.
+            resultado["maior"] = com_dados.loc[
+                com_dados["contributo"].abs().idxmax()].to_dict()
 
     return resultado
 
@@ -429,10 +436,10 @@ def resumo_iva(sim: pd.DataFrame, valor_total: float,
     ⚠️ Os dois campos ``*_agregada_milhoes`` multiplicam o resultado por
     `agregados`. **Só são válidos quando `sim` foi construída sobre a despesa do
     agregado médio.** Se `sim` vier de uma despesa já ajustada a uma composição
-    concreta — dois adultos, cinco adultos —, a multiplicação conta o país
+    concreta (dois adultos, cinco adultos), a multiplicação conta o país
     inteiro como se fosse todo composto dessa maneira, e o total nacional passa
-    a depender de um parâmetro de leitura. O erro mede-se: −14 % para dois
-    adultos, +92 % para cinco (auditoria de 10.08.2026, A3). Os restantes campos
+    a depender de um parâmetro de leitura. O erro mede-se: −14% para dois
+    adultos, +92% para cinco (auditoria de 10.08.2026, A3). Os restantes campos
     são por agregado e não têm esta restrição.
     """
     mecanico = float(sim["mecanico"].sum())
@@ -470,7 +477,7 @@ def resumo_iva(sim: pd.DataFrame, valor_total: float,
 #
 # Ressalva importante: estas escalas foram construídas para o consumo *total*,
 # em que a partilha de habitação gera fortes economias de escala. Na
-# alimentação as economias de escala são bem mais fracas — não se partilha uma
+# alimentação as economias de escala são bem mais fracas, não se partilha uma
 # refeição como se partilha um teto. Por isso a escala OCDE modificada tende a
 # **subestimar** o custo alimentar de agregados maiores, e a aplicação
 # apresenta sempre um intervalo em vez de um valor único.
@@ -489,13 +496,13 @@ ESCALAS = {
     "ocde_modificada": {
         "nome": "OCDE modificada (1 / 0,5 / 0,3)",
         "primeiro": 1.0, "adulto": 0.5, "crianca": 0.3,
-        "nota": "Norma da UE para rendimento; subestima o custo alimentar em ~10 %.",
+        "nota": "Norma da UE para rendimento; subestima o custo alimentar em ~10%.",
     },
 }
 
 
 def _racio_previsto(escala: dict, composicao) -> float:
-    """Rácio de despesa entre «2 ou +» e «1 adulto» que a escala prevê."""
+    """Rácio de despesa entre “2 ou +” e “1 adulto” que a escala prevê."""
     return sum(fracao * (escala["primeiro"] + escala["adulto"] * (adultos - 1))
                for adultos, fracao in composicao)
 
@@ -503,10 +510,10 @@ def _racio_previsto(escala: dict, composicao) -> float:
 def sensibilidade_escalas(cenarios=None) -> pd.DataFrame:
     """
     Testa se as conclusões do teste das escalas dependem do pressuposto dos
-    **3,288 adultos** no grupo «3 ou mais».
+    **3,288 adultos** no grupo “3 ou mais”.
 
     Esse número foi deduzido admitindo que o quadro Q.2.8 do IDF usa a escala
-    OCDE modificada — e é depois usado para avaliar as três escalas, incluindo a
+    OCDE modificada, e é depois usado para avaliar as três escalas, incluindo a
     modificada. A circularidade é real e tem de estar declarada ao lado do
     resultado, não só num comentário (auditoria de 10.08.2026, D3).
 
@@ -553,18 +560,18 @@ def sensibilidade_escalas(cenarios=None) -> pd.DataFrame:
 def pontos_de_rutura_das_escalas(limites=(2.0, 8.0)) -> dict:
     """
     Onde é que as conclusões do teste das escalas mudariam, em número de adultos
-    do grupo «3 ou mais».
+    do grupo “3 ou mais”.
 
-    Estes dois valores apareciam **inscritos à mão** na interface — «3,58» e
-    «4,5» —, ao lado de números calculados em direto, sem que o leitor os
+    Estes dois valores apareciam **inscritos à mão** na interface, “3,58” e
+    “4,5”, ao lado de números calculados em direto, sem que o leitor os
     distinguisse. São resultado de bissecção sobre constantes que a aplicação
     já tem, pelo que não há razão para os fixar (auditoria de 11.08.2026, E9).
 
     Devolve `{ultrapassagem, anulacao}`, em adultos:
 
-    - `ultrapassagem` — a partir de onde a OCDE modificada passaria a estar mais
+    - `ultrapassagem`, a partir de onde a OCDE modificada passaria a estar mais
       perto do observado do que a original;
-    - `anulacao` — onde o desvio da modificada se anularia.
+    - `anulacao`, onde o desvio da modificada se anularia.
 
     Cada um é None se não houver mudança de sinal dentro de `limites`.
     """
@@ -601,18 +608,18 @@ def pontos_de_rutura_das_escalas(limites=(2.0, 8.0)) -> dict:
 def testar_escalas() -> pd.DataFrame:
     """
     Confronta o rácio de despesa que cada escala prevê com o observado no IDF,
-    para a alimentação e — como controlo — para a despesa total.
+    para a alimentação e (como controlo) para a despesa total.
 
     Uma linha por escala. `desvio_alimentar` positivo significa que a escala
     **subestima** o custo alimentar de agregados maiores: o observado é maior do
     que o previsto.
 
-    O pressuposto dos 3,288 adultos no grupo «3 ou mais» é circular — ver
+    O pressuposto dos 3,288 adultos no grupo “3 ou mais” é circular, ver
     `sensibilidade_escalas`, que mede se as conclusões dependem dele.
     """
     linhas = []
     for chave, e in ESCALAS.items():
-        # Rácio previsto entre «2 ou +» e «1 adulto», para a composição do IDF.
+        # Rácio previsto entre “2 ou +” e “1 adulto”, para a composição do IDF.
         previsto = _racio_previsto(e, ESCALAS_TESTE_COMPOSICAO)
         if previsto <= 0:
             continue
@@ -657,7 +664,7 @@ def despesa_do_agregado(despesa_media_agregado: float,
     Converte a despesa média nacional por agregado na despesa estimada de um
     agregado com a composição indicada.
 
-    O agregado médio é modelado com `dimensao_media` pessoas adultas — é uma
+    O agregado médio é modelado com `dimensao_media` pessoas adultas, é uma
     aproximação, necessária porque a dimensão média é publicada sem
     decomposição por idade.
     """
@@ -685,7 +692,7 @@ def intervalo_agregado(despesa_media_agregado: float, dimensao_media: float,
 
 
 # --------------------------------------------------------------------------
-# Cabaz por quintil de rendimento — ponderação IDF
+# Cabaz por quintil de rendimento, ponderação IDF
 # --------------------------------------------------------------------------
 # Aqui os ponderadores são do IDF, não do IHPC. São coisas diferentes e a
 # escolha não é indiferente: entre as duas estruturas o desvio médio absoluto
@@ -694,9 +701,9 @@ def intervalo_agregado(despesa_media_agregado: float, dimensao_media: float,
 #
 # Regra de apresentação, deliberada: a taxa de inflação por quintil **nunca**
 # deve aparecer sem a exposição orçamental ao lado. A amplitude entre quintis é
-# de cerca de 0,2 p.p. — lida isolada, sugere que a inflação alimentar é
+# de cerca de 0,2 p.p., lida isolada, sugere que a inflação alimentar é
 # distributivamente neutra. Não é: o efeito regressivo está na exposição
-# (14,8 % do orçamento no 1.º quintil contra 9,1 % no 5.º), não na taxa. Por
+# (14,8% do orçamento no 1.º quintil contra 9,1% no 5.º), não na taxa. Por
 # isso as duas colunas saem da mesma função e devem ser mostradas juntas.
 
 def cabaz_quintis(variacoes: dict[str, float]) -> pd.DataFrame:
@@ -705,7 +712,7 @@ def cabaz_quintis(variacoes: dict[str, float]) -> pd.DataFrame:
     exposição orçamental e a inflação que resulta da estrutura de consumo desse
     quintil.
 
-    Os níveis são os do IDF 2022/2023 tal como medidos — não são reescalados
+    Os níveis são os do IDF 2022/2023 tal como medidos, não são reescalados
     para a âncora escolhida na aplicação. Reescalar exigiria assumir que o
     sub-reporte do inquérito é uniforme entre quintis, e nada o sustenta.
     """
@@ -739,12 +746,12 @@ def cabaz_quintis(variacoes: dict[str, float]) -> pd.DataFrame:
         total_mensal = float(IDF_DESPESA_TOTAL[chave]) / 12
         # Fração da despesa alimentar do quintil efetivamente coberta pelas
         # classes com variação disponível. Sem isto, um agravamento parcial era
-        # dividido por um orçamento completo e a coluna «Agravamento /
-        # orçamento» subestimava sem o dizer — logo na coluna que fecha o
+        # dividido por um orçamento completo e a coluna “Agravamento /
+        # orçamento” subestimava sem o dizer, logo na coluna que fecha o
         # argumento sobre a regressividade (auditoria de 11.08.2026, E11).
         cobertura = soma_pesos / total_classes if total_classes else 0.0
 
-        # O agravamento em euros é *maior* nos quintis de cima — gastam mais em
+        # O agravamento em euros é *maior* nos quintis de cima, gastam mais em
         # alimentação, logo o mesmo aumento percentual dá mais euros. Lido só
         # assim, inverte a leitura correta. O que mede o esforço é o agravamento
         # em fração do orçamento total, e é essa a coluna que fecha o argumento.
@@ -796,7 +803,7 @@ def composicao_quintis() -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------
-# Viés de substituição — Laspeyres de cabaz fixo contra Törnqvist
+# Viés de substituição, Laspeyres de cabaz fixo contra Törnqvist
 # --------------------------------------------------------------------------
 # A crítica central da nota de enquadramento ao cabaz de composição fixa é que
 # ele não acompanha a substituição de consumo: se as famílias trocam novilho por
@@ -820,7 +827,7 @@ def composicao_quintis() -> pd.DataFrame:
 # correspondência adotada é a que decorre dessa definição: o elo que vai de
 # dezembro de y−1 a dezembro de y usa a média dos ponderadores de y e de y+1,
 # por serem esses os que se reportam àqueles dois momentos. Não é o Törnqvist
-# exato — é a melhor aproximação possível sem microdados de despesa anuais.
+# exato, é a melhor aproximação possível sem microdados de despesa anuais.
 
 def _dezembros(indice_classes: pd.DataFrame) -> pd.DataFrame:
     """Índice de dezembro de cada ano, por classe, numa base única."""
@@ -847,13 +854,13 @@ def indices_comparados(indice_classes: pd.DataFrame,
                        ano_base: int | None = None) -> pd.DataFrame:
     """
     Uma linha por dezembro, com os três índices em base 100 no ano-base.
-    Devolve DataFrame vazio se não houver anos que cheguem — são precisos pelo
+    Devolve DataFrame vazio se não houver anos que cheguem, são precisos pelo
     menos dois elos para haver o que comparar.
 
     `ano_base` é o dezembro a partir do qual os índices são encadeados. Por
     omissão usa `ANO_BASE_VIES`, fixado em `config.py`; se esse ano não estiver
     disponível nos dados, recorre ao primeiro que esteja. Era o primeiro ano da
-    janela pedida ao Eurostat, que desliza a cada 1 de janeiro — e com ele
+    janela pedida ao Eurostat, que desliza a cada 1 de janeiro, e com ele
     deslizava o valor publicado do viés, sem que ninguém o decidisse
     (auditoria de 11.08.2026, E14).
     """
@@ -886,12 +893,12 @@ def indices_comparados(indice_classes: pd.DataFrame,
     if dez.empty or w.empty:
         return pd.DataFrame()
 
-    # Quotas normalizadas dentro da alimentação — os ponderadores do IHPC somam
+    # Quotas normalizadas dentro da alimentação, os ponderadores do IHPC somam
     # 1 000 sobre todo o cabaz do índice, não sobre as nove classes.
     quotas = w.div(w.sum(axis=1), axis=0)
 
     # Basta existir o ponderador do próprio ano. Para o último elo o ponderador
-    # de y+1 ainda não foi publicado — nesse caso repete-se o de y, o que
+    # de y+1 ainda não foi publicado, nesse caso repete-se o de y, o que
     # equivale a assumir estrutura constante no último ano. É o único elo
     # afetado e o efeito é de segunda ordem.
     anos = [a for a in dez.index if a in quotas.index]
@@ -915,7 +922,7 @@ def indices_comparados(indice_classes: pd.DataFrame,
     # diferentes, com um ano de intervalo, nos dois índices cuja diferença é
     # precisamente o que este painel mede. Medido sobre os dezembros de 2020 a
     # 2025: viés acumulado de 0,590 pontos com o ponderador errado contra 0,461
-    # com o certo — **22 % do número apresentado era o artefacto**
+    # com o certo, **22% do número apresentado era o artefacto**
     # (auditoria de 11.08.2026, E4).
     quotas_base = quotas.loc[base + 1] if (base + 1) in quotas.index else quotas.loc[base]
 
@@ -962,12 +969,12 @@ def composicao_iva(pesos_sub: dict[str, float]) -> pd.DataFrame:
     ponderadores a cinco e seis dígitos que a COICOP 2018 passou a publicar.
 
     `pesos_sub` é `{código de subclasse: ponderador}`. Uma linha por classe, com
-    o peso a cada taxa e a parcela **indeterminada** — as subclasses que
+    o peso a cada taxa e a parcela **indeterminada**, as subclasses que
     atravessam taxas em proporção não repartível. Essa parcela não é escondida
     nem arbitrada: é apresentada como tal.
 
     Em `df.attrs`, `cobertura` é a fração do ponderador da classe que as
-    subclasses conhecidas explicam — serve para detetar componentes em falta.
+    subclasses conhecidas explicam, serve para detetar componentes em falta.
     """
     def _peso(spec) -> float:
         if isinstance(spec, str):
@@ -989,8 +996,8 @@ def composicao_iva(pesos_sub: dict[str, float]) -> pd.DataFrame:
         indeterminado, predominante = 0.0, 0.0
         # Imposto contido na parcela indeterminada, nos três cenários. Guardar o
         # imposto e não a taxa é o que permite que cada componente tenha o **seu**
-        # intervalo legal: os cereais de pequeno-almoço estão entre 13 % e 23 %,
-        # não entre 6 % e 23 % como todos os outros (auditoria de 12.08.2026, G1).
+        # intervalo legal: os cereais de pequeno-almoço estão entre 13% e 23%,
+        # não entre 6% e 23% como todos os outros (auditoria de 12.08.2026, G1).
         indet_contido = {"min": 0.0, "max": 0.0, "predefinida": 0.0}
         for comp in componentes:
             p = _peso(comp["peso"])
@@ -1000,7 +1007,7 @@ def composicao_iva(pesos_sub: dict[str, float]) -> pd.DataFrame:
                 indeterminado += p
                 lo, hi = comp.get("entre", (6, 23))
                 # A taxa central é a predefinida do grupo **confinada ao
-                # intervalo legal** — nunca um valor que a lei não admite.
+                # intervalo legal**, nunca um valor que a lei não admite.
                 central = min(max(int(classe["iva"]), lo), hi)
                 indet_contido["min"] += p * (lo / 100) / (1 + lo / 100)
                 indet_contido["max"] += p * (hi / 100) / (1 + hi / 100)
@@ -1032,7 +1039,7 @@ def composicao_iva(pesos_sub: dict[str, float]) -> pd.DataFrame:
             "indet_contido_min": indet_contido["min"],
             "indet_contido_max": indet_contido["max"],
             "indet_contido_predef": indet_contido["predefinida"],
-            # Fração da classe que segue efetivamente a taxa predefinida —
+            # Fração da classe que segue efetivamente a taxa predefinida,
             # é o número que diz se a predefinição é boa aproximação ou não.
             "na_taxa_predefinida": por_taxa.get(classe["iva"], 0.0),
         })
@@ -1053,7 +1060,7 @@ def resumo_composicao_iva(df: pd.DataFrame) -> dict:
     Agrega a composição por taxa ao nível do cabaz alimentar, e confronta-a com
     o que a simulação por classe assume.
 
-    O simulador aplica **uma taxa por classe** — é o que a decomposição permite.
+    O simulador aplica **uma taxa por classe**, é o que a decomposição permite.
     Isso equivale a assumir que toda a despesa da classe segue a taxa
     predefinida. Este resumo mede o erro dessa aproximação, que é o que faltava
     para se poder dizer se ela é aceitável.
@@ -1072,12 +1079,12 @@ def resumo_composicao_iva(df: pd.DataFrame) -> dict:
     # ------------------------------------------------------------------
     # IVA contido na despesa, em fração do preço com imposto.
     #
-    # É este o número que diz em que **direção** a aproximação por classe erra —
+    # É este o número que diz em que **direção** a aproximação por classe erra,
     # e a direção não é sempre a mesma. Comparar apenas a base à taxa reduzida
     # dava a impressão de que o simulador sobrestima sempre, e não é verdade:
     # num cenário de isenção total ele **subestima**, porque credita a
-    # pastelaria, a charcutaria e os hortícolas transformados com 6 % quando
-    # suportam 23 %.
+    # pastelaria, a charcutaria e os hortícolas transformados com 6% quando
+    # suportam 23%.
     # ------------------------------------------------------------------
     def _contido(taxa, peso):
         return peso * (taxa / 100) / (1 + taxa / 100)
@@ -1086,7 +1093,7 @@ def resumo_composicao_iva(df: pd.DataFrame) -> dict:
     iva_certo = sum(_contido(6, r["taxa_6"]) + _contido(13, r["taxa_13"])
                     + _contido(23, r["taxa_23"]) for _, r in df.iterrows())
     # Os extremos da parcela indeterminada respeitam o intervalo legal de cada
-    # componente — não são 6 % e 23 % para todos.
+    # componente, não são 6% e 23% para todos.
     if "indet_contido_min" in df.columns:
         iva_indet_min = float(df["indet_contido_min"].sum())
         iva_indet_max = float(df["indet_contido_max"].sum())
@@ -1111,7 +1118,7 @@ def resumo_composicao_iva(df: pd.DataFrame) -> dict:
         "taxa_6_pct": minimo_6 / total * 100,
         "taxa_13_pct": float(df["taxa_13"].sum()) / total * 100,
         "taxa_23_pct": float(df["taxa_23"].sum()) / total * 100,
-        # O que a simulação por classe assume estar a 6 %
+        # O que a simulação por classe assume estar a 6%
         "assumido_6_pct": base_defeito / total * 100,
         # ... contra o intervalo apurado
         "apurado_6_min_pct": minimo_6 / total * 100,
@@ -1129,13 +1136,13 @@ def taxas_efetivas(comp: pd.DataFrame, indeterminado: str = "predefinida",
     Porque é que uma taxa média basta
     ---------------------------------
     Simular escalão a escalão e simular com uma taxa média efetiva dão
-    **exatamente o mesmo resultado**, e não é aproximação — é identidade
+    **exatamente o mesmo resultado**, e não é aproximação, é identidade
     algébrica. A base sem imposto de uma classe é ``Σ_b V_b / (1 + t_b)``. Se se
     definir ``t_ef`` de modo a que ``V / (1 + t_ef)`` iguale essa soma, então:
 
     - a base sem imposto é a mesma, por construção;
     - o efeito mecânico, ``base · (1 + t₁) − V``, depende só da base e da taxa do
-      cenário, que é uniforme na classe — logo é o mesmo;
+      cenário, que é uniforme na classe, logo é o mesmo;
     - o imposto contido no preço novo depende só do valor novo e de ``t₁``.
 
     Nada no cálculo precisa de saber quantos escalões havia. Por isso a
@@ -1155,10 +1162,10 @@ def taxas_efetivas(comp: pd.DataFrame, indeterminado: str = "predefinida",
     valor central), ``"reduzida"`` ou ``"normal"``.
 
     Os extremos das duas são **limites exteriores, não intervalos plausíveis**.
-    Nenhuma leitura das Listas põe toda a pastelaria a 6 % nem todo o bacalhau
-    seco a 23 %. Servem para responder à pergunta «e se estas atribuições
-    estiverem todas erradas ao mesmo tempo?», que é a única a que um limite
-    exterior responde — e para tornar visível que esta parcela pesa mais do que
+    Nenhuma leitura das Listas põe toda a pastelaria a 6% nem todo o bacalhau
+    seco a 23%. Servem para responder à pergunta “e se estas atribuições
+    estiverem todas erradas ao mesmo tempo?”, que é a única a que um limite
+    exterior responde, e para tornar visível que esta parcela pesa mais do que
     a indeterminada, que já tinha banda enquanto esta não tinha.
     """
     if comp.empty:
@@ -1166,8 +1173,8 @@ def taxas_efetivas(comp: pd.DataFrame, indeterminado: str = "predefinida",
 
     destino = {"reduzida": 6, "normal": 23}
     # A parcela indeterminada entra pelo **imposto contido**, não por uma taxa
-    # arbitrada: cada componente tem o seu intervalo legal, e há um — os cereais
-    # de pequeno-almoço — cujo intervalo não inclui a taxa reduzida.
+    # arbitrada: cada componente tem o seu intervalo legal, e há um, os cereais
+    # de pequeno-almoço, cujo intervalo não inclui a taxa reduzida.
     coluna_indet = {"reduzida": "indet_contido_min", "normal": "indet_contido_max"}
     tem_indet_contido = "indet_contido_predef" in comp.columns
     taxas = {}
@@ -1214,11 +1221,11 @@ def efeito_mecanico_pct(t0: float, t1: float) -> float:
 
         (1 + t₁) / (1 + t₀) − 1
 
-    É a mesma definição que o Banco de Portugal usa para o «impacto mecânico»
+    É a mesma definição que o Banco de Portugal usa para o “impacto mecânico”
     (WAPP de 22.11.2023, p. 5), e serve para dois fins: derivar a repercussão a
     partir dos valores publicados, e confirmar que a aritmética de imposto desta
-    aplicação coincide com a do BdP — para os óleos alimentares (23 % → 0 %) tem
-    de dar os −18,70 % que o BdP publica.
+    aplicação coincide com a do BdP, para os óleos alimentares (23% → 0%) tem
+    de dar os −18,70% que o BdP publica.
     """
     return ((1 + t1 / 100) / (1 + t0 / 100) - 1) * 100
 
@@ -1226,20 +1233,20 @@ def efeito_mecanico_pct(t0: float, t1: float) -> float:
 def estimativas_repercussao() -> pd.DataFrame:
     """
     A repercussão implícita em cada estimativa publicada pelo Banco de Portugal
-    sobre o «IVA zero» de 2023.
+    sobre o “IVA zero” de 2023.
 
     O BdP publica a variação **observada** e a variação **mecânica** (a que
     haveria com repercussão integral). A repercussão é o quociente:
 
         ρ = variação observada / variação mecânica
 
-    Nenhum dos ρ desta tabela é citado — todos são derivados aqui, dos dois
+    Nenhum dos ρ desta tabela é citado, todos são derivados aqui, dos dois
     números publicados. A coluna `rho` é, portanto, um cálculo desta aplicação
     sobre dados do BdP, e não uma estimativa do BdP.
 
     Nota sobre a diluição: as rubricas do IHPC incluem bens não abrangidos pela
     medida, o que atenua tanto o observado como o mecânico. Como atenua os dois
-    na mesma proporção, **o quociente sobrevive** — é a razão pela qual esta
+    na mesma proporção, **o quociente sobrevive**, é a razão pela qual esta
     derivação é legítima apesar da granularidade insuficiente que o BdP assinala.
     """
     linhas = []
@@ -1266,7 +1273,7 @@ def comparar_ponderadores(pesos_ihpc: dict[str, float],
     Confronta as duas estruturas de ponderação na única grandeza em que a
     escolha é observável: a inflação alimentar nacional que cada uma produz.
 
-    Serve de diagnóstico no separador de metodologia — quantifica o que se
+    Serve de diagnóstico no separador de metodologia, quantifica o que se
     ganha e o que se perde ao trocar de base, em vez de o deixar como
     afirmação.
     """

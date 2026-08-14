@@ -1,5 +1,5 @@
 """
-Observatório de Preços Agroalimentar (GPP) — do produtor ao consumidor.
+Observatório de Preços Agroalimentar (GPP), do produtor ao consumidor.
 
 Responde à pergunta que nenhum outro instrumento desta aplicação toca: **onde
 na cadeia está o aumento**. O índice de preços mede o que o consumidor paga; as
@@ -7,14 +7,14 @@ Contas Nacionais e o IDF medem quanto se gasta. Nenhum diz se a subida nasceu na
 exploração agrícola, na transformação ou na distribuição.
 
 Os dados não vêm em direto: são recolhidos por `scripts/recolher_observatorio.py`
-e lidos aqui de `dados/observatorio.csv`. A razão está documentada no script —
+e lidos aqui de `dados/observatorio.csv`. A razão está documentada no script,
 o Observatório não tem API, e a série completa exige uma chamada por produto.
 
 Ressalva central, que atravessa todo este módulo
 ------------------------------------------------
 **A diferença entre o preço no consumo e o preço na produção não é a margem de
 ninguém.** Inclui transporte, transformação, embalagem, distribuição e IVA. E as
-duas fases podem referir-se a formas diferentes do produto — peixe inteiro contra
+duas fases podem referir-se a formas diferentes do produto, peixe inteiro contra
 posta, animal vivo contra peça desmanchada. Não é comparável entre produtos, e
 não deve ser lida como lucro de nenhum operador.
 """
@@ -56,7 +56,7 @@ def variacoes(df: pd.DataFrame) -> pd.DataFrame:
     última observação **comuns às duas fases**.
 
     A restrição ao período comum não é um detalhe. Várias séries de produção
-    terminam antes das de consumo — cebola e brócolo em 2023, por exemplo. Se
+    terminam antes das de consumo, cebola e brócolo em 2023, por exemplo. Se
     cada fase fosse medida no seu próprio intervalo, comparar-se-iam variações
     de períodos diferentes, e a diferença entre elas não significaria nada.
     """
@@ -144,7 +144,7 @@ PADROES = {
         "O preço subiu na produção e a subida chegou ao consumidor em proporção "
         "semelhante ou maior.",
     "Absorvido pela cadeia":
-        "O preço subiu mais na produção do que no consumo — a cadeia absorveu "
+        "O preço subiu mais na produção do que no consumo, a cadeia absorveu "
         "parte do choque, ou comprimiu a diferença.",
     "Divergência":
         "O preço **caiu** na produção e **subiu** no consumo. É o padrão que mais "

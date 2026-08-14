@@ -1,5 +1,5 @@
 """
-Configuração da aplicação — classes de produto, países e identidade gráfica.
+Configuração da aplicação, classes de produto, países e identidade gráfica.
 
 As nove classes correspondem à divisão 01.1 da COICOP (Classificação do Consumo
 Individual por Objetivo), a nomenclatura que o INE e o Eurostat usam para
@@ -21,21 +21,21 @@ CINZENTO = "#171715"
 # --------------------------------------------------------------------------
 # `nome` é a forma curta usada nos cartões e nos gráficos, onde não cabe a
 # designação completa; `oficial` é a designação **do INE**, transcrita do anexo
-# «Classificação do Consumo Individual por Objetivo (COICOP, versão 2018)» do
+# “Classificação do Consumo Individual por Objetivo (COICOP, versão 2018)” do
 # relatório do IDF 2022/2023. As formas curtas são as que o levantamento de
-# 07.08.2026 já usava, §2.1 — não são invenção desta aplicação.
+# 07.08.2026 já usava, §2.1, não são invenção desta aplicação.
 #
-# Até 11.08.2026 os nomes eram os da **ECOICOP versão 1** («Pão e cereais»,
-# «Carne», «Fruta», «Legumes e hortícolas», «Açúcar e doces», «Outros
-# alimentos»). Os códigos CP0111–CP0119 sobreviveram à revisão da nomenclatura,
+# Até 11.08.2026 os nomes eram os da **ECOICOP versão 1** (“Pão e cereais”,
+# “Carne”, “Fruta”, “Legumes e hortícolas”, “Açúcar e doces”, “Outros
+# alimentos”). Os códigos CP0111–CP0119 sobreviveram à revisão da nomenclatura,
 # mas o conteúdo das classes mudou, e os rótulos deixaram de o descrever
 # (auditoria de 11.08.2026, E2).
 #
 # `iva` é a taxa **predominante** predefinida, editável na aplicação. O Código
-# do IVA classifica por produto — Listas I (6 %) e II (13 %) —, não por classe
+# do IVA classifica por produto (Listas I (6%) e II (13%)), não por classe
 # COICOP. **Nenhuma das nove classes é homogénea**: ver `IVA_MAPA`, que assinala
 # o que dentro de cada uma segue taxa diferente da predefinida.
-CLASSES_FONTE = ("INE, Inquérito às Despesas das Famílias 2022/2023, anexo — "
+CLASSES_FONTE = ("INE, Inquérito às Despesas das Famílias 2022/2023, anexo, "
                  "Classificação do Consumo Individual por Objetivo "
                  "(COICOP, versão 2018)")
 
@@ -67,28 +67,28 @@ POR_CODIGO = {c["cod"]: c for c in CLASSES}
 # --------------------------------------------------------------------------
 # Correspondência COICOP ↔ Código do IVA
 # --------------------------------------------------------------------------
-# Levantamento feito sobre o texto das Listas I (taxa reduzida, 6 %) e II (taxa
-# intermédia, 13 %) do Código do IVA. Fecha a lacuna D2 da auditoria de
+# Levantamento feito sobre o texto das Listas I (taxa reduzida, 6%) e II (taxa
+# intermédia, 13%) do Código do IVA. Fecha a lacuna D2 da auditoria de
 # 10.08.2026: até aqui a aplicação limitava-se a dizer que a correspondência era
-# «aproximada», sem dizer em quê.
+# “aproximada”, sem dizer em quê.
 #
 # A conclusão é que **a taxa predefinida é a predominante, nunca a única**.
-# O simulador continua a aplicar uma taxa por classe — é o que a decomposição
-# permite, porque não há despesa aberta ao nível do produto — mas quem o usa
+# O simulador continua a aplicar uma taxa por classe, é o que a decomposição
+# permite, porque não há despesa aberta ao nível do produto, mas quem o usa
 # tem de saber o que fica de fora. **Quanto** fica de fora está apurado em
 # `IVA_COMPONENTES`, mais abaixo, a partir dos ponderadores por subclasse da
-# COICOP 2018 — o que a nomenclatura anterior não permitia.
+# COICOP 2018, o que a nomenclatura anterior não permitia.
 #
 # `taxas` enumera **todas** as taxas presentes na classe, com o que cai em cada
 # uma. A predefinida é assinalada pela aplicação a partir de `CLASSES`, e não
-# repetida aqui — repeti-la abria a porta a que as duas divergissem em silêncio.
+# repetida aqui, repeti-la abria a porta a que as duas divergissem em silêncio.
 IVA_MAPA_FONTE = ("Código do IVA, Lista I (taxa reduzida) e Lista II "
                   "(taxa intermédia); classes da COICOP versão 2018 conforme o "
                   "anexo do IDF 2022/2023 do INE")
 
 # O levantamento foi **refeito a 11.08.2026 contra as subclasses da COICOP
 # versão 2018**, e não contra as da ECOICOP versão 1 sobre as quais tinha sido
-# construído. As verbas das Listas I e II não mudaram — mudou aquilo que cada
+# construído. As verbas das Listas I e II não mudaram, mudou aquilo que cada
 # classe contém, e portanto o que fica dentro e fora de cada verba. Onde a
 # nomenclatura nova dá subclasse própria a um produto que antes estava diluído,
 # isso está assinalado: é o que torna a divergência verificável em vez de
@@ -97,15 +97,15 @@ IVA_MAPA = {
     "CP0111": {
         "taxas": [
             (6, "Cereais, arroz, farinhas, massas não recheadas, pão; seitan, "
-                "tofu, tempeh e soja texturizada (Lista I, 1.1) — cobre as "
+                "tofu, tempeh e soja texturizada (Lista I, 1.1), cobre as "
                 "subclasses 01.1.1.1 a 01.1.1.3 e 01.1.1.5"),
             (13, "Flocos prensados simples de cereais e leguminosas sem adição "
-                 "de açúcar (Lista II, 1.12) — parte dos cereais para "
+                 "de açúcar (Lista II, 1.12), parte dos cereais para "
                  "pequeno-almoço, 01.1.1.4"),
             (23, "Bolos, bolachas, biscoitos e pastelaria; massas recheadas, "
                  "expressamente excluídas da Lista I"),
         ],
-        "nota": "A subclasse 01.1.1.3 chama-se «Pão e produtos de padaria» e "
+        "nota": "A subclasse 01.1.1.3 chama-se “Pão e produtos de padaria” e "
                 "atravessa a fronteira das verbas: o pão está na Lista I, a "
                 "pastelaria não.",
     },
@@ -113,11 +113,11 @@ IVA_MAPA = {
         "taxas": [
             (6, "Carnes e miudezas comestíveis, frescas ou congeladas, das "
                 "espécies bovina, suína, ovina, caprina, equídea, aves de "
-                "capoeira, coelho e caça (Lista I, 1.2) — subclasses 01.1.2.2 "
+                "capoeira, coelho e caça (Lista I, 1.2), subclasses 01.1.2.2 "
                 "e 01.1.2.4"),
             (13, "Alheiras (Lista II, 1.3.3)"),
             (23, "Carne seca, salgada, em salmoura ou fumada (01.1.2.3) e "
-                 "preparações de animais abatidos (01.1.2.5) — a restante "
+                 "preparações de animais abatidos (01.1.2.5), a restante "
                  "charcutaria e enchidos, que a Lista I não abrange"),
         ],
         "nota": "A classe passou a incluir **animais terrestres vivos** "
@@ -129,10 +129,10 @@ IVA_MAPA = {
         "taxas": [
             (6, "Peixe fresco, refrigerado, congelado, seco ou salgado; "
                 "moluscos; conservas de peixe e molusco com teor superior a "
-                "50 % (Lista I, 1.3) — subclasses 01.1.3.1 a 01.1.3.3"),
+                "50% (Lista I, 1.3), subclasses 01.1.3.1 a 01.1.3.3"),
             (13, "Conservas de moluscos (Lista II, 1.2.1)"),
-            (23, "**Crustáceos** — camarão, lagosta, sapateira: a Lista I "
-                 "refere «peixes e moluscos», não crustáceos. Também peixe "
+            (23, "**Crustáceos**, camarão, lagosta, sapateira: a Lista I "
+                 "refere “peixes e moluscos”, não crustáceos. Também peixe "
                  "fumado, espadarte, esturjão e salmão secos, salgados ou em "
                  "conserva, caviar e pastas de atum, cavala e sardinha"),
         ],
@@ -145,8 +145,8 @@ IVA_MAPA = {
         "taxas": [
             (6, "Leite e lacticínios, queijos, iogurtes, ovos; bebidas e "
                 "iogurtes de base vegetal e substitutos de queijo à base de "
-                "frutos secos, cereais, frutas ou hortícolas (Lista I, 1.4) — "
-                "cobre também o «leite não animal», 01.1.4.4"),
+                "frutos secos, cereais, frutas ou hortícolas (Lista I, 1.4), "
+                "cobre também o “leite não animal”, 01.1.4.4"),
             (23, "**Sobremesas e bebidas à base de leite** (01.1.4.7), que a "
                  "Lista I não enumera"),
         ],
@@ -157,20 +157,20 @@ IVA_MAPA = {
         "taxas": [
             (6, "Azeite; banha e outras gorduras de porco (Lista I, 1.5). "
                 "Manteiga, margarina e creme vegetal para barrar "
-                "(Lista I, 1.4.3) — subclasses 01.1.5.2 e 01.1.5.3"),
-            (13, "**Óleos vegetais diretamente comestíveis e suas misturas** — "
+                "(Lista I, 1.4.3), subclasses 01.1.5.2 e 01.1.5.3"),
+            (13, "**Óleos vegetais diretamente comestíveis e suas misturas**, "
                  "os óleos alimentares correntes (Lista II, 1.5.3)"),
         ],
         "nota": "Continua a ser a divergência mais material das nove classes, "
-                "e a nomenclatura nova torna-a quase exata: «Óleos vegetais» "
+                "e a nomenclatura nova torna-a quase exata: “Óleos vegetais” "
                 "é agora a **primeira subclasse** (01.1.5.1) e corresponde "
                 "praticamente um a um à verba da Lista II, numa classe "
-                "predefinida a 6 %.",
+                "predefinida a 6%.",
     },
     "CP0116": {
         "taxas": [
             (6, "Frutas no estado natural ou desidratadas, castanhas e frutos "
-                "vermelhos congelados (Lista I, 1.6.4) — subclasses 01.1.6.1 "
+                "vermelhos congelados (Lista I, 1.6.4), subclasses 01.1.6.1 "
                 "a 01.1.6.5 e 01.1.6.7"),
             (23, "Fruta congelada que não seja frutos vermelhos (01.1.6.6); "
                  "fruta em calda, conserva e outras preparações (01.1.6.9); "
@@ -184,9 +184,9 @@ IVA_MAPA = {
         "taxas": [
             (6, "Legumes e produtos hortícolas frescos, refrigerados, secos, "
                 "desidratados ou congelados, ainda que previamente cozidos; "
-                "leguminosas secas; algas (Lista I, 1.6) — subclasses 01.1.7.1 "
+                "leguminosas secas; algas (Lista I, 1.6), subclasses 01.1.7.1 "
                 "a 01.1.7.8"),
-            (23, "Hortícolas transformados — batata frita de pacote e "
+            (23, "Hortícolas transformados, batata frita de pacote e "
                  "preparados similares (01.1.7.9)"),
         ],
         "nota": "A classe passou a incluir explicitamente **tubérculos, "
@@ -197,13 +197,13 @@ IVA_MAPA = {
         "taxas": [
             (6, "Mel de abelhas e mel de cana tradicional (Lista I, 1.8)"),
             (23, "Açúcar de cana e beterraba e sucedâneos (01.1.8.1 e "
-                 "01.1.8.2) — a verba 1.10 da Lista I foi **revogada**; "
+                 "01.1.8.2), a verba 1.10 da Lista I foi **revogada**; "
                  "chocolate e cacau (01.1.8.5); gelados (01.1.8.6); doces, "
                  "geleias e marmeladas; restante confeitaria"),
         ],
-        "nota": "Predefinida a 23 %: aqui a exceção é o mel. E a nomenclatura "
+        "nota": "Predefinida a 23%: aqui a exceção é o mel. E a nomenclatura "
                 "nova agrega-o numa subclasse com doces, geleias e marmeladas "
-                "(01.1.8.3), o que torna a parcela a 6 % **menos separável** do "
+                "(01.1.8.3), o que torna a parcela a 6% **menos separável** do "
                 "que era.",
     },
     "CP0119": {
@@ -219,8 +219,8 @@ IVA_MAPA = {
                  "aromáticas e sementes para culinária (01.1.9.4), caldos, "
                  "sopas e preparados vários (01.1.9.9)"),
         ],
-        "nota": "A classe passou a chamar-se «Alimentos pré-preparados e "
-                "outros», mas **a predefinição a 23 % mantém-se**: a subclasse "
+        "nota": "A classe passou a chamar-se “Alimentos pré-preparados e "
+                "outros”, mas **a predefinição a 23% mantém-se**: a subclasse "
                 "01.1.9.1 é pré-preparado de retalho, e a verba 1.8 da Lista II "
                 "cobre o pronto a comer e levar e a entrega ao domicílio, que "
                 "na COICOP caem no grupo 11.1 (restauração) e não aqui. "
@@ -229,12 +229,12 @@ IVA_MAPA = {
 }
 
 # --------------------------------------------------------------------------
-# Quanto de cada classe segue cada taxa — ao nível da subclasse
+# Quanto de cada classe segue cada taxa, ao nível da subclasse
 # --------------------------------------------------------------------------
 # O `IVA_MAPA`, acima, diz **o quê** dentro de cada classe segue taxa diferente
-# da predefinida. Não diz **quanto** — e a auditoria de 10.08.2026 (D2)
-# concluiu, com razão à data, que «nenhuma fonte pública reparte a despesa da
-# classe por taxa legal».
+# da predefinida. Não diz **quanto**, e a auditoria de 10.08.2026 (D2)
+# concluiu, com razão à data, que “nenhuma fonte pública reparte a despesa da
+# classe por taxa legal”.
 #
 # A COICOP 2018 mudou isso. O `prc_hicp_iw` publica ponderadores a **cinco e
 # seis dígitos**, e três desses cortes resolvem as maiores ambiguidades:
@@ -245,25 +245,25 @@ IVA_MAPA = {
 #
 # `certeza` é o que impede este quadro de prometer mais do que entrega:
 #
-#   «certa»         a subclasse cai inteira numa verba;
-#   «predominante»  a subclasse é maioritariamente de uma taxa, mas não só;
-#   «mista»         a subclasse atravessa taxas em proporção não determinável,
+#   “certa”         a subclasse cai inteira numa verba;
+#   “predominante”  a subclasse é maioritariamente de uma taxa, mas não só;
+#   “mista”         a subclasse atravessa taxas em proporção não determinável,
 #                   e o seu peso vai para a parcela **indeterminada**.
 #
-# Um componente é `peso: "CODIGO"` ou `peso: ("PAI", ["FILHO", ...])` — neste
+# Um componente é `peso: "CODIGO"` ou `peso: ("PAI", ["FILHO", ...])`, neste
 # caso o peso do pai menos o dos filhos listados, que é como se isola o que não
 # tem código próprio (os óleos vegetais que não são azeite).
 #
 # ---- `entre`: o intervalo legal de uma parcela indeterminada ----------------
-# Um componente «mista» declara em `entre` as **taxas entre as quais a lei o
+# Um componente “mista” declara em `entre` as **taxas entre as quais a lei o
 # situa**. O valor por defeito, (6, 23), é o caso comum: parte na Lista I e
 # parte na taxa normal.
 #
 # Não é uma formalidade. Até 12.08.2026 a parcela indeterminada era sempre
-# arbitrada, no valor central, à **taxa predefinida do grupo** — e para os
-# cereais de pequeno-almoço isso punha 6 % numa subclasse que a lei situa entre
-# **13 % e 23 %**: a verba 1.12 da Lista II cobre os «flocos prensados simples
-# de cereais e leguminosas sem adições de açúcar», e não existe verba alguma na
+# arbitrada, no valor central, à **taxa predefinida do grupo**, e para os
+# cereais de pequeno-almoço isso punha 6% numa subclasse que a lei situa entre
+# **13% e 23%**: a verba 1.12 da Lista II cobre os “flocos prensados simples
+# de cereais e leguminosas sem adições de açúcar”, e não existe verba alguma na
 # Lista I para cereais de pequeno-almoço. O valor central estava **fora do
 # intervalo legal** (auditoria de 12.08.2026, G1).
 #
@@ -273,15 +273,15 @@ IVA_MAPA = {
 # ---- Verificação de 12.08.2026 ---------------------------------------------
 # Todo este quadro foi confrontado, verba a verba, com o texto consolidado do
 # Código do IVA. Antes disso tinha sido construído por leitura indireta.
-CIVA_FONTE = ("Código do IVA, Listas I e II — texto consolidado, versão a "
+CIVA_FONTE = ("Código do IVA, Listas I e II, texto consolidado, versão a "
               "20.05.2026 (Listas em vigor desde 25.05.2026, redação do "
               "Decreto-Lei n.º 97/2026, de 20 de maio)")
 
 # --------------------------------------------------------------------------
-# Doutrina da Autoridade Tributária — informações vinculativas
+# Doutrina da Autoridade Tributária, informações vinculativas
 # --------------------------------------------------------------------------
 # A auditoria de 12.08.2026 (F4) concluiu que o que faltava para fechar as
-# parcelas atribuídas «por predominância» não era estatística, era **leitura
+# parcelas atribuídas “por predominância” não era estatística, era **leitura
 # jurídica**, e que a resposta estaria nas informações vinculativas da AT.
 #
 # A ficha do Processo 28176 é a primeira que se pôde confrontar com o quadro.
@@ -289,22 +289,22 @@ CIVA_FONTE = ("Código do IVA, Listas I e II — texto consolidado, versão a "
 # concretos, questões que estavam em aberto aqui.
 #
 # ---- O que decide, e que importa a este trabalho --------------------------
-# 1. **«Preparados» não cabem na verba 1.1.1.** Papas de aveia, granolas e
-#    cereais de arroz infantis são «preparados» ou «snacks» e «não reúnem
+# 1. **“Preparados” não cabem na verba 1.1.1.** Papas de aveia, granolas e
+#    cereais de arroz infantis são “preparados” ou “snacks” e “não reúnem
 #    condições de enquadramento na verba 1.1.1 da lista I, nem em qualquer
-#    outra verba das Listas» — **taxa normal**. São o grosso do que se vende
+#    outra verba das Listas”, **taxa normal**. São o grosso do que se vende
 #    como cereais de pequeno-almoço.
 # 2. **Refeições pré-preparadas de retalho** (risotto ao qual se junta água)
-#    também não cabem em verba alguma — **taxa normal**. Não são o «pronto a
-#    comer e levar» da verba 1.8 da Lista II.
+#    também não cabem em verba alguma, **taxa normal**. Não são o “pronto a
+#    comer e levar” da verba 1.8 da Lista II.
 # 3. **Verba 1.6.4** cobre a fruta que não sofra transformação além da secagem;
-#    exclui expressamente «a moagem, ou laminação em palitos, ou cubos,
-#    cobertura». Frutas desidratadas sem preparação ficam a **6 %**; farinhas
-#    de fruta e de hortícolas ficam a **23 %**.
+#    exclui expressamente “a moagem, ou laminação em palitos, ou cubos,
+#    cobertura”. Frutas desidratadas sem preparação ficam a **6%**; farinhas
+#    de fruta e de hortícolas ficam a **23%**.
 # 4. **Verba 1.12 é muito mais estreita do que o seu texto sugere.** Só cobre
-#    géneros comercializados com a menção «isento de glúten» que **na sua
+#    géneros comercializados com a menção “isento de glúten” que **na sua
 #    formulação original tinham glúten** e foram reduzidos ou substituídos. Os
-#    produtos **naturalmente** sem glúten não cabem lá — foi o que a AT decidiu
+#    produtos **naturalmente** sem glúten não cabem lá, foi o que a AT decidiu
 #    quanto às barras de fruta e frutos secos.
 # 5. **Artigo 18.º, n.º 4**: num produto composto, se as mercadorias mantêm a
 #    sua individualidade aplica-se **a taxa mais elevada** de entre as que lhes
@@ -314,16 +314,16 @@ CIVA_FONTE = ("Código do IVA, Listas I e II — texto consolidado, versão a "
 # ---- O princípio que sustenta todo este quadro ----------------------------
 # A ficha 24929 enuncia-o de forma que vale a pena citar literalmente:
 #
-#   «A Lista I prevê taxativamente os produtos que podem beneficiar da taxa
+#   “A Lista I prevê taxativamente os produtos que podem beneficiar da taxa
 #   reduzida do IVA, não sendo passível de uma interpretação extensiva, pelo que
 #   todo o produto que não seja ali contemplado, de forma inequívoca, não pode
-#   beneficiar da taxa reduzida de IVA.»
+#   beneficiar da taxa reduzida de IVA.”
 #
 # É a justificação doutrinária do método usado aqui: percorrer as Listas e
 # atribuir a taxa normal a tudo o que não esteja lá de forma inequívoca. E a
 # mesma ficha acrescenta a razão pela qual os preparados caem quase sempre fora:
-# «as categorias 1.3 e 1.6 não incluem qualquer tipo de preparados. Quando assim
-# é, por exemplo a verba 1.1 da Lista I, estes são especificamente referidos».
+# “as categorias 1.3 e 1.6 não incluem qualquer tipo de preparados. Quando assim
+# é, por exemplo a verba 1.1 da Lista I, estes são especificamente referidos”.
 PRINCIPIO_LISTA_TAXATIVA = (
     "A Lista I prevê taxativamente os produtos que podem beneficiar da taxa "
     "reduzida do IVA, não sendo passível de uma interpretação extensiva, pelo "
@@ -334,12 +334,12 @@ PRINCIPIO_LISTA_TAXATIVA_FONTE = ("Autoridade Tributária, ficha doutrinária do
                                   "processo 24929, despacho de 2024-01-25")
 #
 # ---- Uma tensão que se regista e não se resolve --------------------------
-# A ficha caracteriza a verba 1.1.1 como abrangendo os cereais «em grão, ou em
-# flocos (grão inteiro prensado)», o que sugeriria 6 % para os flocos simples.
-# Mas a verba **1.12 da Lista II** é texto legal específico para «flocos
-# prensados simples de cereais e leguminosas sem adições de açúcar», a 13 %.
+# A ficha caracteriza a verba 1.1.1 como abrangendo os cereais “em grão, ou em
+# flocos (grão inteiro prensado)”, o que sugeriria 6% para os flocos simples.
+# Mas a verba **1.12 da Lista II** é texto legal específico para “flocos
+# prensados simples de cereais e leguminosas sem adições de açúcar”, a 13%.
 # Entende-se que o texto específico prevalece, e que a caracterização da ficha é
-# contextual — a decisão que ela toma é sobre *preparados*, não sobre flocos
+# contextual, a decisão que ela toma é sobre *preparados*, não sobre flocos
 # simples. Fica registada porque é o único ponto do quadro onde uma leitura
 # diferente é defensável.
 AT_FICHAS = [
@@ -347,16 +347,16 @@ AT_FICHAS = [
         "processo": "16563",
         "despacho": "2020-01-30",
         "orgao": "Diretora de Serviços do IVA, por subdelegação",
-        "assunto": "Taxas — revenda de artigos de pastelaria",
+        "assunto": "Taxas, revenda de artigos de pastelaria",
         "decide": [
-            ("CP011139", "A verba 1.1.5 cobre os tipos de «pão» definidos na Portaria "
-                         "n.º 52/2015, de 26.02, e **não abrange «quaisquer outros "
-                         "produtos afins do pão, ou de pastelaria fina»**. Na revenda "
-                         "de produtos de pastelaria aplica-se a taxa normal «por falta "
-                         "de enquadramento nas citadas verbas ou em quaisquer outras»."),
+            ("CP011139", "A verba 1.1.5 cobre os tipos de “pão” definidos na Portaria "
+                         "n.º 52/2015, de 26.02, e **não abrange “quaisquer outros "
+                         "produtos afins do pão, ou de pastelaria fina”**. Na revenda "
+                         "de produtos de pastelaria aplica-se a taxa normal “por falta "
+                         "de enquadramento nas citadas verbas ou em quaisquer outras”."),
             ("CP011131", "A mesma verba **exclui os produtos congelados, intermédios ou "
-                         "em processo de fabrico, designadamente o «pão pré-cozido "
-                         "congelado» e a «massa de pão congelada»**, tributados à taxa "
+                         "em processo de fabrico, designadamente o “pão pré-cozido "
+                         "congelado” e a “massa de pão congelada”**, tributados à taxa "
                          "normal. A subclasse do pão não é, por isso, homogénea."),
         ],
     },
@@ -366,8 +366,8 @@ AT_FICHAS = [
         "orgao": "Diretor de Serviços da DSIVA, por subdelegação",
         "assunto": "Preparados de bacalhau, de lulas, mariscada e cocktail de marisco",
         "decide": [
-            ("CP01136", "Os preparados de marisco — combinações de ingredientes que "
-                        "constituem um produto novo — ficam à taxa normal. As "
+            ("CP01136", "Os preparados de marisco, combinações de ingredientes que "
+                        "constituem um produto novo, ficam à taxa normal. As "
                         "categorias 1.3 e 1.6 da Lista I **não incluem qualquer tipo "
                         "de preparados**; quando o legislador os quis abranger, "
                         "referiu-os expressamente."),
@@ -384,25 +384,25 @@ AT_FICHAS = [
             ("CP01122", "Carne fresca, miudezas e **carne picada sem qualquer outro "
                         "ingrediente** ficam na verba 1.2, à taxa reduzida, mesmo "
                         "ultracongeladas (ofício-circulado n.º 30170, de 2015-04-10)."),
-            ("CP01125", "Os «preparados de carne» (carne com adição de outros géneros, "
-                        "condimentos ou aditivos) e os «produtos à base de carne» "
-                        "ficam à **taxa normal** — conceitos do Decreto-Lei n.º "
+            ("CP01125", "Os “preparados de carne” (carne com adição de outros géneros, "
+                        "condimentos ou aditivos) e os “produtos à base de carne” "
+                        "ficam à **taxa normal**, conceitos do Decreto-Lei n.º "
                         "147/2006. Um hambúrguer com água e amido é preparado; um de "
-                        "100 % carne não é."),
+                        "100% carne não é."),
         ],
     },
     {
         "processo": "28176",
         "despacho": "2025-06-27",
         "orgao": "Diretor de Serviços da DSIVA, por subdelegação",
-        "assunto": "IVA — Diversos produtos para alimentação humana",
+        "assunto": "IVA, Diversos produtos para alimentação humana",
         "decide": [
             ("CP01114", "Papas de aveia, granolas e cereais de arroz infantis são "
-                        "«preparados» ou «snacks»: não cabem na verba 1.1.1 nem em "
+                        "“preparados” ou “snacks”: não cabem na verba 1.1.1 nem em "
                         "qualquer outra. Taxa normal."),
             ("CP01191", "Refeições pré-preparadas de retalho (risotto a que se junta "
-                        "água) não cabem em verba alguma. Taxa normal — não são o "
-                        "«pronto a comer e levar» da verba 1.8 da Lista II."),
+                        "água) não cabem em verba alguma. Taxa normal, não são o "
+                        "“pronto a comer e levar” da verba 1.8 da Lista II."),
             ("CP01167", "Frutas desidratadas sem qualquer preparação enquadram-se na "
                         "verba 1.6.4. Taxa reduzida."),
             ("CP01169", "A verba 1.6.4 exclui expressamente a moagem, a laminação em "
@@ -420,7 +420,7 @@ AT_FICHAS_FONTE = ("Autoridade Tributária e Aduaneira, informações vinculativ
                    "(fichas doutrinárias), artigo 68.º do CPPT")
 #
 # **Limitação a declarar:** os ponderadores são do IHPC, que inclui a despesa de
-# não residentes. É a única fonte aberta que desce a este nível — o IDF fica-se
+# não residentes. É a única fonte aberta que desce a este nível, o IDF fica-se
 # pelo quarto dígito. Vale para repartir *dentro* da classe, que é o uso aqui.
 IVA_COMPONENTES_FONTE = (
     CIVA_FONTE + " · " + AT_FICHAS_FONTE + ": "
@@ -432,126 +432,126 @@ IVA_COMPONENTES = {
         {"peso": "CP01111", "taxa": 6, "certeza": "certa",
          "desc": "Cereais (Lista I, 1.1)"},
         {"peso": "CP01112", "taxa": 6, "certeza": "certa",
-         "desc": "Farinhas **de cereais** (Lista I, 1.1.3) — a AT precisou o "
+         "desc": "Farinhas **de cereais** (Lista I, 1.1.3), a AT precisou o "
                  "âmbito: cobre farinha de cereais estreme, mistura, composta, "
                  "corrigida ou autolevedante, e as lácteas e não lácteas; as "
-                 "farinhas obtidas de fruta ou de hortícolas ficam a 23 % "
+                 "farinhas obtidas de fruta ou de hortícolas ficam a 23% "
                  "(ficha 28176). A subclasse é a das farinhas de cereais"},
         {"peso": "CP011131", "taxa": 6, "certeza": "predominante",
-         "desc": "Pão (Lista I, 1.1.5) — os tipos definidos na Portaria n.º "
-                 "52/2015. **Não é homogénea:** a AT excluiu da verba «os "
+         "desc": "Pão (Lista I, 1.1.5), os tipos definidos na Portaria n.º "
+                 "52/2015. **Não é homogénea:** a AT excluiu da verba “os "
                  "produtos congelados, intermédios ou em processo de fabrico, "
                  "designadamente o pão pré-cozido congelado e a massa de pão "
-                 "congelada», que ficam a 23 % (ficha 16563). O pão fresco é o "
+                 "congelada”, que ficam a 23% (ficha 16563). O pão fresco é o "
                  "grosso, mas a subclasse inclui o congelado de retalho"},
         {"peso": "CP011139", "taxa": 23, "certeza": "certa",
-         "desc": "Outros produtos de padaria — bolos, bolachas e pastelaria. **A "
+         "desc": "Outros produtos de padaria, bolos, bolachas e pastelaria. **A "
                  "AT fechou esta questão:** a verba 1.1.5 cobre os tipos de pão "
-                 "definidos na Portaria n.º 52/2015 e «não se enquadram nesta "
+                 "definidos na Portaria n.º 52/2015 e “não se enquadram nesta "
                  "verba quaisquer outros produtos afins do pão, ou de pastelaria "
-                 "fina», aplicando-se a taxa normal «por falta de enquadramento "
-                 "nas citadas verbas ou em quaisquer outras» (ficha 16563). Era "
+                 "fina”, aplicando-se a taxa normal “por falta de enquadramento "
+                 "nas citadas verbas ou em quaisquer outras” (ficha 16563). Era "
                  "a maior parcela por predominância do cabaz"},
         {"peso": "CP01114", "taxa": None, "certeza": "mista", "entre": (13, 23),
-         "desc": "Cereais para pequeno-almoço — **nunca a 6 %**. A Lista I não "
-                 "tem verba para eles; a Lista II (1.12) cobre os «flocos "
+         "desc": "Cereais para pequeno-almoço, **nunca a 6%**. A Lista I não "
+                 "tem verba para eles; a Lista II (1.12) cobre os “flocos "
                  "prensados simples de cereais e leguminosas sem adições de "
-                 "açúcar» a 13 %, e os restantes ficam a 23 %. A AT confirmou o "
+                 "açúcar” a 13%, e os restantes ficam a 23%. A AT confirmou o "
                  "extremo superior: papas de aveia, granolas e cereais infantis "
-                 "são «preparados» e não cabem em verba alguma (ficha 28176), o "
-                 "que põe o grosso da subclasse a 23 %"},
+                 "são “preparados” e não cabem em verba alguma (ficha 28176), o "
+                 "que põe o grosso da subclasse a 23%"},
         {"peso": "CP01115", "taxa": 6, "certeza": "predominante",
-         "desc": "Massas alimentícias — a Lista I cobre as **não recheadas**; "
-                 "as recheadas ficam a 23 %"},
+         "desc": "Massas alimentícias, a Lista I cobre as **não recheadas**; "
+                 "as recheadas ficam a 23%"},
         {"peso": "CP01119", "taxa": None, "certeza": "mista",
          "desc": "Outros produtos da transformação de cereais e leguminosas"},
     ],
     "CP0112": [
         {"peso": "CP01121", "taxa": 23, "certeza": "certa",
-         "desc": "Animais terrestres vivos — a verba 1.2 da Lista I cobre "
-                 "«carnes e miudezas comestíveis, frescas ou congeladas», e não "
+         "desc": "Animais terrestres vivos, a verba 1.2 da Lista I cobre "
+                 "“carnes e miudezas comestíveis, frescas ou congeladas”, e não "
                  "o animal vivo. Não há verba que os abranja"},
         {"peso": "CP01122", "taxa": 6, "certeza": "certa",
-         "desc": "Carne fresca, refrigerada ou congelada (Lista I, 1.2) — as "
+         "desc": "Carne fresca, refrigerada ou congelada (Lista I, 1.2), as "
                  "espécies presentes (bovina, suína, ovina, caprina, aves, "
                  "coelho) estão todas na verba. A AT confirmou que abrange a "
                  "**carne picada sem qualquer outro ingrediente**, mesmo "
                  "ultracongelada (ficha 27368, ofício-circulado n.º 30170 de "
-                 "2015-04-10); com aditivos passa a «preparado» e sai desta "
+                 "2015-04-10); com aditivos passa a “preparado” e sai desta "
                  "subclasse para a CP01125"},
         {"peso": "CP01123", "taxa": 23, "certeza": "certa",
-         "desc": "Carne seca, salgada, em salmoura ou fumada — a Lista I só "
+         "desc": "Carne seca, salgada, em salmoura ou fumada, a Lista I só "
                  "cobre fresca ou congelada"},
         {"peso": "CP01124", "taxa": 6, "certeza": "certa",
          "desc": "Miudezas frescas, refrigeradas ou congeladas (Lista I, 1.2)"},
         {"peso": "CP01125", "taxa": 23, "certeza": "predominante",
-         "desc": "Preparações de carne — a AT decidiu que os «preparados de "
-                 "carne» (carne com adição de outros géneros, condimentos ou "
-                 "aditivos) e os «produtos à base de carne» ficam à **taxa "
+         "desc": "Preparações de carne, a AT decidiu que os “preparados de "
+                 "carne” (carne com adição de outros géneros, condimentos ou "
+                 "aditivos) e os “produtos à base de carne” ficam à **taxa "
                  "normal**, conceitos do Decreto-Lei n.º 147/2006 (ficha 27368). "
-                 "Fica «predominante» e não «certa» porque as **alheiras** estão "
-                 "na verba 1.3.3 da Lista II, a 13 %"},
+                 "Fica “predominante” e não “certa” porque as **alheiras** estão "
+                 "na verba 1.3.3 da Lista II, a 13%"},
     ],
     "CP0113": [
         {"peso": "CP01131", "taxa": 6, "certeza": "certa",
          "desc": "Peixe vivo, fresco, refrigerado ou congelado (Lista I, 1.3)"},
         {"peso": "CP01132", "taxa": 6, "certeza": "predominante",
-         "desc": "Peixe seco ou salgado (Lista I, 1.3.1) — o bacalhau é o grosso; "
+         "desc": "Peixe seco ou salgado (Lista I, 1.3.1), o bacalhau é o grosso; "
                  "o peixe fumado e o salmão, espadarte e esturjão salgados "
-                 "ficam a 23 %"},
+                 "ficam a 23%"},
         {"peso": "CP01133", "taxa": 6, "certeza": "predominante",
-         "desc": "Conservas de peixe com teor superior a 50 % (Lista I, 1.3); "
-                 "as pastas de atum, cavala e sardinha ficam a 23 %"},
+         "desc": "Conservas de peixe com teor superior a 50% (Lista I, 1.3); "
+                 "as pastas de atum, cavala e sardinha ficam a 23%"},
         {"peso": "CP01134", "taxa": None, "certeza": "mista",
-         "desc": "Marisco fresco ou congelado: **moluscos a 6 %, crustáceos a "
-                 "23 %**. A verba 1.3.3 da Lista I diz «moluscos, ainda que "
-                 "secos ou congelados» e não menciona crustáceos — a leitura "
+         "desc": "Marisco fresco ou congelado: **moluscos a 6%, crustáceos a "
+                 "23%**. A verba 1.3.3 da Lista I diz “moluscos, ainda que "
+                 "secos ou congelados” e não menciona crustáceos, a leitura "
                  "legal é inequívoca; o que falta é a repartição do peso"},
         {"peso": "CP01135", "taxa": None, "certeza": "mista",
-         "desc": "Marisco seco ou salgado — a verba 1.3.3 da Lista I cobre os "
-                 "moluscos «ainda que secos»; os crustáceos ficam a 23 %"},
+         "desc": "Marisco seco ou salgado, a verba 1.3.3 da Lista I cobre os "
+                 "moluscos “ainda que secos”; os crustáceos ficam a 23%"},
         {"peso": "CP01136", "taxa": None, "certeza": "mista",
-         "desc": "Preparações de marisco — atravessa **as três taxas**: as "
-                 "conservas de moluscos com teor superior a 50 % caem na verba "
-                 "1.3.2 da Lista I (6 %), as restantes conservas de moluscos na "
-                 "verba 1.2.1 da Lista II (13 %), e as de crustáceos a 23 %. Os "
-                 "**preparados** — mariscadas, cocktails, caldeiradas — ficam a "
-                 "23 %: a AT decidiu que «as categorias 1.3 e 1.6 não incluem "
-                 "qualquer tipo de preparados» (ficha 24929)"},
+         "desc": "Preparações de marisco, atravessa **as três taxas**: as "
+                 "conservas de moluscos com teor superior a 50% caem na verba "
+                 "1.3.2 da Lista I (6%), as restantes conservas de moluscos na "
+                 "verba 1.2.1 da Lista II (13%), e as de crustáceos a 23%. Os "
+                 "**preparados** (mariscadas, cocktails, caldeiradas) ficam a "
+                 "23%: a AT decidiu que “as categorias 1.3 e 1.6 não incluem "
+                 "qualquer tipo de preparados” (ficha 24929)"},
         {"peso": "CP01137", "taxa": None, "certeza": "mista",
-         "desc": "Fígados, ovas e miudezas de peixe e marisco — o caviar fica a 23 %"},
+         "desc": "Fígados, ovas e miudezas de peixe e marisco, o caviar fica a 23%"},
     ],
     "CP0114": [
         {"peso": "CP01141", "taxa": 6, "certeza": "certa", "desc": "Leite cru e inteiro (Lista I, 1.4)"},
         {"peso": "CP01142", "taxa": 6, "certeza": "certa", "desc": "Leite desnatado (Lista I, 1.4)"},
         {"peso": "CP01143", "taxa": 6, "certeza": "certa", "desc": "Outro leite e nata (Lista I, 1.4)"},
         {"peso": "CP01144", "taxa": 6, "certeza": "certa",
-         "desc": "Leite não animal — bebidas de base vegetal (Lista I, 1.4)"},
+         "desc": "Leite não animal, bebidas de base vegetal (Lista I, 1.4)"},
         {"peso": "CP01145", "taxa": 6, "certeza": "certa", "desc": "Queijo (Lista I, 1.4)"},
         {"peso": "CP01146", "taxa": 6, "certeza": "certa", "desc": "Iogurtes (Lista I, 1.4)"},
         {"peso": "CP01147", "taxa": None, "certeza": "mista",
-         "desc": "Sobremesas **e bebidas** à base de leite — a subclasse junta "
+         "desc": "Sobremesas **e bebidas** à base de leite, a subclasse junta "
                  "duas coisas com taxas diferentes: a verba 1.4.7 da Lista I "
-                 "cobre os «leites chocolatados, aromatizados, vitaminados ou "
-                 "enriquecidos» a 6 %, e as sobremesas lácteas não têm verba, "
-                 "ficando a 23 %"},
+                 "cobre os “leites chocolatados, aromatizados, vitaminados ou "
+                 "enriquecidos” a 6%, e as sobremesas lácteas não têm verba, "
+                 "ficando a 23%"},
         {"peso": "CP01148", "taxa": 6, "certeza": "certa", "desc": "Ovos (Lista I, 1.4)"},
         {"peso": "CP01149", "taxa": None, "certeza": "mista", "desc": "Outros produtos lácteos"},
     ],
     "CP0115": [
         {"peso": "CP011513", "taxa": 6, "certeza": "certa",
-         "desc": "**Azeite** (Lista I, 1.5) — tem código próprio na COICOP 2018"},
+         "desc": "**Azeite** (Lista I, 1.5), tem código próprio na COICOP 2018"},
         {"peso": ("CP01151", ["CP011513"]), "taxa": 13, "certeza": "certa",
-         "desc": "**Óleos vegetais que não o azeite** — os óleos alimentares "
+         "desc": "**Óleos vegetais que não o azeite**, os óleos alimentares "
                  "correntes, diretamente comestíveis (Lista II, 1.5.3)"},
         {"peso": "CP01152", "taxa": 6, "certeza": "certa",
          "desc": "Manteiga e gorduras derivadas do leite (Lista I, 1.4.3)"},
         {"peso": "CP01153", "taxa": 6, "certeza": "certa",
          "desc": "Margarina e creme vegetal para barrar (Lista I, 1.4.3)"},
         {"peso": "CP01159", "taxa": 6, "certeza": "predominante",
-         "desc": "Outras gorduras animais — a verba 1.5.2 da Lista I cobre a "
-                 "«banha e outras gorduras **de porco**», que é o grosso; as "
-                 "gorduras de outras espécies não têm verba e ficam a 23 %"},
+         "desc": "Outras gorduras animais, a verba 1.5.2 da Lista I cobre a "
+                 "“banha e outras gorduras **de porco**”, que é o grosso; as "
+                 "gorduras de outras espécies não têm verba e ficam a 23%"},
     ],
     "CP0116": [
         {"peso": "CP01161", "taxa": 6, "certeza": "certa", "desc": "Frutos tropicais frescos (Lista I, 1.6.4)"},
@@ -560,19 +560,19 @@ IVA_COMPONENTES = {
         {"peso": "CP01164", "taxa": 6, "certeza": "certa", "desc": "Bagas frescas (Lista I, 1.6.4)"},
         {"peso": "CP01165", "taxa": 6, "certeza": "certa", "desc": "Outras frutas frescas (Lista I, 1.6.4)"},
         {"peso": "CP01166", "taxa": None, "certeza": "mista",
-         "desc": "Fruta congelada — a Lista I cobre os **frutos vermelhos** "
-                 "congelados; a restante fica a 23 %"},
+         "desc": "Fruta congelada, a Lista I cobre os **frutos vermelhos** "
+                 "congelados; a restante fica a 23%"},
         {"peso": "CP01167", "taxa": 6, "certeza": "certa",
-         "desc": "Frutos secos e desidratados (Lista I, 1.6.4) — a AT decidiu "
-                 "expressamente que «frutas desidratadas sem qualquer "
-                 "preparação» se enquadram nesta verba (ficha 28176)"},
+         "desc": "Frutos secos e desidratados (Lista I, 1.6.4), a AT decidiu "
+                 "expressamente que “frutas desidratadas sem qualquer "
+                 "preparação” se enquadram nesta verba (ficha 28176)"},
         {"peso": "CP01168", "taxa": None, "certeza": "mista",
-         "desc": "Frutos de casca rija — a Lista I refere as **castanhas** "
-                 "nominalmente; amêndoa, noz e avelã ficam a 23 %"},
+         "desc": "Frutos de casca rija, a Lista I refere as **castanhas** "
+                 "nominalmente; amêndoa, noz e avelã ficam a 23%"},
         {"peso": "CP01169", "taxa": 23, "certeza": "certa",
-         "desc": "Fruta moída e outras preparações — a AT decidiu que a verba "
-                 "1.6.4 exclui expressamente «a moagem, ou laminação em palitos, "
-                 "ou cubos, cobertura», e que há produto novo sempre que a "
+         "desc": "Fruta moída e outras preparações, a AT decidiu que a verba "
+                 "1.6.4 exclui expressamente “a moagem, ou laminação em palitos, "
+                 "ou cubos, cobertura”, e que há produto novo sempre que a "
                  "transformação faz a fruta perder a natureza de fruto (ficha "
                  "28176). A subclasse é, por definição, o que sofreu essa "
                  "transformação"},
@@ -586,23 +586,23 @@ IVA_COMPONENTES = {
         {"peso": "CP01176", "taxa": 6, "certeza": "certa", "desc": "Leguminosas secas (Lista I, 1.6)"},
         {"peso": "CP01177", "taxa": 6, "certeza": "certa", "desc": "Hortícolas secos e desidratados (Lista I, 1.6)"},
         {"peso": "CP01178", "taxa": 6, "certeza": "certa",
-         "desc": "Hortícolas congelados — a Lista I cobre-os, «ainda que "
-                 "previamente cozidos»"},
+         "desc": "Hortícolas congelados, a Lista I cobre-os, “ainda que "
+                 "previamente cozidos”"},
         {"peso": "CP01179", "taxa": 23, "certeza": "certa",
-         "desc": "Hortícolas moídos e outras preparações — batata frita de "
-                 "pacote, conservas e preparados. A AT decidiu que **«as "
-                 "categorias 1.3 e 1.6 não incluem qualquer tipo de preparados»**, "
+         "desc": "Hortícolas moídos e outras preparações, batata frita de "
+                 "pacote, conservas e preparados. A AT decidiu que **“as "
+                 "categorias 1.3 e 1.6 não incluem qualquer tipo de preparados”**, "
                  "e que quando o legislador os quis abranger os referiu "
                  "expressamente (ficha 24929). A categoria 1.6 cobre frescos, "
-                 "secos, desidratados e congelados — não preparações"},
+                 "secos, desidratados e congelados, não preparações"},
     ],
     "CP0118": [
         {"peso": "CP01181", "taxa": 23, "certeza": "certa",
-         "desc": "Açúcar de cana e de beterraba — a verba 1.10 da Lista I foi "
+         "desc": "Açúcar de cana e de beterraba, a verba 1.10 da Lista I foi "
                  "**revogada**"},
         {"peso": "CP01182", "taxa": 23, "certeza": "certa", "desc": "Outros açúcares e sucedâneos"},
         {"peso": "CP01183", "taxa": None, "certeza": "mista",
-         "desc": "Doces, geleias, marmeladas **e mel** — só o mel está na "
+         "desc": "Doces, geleias, marmeladas **e mel**, só o mel está na "
                  "Lista I (1.8), e a nomenclatura agrega-os na mesma subclasse"},
         {"peso": "CP01184", "taxa": 23, "certeza": "certa", "desc": "Purés e manteigas de frutos de casca rija"},
         {"peso": "CP01185", "taxa": 23, "certeza": "certa", "desc": "Chocolate, cacau e produtos à base de cacau"},
@@ -612,30 +612,30 @@ IVA_COMPONENTES = {
     "CP0119": [
         {"peso": "CP01191", "taxa": 23, "certeza": "predominante",
          "desc": "Alimentos pré-preparados **de retalho**. A verba 1.8 da "
-                 "Lista II (13 %) cobre o pronto a comer e levar e a entrega ao "
-                 "domicílio, que na COICOP caem no grupo 11.1 — restauração — e "
+                 "Lista II (13%) cobre o pronto a comer e levar e a entrega ao "
+                 "domicílio, que na COICOP caem no grupo 11.1 (restauração) e "
                  "não aqui. A AT confirmou-o: refeições pré-preparadas de "
-                 "retalho, a que se junta água, «não reúnem condições de "
-                 "enquadramento em qualquer verba» e ficam à taxa normal (ficha "
-                 "28176). Fica «predominante» porque a subclasse é larga e "
+                 "retalho, a que se junta água, “não reúnem condições de "
+                 "enquadramento em qualquer verba” e ficam à taxa normal (ficha "
+                 "28176). Fica “predominante” porque a subclasse é larga e "
                  "abrange formatos que a ficha não apreciou"},
         {"peso": "CP01192", "taxa": 6, "certeza": "certa",
          "desc": "Alimentos para bebés e crianças de pouca idade (Lista I, 1.14)"},
         {"peso": "CP01193", "taxa": None, "certeza": "mista",
-         "desc": "Sal, condimentos e molhos — o **sal** está na Lista I (1.9), "
-                 "os condimentos e molhos a 23 %, na mesma subclasse"},
+         "desc": "Sal, condimentos e molhos, o **sal** está na Lista I (1.9), "
+                 "os condimentos e molhos a 23%, na mesma subclasse"},
         {"peso": "CP01194", "taxa": 23, "certeza": "certa",
          "desc": "Especiarias, ervas aromáticas e sementes para culinária"},
         {"peso": "CP01199", "taxa": None, "certeza": "mista",
-         "desc": "Outros produtos alimentares — recolhe várias verbas da Lista I "
-                 "a 6 %: nutrição entérica e sem glúten (1.12), seitan, tofu, "
+         "desc": "Outros produtos alimentares, recolhe várias verbas da Lista I "
+                 "a 6%: nutrição entérica e sem glúten (1.12), seitan, tofu, "
                  "tempeh e soja texturizada (1.1.6), algas (1.6.5), produtos "
                  "semelhantes a queijo sem leite (1.13) e substitutos integrais "
                  "da dieta (1.14). **A verba 1.12 é bem mais estreita do que o "
                  "seu texto sugere:** a AT só a aplica a produtos que tinham "
                  "glúten na formulação original e do qual foi removido ou "
-                 "substituído — os naturalmente sem glúten ficam a 23 % (ficha "
-                 "28176). O restante fica a 23 %"},
+                 "substituído, os naturalmente sem glúten ficam a 23% (ficha "
+                 "28176). O restante fica a 23%"},
     ],
 }
 
@@ -659,10 +659,10 @@ COICOP_ALIMENTAR = "CP011"
 # --------------------------------------------------------------------------
 # Ano-base do painel de viés de substituição
 # --------------------------------------------------------------------------
-# O painel «cabaz fixo contra Törnqvist» encadeia os dois índices a partir de um
-# dezembro. Esse dezembro era o primeiro da janela pedida ao Eurostat — que é
-# `ano corrente − 6`. A 1 de janeiro deslizava sozinho: a métrica «viés
-# acumulado desde dez/20» passaria a medir outro período com o mesmo nome, sem
+# O painel “cabaz fixo contra Törnqvist” encadeia os dois índices a partir de um
+# dezembro. Esse dezembro era o primeiro da janela pedida ao Eurostat, que é
+# `ano corrente − 6`. A 1 de janeiro deslizava sozinho: a métrica “viés
+# acumulado desde dez/20” passaria a medir outro período com o mesmo nome, sem
 # que ninguém o decidisse (auditoria de 11.08.2026, E14).
 #
 # Uma série que se compara entre versões do documento tem de ter base estável.
@@ -670,24 +670,24 @@ COICOP_ALIMENTAR = "CP011"
 #
 # 2019 é o primeiro dezembro com série completa das nove classes na ECOICOP
 # versão 2 (`prc_hicp_minr`, unidade I25, verificado a 11.08.2026: as classes
-# começam em 2019-01). Alterar este ano muda o valor publicado do viés — é uma
+# começam em 2019-01). Alterar este ano muda o valor publicado do viés, é uma
 # decisão, não um detalhe de implementação.
 ANO_BASE_VIES = 2019
 
 # --------------------------------------------------------------------------
-# Repercussão — a fração da alteração de imposto que chega ao preço final
+# Repercussão, a fração da alteração de imposto que chega ao preço final
 # --------------------------------------------------------------------------
-# É **o parâmetro decisivo** do simulador: move o resultado 250 % entre 0 % e
-# 100 %, mais do que todas as outras incertezas somadas (auditoria de
-# 12.08.2026, F1). Até 12.08.2026 o valor por defeito era **40 %**, declarado
-# como «parâmetro de trabalho, não estimativa», fundado em avaliações
-# internacionais de outros setores e outros países — França 2009 (restauração),
+# É **o parâmetro decisivo** do simulador: move o resultado 250% entre 0% e
+# 100%, mais do que todas as outras incertezas somadas (auditoria de
+# 12.08.2026, F1). Até 12.08.2026 o valor por defeito era **40%**, declarado
+# como “parâmetro de trabalho, não estimativa”, fundado em avaliações
+# internacionais de outros setores e outros países, França 2009 (restauração),
 # Suécia. Nenhuma delas sobre Portugal, nenhuma sobre alimentação em retalho.
 #
-# Portugal correu esta experiência. O «IVA zero» da Lei n.º 17/2023, de 14 de
+# Portugal correu esta experiência. O “IVA zero” da Lei n.º 17/2023, de 14 de
 # abril, isentou 46 bens alimentares entre 18.04.2023 e 04.01.2024, e o Banco de
-# Portugal mediu a repercussão por quatro vias independentes. Os 40 % não são
-# uma hipótese conservadora — são **contrariados pela única evidência
+# Portugal mediu a repercussão por quatro vias independentes. Os 40% não são
+# uma hipótese conservadora, são **contrariados pela única evidência
 # portuguesa sobre a medida idêntica**, por um fator de 2,4.
 #
 # ---- Como se extrai a repercussão dos números publicados -------------------
@@ -697,8 +697,8 @@ ANO_BASE_VIES = 2019
 #     ρ = variação observada / variação mecânica
 #
 # O efeito mecânico de passar da taxa t₀ para t₁ é (1+t₁)/(1+t₀) − 1. Para uma
-# isenção a partir de 6 %: 1/1,06 − 1 = −5,66 %. A partir de 23 %: 1/1,23 − 1
-# = −18,70 % — que é exatamente o valor que o BdP publica para os óleos
+# isenção a partir de 6%: 1/1,06 − 1 = −5,66%. A partir de 23%: 1/1,23 − 1
+# = −18,70%, que é exatamente o valor que o BdP publica para os óleos
 # alimentares (WAPP, p. 5). A aritmética de IVA contido desta aplicação
 # reproduz a do Banco de Portugal; isso está travado por teste.
 #
@@ -706,20 +706,20 @@ ANO_BASE_VIES = 2019
 # 1. O próprio BdP alerta para **desvios-padrão elevados** nas estimativas de
 #    diferença-nas-diferenças, e para a granularidade insuficiente do IHPC (as
 #    rubricas afetadas incluem bens não abrangidos, o que dilui observado e
-#    mecânico na mesma proporção — por isso o quociente sobrevive).
+#    mecânico na mesma proporção, por isso o quociente sobrevive).
 # 2. Foi uma medida **temporária, taxativa e muito mediática**, com pressões de
 #    custo a montante já em queda e acompanhamento público do setor. Uma
 #    alteração permanente e discreta pode repercutir-se menos.
-# 3. A janela avaliada vai até agosto de 2023 — **quatro meses**. Não há aqui
+# 3. A janela avaliada vai até agosto de 2023, **quatro meses**. Não há aqui
 #    evidência sobre erosão a prazo. O balanço do período completo mostra o
-#    cabaz da DECO a subir 4,71 %: a repercussão foi alta, e mesmo assim o
+#    cabaz da DECO a subir 4,71%: a repercussão foi alta, e mesmo assim o
 #    efeito foi superado pela inflação de base. São coisas diferentes.
-# 4. A evidência robusta é sobre cortes **a partir de 6 %**. Para os 23 % há um
+# 4. A evidência robusta é sobre cortes **a partir de 6%**. Para os 23% há um
 #    único produto (óleos alimentares).
-# 5. Os valores acima de 100 % refletem provavelmente concorrência e salivência
+# 5. Os valores acima de 100% refletem provavelmente concorrência e saliência
 #    política, não repercussão pura. Não se usa mais de 1,00 por defeito.
 REPERCUSSAO_FONTE = (
-    "Banco de Portugal, «Impacto do IVA zero sobre os preços», WAPP de "
+    "Banco de Portugal, “Impacto do IVA zero sobre os preços”, WAPP de "
     "22.11.2023 (Gouveia, Manteu, Serra e Cabral) · Boletim Económico de "
     "outubro de 2023, caixa 4"
 )
@@ -729,28 +729,37 @@ REPERCUSSAO_FONTE = (
 REPERCUSSAO_ESTIMATIVAS = [
     ("IHPC, diferença-nas-diferenças vs. Espanha", 4.0, 4.2,
      "Regressão de event-study, Portugal como tratamento e Espanha como "
-     "controlo; rubricas com IVA anterior de 6 %; pré-tratamento set/2022 a "
+     "controlo; rubricas com IVA anterior de 6%; pré-tratamento set/2022 a "
      "mar/2023. O contrafactual foi estatisticamente confirmado."),
     ("IHPC, diferença-nas-diferenças vs. área do euro", 3.5, 4.2,
      "Mesma especificação, com a área do euro como controlo."),
     ("Preços online, cabaz abrangido", 6.0, 5.66,
      "Preços diários fixados nas plataformas dos principais retalhistas "
      "(BPLIM). Semana de 23-29.04 contra a semana anterior à medida. As "
-     "variações concentraram-se entre −5 % e −7 %."),
-    ("Preços online, óleos alimentares (eram 23 %)", 24.5, 18.70,
-     "Único produto do cabaz com taxa anterior de 23 % isolado na publicação. "
+     "variações concentraram-se entre −5% e −7%."),
+    ("Preços online, óleos alimentares (eram 23%)", 24.5, 18.70,
+     "Único produto do cabaz com taxa anterior de 23% isolado na publicação. "
      "Amostra de um: indicativo, não conclusivo."),
 ]
 
-# Valor por defeito: a estimativa **mais conservadora das duas robustas** —
-# as duas de diferença-nas-diferenças, que têm contrafactual estatisticamente
-# validado. Escolhe-se 0,95 (Espanha) e não a média das quatro, porque as duas
-# de preços online medem uma janela de duas semanas e dão acima de 100 %.
+# Valor por defeito: a estimativa de diferença-nas-diferenças com **Espanha
+# como controlo** (4,0/4,2 = 0,952), que é a única cujo contrafactual o BdP
+# declara estatisticamente confirmado. Escolhe-se pela qualidade do
+# contrafactual, e não por prudência: das duas de diferença-nas-diferenças é a
+# **mais alta**, porque a de controlo da área do euro dá 3,5/4,2 = 0,833.
+#
+# O comentário anterior descrevia-a como “a mais conservadora das duas
+# robustas”, o que é o contrário do que a tabela desta mesma aplicação mostra,
+# e a interface repetia a afirmação por baixo dos números que a desmentiam
+# (auditoria de 12.08.2026, L4). A escolha mantém-se; a justificação é que
+# estava trocada. As duas de preços online não entram por medirem uma janela de
+# duas semanas e darem acima de 100%.
 REPERCUSSAO_PADRAO = 0.95
 
 # Banda apresentada com os indicadores: da estimativa mais baixa (área do euro,
-# 83 %) à repercussão integral (100 %). Não se estende abaixo de 83 % porque
-# nenhuma estimativa portuguesa o sustenta, nem acima de 100 % pela ressalva 5.
+# 83,3%) à repercussão integral (100%). É aqui que a leitura conservadora
+# aparece, não no valor por defeito. Não se estende abaixo de 83,3% porque
+# nenhuma estimativa portuguesa o sustenta, nem acima de 100% pela ressalva 5.
 REPERCUSSAO_BANDA = (0.833, 1.00)
 
 # --------------------------------------------------------------------------
@@ -765,18 +774,59 @@ REPERCUSSAO_BANDA = (0.833, 1.00)
 #     rendimento, porque gastam mais em valor absoluto.
 #
 # Uma ferramenta que só mostre a primeira dá uma leitura incompleta a quem
-# decide. O BdP é explícito: as famílias do quintil mais elevado «recebem mais
-# 20 % de recursos públicos do que as do quintil de menores rendimentos, não
-# contribuindo para uma política focada nos agregados vulneráveis».
+# decide. O BdP é explícito: as famílias do quintil mais elevado “recebem mais
+# 20% de recursos públicos do que as do quintil de menores rendimentos, não
+# contribuindo para uma política focada nos agregados vulneráveis”.
 IVA_ZERO_QUINTIS_FONTE = (
     "Banco de Portugal, WAPP de 22.11.2023, p. 9 · inflação por quintil: "
-    "Boletim Económico de outubro de 2022, caixa «Estimativas de inflação por "
-    "nível de rendimento e escalão etário» · afetação orçamental: simulações "
-    "EUROMOD estendidas a impostos indiretos, sobre EU-SILC e IDF"
+    "Boletim Económico de outubro de 2022, caixa “Estimativas de inflação por "
+    "nível de rendimento e escalão etário” · afetação orçamental: simulações "
+    "EUROMOD estendidas a impostos indiretos, sobre EU-SILC e IDF · a citação "
+    "sobre os recursos públicos é da caixa 3 do Boletim Económico de junho de 2023"
+)
+
+# Perímetro e calendário da medida de 2023, transcritos da p. 2 do mesmo WAPP:
+# “A medida do IVA zero entrou em vigor a 18 de abril e deverá prolongar-se até
+# ao final do ano. Isenta temporariamente de IVA um cabaz de 46 alimentos (a
+# maioria com taxa anterior de 6%).”
+#
+# O segundo número é o que interessa a quem decide, e não é uma curiosidade
+# histórica: a medida efetivamente tomada em 2023 foi sobretudo uma **isenção do
+# que já estava no mínimo**, não uma descida de taxa. É a mesma fronteira que o
+# apuramento por subclasse mostra hoje.
+#
+# Como texto e não como `date`: só é usado em prosa, e o `config` não importa
+# `datetime` para mais nada.
+IVA_ZERO_INICIO = "18 de abril de 2023"
+IVA_ZERO_N_ALIMENTOS = 46
+
+# Citação **verbatim**, confrontada com a p. 9 do WAPP de 22.11.2023.
+#
+# Fica aqui inteira, e não montada no `app.py` à volta de um número calculado,
+# por uma razão que é de rigor e não de arrumação: a aplicação interpolava dentro
+# das aspas o resultado de `23 / 19 - 1`, que dá **21%**. O Banco de Portugal
+# escreveu **20%**, partiu dos valores não arredondados, não das percentagens
+# publicadas. Atribuir a uma fonte um número que ela não escreveu é uma citação
+# falsa, mesmo quando a diferença é de um ponto (assinalado à Inês, 13.08.2026).
+#
+# Nada dentro destas aspas pode ser derivado, formatado ou enfatizado: o realce
+# que não é do original não entra sem “sublinhado nosso”.
+IVA_ZERO_CITACAO = (
+    "as famílias do quintil mais elevado de rendimentos recebem mais 20% de "
+    "recursos públicos do que as do quintil de menores rendimentos, não "
+    "contribuindo para uma política focada nos agregados vulneráveis"
 )
 
 # Taxa de variação em cadeia em maio de 2023, em pontos percentuais.
-# (quintil, IPC bens alimentares — rubricas afetadas, IPC bens alimentares, IPC total)
+# (quintil, IPC bens alimentares, rubricas afetadas, IPC bens alimentares, IPC total)
+#
+# Sobre a unidade: o rótulo é o do original, e o original não é consistente
+# consigo próprio. O gráfico da p. 9 diz “Taxa de variação em cadeia em maio de
+# 2023, em pp”; os gráficos da mesma grandeza nas pp. 5 e 6 dizem “em
+# percentagem”. Uma taxa de variação exprime-se em percentagem, pontos
+# percentuais são para diferenças **entre** taxas. Mantém-se “p.p.” porque é o
+# que o Banco de Portugal imprime neste gráfico concreto; a divergência
+# regista-se aqui em vez de se corrigir em silêncio numa fonte citada.
 IVA_ZERO_INFLACAO_QUINTIL = [
     ("Total de famílias", -4.1, -2.6, -0.7),
     ("Q1 (mais baixo)", -4.4, -2.9, -0.9),
@@ -789,7 +839,7 @@ IVA_ZERO_INFLACAO_QUINTIL = [
 # Fração do custo orçamental de cada medida de 2023 que chega ao quintil mais
 # pobre e ao mais rico. Serve para situar a redução do IVA face às alternativas
 # que o Estado tinha em cima da mesa no mesmo ano.
-# (medida, % para os 20 % mais pobres, % para os 20 % mais ricos)
+# (medida, % para os 20% mais pobres, % para os 20% mais ricos)
 IVA_ZERO_AFETACAO_ORCAMENTAL = [
     ("Redução do IVA", 19, 23),
     ("Complemento extraordinário ao abono", 35, 1),
@@ -798,27 +848,27 @@ IVA_ZERO_AFETACAO_ORCAMENTAL = [
 ]
 
 # --------------------------------------------------------------------------
-# Agregados especiais do índice — permitem separar o que é choque conjuntural
+# Agregados especiais do índice, permitem separar o que é choque conjuntural
 # do que é inflação estrutural, e situar a alimentação no conjunto dos preços.
 # --------------------------------------------------------------------------
 AGREGADOS = [
     # --- a alimentação por dentro: são componentes do objeto do estudo ---
     {"cod": "FOOD_NP", "nome": "Alimentos não transformados", "cor": "#D02117", "larg": 2.4,
-     "grupo": "alimentacao", "porque": "Frescos. Reagem a clima e sazonalidade — é aqui que "
+     "grupo": "alimentacao", "porque": "Frescos. Reagem a clima e sazonalidade, é aqui que "
                                        "os choques de oferta aparecem primeiro."},
     {"cod": "FOOD_P", "nome": "Alimentos transformados", "cor": "#BE9C54", "larg": 2.4,
      "grupo": "alimentacao", "porque": "Pão, laticínios, conservas. Refletem custos de "
                                        "produção e distribuição, não o tempo que fez."},
     {"cod": "FOOD", "nome": "Alimentação e bebidas (total)", "cor": "#0E7433", "larg": 2.8,
-     "grupo": "alimentacao", "porque": "O agregado que o debate público chama «alimentação»."},
+     "grupo": "alimentacao", "porque": "O agregado que o debate público chama “alimentação”."},
     # --- enquadramento: não são alimentação, servem de referência ---
     # `TOTAL` e não `CP00`: na ECOICOP versão 2 o agregado de todos os produtos
-    # mudou de código. `CP00` devolve HTTP 400 em `prc_hicp_minr` — e a via de
+    # mudou de código. `CP00` devolve HTTP 400 em `prc_hicp_minr`, e a via de
     # reserva respondia com uma fatia arbitrária em vez de erro
     # (auditoria de 11.08.2026, E1).
     {"cod": "TOTAL", "nome": "Todos os produtos", "cor": "#171715", "larg": 2.2,
-     "grupo": "enquadramento", "porque": "A inflação geral. Responde a «como pode a inflação "
-                                         "ser baixa e o cabaz subir?»"},
+     "grupo": "enquadramento", "porque": "A inflação geral. Responde a “como pode a inflação "
+                                         "ser baixa e o cabaz subir?”"},
     {"cod": "TOT_X_NRG_FOOD", "nome": "Subjacente (sem energia nem alimentos)",
      "cor": "#2B5683", "larg": 1.8, "grupo": "enquadramento",
      "porque": "A medida que os bancos centrais seguem. Distingue pressão estrutural "
@@ -848,7 +898,7 @@ PAISES = {
 PAISES_POR_DEFEITO = ["PT", "EU27_2020", "ES", "FR"]
 
 # --------------------------------------------------------------------------
-# Número de agregados familiares — divisor da despesa nacional
+# Número de agregados familiares, divisor da despesa nacional
 # --------------------------------------------------------------------------
 # Valor de referência oficial. Os Censos são a fonte autoritativa para o número
 # de agregados: é um apuramento exaustivo, não uma estimativa por amostragem.
@@ -856,25 +906,25 @@ AGREGADOS_CENSOS = 4_149_096
 AGREGADOS_FONTE = "INE, Censos 2021 (resultados definitivos)"
 AGREGADOS_ANO = 2021
 
-# Dimensão média do agregado — apenas usada se o Eurostat não responder.
+# Dimensão média do agregado, apenas usada se o Eurostat não responder.
 # O valor corrente é obtido de ilc_lvph01 (EU-SILC) em cada sessão: está em
 # queda em toda a Europa, pelo que uma constante desatualiza-se depressa.
 DIMENSAO_RECUO = 2.4
 DIMENSAO_RECUO_FONTE = "Eurostat, ilc_lvph01 (EU-SILC), 2025"
 
 # --------------------------------------------------------------------------
-# Âncoras da despesa alimentar — duas bases oficiais que não coincidem
+# Âncoras da despesa alimentar, duas bases oficiais que não coincidem
 # --------------------------------------------------------------------------
 # As Contas Nacionais medem o consumo *no território*, incluindo o de não
 # residentes, e são obtidas em direto do Eurostat. O IDF mede a despesa
 # declarada pelos agregados *residentes*.
 #
-# Para 2022 as duas divergem por um fator de 2,3 na alimentação — muito acima
+# Para 2022 as duas divergem por um fator de 2,3 na alimentação, muito acima
 # do desvio geral de 1,7 entre inquérito e Contas Nacionais. A taxa de
-# cobertura portuguesa da alimentação (44 %) fica abaixo do mínimo europeu
-# (58 %), e não existe exercício nacional de conciliação que permita arbitrar.
+# cobertura portuguesa da alimentação (44%) fica abaixo do mínimo europeu
+# (58%), e não existe exercício nacional de conciliação que permita arbitrar.
 #
-# Nenhuma das duas é «a» resposta: as Contas Nacionais sobrestimam (conceito
+# Nenhuma das duas é “a” resposta: as Contas Nacionais sobrestimam (conceito
 # interno, possível sobre-atribuição), o inquérito subestima (sub-reporte).
 # A aplicação apresenta por isso o intervalo entre ambas e deixa o utilizador
 # escolher a base de trabalho. Ver docs/2026-08-07_levantamento_lacunas.md, §2.10.
@@ -882,21 +932,21 @@ IDF_ALIMENTAR_ANUAL = 2872.0          # € por agregado e por ano, COICOP 01.1
 IDF_FONTE = "INE, IDF 2022/2023 (quadro Q.2.11.a)"
 
 # Período de referência do IDF 2022/2023, confirmado no documento metodológico
-# do INE (Metainformação IDF, V.6.1.1): «O período de recolha decorrerá entre
+# do INE (Metainformação IDF, V.6.1.1): “O período de recolha decorrerá entre
 # 3 de fevereiro de 2022 e 5 de fevereiro de 2023, correspondendo a 26
-# quinzenas. Os dados de cada agregado são recolhidos ao longo de 14 dias».
+# quinzenas. Os dados de cada agregado são recolhidos ao longo de 14 dias”.
 #
 # Duas consequências, e ambas importam:
 #
-# 1. A recolha é **uniforme ao longo de doze meses** — 26 quinzenas seguidas —,
+# 1. A recolha é **uniforme ao longo de doze meses** (26 quinzenas seguidas),
 #    não um instantâneo. O valor publicado é uma média desse período.
-# 2. O INE **não corrige os valores para uma data comum**: V.7.4, «Ajustamentos
-#    dos dados: Não aplicável». Ficam aos preços do momento em que cada
+# 2. O INE **não corrige os valores para uma data comum**: V.7.4, “Ajustamentos
+#    dos dados: Não aplicável”. Ficam aos preços do momento em que cada
 #    agregado foi inquirido.
 #
-# Logo, a base de indexação não é um ano civil — é a janela de recolha. A
+# Logo, a base de indexação não é um ano civil, é a janela de recolha. A
 # aplicação usava `IDF_ANO_BASE = 2023`, um pressuposto que ninguém tinha
-# confirmado e que subestimava o valor atual em 21,05 €/mês, 8,3 %
+# confirmado e que subestimava o valor atual em 21,05 €/mês, 8,3%
 # (auditoria de 10.08.2026, D1).
 #
 # Fevereiro de 2022 é o primeiro mês inteiro de recolha e janeiro de 2023 o
@@ -914,14 +964,14 @@ BASES_ANCORA = {
     },
     "contas": {
         # `nama_10_co3_p3` foi arquivado com a passagem à COICOP 2018 e a
-        # aplicação migrou para `nama_10_cp18` a 11.08.2026 (E1/E2) — esta
+        # aplicação migrou para `nama_10_cp18` a 11.08.2026 (E1/E2), esta
         # citação tinha ficado para trás, a apontar para um conjunto parado.
         "nome": "Contas Nacionais",
         "fonte": "Eurostat, nama_10_cp18 (Contas Nacionais, COICOP 2018, "
-                 "compiladas pelo INE) — conceito **interno**: despesa no "
+                 "compiladas pelo INE), conceito **interno**: despesa no "
                  "território económico, não residentes incluídos",
         "porque": "Agregado macroeconómico dividido pelo número de agregados. "
-                  "Sobrestima — mas **não é sobretudo por causa dos não "
+                  "Sobrestima, mas **não é sobretudo por causa dos não "
                   "residentes**: no caso dos alimentos consumidos em casa esse "
                   "efeito é pequeno (ver CONCEITO_CONTAS_NACIONAIS). O grosso da "
                   "divergência face ao IDF vem da sub-declaração dos inquéritos "
@@ -932,7 +982,7 @@ BASES_ANCORA = {
 BASE_POR_DEFEITO = "idf"
 
 # --------------------------------------------------------------------------
-# Conceito das Contas Nacionais — verificado a 12.08.2026
+# Conceito das Contas Nacionais, verificado a 12.08.2026
 # --------------------------------------------------------------------------
 # Ficara em aberto na auditoria de 12.08.2026 (F5) se o `nama_10_cp18` está em
 # conceito **interno** (despesa no território, não residentes incluídos) ou
@@ -942,34 +992,34 @@ BASE_POR_DEFEITO = "idf"
 # ---- Prova 1: identidade contabilística ------------------------------------
 # O total da desagregação por COICOP excede sistematicamente o `P31_S14` do
 # `nama_10_gdp`, que é o consumo das famílias no conceito nacional. Em 2024:
-# 192 796 contra 171 641 M€ — mais 21 155 M€, ou 12,3 %. Se estivessem no mesmo
+# 192 796 contra 171 641 M€, mais 21 155 M€, ou 12,3%. Se estivessem no mesmo
 # conceito, seriam iguais.
 #
 # ---- Prova 2: o ano de 2020 ------------------------------------------------
-# A diferença entre os dois desabou em 2020, de 13 503 para 5 277 M€ (−61 %),
+# A diferença entre os dois desabou em 2020, de 13 503 para 5 277 M€ (−61%),
 # no ano em que o turismo parou, e recuperou depois. Nada além do turismo
 # produz esse padrão. **O `nama_10_cp18` está no conceito interno.**
 #
 # ---- E quanto contamina os alimentos? --------------------------------------
 # Muito menos do que o total, e isto corrige o que a app afirmava. Em 2020:
 #
-#   CP111 restauração        −36,6 %      (o turismo estava aqui)
-#   CP011 alimentação em casa  +3,1 %      (subiu)
+#   CP111 restauração        −36,6%      (o turismo estava aqui)
+#   CP011 alimentação em casa  +3,1%      (subiu)
 #
 # Se a despesa alimentar em casa fosse materialmente de turistas, teria caído em
 # 2020. Subiu. Os não residentes comem em restaurantes, não cozinham em casa.
 #
 # **Ressalva honesta:** 2020 teve dois efeitos em sentidos opostos sobre o CP011
-# — os residentes substituíram restaurante por casa (a subir) e os turistas
-# desapareceram (a descer). O saldo foi +3,1 %, o que **não prova que o efeito
+#, os residentes substituíram restaurante por casa (a subir) e os turistas
+# desapareceram (a descer). O saldo foi +3,1%, o que **não prova que o efeito
 # turista seja nulo**, só que é menor do que a substituição. O limite superior,
 # se os não residentes consumissem alimentos em casa na proporção do seu peso no
-# consumo total, seria 12,3 % do CP011; a evidência de 2020 diz que o valor real
+# consumo total, seria 12,3% do CP011; a evidência de 2020 diz que o valor real
 # está bem abaixo.
 #
 # ---- Consequência ----------------------------------------------------------
-# A base **não se troca**, mas a razão mudou. Não é «as Contas Nacionais estão
-# contaminadas por turistas»: essa contaminação existe e é pequena nos
+# A base **não se troca**, mas a razão mudou. Não é “as Contas Nacionais estão
+# contaminadas por turistas”: essa contaminação existe e é pequena nos
 # alimentos. É que a divergência de ~2,3× face ao IDF **continua sem explicação
 # completa**, e uma diferença dessa ordem não se adota sem a perceber.
 CONCEITO_CONTAS_NACIONAIS = {
@@ -977,15 +1027,15 @@ CONCEITO_CONTAS_NACIONAIS = {
     "verificado": "2026-08-12",
     "prova": ("Total COICOP (nama_10_cp18) contra P31_S14 (nama_10_gdp), "
               "conceito nacional: 192 796 contra 171 641 M€ em 2024. A "
-              "diferença desaba 61 % em 2020, com a paragem do turismo."),
+              "diferença desaba 61% em 2020, com a paragem do turismo."),
     "efeito_nos_alimentos": ("Pequeno. Em 2020 a restauração (CP111) caiu "
-                             "36,6 % e a alimentação em casa (CP011) subiu "
-                             "3,1 %. Limite superior de 12,3 %; o valor real "
+                             "36,6% e a alimentação em casa (CP011) subiu "
+                             "3,1%. Limite superior de 12,3%; o valor real "
                              "está bem abaixo."),
 }
 
 # --------------------------------------------------------------------------
-# IDF 2022/2023 por quintil de rendimento — a base estrutural
+# IDF 2022/2023 por quintil de rendimento, a base estrutural
 # --------------------------------------------------------------------------
 # Divisão de trabalho entre as duas fontes de ponderação, decidida em 08.08.2026:
 #
@@ -993,16 +1043,16 @@ CONCEITO_CONTAS_NACIONAIS = {
 #   IHPC  → movimento dos preços (como variou cada classe)
 #
 # A razão não é de conveniência. O Documento Metodológico do IPC (INE, 2023) é
-# explícito: «O IHPC inclui a despesa realizada pelos não residentes ("turistas")
+# explícito: “O IHPC inclui a despesa realizada pelos não residentes ("turistas")
 # no território económico e exclui a despesa dos residentes no exterior,
-# originando uma estrutura de ponderação diferente da utilizada no IPC.» Os
-# ponderadores do IHPC — os únicos que o Eurostat difunde — medem, por
+# originando uma estrutura de ponderação diferente da utilizada no IPC.” Os
+# ponderadores do IHPC (os únicos que o Eurostat difunde) medem, por
 # construção, um universo que inclui turistas. É a mesma contaminação que levou
 # a app a abandonar as Contas Nacionais como âncora única.
 #
 # O INE publica ponderadores do IPC (conceito nacional, sem turistas), mas apenas
 # em ine.pt. O IDF é, entre as fontes abertas, a única via para uma estrutura de
-# consumo de agregados residentes — e a única que desce ao quintil.
+# consumo de agregados residentes, e a única que desce ao quintil.
 #
 # Fonte: INE, IDF 2022/2023, quadros Q.2.11.a (euros/ano) e Q.2.11.b (estrutura %).
 # Quintis de rendimento *equivalente*. Atualização manual a cada vaga do IDF.
@@ -1051,27 +1101,27 @@ IDF_CLASSES_QUINTIL = {
 # Teste empírico das escalas de equivalência na alimentação
 # --------------------------------------------------------------------------
 # A aplicação sempre declarou que a escala OCDE modificada subestima o custo
-# alimentar de agregados maiores — mas como ressalva qualitativa. O IDF
+# alimentar de agregados maiores, mas como ressalva qualitativa. O IDF
 # 2022/2023 permite medi-la.
 #
 # Método: restringir a agregados **sem crianças dependentes**, onde a escala é
-# mais limpa, e comparar o rácio de despesa observado entre «2 ou mais adultos»
-# e «1 adulto» com o rácio que cada escala prevê para a mesma composição.
+# mais limpa, e comparar o rácio de despesa observado entre “2 ou mais adultos”
+# e “1 adulto” com o rácio que cada escala prevê para a mesma composição.
 #
-# O grupo «2 ou +» reparte-se por resíduo, a partir das contagens do Q.1.3, em
-# 72 % com dois adultos e 28 % com três ou mais. Os 3+ têm 2,144 adultos
+# O grupo “2 ou +” reparte-se por resíduo, a partir das contagens do Q.1.3, em
+# 72% com dois adultos e 28% com três ou mais. Os 3+ têm 2,144 adultos
 # equivalentes na escala OCDE modificada, o que implica 3,288 adultos em média.
 #
 # O controlo é o que torna o teste convincente: repetindo a conta para a despesa
-# **total** — para a qual as escalas foram desenhadas — o desvio inverte-se.
+# **total** (para a qual as escalas foram desenhadas) o desvio inverte-se.
 # Ou seja, o problema não é da escala em geral: é da alimentação em particular,
 # onde as economias de escala são mais fracas do que na habitação.
 ESCALAS_TESTE_FONTE = "INE, IDF 2022/2023, quadros Q.1.3, Q.2.6.a e Q.2.8"
 
-# Composição do grupo «2 ou mais adultos»: (n.º de adultos, fração do grupo)
+# Composição do grupo “2 ou mais adultos”: (n.º de adultos, fração do grupo)
 ESCALAS_TESTE_COMPOSICAO = [(2.0, 0.72), (3.288, 0.28)]
 
-# Rácios observados de despesa entre «2 ou +» e «1 adulto», sem crianças
+# Rácios observados de despesa entre “2 ou +” e “1 adulto”, sem crianças
 ESCALAS_TESTE_RACIO = {
     "alimentar": 1.854,   # 3 066 € / 1 654 € por ano, COICOP 01.1
     "total": 1.498,       # a mesma conta sobre a despesa total
@@ -1079,29 +1129,29 @@ ESCALAS_TESTE_RACIO = {
 
 # As duas restrições disponíveis são ligeiramente inconsistentes entre si
 # (adultos equivalentes médios reconstruídos: 1,435 contra 1,407 publicados),
-# pelo que a subestimação fica entre +10 % e +13 %. Robusta no sinal e na ordem
+# pelo que a subestimação fica entre +10% e +13%. Robusta no sinal e na ordem
 # de grandeza, não no algarismo.
 ESCALAS_TESTE_INTERVALO = (10, 13)
 
 # --------------------------------------------------------------------------
-# Acessibilidade alimentar — três limiares que medem coisas diferentes
+# Acessibilidade alimentar, três limiares que medem coisas diferentes
 # --------------------------------------------------------------------------
-# «Acessibilidade alimentar» não é uma grandeza única. Consoante o limiar,
+# “Acessibilidade alimentar” não é uma grandeza única. Consoante o limiar,
 # Portugal parece estar muito bem ou bastante mal, com dados oficiais em ambos
 # os casos. Daí a regra de apresentação: os três aparecem **sempre juntos**.
 #
-#   1,9 %   privação severa — não pagar uma refeição com carne ou peixe de dois
+#   1,9%   privação severa, não pagar uma refeição com carne ou peixe de dois
 #           em dois dias. Limiar muito baixo: mede quase fome. Em mínimo de série.
-#   14,4 %  não conseguir pagar uma dieta nutricionalmente adequada ao menor
+#   14,4%  não conseguir pagar uma dieta nutricionalmente adequada ao menor
 #           custo. É o nível intermédio, e é onde está o problema real.
-#   14,8 %  peso da alimentação no orçamento do 1.º quintil — não é privação,
+#   14,8%  peso da alimentação no orçamento do 1.º quintil, não é privação,
 #           é exposição. Vem de IDF_PESO_ALIMENTAR, acima.
 #
-# Apresentar só o de 1,9 % dá uma leitura indevidamente tranquilizadora: sugere
-# um problema de 2 % da população, quando por um limiar nutricionalmente
-# defensável são 14 %.
+# Apresentar só o de 1,9% dá uma leitura indevidamente tranquilizadora: sugere
+# um problema de 2% da população, quando por um limiar nutricionalmente
+# defensável são 14%.
 #
-# O SOFI é publicado em PDF, não em API — os valores abaixo são transcritos dos
+# O SOFI é publicado em PDF, não em API, os valores abaixo são transcritos dos
 # anexos A1.5 e A1.6 e têm de ser atualizados à mão a cada edição.
 # --------------------------------------------------------------------------
 # Prazos de validade das fontes de atualização manual
@@ -1124,14 +1174,14 @@ LIMITE_ANOS_SOFI = 2
 # --------------------------------------------------------------------------
 # A auditoria de 10.08.2026 (D4) criou a verificação de frescura e apontou-a ao
 # SOFI e ao Observatório, com o argumento de que são as fontes **sem** API. A
-# conclusão implícita — que as séries com API não têm esse problema, porque a
-# rede avisaria — estava errada, e custou sete meses de dados desatualizados:
+# conclusão implícita, que as séries com API não têm esse problema, porque a
+# rede avisaria, estava errada, e custou sete meses de dados desatualizados:
 # uma série arquivada responde com HTTP 200 e simplesmente deixa de avançar
 # (auditoria de 11.08.2026, E1 e E3).
 #
 # O limite de cada série é o seu **desfasamento normal de publicação mais um
 # ciclo**. Um prazo uniforme não serviria: acusaria de velhas as fontes que são
-# lentas por construção — as Contas Nacionais têm dois anos de desfasamento e
+# lentas por construção, as Contas Nacionais têm dois anos de desfasamento e
 # está certo que tenham. O que se quer apanhar é a série que **parou**, não a
 # série que é lenta.
 #
@@ -1140,7 +1190,7 @@ LIMITES_FRESCURA = {
     "indice": (60, "O índice completo, com todas as classes, sai por volta do "
                    "dia 17 do mês seguinte ao de referência. Sessenta dias "
                    "tolera um mês em atraso e apanha o segundo."),
-    "variacoes": (60, "Mesma publicação do índice — sai no mesmo momento."),
+    "variacoes": (60, "Mesma publicação do índice, sai no mesmo momento."),
     "ponderadores": (450, "Anuais, publicados com os dados de janeiro, em "
                           "fevereiro. Quinze meses tolera uma vaga em atraso."),
     "contas_nacionais": (800, "As Contas Nacionais por finalidade saem com cerca "
@@ -1151,7 +1201,7 @@ LIMITES_FRESCURA = {
     "dimensao": (800, "EU-SILC, anual, com cerca de um ano de desfasamento."),
     "rendimento": (800, "EU-SILC, anual, com cerca de um ano de desfasamento."),
     "privacao": (800, "EU-SILC, anual, com cerca de um ano de desfasamento."),
-    "salario_minimo": (260, "Semestral — janeiro e julho. Oito meses e meio "
+    "salario_minimo": (260, "Semestral, janeiro e julho. Oito meses e meio "
                             "tolera um semestre em atraso."),
     "salario_medio": (800, "Contas Nacionais anuais por ramo de atividade, "
                            "publicadas no ano seguinte."),
@@ -1179,7 +1229,7 @@ SOFI_INCAPACIDADE = {
                  2022: 9.5,  2023: 9.9,  2024: 9.6,  2025: 9.3},
 }
 
-# Pessoas, em milhões — Portugal
+# Pessoas, em milhões, Portugal
 SOFI_MILHOES = {2017: 2.3, 2019: 1.6, 2020: 1.7, 2021: 1.6,
                 2022: 1.8, 2023: 1.6, 2024: 1.5, 2025: 1.5}
 
@@ -1189,7 +1239,7 @@ SOFI_MILHOES = {2017: 2.3, 2019: 1.6, 2020: 1.7, 2021: 1.6,
 ORGANISMO = "Secretaria-Geral do Governo"
 UNIDADE = "DSSD · Unidade de Pesquisa e Estatísticas"
 RODAPE = (
-    "Ferramenta de trabalho interno — não constitui posição oficial da "
+    "Ferramenta de trabalho interno, não constitui posição oficial da "
     "Secretaria-Geral do Governo. Os dados são obtidos em direto do Eurostat; "
     "o valor de referência do cabaz e as taxas de IVA são parâmetros do utilizador."
 )
@@ -1216,10 +1266,17 @@ def euro(valor, casas: int = 2) -> str:
 
 
 def percentagem(valor, casas: int = 1, sinal: bool = True) -> str:
+    """
+    Percentagem à portuguesa: vírgula decimal e **símbolo colado ao número**.
+
+    O Livro de Estilo da SGGov, E.3, é explícito: o símbolo segue o número sem
+    espaço. Como quase todas as percentagens da aplicação passam por aqui, é
+    esta linha que decide a conformidade do conjunto (13.08.2026).
+    """
     if valor is None:
         return "—"
     pre = "+" if (sinal and valor > 0) else ""
-    return f"{pre}{valor:.{casas}f}".replace(".", ",") + " %"
+    return f"{pre}{valor:.{casas}f}".replace(".", ",") + "%"
 
 
 # As três funções seguintes existem para que nenhuma frase volte a ser

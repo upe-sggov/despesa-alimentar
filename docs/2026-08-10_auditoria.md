@@ -3633,3 +3633,744 @@ aparece quando se vai verificar — que é precisamente por isso que se faz audi
 
 *Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.
 Não constitui posição oficial.*
+
+---
+
+# L — Quinta auditoria: auditoria final ao `app.py` — 12 de agosto de 2026
+
+**Âmbito:** `app.py` na íntegra (4 446 linhas), com incursões em `src/config.py`,
+`src/calculos.py`, `src/eurostat.py` e `src/observatorio.py` sempre que o defeito nascia lá e
+se via aqui.
+
+**Método — e é diferente das quatro rondas anteriores.** Além da leitura do código e da
+reexecução dos cálculos contra as ligações em direto, esta ronda **correu a aplicação**, sem
+navegador, com o `AppTest` do Streamlit:
+
+- **renderização completa** nas duas bases de âncora, nas três escalas, em cinco composições
+  (1 adulto, 2, 5 adultos, 5+3 crianças), nos quatro cenários de IVA, nas três vistas do
+  separador UE-27, com a repercussão em 0 % e em 100 %, e com o cursor do histórico nos
+  extremos — **um mês, dois meses, série completa**;
+- **injeção de falhas**: cada ligação declarada «opcional» no `carregar_dados` foi
+  forçada a falhar, uma de cada vez, para ver o que a aplicação faz quando ela não responde.
+  Foi este teste que apanhou o **L2**, e nenhuma leitura de código o teria apanhado;
+- **reconstituição numérica** de todas as afirmações quantitativas inscritas no texto, contra os
+  dados obtidos na sessão.
+
+> **Conclusão em três linhas.** Não há erros de cálculo — pelo quinto exercício seguido, a
+> aritmética resiste. **Há um erro de apresentação que produz uma frase impossível no ecrã**
+> («0,9 vezes mais»), **e uma falha de arquitetura que derruba a aplicação inteira por causa de
+> uma ligação que a própria aplicação declara opcional**. O resto é rigor: números escritos à
+> mão que envelheceram, uma justificação que diz o contrário da tabela que está por cima dela,
+> e um recuo que acontecia sem uma palavra.
+
+**Resumo por gravidade:**
+
+| | N.º | Efeito |
+|---|---|---|
+| 🔴 Crítico | 2 | Texto factualmente errado no ecrã · aplicação inutilizável |
+| 🟠 Importante | 5 | Afirmações desatualizadas ou invertidas em blocos de leitura obrigatória |
+| 🟡 A corrigir | 12 | Rigor, rastreabilidade, robustez, apresentação |
+| ⚪ Declarado | 3 | Higiene de código e um resíduo justificado |
+
+**Todos os vinte e dois itens estão corrigidos e verificados em execução.** Os 134 testes
+continuam a passar.
+
+---
+
+## 🔴 L1 · Na base Contas Nacionais, a caixa do custo orçamental compara a fonte consigo mesma — e escreve «0,9 vezes mais»
+
+**Onde:** `app.py`, separador do IVA, bloco «Isto não é uma estimativa de custo orçamental».
+
+**O que se passa.** O bloco confronta a base do simulador com a despesa alimentar das Contas
+Nacionais, para mostrar que as duas bases oficiais estão longe uma da outra. Estava escrito
+**como se a base ativa fosse sempre o IDF**. Quando o utilizador escolhe as Contas Nacionais na
+barra lateral, o numerador do rácio passa a ser a própria fonte com que se está a comparar, e o
+resultado inverte-se.
+
+**Reproduzido em execução, com os dados de hoje:**
+
+| Base ativa | Base do simulador | Contas Nacionais | Rácio | O que a aplicação escrevia |
+|---|---|---|---|---|
+| IDF 2022/2023 | 15 387 M€ | 33 038 M€ | 2,147 | «2,1 vezes mais» ✅ |
+| **Contas Nacionais** | **35 706 M€** | **33 038 M€** | **0,925** | **«0,9 vezes mais»** ❌ |
+
+«0,9 vezes mais» não é uma frase possível. E não era o único problema do bloco: a abertura
+afirmava que a ferramenta mede «a despesa das famílias residentes, **apurada por inquérito**»,
+o que é falso quando a base ativa são as Contas Nacionais, e o título anunciava que «as duas
+bases não estão perto uma da outra» a propósito de dois números que, nessa base, **medem a
+mesma fonte**.
+
+**Porque é que importa mais do que parece.** É o bloco onde a ferramenta se demarca de uma
+estimativa de custo orçamental. É exatamente o parágrafo que alguém citaria numa reunião, e o
+que ali estava era indefensável.
+
+**Correção.** Três coisas ao mesmo tempo:
+
+1. A abertura passa a **depender da base ativa**: com as Contas Nacionais deixa de dizer
+   «apurada por inquérito» e explica que o custo orçamental exige a base tributável.
+2. O rácio passa a seguir o **sentido que tem**, em vez de o presumir: se as Contas Nacionais
+   forem menores, escreve «1,08 vezes menos (93 % do valor acima)».
+3. Na base Contas Nacionais acrescenta-se o que a diferença residual é de facto — despesa de
+   2024 a preços de jun/26 multiplicada pelos agregados de 2025 e não pelos 4 473 300 do ano da
+   despesa — e diz-se expressamente que **isto não mede a distância entre as duas bases
+   oficiais**, remetendo para a base IDF quem quiser essa leitura.
+
+**Verificado em execução**, nas duas bases. Com o IDF: «2,15 vezes mais». Com as Contas
+Nacionais: «1,08 vezes menos (93 % do valor acima)», seguido da explicação.
+
+---
+
+## 🔴 L2 · Uma ligação declarada opcional derruba a aplicação inteira — incluindo na base por defeito, que não a usa
+
+**Onde:** `app.py`, `ancora_oficial()` e a barra lateral.
+
+**O que se passa.** O `carregar_dados` apanha a falha da despesa das Contas Nacionais e
+comenta, textualmente: *«opcional: pode não estar disponível para o último ano; a aplicação
+funciona sem ela»*. Não funciona. A `ancora_oficial` abria com
+
+```python
+if not dados.get("despesa_milhoes") or not agregados:
+    return None
+```
+
+e a barra lateral respondia a esse `None` com `st.stop()`. **A aplicação inteira parava.**
+
+**O que torna isto grave.** A base por defeito é o **IDF**, e a âncora do IDF é uma constante
+publicada pelo INE atualizada pelo índice de preços: **não divide agregado macroeconómico
+nenhum e não precisa das Contas Nacionais para coisa alguma**. Um utilizador na base por
+defeito ficava sem aplicação por causa de uma fonte que a sua base não consome — e a mensagem
+de erro falava-lhe de Contas Nacionais, que ele não tinha escolhido.
+
+**Confirmado por injeção de falha**, forçando `eurostat.despesa_alimentar` a levantar exceção:
+seis separadores por renderizar, `st.stop()` acionado, uma única mensagem de erro. As outras
+quatro ligações opcionais testadas — dimensão do agregado, n.º de agregados, ponderadores por
+subclasse, rendimento — degradavam corretamente.
+
+**Correção.** A `ancora_oficial` passa a construir cada base **independentemente**: a das
+Contas Nacionais só entra se a despesa e os agregados existirem; a do IDF entra sempre. Devolve
+`None` apenas se **nenhuma** for calculável, e assinala `base_unica` quando só há uma.
+
+As opções da barra lateral passam a ser **as bases efetivamente calculáveis nesta sessão**, e
+não a lista fixa do `config`. Com uma só base, o seletor dá lugar a uma nota que o diz, e três
+blocos que assumiam a existência de duas — o cartão do intervalo, o «De onde vem este valor» e
+a sensibilidade à base no simulador — ganham a sua variante de base única. O cartão de topo
+troca a nota dourada do intervalo por uma **nota vermelha**: sem intervalo, o valor é um ponto
+de uma só base e não deve ser lido como valor central de nada.
+
+**Verificado em execução**, com a mesma injeção de falha: seis separadores renderizados, âncora
+IDF em 281,06 €/mês, despesa do agregado de 2 pessoas em 241,32 €/mês, sem exceções, com as
+quatro declarações de base única visíveis.
+
+---
+
+## 🟠 L3 · «Cerca de 1,8 vezes» — hoje são 1,47
+
+**Onde:** `app.py`, bloco «⚠️ O que estes números assumem — **leitura obrigatória**», na base
+Contas Nacionais.
+
+**O que se passa.** O bloco justificava a advertência de que os rácios de esforço são limites
+superiores com um número inscrito à mão: *«O consumo por agregado das Contas Nacionais é
+estruturalmente cerca de 1,8 vezes o rendimento do EU-SILC — rácio que implicaria taxa de
+poupança fortemente negativa.»*
+
+**Recalculado com os dados de hoje:**
+
+| | Valor |
+|---|---|
+| Consumo total das famílias, `nama_10_cp18` 2024 | 192 796 M€ |
+| ÷ agregados de 2024 ÷ 12 | **3 592 €/mês** |
+| Rendimento equivalente EU-SILC 2025 × unidades do agregado médio | **2 442 €/mês** |
+| **Rácio** | **1,47** — e não 1,8 |
+
+O argumento sobrevive — 1,47 continua a implicar poupança negativa —, mas o número estava
+errado em 22 %, num bloco que a própria aplicação rotula «leitura obrigatória».
+
+**Correção.** O rácio passa a ser **calculado na sessão**, com o ano de cada fonte nomeado, e
+tem uma variante para o caso de não ser calculável.
+
+---
+
+## 🟠 L4 · A justificação dos 95 % diz o contrário da tabela que está imediatamente por cima
+
+**Onde:** `app.py`, expansor da calibração da repercussão; `src/config.py`, junto de
+`REPERCUSSAO_PADRAO`.
+
+**O que se passa.** A aplicação apresenta uma tabela com os quatro ρ derivados dos números do
+Banco de Portugal, e **logo por baixo** escrevia: *«Toma-se a mais conservadora das duas
+estimativas de diferença-nas-diferenças.»*
+
+A tabela, que está à vista, diz outra coisa:
+
+| Estimativa | Observado | Mecânico | ρ |
+|---|---|---|---|
+| DiD vs. **Espanha** | −4,0 % | −4,2 % | **95,2 %** ← adotada |
+| DiD vs. área do euro | −3,5 % | −4,2 % | **83,3 %** |
+
+**95,2 % é a mais alta das duas, não a mais conservadora.** O `config.py` repetia a mesma
+inversão no comentário que fixa o parâmetro.
+
+**A escolha está certa; a justificação é que estava trocada.** A estimativa com Espanha como
+controlo é a única cujo contrafactual o BdP declara estatisticamente confirmado — é por isso
+que é a adotada, e não por prudência.
+
+**Correção.** O texto passa a dizer o que se passa: escolhe-se pela qualidade do contrafactual,
+é a mais alta das duas, e a mais baixa **não desaparece — é o extremo inferior da banda**, com
+indicação de que arrastar o cursor para os 83 % dá a leitura conservadora. Os dois ρ da frase
+são lidos da tabela, não escritos à mão. O comentário do `config.py` foi corrigido no mesmo
+sentido.
+
+---
+
+## 🟠 L5 · O registo de ligações chama «líquido» ao salário médio bruto
+
+**Onde:** `app.py`, `carregar_dados()`; `src/eurostat.py`, comentário de `salario_medio()`.
+
+**O que se passa.** O registo de ligações — o painel de rastreabilidade da Metodologia —
+apresentava a linha **«Salário médio líquido»**. A série é `nama_10_a10` D11 ÷ trabalhadores
+por conta de outrem: é **bruta**, antes de imposto e contribuições. A aplicação diz-o em quatro
+sítios diferentes, e um deles abre com *«A diferença entre bruto e líquido não é um detalhe.»*
+
+Em `eurostat.py`, o comentário sobre a mesma função falava de *«conjunto de remunerações
+**líquidas** anuais»*.
+
+**Correção.** O rótulo passa a **«Salário médio bruto (massa salarial ÷ TCO)»**, numa constante
+única usada nos dois ramos (sucesso e falha). O comentário do `eurostat.py` foi reescrito.
+
+**Achado colateral, corrigido.** O comentário que descrevia os indicadores de rendimento do
+EU-SILC estava colocado por cima do bloco do salário médio, a três blocos de distância do
+código que descreve.
+
+---
+
+## 🟠 L6 · O recuo da dimensão média do agregado era o único que acontecia em silêncio
+
+**Onde:** `app.py`, barra lateral — `dim_efetiva = dim_media if dim_media else DIMENSAO_RECUO`.
+
+**O que se passa.** A dimensão média do agregado é o **denominador** de
+`despesa_do_agregado`: entra em todos os valores em euros da aplicação. Se o `ilc_lvph01` não
+responder, entra em seu lugar a constante `DIMENSAO_RECUO = 2.4` — **e não é dito em lado
+nenhum**, além de uma linha «indisponível» no registo de ligações.
+
+Isto contraria a doutrina que as quatro auditorias anteriores fixaram e que a aplicação segue
+em toda a parte: o recuo do n.º de agregados é declarado («N.º de agregados: INE, Censos
+2021»), a idade do SOFI é declarada, a do Observatório é declarada, a frescura de todas as
+séries com API é declarada. Este não era.
+
+**A prova de que era um esquecimento e não uma decisão:** o `config.py` define
+`DIMENSAO_RECUO_FONTE` precisamente para o declarar, o `app.py` importava essa constante — e
+**nunca a usava**. Foi o `pyflakes` que a assinalou como importação morta.
+
+**Correção.** Quando a série não responde, a barra lateral passa a mostrar um aviso com o valor
+da constante, a sua fonte, e a consequência: *«Todos os valores em euros por agregado dependem
+deste número.»* A Metodologia ganhou o parágrafo correspondente, ao lado do recuo dos
+agregados.
+
+**Verificado por injeção de falha** em `eurostat.dimensao_agregado`.
+
+---
+
+## 🟠 L7 · «Como é calculado» descreve sempre as Contas Nacionais — inclusive na base IDF, que é a base por defeito
+
+**Onde:** `app.py`, separador «Despesa e composição», expansor «🧮 Como é calculado».
+
+**O que se passa.** O passo 1 dizia, sem condição nenhuma: *«Das Contas Nacionais vem a despesa
+anual de todas as famílias em produtos alimentares. Divide-se pelo número de agregados desse
+mesmo ano e por doze.»*
+
+Com a base IDF — **que é a base por defeito** — nenhuma dessas três operações acontece: o IDF
+publica a despesa **por agregado**, medida diretamente, e só se divide por doze. O expansor «De
+onde vem este valor», na barra lateral, já ramificava corretamente; este contradizia-o a dois
+cliques de distância.
+
+**Correção.** O passo 1 ramifica por base, e o bloco passa a nomear a base que está a
+descrever, com remissão para a Metodologia, que apresenta as duas fórmulas lado a lado.
+
+---
+
+## 🟡 L8 · A tabela de frescura mostrava idades negativas
+
+**Onde:** `app.py`, expansor «⏱️ Estas séries ainda estão a avançar?».
+
+A idade conta-se a partir do **fim** do período, «a leitura mais favorável à fonte». Numa série
+anual cujo último período é o ano corrente, esse fim ainda não chegou:
+
+| Série | Último período | «Idade (dias)» |
+|---|---|---|
+| Ponderadores por classe | 2026 | **−141** |
+| Ponderadores por subclasse | 2026 | **−141** |
+| Salário mínimo nacional | 2026-S2 | **−141** |
+
+Uma idade de menos 141 dias não significa nada para quem lê. A lógica do alarme estava certa —
+nenhuma destas séries é acusada de nada; era a **coluna** que estava errada.
+
+**Correção.** A idade é apresentada com mínimo zero e ganha um símbolo próprio, **🕓**, com a
+legenda «o período mais recente ainda está a decorrer — a série está à frente da data corrente
+e a idade é zero». Distingue-se assim de ✅ (dentro do prazo), que é outra coisa.
+
+---
+
+## 🟡 L9 · «A poupança varia 250 %» é um número herdado dos 40 %
+
+**Onde:** `app.py`, abertura do expansor da calibração da repercussão.
+
+*«Entre 0 % e 100 %, a poupança varia 250 %, mais do que todas as outras incertezas somadas.»*
+
+A poupança é **proporcional** a ρ: entre 0 % e 100 % vai de zero ao máximo, e a variação
+relativa não é 250 % — é indefinida. Os 250 % obtêm-se tomando **40 %** como referência
+(1,00 ÷ 0,40 = 2,5). É o valor por defeito antigo, que este mesmo expansor documenta ter sido
+substituído por 95 % a 12.08.2026. Face ao novo central, a amplitude seria de ~105 %.
+
+**Correção.** A frase passa a dizer o que é verdade e é verificável: a poupança é proporcional
+à repercussão, pelo que entre 0 % e 100 % vai de zero ao máximo, e nenhuma outra incerteza da
+aplicação tem esta amplitude.
+
+---
+
+## 🟡 L10 · A ressalva 5 remete para a ressalva 5
+
+**Onde:** `app.py`, lista de ressalvas da repercussão.
+
+> 5. Não se usa mais de 100 % por defeito, **pela razão da ressalva 5 acima**.
+
+Auto-referência. A razão está no `config.py` — os valores acima de 100 % refletem concorrência
+e saliência política, não repercussão pura — e perdeu-se ao transpor a lista para a interface.
+
+**Correção.** A ressalva 5 passa a conter a sua própria razão.
+
+---
+
+## 🟡 L11 · «Salivência»
+
+`app.py` e `src/config.py` diziam *«concorrência e **salivência** política»*. É **saliência**.
+Corrigido nos dois ficheiros.
+
+---
+
+## 🟡 L12 · O painel dos endereços tinha um conjunto sem rótulo e cinco pedidos com o mesmo
+
+**Onde:** `app.py`, expansor «🔗 Ver os dados em bruto — endereços exatos desta sessão».
+
+Duas coisas, no painel que existe para «verificar qualquer valor sem depender da aplicação»:
+
+1. **`ilc_mdes03` não constava do dicionário de rótulos.** A privação alimentar aparecia com o
+   código em bruto onde os outros têm uma descrição.
+2. **Dezanove endereços, dez conjuntos.** O `prc_hicp_minr` aparece **cinco vezes** — índice,
+   variações e UE-27, série longa de PT, agregados especiais, índice por classe — e as cinco
+   saíam com o **mesmo** rótulo, sem nada que as distinguisse. O `nama_10_cp18` três vezes, o
+   `ilc_di03` duas, o `prc_hicp_iw` duas.
+
+**Correção.** O `ilc_mdes03` ganhou rótulo. Quando um conjunto aparece mais de uma vez, cada
+linha passa a mostrar **«Pedido n · seleção `…`»** com a chave SDMX ou os filtros que a
+distinguem, e a legenda explica porquê.
+
+---
+
+## 🟡 L13 · Dois ficheiros CSV diferentes com o mesmo nome
+
+O botão do separador «Despesa e composição» e o do separador «Histórico» descarregavam ambos
+`despesa_alimentar_decomposicao_<data>.csv`, com conteúdos completamente diferentes — a
+decomposição por grupo de produto num caso, os agregados especiais do índice no outro. Quem
+descarregasse os dois ficava com dois ficheiros indistinguíveis na mesma pasta.
+
+**Correção.** O segundo passa a `despesa_alimentar_agregados_indice_<data>.csv`.
+
+---
+
+## 🟡 L14 · A etiqueta do gráfico de esforço não tinha a guarda que a tabela ao lado tem
+
+**Onde:** `app.py`, gráfico de barras do esforço alimentar.
+
+A tabela protegia-se: `f"{r['esforco']:.1f} %" if r["esforco"] is not None else "—"`. O
+gráfico, construído três linhas abaixo com os mesmos dados, formatava diretamente e levantaria
+`TypeError` se algum rendimento de referência viesse a zero. É o mesmo modo de falha, no mesmo
+sítio, sem a mesma guarda.
+
+**Correção.** Passa a usar o formatador partilhado `percentagem()`, que já trata `None`.
+
+---
+
+## 🟡 L15 · A observação mais recente dos agregados do índice era descartada em silêncio
+
+**Onde:** `app.py`, separador «Histórico», bloco «O que está por trás da subida».
+
+O cursor de intervalo é definido pelo índice **por classe**, que sai por volta do dia 17 do mês
+seguinte. A estimativa rápida dos **agregados** sai no último dia útil do mês de referência.
+Nesta sessão os agregados têm **2026-07** e o índice tem **2026-06**: o gráfico está alinhado
+com o cursor, e a observação de julho — que a aplicação obteve e tem em memória — desaparece.
+Nem sequer a tabela de frescura, que a lista, a relacionava com o cursor.
+
+**Correção.** Quando a série dos agregados vai além do fim do intervalo, aparece uma nota que o
+diz, explica a diferença de calendário de publicação, e declara que a observação existe e não é
+apresentada.
+
+---
+
+## 🟡 L16 · Números fixados à mão, quinta ocorrência do padrão do C2/E9/K8
+
+Cinco sítios onde o texto afirmava números que ninguém recalcula:
+
+| Onde | Estava | Hoje | Correção |
+|---|---|---|---|
+| Metodologia, passo 2 e ponderação | «21,05 €/mês — 8,3 %» | **21,44 €** — 8,3 % | Calculado dos dois modos de indexação |
+| Metodologia, quadro dos conjuntos | unidade «`I25`» | `I25` | Lê `dados["base_indice"]` |
+| Metodologia, quadro dos conjuntos | categoria «`A010101`» | `A010101` | Lê `dados["pli_cat"]` — a reserva mudaria |
+| Metodologia, recuos | «4 149 096», «3 939 900», «5,0 %» | idem | Das constantes e da série da sessão |
+| Metodologia, salário mínimo | «920 €» e «1 073 €» em 2026 | 2026-S2 | Derivado da série, com o ×12/14 |
+| Simulador, «quem recebe o quê» | «−4,4 pp», «−3,7 pp», «mais 20 %», «71 %», «quatro medidas» | idem | Todos das constantes do `config` |
+
+O caso do salário mínimo era o mais frágil: envelhecia **de seis em seis meses**, ao ritmo da
+publicação semestral do `earn_mw_cur`. O da janela do IDF estava escrito no presente
+(«subestimava o valor atual em 21,05 €/mês») e move-se com cada mês novo do índice.
+
+A citação metodológica do IDF passou a sair de `IDF_JANELA_FONTE` — uma constante que existia,
+era importada e **nunca era usada**, enquanto a Metodologia escrevia a mesma citação à mão em
+dois sítios.
+
+---
+
+## 🟡 L17 · Os três quadros do SOFI não têm o mesmo conjunto de anos
+
+**Onde:** `app.py`, bloco da acessibilidade alimentar.
+
+O ano de referência era `max(SOFI_INCAPACIDADE["Portugal"])` e servia depois para indexar
+`SOFI_CUSTO["Portugal"]` e `SOFI_CUSTO["Espanha"]` diretamente. Os quadros **já hoje divergem**:
+o da incapacidade tem 2020, o do custo não. Hoje o máximo coincide e funciona; na primeira
+edição do SOFI em que os anexos A1.5 e A1.6 divirjam no último ano, é `KeyError` — contido pelo
+`painel()`, mas com o separador inteiro substituído por uma mensagem técnica.
+
+**Correção.** O ano passa a ser o máximo da **interseção** dos quatro quadros, com recuo ao
+comportamento anterior se a interseção for vazia.
+
+---
+
+## 🟡 L18 · A coluna «Taxa média efetiva» mantinha o rótulo mesmo quando não era uma taxa efetiva
+
+**Onde:** `app.py`, editor de taxas do simulador de IVA.
+
+Sem os ponderadores por subclasse, a aplicação recorre à taxa **predefinida** de cada grupo e
+avisa-o num `st.warning` acima. Mas a coluna continuava a chamar-se «Taxa média efetiva (%)», o
+seu *tooltip* continuava a dizer «é apurada a partir da composição do grupo por subclasse», e a
+legenda por baixo continuava a afirmar «a coluna do meio é apurada, não escolhida» — três
+afirmações falsas, precisamente no caso em que o são.
+
+**Correção.** *Tooltip* e legenda ramificam por `_tem_apuramento` e dizem, nesse caso, que a
+coluna é a taxa predefinida e que subestima o imposto contido.
+
+---
+
+## 🟡 L19 · «Comparar composições» fixava uma escala e não o dizia
+
+**Onde:** `app.py`, expansor «👥 Comparar composições».
+
+A coluna **«Central (€)»** era calculada sempre com a escala `ocde_original`, fosse qual fosse a
+escolhida na barra lateral. O cabeçalho não a nomeava, e a legenda dizia apenas que «o intervalo
+resulta das diferentes escalas» — o leitor não tinha como saber que a coluna do meio ignorava a
+sua escolha.
+
+**Correção.** A coluna usa a escala ativa e **nomeia-a no cabeçalho** («OCDE original (€)», «Per
+capita (€)»…). A legenda declara-o.
+
+---
+
+## ⚪ L20 · O sinal das setas: uma poupança pintada de vermelho
+
+**Onde:** `app.py`, indicadores de topo do simulador de IVA.
+
+Duas setas do Streamlit ao contrário do que significam:
+
+- **«Nova despesa mensal»** com delta negativo — uma despesa que **desce** — saía a vermelho,
+  como se fosse má notícia para o agregado;
+- **«Capturado na margem»** exibia «5 % do efeito» com **seta verde a subir**, quando não é uma
+  variação de coisa nenhuma: é a fração que **não** chega ao consumidor.
+
+**Correção.** `delta_color="inverse"` no primeiro, `delta_color="off"` no segundo — que é o que
+o indicador do viés de substituição já fazia, três separadores antes.
+
+---
+
+## ⚪ L21 · Higiene: importações mortas e f-strings sem interpolação
+
+O `pyflakes` sobre `app.py` e `src/` devolvia seis avisos: três constantes importadas e nunca
+usadas (`DIMENSAO_RECUO_FONTE`, `IDF_FONTE`, `IDF_JANELA_FONTE`), três `f"""…"""` sem uma única
+substituição, e uma importação morta em `calculos.py` (`POR_CODIGO`).
+
+Não são inofensivos por acidente: **duas das três constantes mortas eram exatamente as que
+faltava usar** — a `DIMENSAO_RECUO_FONTE` no L6 e a `IDF_JANELA_FONTE` no L16. A importação
+morta era o sintoma da declaração em falta.
+
+**Correção.** As duas passaram a ser usadas, a terceira (`IDF_FONTE`, que chega à interface via
+`BASES_ANCORA`) e a do `calculos.py` foram removidas, e os `f` supérfluos retirados. O
+`pyflakes` passa agora limpo em todos os ficheiros do projeto.
+
+---
+
+## ⚪ L22 · «Posição em …» desenhava-se vazio
+
+**Onde:** `app.py`, separador UE-27, vista da inflação.
+
+Quando nenhum dos países selecionados tem observação no mês mais recente da série, a aplicação
+explicava-o corretamente — e a seguir escrevia o cabeçalho «#### Posição em …» e desenhava um
+gráfico de barras **vazio** por baixo da explicação, a desmenti-la.
+
+**Correção.** O cabeçalho, o gráfico e a legenda ficam sob a condição de haver observações. A
+condição é escrita com `or` para curto-circuitar quando `ranking` nem chega a existir.
+
+---
+
+## ⚪ Resíduo declarado, não corrigido
+
+**A lista de candidatas em `eurostat.salario_medio()`.** Restam três pares
+(massa salarial, emprego) tentados por ordem — é o padrão que o K3/K10 eliminou em todo o resto
+da aplicação. **Não é o mesmo defeito**: aqui as candidatas diferem no `na_item`, que vai tanto
+na chave SDMX **como** no filtro nominal da via de recurso, pelo que cada tentativa é
+discriminável e a lista não pode esconder qual foi usada — ao contrário do `earn_mw_cur`, onde
+os filtros não dependiam da chave e as candidatas 2 e 3 eram inalcançáveis. A primeira responde
+sempre; as outras existem porque o Eurostat já descontinuou códigos de emprego nesta família.
+Fica **declarado no código**, com esta justificação, em vez de removido.
+
+---
+
+## O que verifiquei e está correto
+
+- **Aritmética, pela quinta vez.** Decomposição aditiva, simulação de IVA, taxa média efetiva,
+  cabaz por quintil, Törnqvist, escalas de equivalência, intervalo de Engel — todos
+  reconstituídos por via independente, nenhum falhou.
+- **A taxa de capa (K1) continua a bater certo.** Oficial `CP011` em jun/26: **3,10 %**.
+  Reconstituída da decomposição: 2,97 %. Ponderando pelos valores correntes: **3,11 %** —
+  reproduz a oficial, que é exatamente o que o texto sob os gráficos afirma.
+- **Todas as dezoito ligações respondem pela via preferida (SDMX 2.1).** Nenhuma caiu na via
+  de recurso.
+- **Nenhuma série parada.** As catorze séries vigiadas estão dentro do prazo.
+- **Os ponderadores e as variações estão todos no mesmo período** — nenhuma classe
+  desalinhada, nenhuma classe sem ponderador, nenhuma sem variação. Cobertura do Törnqvist:
+  **nove classes em nove**.
+- **A aplicação renderiza sem uma única exceção** nas duas bases, nas três escalas, em cinco
+  composições, nos quatro cenários de IVA, nas três vistas do UE-27, com a repercussão em 0 % e
+  100 %, e com o cursor do histórico em intervalos de um mês, dois meses e série completa.
+- **Degrada corretamente** quando qualquer das cinco ligações opcionais falha — o que, antes
+  do L2, não era verdade para uma delas.
+- **134 testes passam.**
+
+---
+
+## Registo de aplicação — quinta auditoria, 12.08.2026
+
+**Os vinte e dois itens estão fechados.** Dois críticos (**L1, L2**), cinco importantes
+(**L3 … L7**), doze de rigor (**L8 … L19**) e três de higiene (**L20, L21, L22**), mais um
+resíduo declarado e justificado.
+
+### O que mudou no que a aplicação mostra
+
+| | Antes | Depois |
+|---|---|---|
+| Caixa do custo orçamental, base Contas Nacionais | «33 038 M€ — **0,9 vezes mais**» | «1,08 vezes menos (93 % do valor acima)», com a explicação do que a diferença é |
+| Sem as Contas Nacionais | **aplicação parada** | seis separadores, base IDF, quatro declarações de base única |
+| Rácio Contas Nacionais / EU-SILC | «cerca de 1,8 vezes» | **1,47 vezes**, calculado, com os anos nomeados |
+| Justificação dos 95 % | «a mais conservadora das duas» | «a mais alta das duas; escolhida pelo contrafactual — a conservadora é o extremo da banda» |
+| Registo de ligações | «Salário médio **líquido**» | «Salário médio **bruto** (massa salarial ÷ TCO)» |
+| «Como é calculado», base IDF | passo 1 das Contas Nacionais | passo 1 do IDF, com a base nomeada |
+| Tabela de frescura | «Idade: **−141 dias**» | «0», com o símbolo 🕓 e a sua legenda |
+| Efeito da janela do IDF | «21,05 €/mês» | **21,44 €/mês**, calculado |
+| «Comparar composições» | coluna «Central (€)», sempre OCDE original | coluna com o nome da escala ativa |
+
+### Três coisas que apareceram durante a aplicação, e não no diagnóstico
+
+**Primeira: o `pyflakes` apontou o L6 antes de mim.** A importação morta de
+`DIMENSAO_RECUO_FONTE` não era desarrumação — era o rasto de uma declaração que ficou por
+fazer. A constante existia para dizer de onde vem o recuo, e o recuo acontecia sem uma palavra.
+O mesmo com `IDF_JANELA_FONTE`, cuja citação a Metodologia escrevia à mão em dois sítios.
+
+**Segunda: o L2 só se vê a correr a aplicação.** O código lê-se bem — o `carregar_dados` apanha
+a exceção, comenta que a ligação é opcional, e continua. É preciso forçar a falha e ver o
+`st.stop()` disparar para perceber que o comentário está errado há quatro auditorias. Nenhuma
+das quatro rondas anteriores tinha corrido a aplicação em modo degradado.
+
+**Terceira: o L1 exigia mexer no seletor.** A base por defeito é o IDF, e na base por defeito o
+bloco está certo. Só trocando para as Contas Nacionais é que a frase impossível aparece — e o
+que a torna difícil de apanhar por leitura é que o cálculo está correto: o que está errado é a
+**prosa à volta dele**, que pressupõe uma base que pode não ser a ativa.
+
+### O padrão que atravessa esta ronda
+
+Quatro dos sete itens mais graves — L1, L3, L4, L7 — são **o mesmo defeito**: texto escrito
+para um estado da aplicação e apresentado em todos. Uma base que se pode trocar, um número que
+se pode recalcular, uma tabela que se pode reler. A aplicação já sabia fazer isto em vários
+sítios (o «De onde vem este valor» ramifica por base desde a auditoria B2; o rótulo do nível de
+preços é dinâmico desde a B3); o que faltava era aplicá-lo **em toda a parte onde a prosa faz
+uma afirmação sobre os dados**.
+
+A regra que fica inscrita, e que resume as cinco auditorias: **se uma frase contém um número ou
+pressupõe uma escolha, tem de o ir buscar — nunca afirmá-lo.**
+
+### Verificação final
+
+- `pytest`: **134 passam**, 0 falham.
+- `pyflakes` sobre `app.py`, `config.py`, `calculos.py`, `eurostat.py`, `observatorio.py`:
+  **limpo**.
+- `AppTest`: **20 renderizações completas** sem exceções — 2 bases × cenários, 3 escalas, 5
+  composições, 4 cenários de IVA, 3 vistas do UE-27, 2 extremos de repercussão, 3 extremos do
+  cursor do histórico, 1 estado sem países selecionados.
+- **5 injeções de falha**, uma por ligação opcional: nenhuma derruba a aplicação, todas
+  declaram o que perderam.
+- **0 marcadores `@…@` por substituir** no texto renderizado.
+
+---
+
+## Encerramento da quinta auditoria — 12.08.2026
+
+Nenhum dos vinte e dois itens era um erro de cálculo. Pela quinta vez seguida, a camada
+analítica resistiu a reconstituição independente — e é isso que justifica a confiança nos
+números que esta ferramenta produz.
+
+O que falhou foi outra coisa, e vale a pena nomeá-la com precisão porque é a lição que sobra:
+**a aplicação sabe calcular melhor do que sabe falar sobre o que calculou.** Uma frase que
+pressupõe a base IDF quando o utilizador escolheu as Contas Nacionais; um rácio de 2023 que
+ninguém voltou a medir; uma ligação chamada opcional que não o era. Nenhum destes defeitos dá
+erro, nenhum move um número, e todos eles seriam citáveis contra a ferramenta por quem os
+encontrasse primeiro.
+
+Está pronto para a fase de desenho. Duas notas para essa fase, que saem daqui:
+
+1. **O L20 já é meio desenho.** A cor de um delta é semântica, não estética — vermelho num
+   número que representa uma poupança inverte a leitura antes de a pessoa ler o rótulo. Há mais
+   decisões desse tipo por tomar, e devem ser tomadas com a mesma disciplina do resto.
+2. **As declarações de degradação são agora nove** — base única, dimensão de recuo, classes
+   desalinhadas, cobertura parcial, séries paradas, Observatório, SOFI, apuramento do IVA
+   indisponível, cobertura do Törnqvist. Em conjunto, num ecrã mau dia, são muitos avisos
+   empilhados. Vale a pena, no desenho, dar-lhes uma hierarquia visual em vez de os deixar
+   todos com o mesmo peso.
+
+---
+
+*Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.
+Não constitui posição oficial.*
+
+---
+
+# M — Varrimento dos ramos raramente acionados — 12 de agosto de 2026
+
+**Porquê.** A quinta auditoria fechou com uma ressalva explícita: a garantia cobria os caminhos
+que os **dados de hoje** acionam. Ficavam de fora onze ramos que existem no código e que a
+sessão normal nunca percorre — os avisos de degradação, os recuos, os casos-limite. Alguns
+tinham sido exercitados em auditorias anteriores; outros só existiam no papel.
+
+**Método.** Onze cenários, cada um adulterando a resposta de uma ligação — como o Eurostat a
+devolveria num dia mau — e verificando duas coisas: que a aplicação não rebenta, e que o aviso
+previsto para esse caso **aparece de facto**.
+
+| # | Cenário forçado | Resultado |
+|---|---|---|
+| 1 | Uma classe sem ponderador (`prc_hicp_iw` sem `CP0115`) | ✅ aviso vermelho, correto |
+| 2 | Uma classe sem variação homóloga | ✅ aviso, correto |
+| 3a | Ponderadores de anos diferentes entre classes | ✅ aviso, correto |
+| 3b | Variações de meses diferentes entre classes | ✅ aviso, correto |
+| 4 | Categoria preferida das PPP em baixo → reserva `A0101` | ✅ aviso, correto |
+| 5 | Classe sem série completa nos dezembros → fora do Törnqvist | ✅ aviso, correto |
+| 6 | Cobertura parcial no cabaz por quintil | ✅ «95,4 % da despesa alimentar», correto |
+| 7 | Ano-base do viés de substituição indisponível | ✅ aviso, correto |
+| 8 | Âncora das Contas Nacionais absurda (×500) | ❌ **M1 — sem alarme** |
+| 9 | Observatório sem recolha nenhuma | ✅ aviso, correto |
+| 10 | Série do Eurostat parada (`ilc_lvph01` em 2020) | ✅ ⛔ «1 série deixou de avançar», correto |
+| 11 | Deflação alimentar — todos os contributos negativos | ❌ **M2 — rótulos invertidos** |
+
+**Nove em onze passaram.** Nenhum dos onze cenários fez a aplicação rebentar: seis separadores
+renderizados em todos. Os dois que falharam estão corrigidos, e são de natureza diferente um do
+outro.
+
+---
+
+## 🟠 M1 · A guarda de plausibilidade só olhava para a base ativa — e o valor absurdo aparecia à mesma
+
+**Onde:** `app.py`, barra lateral.
+
+**O que se passa.** Existe uma verificação que rejeita âncoras fora de 50 € a 3 000 €/mês por
+agregado, com uma mensagem inequívoca: *«Valor fora do intervalo plausível. Não use estes
+números.»* Ela só testava `base_ancora` — **a base ativa**.
+
+Forçando a despesa das Contas Nacionais a 500 vezes o valor real, com o **IDF** selecionado
+(que é a base por defeito):
+
+- alarme de plausibilidade: **nenhum**;
+- barra lateral: «Intervalo entre as duas bases: **281,06 € a 326 112,43 €** por mês»;
+- cartão de topo: «a despesa mensal situa-se entre 281,06 € e **326 112,43 €**»;
+- «De onde vem este valor»: «Na outra base o mesmo agregado médio daria **326 112,43 €**»;
+- simulador de IVA: a sensibilidade à base apresentava a poupança nessa âncora.
+
+**A guarda existe exatamente para impedir isto, e a aplicação mostrava o número em quatro
+sítios sem uma palavra.** É a mesma família dos defeitos L1 e L18 desta ronda: uma verificação
+que existe e não cobre todos os sítios onde o número aparece.
+
+**Correção.** A plausibilidade passa a ser avaliada **nas duas bases**:
+
+- base ativa implausível → o erro existente, agora com o nome da base e o valor;
+- **outra** base implausível → erro novo, que diz que a base ativa não é afetada e enumera os
+  três sítios que consomem o número afetado, para que sejam ignorados;
+- a legenda do intervalo assinala o extremo suspeito.
+
+**Verificado**: alarme dispara nas duas bases, e o intervalo passa a trazer a ressalva.
+
+---
+
+## 🟡 M2 · Em deflação, três rótulos afirmavam o contrário do que mostravam
+
+**Onde:** `app.py`, cartões de topo do separador «Despesa e composição»;
+`src/calculos.py`, `resumo_decomposicao()`.
+
+**Não é um cenário hipotético.** Portugal teve deflação alimentar em 2014-2016. Invertendo o
+sinal das variações homólogas, a aplicação apresentava:
+
+| Estava | Problema |
+|---|---|
+| «**Agravamento** nos últimos 12 meses = **−9,79 €**» | um agravamento negativo é um alívio |
+| «🍎 **Maior contributo** = **−0,07 €**» | `idxmax` sobre contributos todos negativos devolve o **menos** negativo: era a classe que **menos** pesou, apresentada como a que mais pesou |
+| «Essa soma corresponde a uma **subida** de −3,9 %» | uma subida negativa |
+| «Quanto cada grupo pesou no **agravamento** · Euros de **aumento**» | o gráfico mostrava barras verdes para baixo |
+
+O erro do «Maior contributo» é o mais sério dos quatro, porque não é de redação: **o número
+estava errado**. Escolhia a classe errada.
+
+**Correção.**
+
+- `resumo_decomposicao()` passa a escolher a classe de maior contributo **em valor absoluto**.
+  Com todos os contributos positivos — o caso normal — o resultado é idêntico ao anterior, pelo
+  que nada muda hoje.
+- Os rótulos seguem o sinal: «Alívio nos últimos 12 meses» / «Maior alívio», com o valor
+  apresentado em módulo, e «descida» em vez de «subida» na legenda dos contributos.
+- O título e a legenda do gráfico deixam de presumir aumento.
+
+**Verificado em deflação simulada:** «Alívio nos últimos 12 meses = **9,79 €**», «🐟 **Maior
+alívio** = 4,18 €» — o pescado, com −10,7 %, que é de facto a classe que mais puxou para baixo.
+Nenhum rótulo com «agravamento» sobra no ecrã. Em condições normais, os cartões e o valor da
+classe de maior contributo são exatamente os de antes.
+
+---
+
+## Estado após o varrimento
+
+- **134 testes** passam.
+- `pyflakes` limpo em `app.py` e nos quatro módulos de `src/`.
+- **11 ramos de degradação** forçados: nenhum rebenta, todos declaram o que perderam.
+- Somando às vinte e quatro renderizações da ronda L: **35 estados distintos da aplicação**
+  verificados sem uma única exceção.
+
+## O que continua fora da garantia
+
+Por honestidade, e para que a fase de desenho saiba com o que conta:
+
+1. **Combinações.** Os ramos foram forçados um de cada vez. Base única *e* sem apuramento de
+   IVA *e* em deflação, ao mesmo tempo, nunca correu.
+2. **O tempo.** Tudo foi verificado contra os dados de **12.08.2026**. A viragem do ano, uma
+   nova vaga do IDF ou outra migração de nomenclatura são eventos que nenhuma auditoria estática
+   antecipa — é para isso que existe a vigilância de frescura.
+3. **As fontes externas.** Os valores do Banco de Portugal, das fichas da AT e do SOFI estão
+   inscritos no `config.py` e foram verificados nas rondas anteriores contra os documentos. Esta
+   ronda não os reabriu.
+4. **O sinal de menos.** Os formatadores produzem hífen ASCII (`-9,79 €`) e o texto corrido usa
+   o menos tipográfico (`−9,79 €`). É consistente dentro de cada um, não é erro, e é **matéria
+   da fase de desenho** — mexer nos formatadores agora obrigaria a rever as asserções de
+   formatação da bateria de testes sem benefício analítico.
+
+---
+
+*Documento de trabalho interno — UPE · DSSD · Secretaria-Geral do Governo.
+Não constitui posição oficial.*
