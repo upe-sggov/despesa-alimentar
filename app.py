@@ -192,14 +192,14 @@ button, input, select, textarea {{
    corpo do texto corrido, em vez de dominar a página. As declarações estavam
    escritas; nunca chegavam a aplicar-se. */
 [data-testid="stMarkdownContainer"] :is(p, li):not([class*="sg-"]) {{
-  font-size: .9375rem; line-height: 1.7; color: var(--sg-texto-2);
+  font-size: .875rem; line-height: 1.7; color: var(--sg-texto-2);
 }}
 [data-testid="stMarkdownContainer"] strong {{ color: var(--sg-texto); font-weight: 600; }}
 [data-testid="stMarkdownContainer"] a {{ color: var(--sg-azul); text-decoration: none;
   border-bottom: 1px solid rgba(43,86,131,.3); }}
 [data-testid="stMarkdownContainer"] a:hover {{ border-bottom-color: var(--sg-azul); }}
 [data-testid="stCaptionContainer"] p {{
-  font-size: .8125rem; line-height: 1.62; color: var(--sg-texto-3);
+  font-size: .75rem; line-height: 1.58; color: var(--sg-texto-3);
 }}
 
 /* Hierarquia de títulos: quatro degraus, sem tamanhos intermédios. Mesma
@@ -286,8 +286,8 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 /* O tamanho e o peso do título têm de vencer o `h1: {{ fontSize, fontWeight }}`
    que a mesma função `Kf` injeta, e que está em (0,1,1). */
 [data-testid="stMarkdownContainer"] h1.sg-cabecalho__titulo {{
-  font-size: 1.875rem; font-weight: 600; letter-spacing: -.028em;
-  margin: 0; padding: 0; line-height: 1.15;
+  font-size: 1.625rem; font-weight: 600; letter-spacing: -.025em;
+  margin: 0; padding: 0; line-height: 1.18;
 }}
 .sg-cabecalho__sub {{
   font-size: .875rem; margin: .38rem 0 0;
@@ -336,28 +336,45 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    analítico (numerado, com filete), secção, rótulo de componente. O que
    distingue um bloco de uma secção é espaço e uma linha, não uma caixa. */
 .sg-pagina {{ margin: .25rem 0 1.5rem; }}
-.sg-pagina__t {{ font-size: 1.5rem; font-weight: 600; letter-spacing: -.025em;
-  color: var(--sg-texto); margin: 0; line-height: 1.25; }}
+/* Ancorado no contentor de markdown, em (0,2,1). É um <h1>, e o Streamlit
+   injeta `h1: {{ fontSize, fontWeight, padding }}` em (0,1,1) sobre esse mesmo
+   contentor: uma declaração de classe simples, em (0,1,0), perdia sempre, e o
+   título de página vinha a render no corpo de omissão do Streamlit em vez do
+   declarado aqui. O `padding: 0` anula o espaçamento que essa regra acrescenta
+   e que o `.sg-pagina` já dá. */
+[data-testid="stMarkdownContainer"] h1.sg-pagina__t {{
+  font-size: 1.375rem; font-weight: 600; letter-spacing: -.02em;
+  color: var(--sg-texto); margin: 0; padding: 0; line-height: 1.28;
+}}
 /* Sem `max-width`: as descrições acompanham a largura da página, por decisão
    da Inês (13.08.2026). A medida tipográfica de 72-74 caracteres favorece a
    leitura de texto corrido, mas estas são frases curtas de enquadramento e
    ficavam a meio da página, com o gráfico ou o quadro a ocupar o resto. */
-.sg-pagina__s {{ font-size: .9375rem; color: var(--sg-texto-2); margin: .55rem 0 0;
-  line-height: 1.65; }}
+.sg-pagina__s {{ font-size: .875rem; color: var(--sg-texto-2); margin: .55rem 0 0;
+  line-height: 1.68; }}
 
 .sg-secao {{ margin: var(--sg-e4) 0 var(--sg-e2); }}
 .sg-secao--topo {{ margin-top: 1.25rem; }}
-.sg-secao__t {{ font-size: 1.3125rem; font-weight: 600; letter-spacing: -.018em;
-  color: var(--sg-texto); margin: 0; line-height: 1.3; }}
-.sg-secao__d {{ font-size: .875rem; color: var(--sg-texto-3); margin: .5rem 0 0;
-  line-height: 1.65; }}
+/* Mesma correção do título de página, agora sobre <h2>. */
+[data-testid="stMarkdownContainer"] h2.sg-secao__t {{
+  font-size: 1.25rem; font-weight: 600; letter-spacing: -.015em;
+  color: var(--sg-texto); margin: 0; padding: 0; line-height: 1.3;
+}}
+.sg-secao__d {{ font-size: .8125rem; color: var(--sg-texto-3); margin: .5rem 0 0;
+  line-height: 1.6; }}
 /* Título de secção com (i). É o único caso em que o cabeçalho vem do Streamlit
    e não do nosso HTML: é o que dá acesso ao painel de ajuda, onde cabe a nota
    metodológica que estava em prosa por baixo dos gráficos. O aspeto é o mesmo
    do sg-secao__t; só a margem de topo é uniforme, sem a variante --topo. */
 [data-testid="stHeadingWithActionElements"] {{ margin: var(--sg-e4) 0 0; }}
-[data-testid="stHeadingWithActionElements"] :is(h1, h2, h3) {{
-  font-size: 1.3125rem; font-weight: 600; letter-spacing: -.018em;
+/* O título com (i) é renderizado **dentro** do contentor de markdown (o
+   `stHeadingWithActionElements` envolve a própria tag do cabeçalho, dentro do
+   `stMarkdownContainer`), pelo que apanha a mesma regra de emotion em (0,1,1)
+   que os outros títulos. Ancorá-lo no contentor põe-no em (0,2,1) e garante
+   que um título com ajuda não sai maior do que um título sem ela: ambos a
+   20 px. */
+[data-testid="stMarkdownContainer"] [data-testid="stHeadingWithActionElements"] :is(h1, h2, h3) {{
+  font-size: 1.25rem; font-weight: 600; letter-spacing: -.015em;
   color: var(--sg-texto); margin: 0; padding: 0; line-height: 1.3; }}
 .sg-secao--dep {{ margin-top: 0; }}
 
@@ -382,7 +399,9 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   color: var(--sg-texto-3); font-weight: 500; letter-spacing: .1em;
   margin-right: .8rem;
 }}
-.sg-bloco .sg-secao__t {{ margin-top: .55rem; }}
+/* Acompanha a especificidade da regra do <h2> acima, que agora está em (0,2,1)
+   e declara `margin: 0`: sem isto, o título colava-se ao rótulo do bloco. */
+[data-testid="stMarkdownContainer"] .sg-bloco h2.sg-secao__t {{ margin-top: .55rem; }}
 /* Quando o título do bloco tem (i), ele vem do Streamlit, no elemento
    seguinte: é preciso anular-lhe a margem de topo para que não se descole
    do rótulo do bloco. */
@@ -394,8 +413,8 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 .sg-comp {{ margin: var(--sg-e3) 0 .6rem; }}
 .sg-comp__t {{ font-size: .875rem; font-weight: 600; letter-spacing: .01em;
   color: var(--sg-texto); margin: 0; line-height: 1.4; }}
-.sg-comp__d {{ font-size: .8125rem; color: var(--sg-texto-3); margin: .3rem 0 0;
-  line-height: 1.6; }}
+.sg-comp__d {{ font-size: .75rem; color: var(--sg-texto-3); margin: .3rem 0 0;
+  line-height: 1.58; }}
 
 /* ---------- indicador principal (KPI de capa) -------------------------- */
 /* O número mais importante da página, e só um por página. A hierarquia face
@@ -434,9 +453,9 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   color: var(--sg-texto); margin: .55rem 0 0; font-variant-numeric: tabular-nums;
 }}
 .sg-hero__c {{
-  font-size: .8125rem; color: var(--sg-texto-3); margin: 1.3rem 0 0;
+  font-size: .75rem; color: var(--sg-texto-3); margin: 1.3rem 0 0;
   padding-top: 1rem; border-top: 1px solid var(--sg-grelha);
-  line-height: 1.55;
+  line-height: 1.58;
 }}
 .sg-hero__c strong {{ color: var(--sg-texto-2); font-weight: 600; }}
 .sg-hero__s {{ text-align: right; padding-bottom: .3rem; }}
@@ -513,8 +532,8 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 .sg-nota {{
   background: var(--sg-superficie); border: 0;
   border-left: 3px solid var(--sg-dourado); border-radius: 0;
-  padding: 1.3rem 1.75rem 1.35rem; margin: var(--sg-e3) 0; font-size: .875rem;
-  line-height: 1.72; color: var(--sg-texto-2); box-shadow: none;
+  padding: 1.3rem 1.75rem 1.35rem; margin: var(--sg-e3) 0; font-size: .8125rem;
+  line-height: 1.7; color: var(--sg-texto-2); box-shadow: none;
 }}
 .sg-nota__t {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .12em;
@@ -527,7 +546,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    de uma nota que é de 14. Este seletor tem a mesma especificidade (0,2,1) da
    regra genérica e vem depois dela na folha, que é o que o faz ganhar. */
 [data-testid="stMarkdownContainer"] .sg-nota :is(p, li) {{
-  font-size: .875rem; line-height: 1.72; color: var(--sg-texto-2);
+  font-size: .8125rem; line-height: 1.7; color: var(--sg-texto-2);
 }}
 .sg-nota li {{ margin-bottom: .45rem; }}
 .sg-nota--alerta {{ border-left-color: var(--sg-vermelho); }}
@@ -573,7 +592,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 .stTabs [data-testid="stTab"] {{
   flex: 0 0 auto; height: auto; padding: .7rem 0;
-  font-size: .8125rem; font-weight: 500; color: var(--sg-texto-3);
+  font-size: .75rem; font-weight: 500; color: var(--sg-texto-3);
   white-space: nowrap;
 }}
 .stTabs [data-testid="stTab"]:hover {{ color: var(--sg-texto); }}
@@ -707,7 +726,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   outline: 2px solid var(--sg-verde); outline-offset: 2px;
 }}
 [data-testid="stWidgetLabel"] p {{
-  font-size: .8125rem; font-weight: 500; color: var(--sg-texto-2);
+  font-size: .75rem; font-weight: 500; color: var(--sg-texto-2);
 }}
 /* Na barra lateral os botões são ações secundárias, não chamadas à ação. */
 [data-testid="stSidebar"] .stButton > button {{
@@ -735,7 +754,9 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   background: var(--sg-superficie); border-right: 1px solid var(--sg-borda);
 }}
 [data-testid="stSidebarUserContent"] {{ padding: 1.05rem 1.15rem 2.5rem; }}
-[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {{ font-size: .8125rem; }}
+/* A barra lateral deixou de ter corpo próprio para os rótulos de controlo:
+   segue o degrau global de 12 px, para não haver dois tamanhos quase iguais
+   a fazer o mesmo trabalho. */
 .sg-lateral__t {{
   font-size: .75rem; font-weight: 600; letter-spacing: .13em;
   text-transform: uppercase; color: var(--sg-verde); margin: 0;
