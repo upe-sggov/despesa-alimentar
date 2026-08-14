@@ -192,7 +192,7 @@ button, input, select, textarea {{
    corpo do texto corrido, em vez de dominar a página. As declarações estavam
    escritas; nunca chegavam a aplicar-se. */
 [data-testid="stMarkdownContainer"] :is(p, li):not([class*="sg-"]) {{
-  font-size: .875rem; line-height: 1.7; color: var(--sg-texto-2);
+  font-size: .8125rem; line-height: 1.7; color: var(--sg-texto-2);
 }}
 [data-testid="stMarkdownContainer"] strong {{ color: var(--sg-texto); font-weight: 600; }}
 [data-testid="stMarkdownContainer"] a {{ color: var(--sg-azul); text-decoration: none;
@@ -286,8 +286,8 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 /* O tamanho e o peso do título têm de vencer o `h1: {{ fontSize, fontWeight }}`
    que a mesma função `Kf` injeta, e que está em (0,1,1). */
 [data-testid="stMarkdownContainer"] h1.sg-cabecalho__titulo {{
-  font-size: 1.625rem; font-weight: 600; letter-spacing: -.025em;
-  margin: 0; padding: 0; line-height: 1.18;
+  font-size: 1.5rem; font-weight: 600; letter-spacing: -.022em;
+  margin: 0; padding: 0; line-height: 1.2;
 }}
 .sg-cabecalho__sub {{
   font-size: .875rem; margin: .38rem 0 0;
@@ -343,24 +343,24 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    declarado aqui. O `padding: 0` anula o espaçamento que essa regra acrescenta
    e que o `.sg-pagina` já dá. */
 [data-testid="stMarkdownContainer"] h1.sg-pagina__t {{
-  font-size: 1.375rem; font-weight: 600; letter-spacing: -.02em;
-  color: var(--sg-texto); margin: 0; padding: 0; line-height: 1.28;
+  font-size: 1.25rem; font-weight: 600; letter-spacing: -.018em;
+  color: var(--sg-texto); margin: 0; padding: 0; line-height: 1.26;
 }}
 /* Sem `max-width`: as descrições acompanham a largura da página, por decisão
    da Inês (13.08.2026). A medida tipográfica de 72-74 caracteres favorece a
    leitura de texto corrido, mas estas são frases curtas de enquadramento e
    ficavam a meio da página, com o gráfico ou o quadro a ocupar o resto. */
-.sg-pagina__s {{ font-size: .875rem; color: var(--sg-texto-2); margin: .55rem 0 0;
-  line-height: 1.68; }}
+.sg-pagina__s {{ font-size: .8125rem; color: var(--sg-texto-2); margin: .55rem 0 0;
+  line-height: 1.65; }}
 
 .sg-secao {{ margin: var(--sg-e4) 0 var(--sg-e2); }}
 .sg-secao--topo {{ margin-top: 1.25rem; }}
 /* Mesma correção do título de página, agora sobre <h2>. */
 [data-testid="stMarkdownContainer"] h2.sg-secao__t {{
-  font-size: 1.25rem; font-weight: 600; letter-spacing: -.015em;
-  color: var(--sg-texto); margin: 0; padding: 0; line-height: 1.3;
+  font-size: 1.125rem; font-weight: 600; letter-spacing: -.012em;
+  color: var(--sg-texto); margin: 0; padding: 0; line-height: 1.32;
 }}
-.sg-secao__d {{ font-size: .8125rem; color: var(--sg-texto-3); margin: .5rem 0 0;
+.sg-secao__d {{ font-size: .75rem; color: var(--sg-texto-3); margin: .5rem 0 0;
   line-height: 1.6; }}
 /* Título de secção com (i). É o único caso em que o cabeçalho vem do Streamlit
    e não do nosso HTML: é o que dá acesso ao painel de ajuda, onde cabe a nota
@@ -374,8 +374,8 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    que um título com ajuda não sai maior do que um título sem ela: ambos a
    20 px. */
 [data-testid="stMarkdownContainer"] [data-testid="stHeadingWithActionElements"] :is(h1, h2, h3) {{
-  font-size: 1.25rem; font-weight: 600; letter-spacing: -.015em;
-  color: var(--sg-texto); margin: 0; padding: 0; line-height: 1.3; }}
+  font-size: 1.125rem; font-weight: 600; letter-spacing: -.012em;
+  color: var(--sg-texto); margin: 0; padding: 0; line-height: 1.32; }}
 .sg-secao--dep {{ margin-top: 0; }}
 
 /* ---------- bloco analítico (super-secção) ----------------------------- */
@@ -390,7 +390,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 .sg-bloco--topo {{ margin-top: var(--sg-e4); }}
 .sg-bloco--so {{ margin-bottom: 0; }}
 .sg-bloco__r {{
-  font-size: .6875rem; font-weight: 600; letter-spacing: .16em;
+  font-size: .6875rem; font-weight: 600; letter-spacing: .12em;
   text-transform: uppercase; color: var(--sg-verde); margin: 0; line-height: 1.4;
 }}
 /* O número ordena, não anuncia: fica em cinzento e com menos peso do que o
@@ -411,8 +411,8 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 
 .sg-comp {{ margin: var(--sg-e3) 0 .6rem; }}
-.sg-comp__t {{ font-size: .875rem; font-weight: 600; letter-spacing: .01em;
-  color: var(--sg-texto); margin: 0; line-height: 1.4; }}
+.sg-comp__t {{ font-size: .8125rem; font-weight: 600; letter-spacing: .01em;
+  color: var(--sg-texto); margin: 0; line-height: 1.42; }}
 .sg-comp__d {{ font-size: .75rem; color: var(--sg-texto-3); margin: .3rem 0 0;
   line-height: 1.58; }}
 
@@ -435,7 +435,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 .sg-hero__p {{ min-width: min(100%, 15rem); }}
 .sg-hero__r {{
-  font-size: .6875rem; font-weight: 600; letter-spacing: .13em;
+  font-size: .6875rem; font-weight: 600; letter-spacing: .10em;
   text-transform: uppercase; color: var(--sg-texto-3); margin: 0; line-height: 1.4;
 }}
 /* Valor de partida, quando o cartão mostra uma transição (simulador de IVA). */
@@ -449,7 +449,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    dependente de ordem. Aqui não fica: os 36 px passam a ganhar sempre.
    Sem `!important` — a especificidade chega. */
 [data-testid="stMarkdownContainer"] p.sg-hero__v {{
-  font-size: 2.25rem; font-weight: 700; letter-spacing: -.035em; line-height: 1;
+  font-size: 2rem; font-weight: 700; letter-spacing: -.03em; line-height: 1;
   color: var(--sg-texto); margin: .55rem 0 0; font-variant-numeric: tabular-nums;
 }}
 .sg-hero__c {{
@@ -464,7 +464,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    definida em linha quando a variação tem sinal, e o `style` de elemento ganha
    a esta regra, que é o comportamento pretendido. */
 [data-testid="stMarkdownContainer"] p.sg-hero__sv {{
-  font-size: 1.375rem; font-weight: 700; letter-spacing: -.025em; line-height: 1;
+  font-size: 1.25rem; font-weight: 700; letter-spacing: -.022em; line-height: 1;
   margin: 0; color: var(--sg-texto); font-variant-numeric: tabular-nums;
 }}
 .sg-hero__sr {{
@@ -653,15 +653,14 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 [data-testid="stMetricLabel"] {{ overflow: visible; }}
 [data-testid="stMetricLabel"] p {{
-  font-size: .6875rem; font-weight: 600; letter-spacing: .08em;
+  font-size: .6875rem; font-weight: 600; letter-spacing: .06em;
   text-transform: uppercase; color: var(--sg-texto-3); line-height: 1.45;
   min-height: 2.1em;
 }}
-/* Nível 2 da escala: 22 px contra os 36 px do indicador de capa e os 13 px do
-   metadado. Desceu de 23 px para abrir a distância ao número de capa, e não o
-   contrário: o pedido era hierarquia, não letras maiores em toda a parte. */
+/* Nível 2 da escala: 20 px contra os 32 px do indicador de capa e os 11 px do
+   seu rótulo. A distância continua a chegar para o número de capa dominar. */
 [data-testid="stMetricValue"] {{
-  font-size: 1.375rem; font-weight: 700; letter-spacing: -.03em;
+  font-size: 1.25rem; font-weight: 700; letter-spacing: -.025em;
   color: var(--sg-texto); line-height: 1.2;
 }}
 [data-testid="stMetricDelta"] {{ font-size: .8125rem; font-weight: 600; padding-top: .3rem; }}
@@ -676,7 +675,9 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   border-radius: var(--sg-raio); background: var(--sg-superficie);
   box-shadow: none; padding: 1.1rem 1.4rem; color: var(--sg-texto-2);
 }}
-[data-testid="stAlertContainer"] :is(p, li) {{ font-size: .875rem; line-height: 1.72; }}
+/* Acompanha o corpo de texto: um `st.info` contém prosa analítica, e ficar um
+   degrau acima do texto que o rodeia fá-lo-ia ler como aviso de sistema. */
+[data-testid="stAlertContainer"] :is(p, li) {{ font-size: .8125rem; line-height: 1.7; }}
 [data-testid="stAlertContainer"] strong {{ color: var(--sg-texto); }}
 [data-testid="stAlertContainer"]:has([data-testid="stAlertContentInfo"]) {{
   border-left-color: var(--sg-azul);
@@ -697,8 +698,10 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   border: 1px solid var(--sg-borda-1); border-radius: var(--sg-raio);
   background: var(--sg-superficie); box-shadow: none;
 }}
+/* O sumário é o título de um bloco recolhível: alinha com o título de
+   componente, que é a mesma função. */
 [data-testid="stExpander"] summary {{
-  padding: .9rem 1.2rem; font-size: .875rem; font-weight: 500;
+  padding: .9rem 1.2rem; font-size: .8125rem; font-weight: 500;
   color: var(--sg-texto);
 }}
 [data-testid="stExpander"] summary:hover {{ color: var(--sg-verde); }}
@@ -757,8 +760,11 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 /* A barra lateral deixou de ter corpo próprio para os rótulos de controlo:
    segue o degrau global de 12 px, para não haver dois tamanhos quase iguais
    a fazer o mesmo trabalho. */
+/* Tracking mais curto em tudo o que é versalete. O espaçamento largo dava a
+   estes rótulos uma presença que não corresponde ao seu lugar na hierarquia:
+   são etiquetas, não títulos. O corpo de letra não desce; só o tracking. */
 .sg-lateral__t {{
-  font-size: .75rem; font-weight: 600; letter-spacing: .13em;
+  font-size: .75rem; font-weight: 600; letter-spacing: .10em;
   text-transform: uppercase; color: var(--sg-verde); margin: 0;
 }}
 .sg-lateral__d {{ font-size: .75rem; color: var(--sg-texto-3); margin: .35rem 0 0;
@@ -767,7 +773,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    vertical do que controlos, e obrigava a deslocar a página para chegar ao
    botão de recarregamento. */
 .sg-grupo {{
-  font-size: .6875rem; font-weight: 600; letter-spacing: .1em;
+  font-size: .6875rem; font-weight: 600; letter-spacing: .08em;
   text-transform: uppercase; color: var(--sg-texto-3);
   margin: 1.3rem 0 .45rem; padding-top: .9rem;
   border-top: 1px solid var(--sg-borda);
@@ -809,6 +815,28 @@ footer:not(.sg-rodape) {{ visibility: hidden; }}
 [data-testid="stDataFrame"], [data-testid="stExpander"], [data-testid="stMetric"],
 [data-testid="stAlertContainer"], [data-testid="stPopoverBody"],
 .stButton > button, .stDownloadButton > button {{ box-shadow: none; }}
+
+/* ---------- ecrãs realmente largos ------------------------------------- */
+/* A escala compacta acima é a **normal**: a aplicação não depende de um ecrã
+   grande para estar equilibrada. Acima de 1800 px sobra largura, e cinco níveis
+   ganham um degrau — só cinco. Rótulos, legendas, metadados, separadores e
+   cabeçalhos da barra lateral **não** sobem: se subissem, isto deixava de ser
+   uma escala e passava a ser um zoom. O indicador de capa vai a 34 px, e não
+   volta aos 36 de onde veio.
+   Os seletores repetem os das regras base porque a media query não altera a
+   especificidade: qualquer um mais fraco perderia para a regra que substitui. */
+@media (min-width: 1800px) {{
+  [data-testid="stMarkdownContainer"] p.sg-hero__v {{ font-size: 2.125rem; }}
+  [data-testid="stMarkdownContainer"] h1.sg-pagina__t {{ font-size: 1.375rem; }}
+  [data-testid="stMarkdownContainer"] h2.sg-secao__t,
+  [data-testid="stMarkdownContainer"] [data-testid="stHeadingWithActionElements"] :is(h1, h2, h3) {{
+    font-size: 1.25rem;
+  }}
+  [data-testid="stMarkdownContainer"] :is(p, li):not([class*="sg-"]) {{
+    font-size: .875rem;
+  }}
+  .sg-pagina__s {{ font-size: .875rem; }}
+}}
 
 /* ---------- larguras intermédias --------------------------------------- */
 /* O Streamlit só empilha colunas abaixo de ~640 px. Entre isso e o ecrã
