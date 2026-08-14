@@ -126,6 +126,11 @@ st.markdown(f"""
   --sg-fundo: {FUNDO}; --sg-superficie: {SUPERFICIE};
   --sg-texto: {TEXTO}; --sg-texto-2: {TEXTO_2}; --sg-texto-3: {TEXTO_3};
   --sg-borda: {BORDA}; --sg-borda-2: {BORDA_2}; --sg-grelha: {GRELHA};
+  /* Contorno de contentor. É mais claro do que `--sg-borda`, que fica
+     reservada aos filetes que **separam** (blocos, secções, rodapé). A
+     distinção existe porque uma caixa não precisa de se afirmar para conter:
+     precisa apenas de não se confundir com o fundo. */
+  --sg-borda-1: #EBEFF4;
   --sg-tipo: {TIPO};
   --sg-raio: 2px;
   /* Escada de espaçamento. Nenhum componente inventa margens próprias:
@@ -153,11 +158,11 @@ button, input, select, textarea {{
 
 [data-testid="stAppViewContainer"], .stApp {{ background: var(--sg-fundo); }}
 [data-testid="stHeader"] {{ background: transparent; }}
-/* Largura útil de ~1256 px em ecrã largo (1352 menos as duas margens de 3rem).
-   Acima disso as linhas de texto ficam longas de mais; abaixo, os gráficos e
-   os quadros perdem o espaço de que precisam para se lerem. */
+/* Largura útil de ~1288 px em ecrã largo (1376 menos as duas margens de
+   2,75rem). Acima disso as linhas de texto ficam longas de mais; abaixo, os
+   gráficos e os quadros perdem o espaço de que precisam para se lerem. */
 [data-testid="stMainBlockContainer"] {{
-  padding: 2.25rem 3rem 1rem; max-width: 1352px;
+  padding: 2.25rem 2.75rem 1rem; max-width: 1376px;
 }}
 @media (max-width: 1200px) {{
   [data-testid="stMainBlockContainer"] {{ padding: 2rem 2rem 1rem; }}
@@ -172,45 +177,60 @@ button, input, select, textarea {{
 [data-testid="stMarkdownContainer"] td {{ font-variant-numeric: tabular-nums; }}
 
 /* ---------- texto corrente -------------------------------------------- */
-[data-testid="stMarkdownContainer"] :is(p, li) {{
-  font-size: .875rem; line-height: 1.68; color: var(--sg-texto-2);
+/* O `:not([class*="sg-"])` separa o markdown escrito pelo Streamlit dos
+   componentes desta aplicação, e **não é cosmético**.
+   `[data-testid="stMarkdownContainer"] :is(p, li)` tem especificidade (0,1,1)
+   porque `:is()` assume a do seu argumento mais específico; `.sg-hero__v` e
+   `.sg-cabecalho__inst` têm (0,1,0). A regra genérica ganhava, portanto, a
+   **todos** os nossos <p> e <h*>, que vivem dentro do mesmo contentor de
+   markdown. Consequências que se viam no ecrã: o cabeçalho institucional saía
+   a cinzento-escuro sobre o verde, em vez de branco, e o valor de capa saía ao
+   corpo do texto corrido, em vez de dominar a página. As declarações estavam
+   escritas; nunca chegavam a aplicar-se. */
+[data-testid="stMarkdownContainer"] :is(p, li):not([class*="sg-"]) {{
+  font-size: .9375rem; line-height: 1.7; color: var(--sg-texto-2);
 }}
 [data-testid="stMarkdownContainer"] strong {{ color: var(--sg-texto); font-weight: 600; }}
 [data-testid="stMarkdownContainer"] a {{ color: var(--sg-azul); text-decoration: none;
   border-bottom: 1px solid rgba(43,86,131,.3); }}
 [data-testid="stMarkdownContainer"] a:hover {{ border-bottom-color: var(--sg-azul); }}
 [data-testid="stCaptionContainer"] p {{
-  font-size: .78rem; line-height: 1.6; color: var(--sg-texto-3);
+  font-size: .8125rem; line-height: 1.62; color: var(--sg-texto-3);
 }}
 
-/* Hierarquia de títulos: quatro degraus, sem tamanhos intermédios. */
-[data-testid="stMarkdownContainer"] h1 {{ font-size: 1.75rem; font-weight: 600;
-  letter-spacing: -.025em; color: var(--sg-texto); margin: 0 0 .5rem; }}
-[data-testid="stMarkdownContainer"] h2 {{ font-size: 1.25rem; font-weight: 600;
-  letter-spacing: -.015em; color: var(--sg-texto); margin: 2.5rem 0 .5rem; }}
-[data-testid="stMarkdownContainer"] h3,
-[data-testid="stMarkdownContainer"] h4 {{ font-size: 1.0625rem; font-weight: 600;
+/* Hierarquia de títulos: quatro degraus, sem tamanhos intermédios. Mesma
+   ressalva de especificidade do bloco acima. */
+[data-testid="stMarkdownContainer"] h1:not([class*="sg-"]) {{ font-size: 1.75rem;
+  font-weight: 600; letter-spacing: -.025em; color: var(--sg-texto); margin: 0 0 .5rem; }}
+[data-testid="stMarkdownContainer"] h2:not([class*="sg-"]) {{ font-size: 1.3125rem;
+  font-weight: 600; letter-spacing: -.015em; color: var(--sg-texto); margin: 2.5rem 0 .5rem; }}
+[data-testid="stMarkdownContainer"] :is(h3, h4):not([class*="sg-"]) {{
+  font-size: 1.125rem; font-weight: 600;
   letter-spacing: -.01em; color: var(--sg-texto); margin: 2.25rem 0 .4rem; }}
-[data-testid="stMarkdownContainer"] h5,
-[data-testid="stMarkdownContainer"] h6 {{ font-size: .875rem; font-weight: 600;
+[data-testid="stMarkdownContainer"] :is(h5, h6):not([class*="sg-"]) {{
+  font-size: .9375rem; font-weight: 600;
   letter-spacing: .01em; color: var(--sg-texto); margin: 1.75rem 0 .35rem;
   text-transform: none; }}
 
 /* Tabelas de markdown com aspeto de quadro estatístico, e que não rebentam
-   a largura da página em ecrã estreito. */
+   a largura da página em ecrã estreito. Sem filetes verticais, cabeçalho
+   discreto, e ar suficiente entre linhas para não parecerem folha de cálculo. */
 [data-testid="stMarkdownContainer"] table {{
   display: block; width: fit-content; max-width: 100%; overflow-x: auto;
-  border-collapse: collapse; font-size: .8125rem; margin: .9rem 0 1rem;
+  border-collapse: collapse; font-size: .875rem; margin: 1rem 0 1.1rem;
 }}
 [data-testid="stMarkdownContainer"] th {{
-  text-align: left; font-size: .6875rem; font-weight: 600; letter-spacing: .07em;
+  text-align: left; font-size: .6875rem; font-weight: 600; letter-spacing: .08em;
   text-transform: uppercase; color: var(--sg-texto-3); background: transparent;
-  border: 0; border-bottom: 1px solid var(--sg-borda-2); padding: .5rem .85rem .45rem;
+  border: 0; border-bottom: 1px solid var(--sg-borda); padding: .6rem .95rem .5rem;
 }}
 [data-testid="stMarkdownContainer"] td {{
   border: 0; border-bottom: 1px solid var(--sg-grelha);
-  padding: .5rem .85rem; color: var(--sg-texto-2); vertical-align: top;
+  padding: .68rem .95rem; color: var(--sg-texto-2); vertical-align: top;
+  line-height: 1.6;
 }}
+/* Primeira coluna mais forte: é a que identifica a linha. */
+[data-testid="stMarkdownContainer"] td:first-child {{ color: var(--sg-texto); }}
 
 hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25rem; }}
 
@@ -225,26 +245,33 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   padding: 1.35rem 2rem 1.45rem; margin: 0 0 var(--sg-e3);
   display: flex; flex-direction: column; gap: 1rem; box-shadow: none;
 }}
-.sg-cabecalho__marca {{ display: flex; align-items: center; gap: .8rem; }}
+/* Tudo o que está sobre o verde é branco por omissão, declarado com a mesma
+   especificidade (0,1,1) das regras genéricas do markdown e depois delas na
+   folha, para que nenhuma regra herdada lhe volte a ganhar. Os dois níveis
+   secundários descem para .86 de opacidade: sobre o verde SGGov isso dá um
+   contraste de 4,6:1, ainda acima do mínimo de 4,5:1, ao contrário dos .72
+   anteriores, que ficavam em 3,7:1. */
+.sg-cabecalho :is(p, h1) {{ color: #fff; }}
+.sg-cabecalho__marca {{ display: flex; align-items: center; gap: .85rem; }}
 .sg-cabecalho__logo {{
   width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%;
   background: #fff; padding: 2px; display: block;
 }}
 .sg-cabecalho__inst {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .16em;
-  text-transform: uppercase; margin: 0; color: #fff; line-height: 1.25;
+  text-transform: uppercase; margin: 0; line-height: 1.25;
 }}
-.sg-cabecalho__uni {{
-  font-size: .72rem; font-weight: 400; margin: .16rem 0 0; line-height: 1.25;
-  color: rgba(255,255,255,.72);
+.sg-cabecalho :is(p).sg-cabecalho__uni {{
+  font-size: .75rem; font-weight: 400; margin: .18rem 0 0; line-height: 1.25;
+  color: rgba(255,255,255,.86); letter-spacing: .005em;
 }}
 .sg-cabecalho__titulo {{
-  font-size: 1.8rem; font-weight: 600; letter-spacing: -.028em;
-  margin: 0; color: #fff; line-height: 1.15;
+  font-size: 1.875rem; font-weight: 600; letter-spacing: -.028em;
+  margin: 0; line-height: 1.15;
 }}
-.sg-cabecalho__sub {{
-  font-size: .8125rem; margin: .35rem 0 0; color: rgba(255,255,255,.76);
-  max-width: 100ch; line-height: 1.55;
+.sg-cabecalho :is(p).sg-cabecalho__sub {{
+  font-size: .875rem; margin: .38rem 0 0; color: rgba(255,255,255,.86);
+  max-width: 100ch; line-height: 1.5;
 }}
 @media (max-width: 640px) {{
   .sg-cabecalho {{ padding: 1.2rem 1.2rem 1.3rem; gap: .9rem; }}
@@ -255,10 +282,11 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 /* Metadados de publicação estatística: rótulos pequenos em versalete, valores
    um degrau acima, separadores quase impercetíveis. Não é um cartão, e não
    compete com o primeiro indicador da página. */
+/* Sem caixa: fundo da página e um filete em baixo. É metadado de publicação,
+   não um cartão, e não tem de competir com o indicador de capa logo abaixo. */
 .sg-estado {{
-  background: var(--sg-superficie); border: 1px solid var(--sg-borda);
-  border-radius: var(--sg-raio); padding: .7rem 1.1rem .75rem;
-  margin: 0; box-shadow: none;
+  background: transparent; border: 0; border-bottom: 1px solid var(--sg-borda-1);
+  border-radius: 0; padding: .1rem 0 .85rem; margin: 0; box-shadow: none;
 }}
 .sg-estado__t {{
   font-size: .625rem; font-weight: 600; letter-spacing: .15em;
@@ -298,17 +326,17 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 
 .sg-secao {{ margin: var(--sg-e4) 0 var(--sg-e2); }}
 .sg-secao--topo {{ margin-top: 1.25rem; }}
-.sg-secao__t {{ font-size: 1.1875rem; font-weight: 600; letter-spacing: -.015em;
+.sg-secao__t {{ font-size: 1.3125rem; font-weight: 600; letter-spacing: -.018em;
   color: var(--sg-texto); margin: 0; line-height: 1.3; }}
-.sg-secao__d {{ font-size: .8125rem; color: var(--sg-texto-3); margin: .45rem 0 0;
-  line-height: 1.62; }}
+.sg-secao__d {{ font-size: .875rem; color: var(--sg-texto-3); margin: .5rem 0 0;
+  line-height: 1.65; }}
 /* Título de secção com (i). É o único caso em que o cabeçalho vem do Streamlit
    e não do nosso HTML: é o que dá acesso ao painel de ajuda, onde cabe a nota
    metodológica que estava em prosa por baixo dos gráficos. O aspeto é o mesmo
    do sg-secao__t; só a margem de topo é uniforme, sem a variante --topo. */
 [data-testid="stHeadingWithActionElements"] {{ margin: var(--sg-e4) 0 0; }}
 [data-testid="stHeadingWithActionElements"] :is(h1, h2, h3) {{
-  font-size: 1.1875rem; font-weight: 600; letter-spacing: -.015em;
+  font-size: 1.3125rem; font-weight: 600; letter-spacing: -.018em;
   color: var(--sg-texto); margin: 0; padding: 0; line-height: 1.3; }}
 .sg-secao--dep {{ margin-top: 0; }}
 
@@ -327,6 +355,12 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   font-size: .6875rem; font-weight: 600; letter-spacing: .16em;
   text-transform: uppercase; color: var(--sg-verde); margin: 0; line-height: 1.4;
 }}
+/* O número ordena, não anuncia: fica em cinzento e com menos peso do que o
+   nome do bloco, e nenhum dos dois compete com o título que vem a seguir. */
+.sg-bloco__n {{
+  color: var(--sg-texto-3); font-weight: 500; letter-spacing: .1em;
+  margin-right: .8rem;
+}}
 .sg-bloco .sg-secao__t {{ margin-top: .55rem; }}
 /* Quando o título do bloco tem (i), ele vem do Streamlit, no elemento
    seguinte: é preciso anular-lhe a margem de topo para que não se descole
@@ -336,55 +370,67 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   margin-top: .55rem;
 }}
 
-.sg-comp {{ margin: var(--sg-e3) 0 .55rem; }}
-.sg-comp__t {{ font-size: .8125rem; font-weight: 600; letter-spacing: .015em;
+.sg-comp {{ margin: var(--sg-e3) 0 .6rem; }}
+.sg-comp__t {{ font-size: .875rem; font-weight: 600; letter-spacing: .01em;
   color: var(--sg-texto); margin: 0; line-height: 1.4; }}
-.sg-comp__d {{ font-size: .78rem; color: var(--sg-texto-3); margin: .28rem 0 0;
-  line-height: 1.58; }}
+.sg-comp__d {{ font-size: .8125rem; color: var(--sg-texto-3); margin: .3rem 0 0;
+  line-height: 1.6; }}
 
 /* ---------- indicador principal (KPI de capa) -------------------------- */
 /* O número mais importante da página, e só um por página. A hierarquia face
    aos indicadores secundários é dada pelo corpo do número (2,4rem contra
    1,44rem) e pelo espaço à volta, não por cor nem por moldura. */
+/* Composição: rótulo em cima, valor à esquerda, grandeza que o qualifica à
+   direita, proveniência em baixo a atravessar o cartão. Três registos de
+   tamanho bem separados, 36 / 22 / 13 px, que são os três níveis da aplicação
+   inteira: número de capa, indicador secundário, metadado. */
 .sg-hero {{
-  background: var(--sg-superficie); border: 1px solid var(--sg-borda);
+  background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
   border-radius: var(--sg-raio); box-shadow: none;
-  padding: 1.85rem 2rem 1.7rem; margin: var(--sg-e2) 0 0;
-  display: flex; align-items: flex-end; justify-content: space-between;
-  gap: 1.5rem 2.5rem; flex-wrap: wrap;
+  padding: 1.9rem 2.1rem 1.55rem; margin: var(--sg-e2) 0 0;
 }}
-.sg-hero__p {{ min-width: min(100%, 16rem); }}
+.sg-hero__topo {{
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 1.1rem 2.5rem; flex-wrap: wrap;
+}}
+.sg-hero__p {{ min-width: min(100%, 15rem); }}
 .sg-hero__r {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .13em;
   text-transform: uppercase; color: var(--sg-texto-3); margin: 0; line-height: 1.4;
 }}
+/* Valor de partida, quando o cartão mostra uma transição (simulador de IVA). */
+.sg-hero__antes {{
+  font-size: .8125rem; color: var(--sg-texto-3); margin: .55rem 0 0;
+  line-height: 1.4; font-variant-numeric: tabular-nums;
+}}
 .sg-hero__v {{
-  font-size: 2.4rem; font-weight: 700; letter-spacing: -.035em; line-height: 1;
-  color: var(--sg-texto); margin: .6rem 0 0; font-variant-numeric: tabular-nums;
+  font-size: 2.25rem; font-weight: 700; letter-spacing: -.035em; line-height: 1;
+  color: var(--sg-texto); margin: .55rem 0 0; font-variant-numeric: tabular-nums;
 }}
 .sg-hero__c {{
-  font-size: .8125rem; color: var(--sg-texto-3); margin: .7rem 0 0;
-  line-height: 1.55; max-width: 72ch;
+  font-size: .8125rem; color: var(--sg-texto-3); margin: 1.3rem 0 0;
+  padding-top: 1rem; border-top: 1px solid var(--sg-grelha);
+  line-height: 1.55;
 }}
 .sg-hero__c strong {{ color: var(--sg-texto-2); font-weight: 600; }}
-.sg-hero__s {{ text-align: right; padding-bottom: .2rem; }}
+.sg-hero__s {{ text-align: right; padding-bottom: .3rem; }}
 .sg-hero__sv {{
-  font-size: 1.5rem; font-weight: 700; letter-spacing: -.025em; line-height: 1;
+  font-size: 1.375rem; font-weight: 700; letter-spacing: -.025em; line-height: 1;
   margin: 0; color: var(--sg-texto); font-variant-numeric: tabular-nums;
 }}
 .sg-hero__sr {{
-  font-size: .72rem; color: var(--sg-texto-3); margin: .4rem 0 0;
-  letter-spacing: .02em;
+  font-size: .78rem; color: var(--sg-texto-3); margin: .4rem 0 0;
+  letter-spacing: .01em;
 }}
 @media (max-width: 700px) {{
-  .sg-hero {{ padding: 1.4rem 1.35rem 1.3rem; }}
-  .sg-hero__v {{ font-size: 2rem; }}
+  .sg-hero {{ padding: 1.45rem 1.35rem 1.2rem; }}
+  .sg-hero__v {{ font-size: 1.875rem; }}
   .sg-hero__s {{ text-align: left; }}
 }}
 
 /* ---------- cartões de indicador -------------------------------------- */
 .sg-cartao {{
-  background: var(--sg-superficie); border: 1px solid var(--sg-borda);
+  background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
   border-radius: var(--sg-raio); padding: 1.45rem 1.5rem 1.3rem;
   height: 100%; display: flex; flex-direction: column; box-shadow: none;
 }}
@@ -408,16 +454,18 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   background: var(--sg-cor, var(--sg-borda-2)); }}
 .sg-cartao__cod {{ font-size: .6875rem; letter-spacing: .06em; color: var(--sg-texto-3);
   margin: .3rem 0 0; padding-left: calc(7px + .5rem); }}
-.sg-cartao__valor {{ font-size: 1.5rem; font-weight: 700; letter-spacing: -.03em;
+/* Mesmo corpo do valor de um indicador secundário: os cartões de grupo e os
+   `st.metric` são o mesmo degrau da escala, e tinham 24 px contra 22 px. */
+.sg-cartao__valor {{ font-size: 1.375rem; font-weight: 700; letter-spacing: -.03em;
   color: var(--sg-texto); margin: 1.35rem 0 0; line-height: 1; }}
-.sg-cartao__desc {{ font-size: .75rem; color: var(--sg-texto-3); margin: .4rem 0 0;
+.sg-cartao__desc {{ font-size: .78rem; color: var(--sg-texto-3); margin: .42rem 0 0;
   line-height: 1.5; }}
 /* Duas linhas, não uma: a variação homóloga e o contributo passaram a viver
    uma sobre a outra, cada uma com o seu rótulo. Antes a variação estava solta
    no canto superior do cartão, sem nome nenhum, era essa a origem da confusão,
    e não a posição (relatado pela Inês, 13.08.2026). */
 .sg-cartao__rodape {{ margin-top: auto; padding-top: 1.15rem;
-  border-top: 1px solid var(--sg-grelha); font-size: .75rem;
+  border-top: 1px solid var(--sg-grelha); font-size: .78rem;
   color: var(--sg-texto-3); line-height: 1.4; }}
 .sg-cartao__linha {{ display: flex; align-items: baseline;
   justify-content: space-between; gap: .6rem; }}
@@ -428,27 +476,37 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 /* Reservada ao insight de um bloco, no máximo um por bloco. Tudo o resto é
    texto corrido, legenda ou bloco recolhível: a caixa perde o efeito no
    momento em que se repete de parágrafo em parágrafo. */
+/* Nota editorial, não alerta de sistema. Perdeu o contorno completo: fica só
+   o acento dourado à esquerda sobre o branco, com mais ar interno. O contorno
+   fazia-a ler como aviso mesmo quando o conteúdo era explicativo. */
 .sg-nota {{
-  background: var(--sg-superficie); border: 1px solid var(--sg-borda);
-  border-left: 3px solid var(--sg-dourado); border-radius: var(--sg-raio);
-  padding: 1.35rem 1.6rem 1.4rem; margin: var(--sg-e3) 0; font-size: .8125rem;
-  line-height: 1.7; color: var(--sg-texto-2); box-shadow: none;
+  background: var(--sg-superficie); border: 0;
+  border-left: 3px solid var(--sg-dourado); border-radius: 0;
+  padding: 1.3rem 1.75rem 1.35rem; margin: var(--sg-e3) 0; font-size: .875rem;
+  line-height: 1.72; color: var(--sg-texto-2); box-shadow: none;
 }}
 .sg-nota__t {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--sg-dourado); margin: 0 0 .6rem;
+  text-transform: uppercase; color: var(--sg-dourado); margin: 0 0 .65rem;
 }}
 .sg-nota strong {{ color: var(--sg-texto); font-weight: 600; }}
-.sg-nota ul {{ margin: .5rem 0 0; padding-left: 1.15rem; }}
-.sg-nota li {{ margin-bottom: .4rem; }}
+.sg-nota ul {{ margin: .55rem 0 0; padding-left: 1.15rem; }}
+/* Os <li> de uma nota não trazem classe, pelo que caem dentro da guarda
+   `:not([class*="sg-"])` e apanhariam o corpo do texto corrido, 15 px, dentro
+   de uma nota que é de 14. Este seletor tem a mesma especificidade (0,2,1) da
+   regra genérica e vem depois dela na folha, que é o que o faz ganhar. */
+[data-testid="stMarkdownContainer"] .sg-nota :is(p, li) {{
+  font-size: .875rem; line-height: 1.72; color: var(--sg-texto-2);
+}}
+.sg-nota li {{ margin-bottom: .45rem; }}
 .sg-nota--alerta {{ border-left-color: var(--sg-vermelho); }}
 .sg-nota--alerta .sg-nota__t {{ color: var(--sg-vermelho); }}
 
 /* ---------- repartição consumidor / margem ---------------------------- */
 .sg-reparticao {{
-  border: 1px solid var(--sg-borda); border-radius: var(--sg-raio);
-  background: var(--sg-superficie); padding: 1rem 1.2rem 1.1rem;
-  font-size: .8125rem; color: var(--sg-texto-2); margin-top: .35rem;
+  border: 1px solid var(--sg-borda-1); border-radius: var(--sg-raio);
+  background: var(--sg-superficie); padding: 1.1rem 1.3rem 1.2rem;
+  font-size: .875rem; color: var(--sg-texto-2); margin-top: .35rem;
 }}
 .sg-reparticao__par {{ display: flex; gap: 1.5rem; margin-top: .85rem;
   flex-wrap: wrap; }}
@@ -465,7 +523,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    desalinharia na segunda linha, e passa a ser um filete no próprio botão. */
 .stTabs [data-baseweb="tab-list"] {{
   display: flex; flex-wrap: wrap; overflow: visible;
-  column-gap: 2rem; row-gap: 0; background: transparent;
+  column-gap: 1.75rem; row-gap: 0; background: transparent;
   border-bottom: 1px solid var(--sg-borda);
   margin: var(--sg-e3) 0 var(--sg-e4); padding: 0;
 }}
@@ -473,11 +531,23 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   flex: 0 0 auto; height: auto; padding: .7rem 0; background: transparent;
   border-radius: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
   font-size: .8125rem; font-weight: 500; color: var(--sg-texto-3);
-  white-space: nowrap; text-overflow: clip; min-width: 0;
+  white-space: nowrap;
 }}
 /* O rótulo vem dentro de um <p> com estilos próprios do Streamlit. */
 .stTabs [data-baseweb="tab"] :is(p, div, span) {{
   font-size: inherit; font-weight: inherit; color: inherit; white-space: nowrap;
+}}
+/* Nenhum nível da barra de navegação corta texto. O BaseWeb aplica
+   `overflow: hidden` e reticências em mais do que um contentor, e desligá-las
+   só no botão não chega: era daí que vinha o “Metodologia e…”. O `!important`
+   é deliberado, porque as regras do BaseWeb entram por emotion, com
+   especificidade mais alta do que qualquer seletor razoável desta folha. */
+.stTabs > div,
+.stTabs [data-baseweb="tab-list"],
+.stTabs [data-baseweb="tab"],
+.stTabs [data-baseweb="tab"] * {{
+  overflow: visible !important; text-overflow: clip !important;
+  max-width: none !important; min-width: 0;
 }}
 .stTabs [data-baseweb="tab"]:hover {{ background: transparent; color: var(--sg-texto); }}
 .stTabs [aria-selected="true"] {{
@@ -489,9 +559,14 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    versão do BaseWeb as emitir à mesma, ficam fora do caminho. */
 .stTabs [data-baseweb="tab-list"] > button[aria-label*="scroll" i],
 .stTabs [data-baseweb="tab-list"] ~ button[aria-label*="scroll" i] {{ display: none; }}
-@media (max-width: 1280px) {{
-  .stTabs [data-baseweb="tab-list"] {{ column-gap: 1.35rem; }}
-  .stTabs [data-baseweb="tab"] {{ font-size: .78rem; }}
+/* Em larguras intermédias encolhe-se o **intervalo** entre separadores, nunca
+   o corpo da letra: um rótulo ilegível não é melhor do que um rótulo cortado.
+   Esgotado o intervalo, a barra quebra para uma segunda linha. */
+@media (max-width: 1320px) {{
+  .stTabs [data-baseweb="tab-list"] {{ column-gap: 1.25rem; }}
+}}
+@media (max-width: 1100px) {{
+  .stTabs [data-baseweb="tab-list"] {{ column-gap: 1rem; }}
 }}
 
 /* ---------- indicadores secundários (st.metric) ------------------------ */
@@ -502,8 +577,8 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    intermédios do Streamlit, como se faz nos cartões de grupo, partiria as
    colunas que têm um indicador **e** uma legenda por baixo. */
 [data-testid="stMetric"] {{
-  background: var(--sg-superficie); border: 1px solid var(--sg-borda);
-  border-radius: var(--sg-raio); padding: 1.25rem 1.35rem 1.3rem;
+  background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
+  border-radius: var(--sg-raio); padding: 1.3rem 1.4rem 1.35rem;
   min-height: 7.5rem; box-shadow: none;
 }}
 [data-testid="stSidebar"] [data-testid="stMetric"] {{ min-height: 0; }}
@@ -511,11 +586,14 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   font-size: .6875rem; font-weight: 600; letter-spacing: .08em;
   text-transform: uppercase; color: var(--sg-texto-3); line-height: 1.45;
 }}
+/* Nível 2 da escala: 22 px contra os 36 px do indicador de capa e os 13 px do
+   metadado. Desceu de 23 px para abrir a distância ao número de capa, e não o
+   contrário: o pedido era hierarquia, não letras maiores em toda a parte. */
 [data-testid="stMetricValue"] {{
-  font-size: 1.4375rem; font-weight: 700; letter-spacing: -.03em;
+  font-size: 1.375rem; font-weight: 700; letter-spacing: -.03em;
   color: var(--sg-texto); line-height: 1.2;
 }}
-[data-testid="stMetricDelta"] {{ font-size: .78rem; font-weight: 600; padding-top: .25rem; }}
+[data-testid="stMetricDelta"] {{ font-size: .8125rem; font-weight: 600; padding-top: .3rem; }}
 [data-testid="stSidebar"] [data-testid="stMetric"] {{
   border: 0; border-top: 1px solid var(--sg-borda); border-radius: 0;
   padding: .95rem 0 .2rem;
@@ -523,11 +601,11 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 
 /* ---------- mensagens: hierarquia sem dominar a página ----------------- */
 [data-testid="stAlertContainer"] {{
-  border: 1px solid var(--sg-borda); border-left: 2px solid var(--sg-borda-2);
+  border: 1px solid var(--sg-borda-1); border-left: 2px solid var(--sg-borda-2);
   border-radius: var(--sg-raio); background: var(--sg-superficie);
-  box-shadow: none; padding: 1rem 1.3rem; color: var(--sg-texto-2);
+  box-shadow: none; padding: 1.1rem 1.4rem; color: var(--sg-texto-2);
 }}
-[data-testid="stAlertContainer"] :is(p, li) {{ font-size: .8125rem; line-height: 1.68; }}
+[data-testid="stAlertContainer"] :is(p, li) {{ font-size: .875rem; line-height: 1.72; }}
 [data-testid="stAlertContainer"] strong {{ color: var(--sg-texto); }}
 [data-testid="stAlertContainer"]:has([data-testid="stAlertContentInfo"]) {{
   border-left-color: var(--sg-azul);
@@ -545,15 +623,24 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 
 /* ---------- blocos recolhíveis ----------------------------------------- */
 [data-testid="stExpander"] {{
-  border: 1px solid var(--sg-borda); border-radius: var(--sg-raio);
+  border: 1px solid var(--sg-borda-1); border-radius: var(--sg-raio);
   background: var(--sg-superficie); box-shadow: none;
 }}
 [data-testid="stExpander"] summary {{
-  padding: .85rem 1.15rem; font-size: .8125rem; font-weight: 500;
+  padding: .9rem 1.2rem; font-size: .875rem; font-weight: 500;
   color: var(--sg-texto);
 }}
 [data-testid="stExpander"] summary:hover {{ color: var(--sg-verde); }}
-[data-testid="stExpanderDetails"] {{ padding: 0 1.15rem 1.15rem; }}
+[data-testid="stExpanderDetails"] {{ padding: 0 1.2rem 1.2rem; }}
+/* Na barra lateral são **ações contextuais**, não painéis: sem caixa, sem
+   fundo, alinhados com os controlos e em corpo de rótulo. */
+[data-testid="stSidebar"] [data-testid="stExpander"] {{
+  border: 0; background: transparent;
+}}
+[data-testid="stSidebar"] [data-testid="stExpander"] summary {{
+  padding: .4rem 0; font-size: .78rem; font-weight: 500; color: var(--sg-texto-2);
+}}
+[data-testid="stSidebar"] [data-testid="stExpanderDetails"] {{ padding: 0 0 .6rem; }}
 
 /* ---------- botões e controlos ----------------------------------------- */
 .stButton > button, .stDownloadButton > button {{
@@ -568,19 +655,30 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   outline: 2px solid var(--sg-verde); outline-offset: 2px;
 }}
 [data-testid="stWidgetLabel"] p {{
-  font-size: .78rem; font-weight: 500; color: var(--sg-texto-2);
+  font-size: .8125rem; font-weight: 500; color: var(--sg-texto-2);
+}}
+/* Na barra lateral os botões são ações secundárias, não chamadas à ação. */
+[data-testid="stSidebar"] .stButton > button {{
+  border-color: var(--sg-borda-1); color: var(--sg-texto-2);
+  font-size: .78rem; padding: .45rem .9rem;
 }}
 
 /* ---------- quadros de dados ------------------------------------------- */
 [data-testid="stDataFrame"] {{
-  border: 1px solid var(--sg-borda); border-radius: var(--sg-raio);
+  border: 1px solid var(--sg-borda-1); border-radius: var(--sg-raio);
 }}
 
 /* ---------- barra lateral ---------------------------------------------- */
+/* Barra lateral mais estreita, para devolver cerca de 64 px ao conteúdo
+   analítico. O `!important` é necessário porque o Streamlit fixa a largura por
+   estilo em linha, e uma declaração `!important` da folha de autor ganha-lhe.
+   17rem ainda acomoda os dois campos de composição lado a lado. */
 [data-testid="stSidebar"] {{
   background: var(--sg-superficie); border-right: 1px solid var(--sg-borda);
+  width: 17rem !important; min-width: 17rem !important;
 }}
-[data-testid="stSidebarUserContent"] {{ padding: 1.05rem 1.25rem 2.5rem; }}
+[data-testid="stSidebarUserContent"] {{ padding: 1.05rem 1.15rem 2.5rem; }}
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {{ font-size: .8125rem; }}
 .sg-lateral__t {{
   font-size: .75rem; font-weight: 600; letter-spacing: .13em;
   text-transform: uppercase; color: var(--sg-verde); margin: 0;
@@ -678,6 +776,20 @@ def titulo_pagina(titulo: str, subtitulo: str | None = None) -> None:
                 f'{sub}</div>', unsafe_allow_html=True)
 
 
+def _olho(rotulo: str) -> str:
+    """
+    Rótulo de bloco. O número de ordem sai em cinzento e com menos peso do que o
+    nome do bloco: ordena a leitura, não a anuncia, e nenhum dos dois deve
+    competir com o título da secção que vem a seguir.
+    """
+    partes = str(rotulo).split(" · ", 1)
+    if len(partes) == 2:
+        return (f'<p class="sg-bloco__r">'
+                f'<span class="sg-bloco__n">{_html(partes[0])}</span>'
+                f'{_html(partes[1])}</p>')
+    return f'<p class="sg-bloco__r">{_html(rotulo)}</p>'
+
+
 def bloco(rotulo: str, topo: bool = False) -> None:
     """
     Abre um grande bloco analítico sem lhe dar título próprio. Serve os casos em
@@ -685,7 +797,7 @@ def bloco(rotulo: str, topo: bool = False) -> None:
     inventar um cabeçalho para conteúdo que já se nomeia a si mesmo.
     """
     classe = "sg-bloco sg-bloco--so" + (" sg-bloco--topo" if topo else "")
-    st.markdown(f'<div class="{classe}"><p class="sg-bloco__r">{_html(rotulo)}</p></div>',
+    st.markdown(f'<div class="{classe}">{_olho(rotulo)}</div>',
                 unsafe_allow_html=True)
 
 
@@ -703,7 +815,7 @@ def secao(titulo: str, descricao: str | None = None, topo: bool = False,
     grandes blocos de uma página das secções dentro de cada um.
     """
     desc = f'<p class="sg-secao__d">{descricao}</p>' if descricao else ""
-    olho = f'<p class="sg-bloco__r">{_html(grupo)}</p>' if grupo else ""
+    olho = _olho(grupo) if grupo else ""
     if ajuda:
         if grupo:
             # O título vem do Streamlit no elemento seguinte; o CSS encosta-o
@@ -734,7 +846,7 @@ def componente(titulo: str, descricao: str | None = None) -> None:
 
 def indicador_principal(rotulo: str, valor: str, contexto: str | None = None,
                         sec_valor: str | None = None, sec_rotulo: str | None = None,
-                        sec_cor: str | None = None) -> None:
+                        sec_cor: str | None = None, antes: str | None = None) -> None:
     """
     O número de capa de uma página, e só um por página.
 
@@ -744,7 +856,14 @@ def indicador_principal(rotulo: str, valor: str, contexto: str | None = None,
     `contexto` aceita HTML simples e é onde vai a proveniência (base, composição,
     escala) que antes vivia num *tooltip*. `sec_valor` é a grandeza que qualifica
     o número principal, tipicamente a variação homóloga.
+
+    `antes` mostra o valor de partida por cima do valor de capa, em corpo de
+    metadado. Serve o simulador de IVA, onde o que interessa não é só a despesa
+    nova mas a passagem da atual para ela; a diferença entre as duas vai no
+    `sec_valor`. É texto, e não uma seta: o mesmo critério que rege o resto da
+    aplicação.
     """
+    ant = f'<p class="sg-hero__antes">{antes}</p>' if antes else ""
     ctx = f'<p class="sg-hero__c">{contexto}</p>' if contexto else ""
     lado = ""
     if sec_valor is not None:
@@ -753,9 +872,10 @@ def indicador_principal(rotulo: str, valor: str, contexto: str | None = None,
                 f'<p class="sg-hero__sv"{estilo}>{_html(sec_valor)}</p>'
                 f'<p class="sg-hero__sr">{_html(sec_rotulo or "")}</p></div>')
     st.markdown(
-        f'<section class="sg-hero"><div class="sg-hero__p">'
-        f'<p class="sg-hero__r">{_html(rotulo)}</p>'
-        f'<p class="sg-hero__v">{_html(valor)}</p>{ctx}</div>{lado}</section>',
+        f'<section class="sg-hero"><div class="sg-hero__topo">'
+        f'<div class="sg-hero__p">'
+        f'<p class="sg-hero__r">{_html(rotulo)}</p>{ant}'
+        f'<p class="sg-hero__v">{_html(valor)}</p></div>{lado}</div>{ctx}</section>',
         unsafe_allow_html=True)
 
 
@@ -1456,26 +1576,28 @@ def cartao_classe(linha: pd.Series) -> str:
 def estilo_grafico(fig: go.Figure) -> go.Figure:
     # As margens de cada gráfico não são tocadas: várias dependem de rótulos
     # colocados fora da área de traçado e reduzi-las cortava-os.
+    # Os corpos de letra subiram meio ponto com o resto da aplicação, para que
+    # um rótulo de eixo não fique mais pequeno do que a legenda que o explica.
     fig.update_layout(
-        font=dict(family=TIPO, size=12, color=TEXTO_2),
+        font=dict(family=TIPO, size=12.5, color=TEXTO_2),
         paper_bgcolor=SUPERFICIE, plot_bgcolor=SUPERFICIE,
         legend=dict(bgcolor="rgba(0,0,0,0)", borderwidth=0,
-                    font=dict(size=11.5, color=TEXTO_2)),
+                    font=dict(size=12, color=TEXTO_2)),
         hoverlabel=dict(bgcolor=SUPERFICIE, bordercolor=BORDA,
-                        font=dict(family=TIPO, size=12, color=TEXTO)),
+                        font=dict(family=TIPO, size=12.5, color=TEXTO)),
         # Convenção portuguesa nos números dos gráficos, como no resto da
         # aplicação: vírgula decimal, espaço nos milhares.
         separators=", ",
     )
     fig.update_xaxes(
         gridcolor=GRELHA, linecolor=BORDA, zerolinecolor=BORDA_2, zerolinewidth=1,
-        tickfont=dict(size=11, color=TEXTO_3),
-        title_font=dict(size=11.5, color=TEXTO_3),
+        tickfont=dict(size=11.5, color=TEXTO_3),
+        title_font=dict(size=12, color=TEXTO_3),
     )
     fig.update_yaxes(
         gridcolor=GRELHA, linecolor=BORDA, zerolinecolor=BORDA_2, zerolinewidth=1,
-        tickfont=dict(size=11, color=TEXTO_3),
-        title_font=dict(size=11.5, color=TEXTO_3),
+        tickfont=dict(size=11.5, color=TEXTO_3),
+        title_font=dict(size=12, color=TEXTO_3),
     )
     return fig
 
@@ -1544,7 +1666,7 @@ def grafico_historico(indice: pd.DataFrame, variacao: pd.DataFrame,
     # Mais alto do que na primeira versão: é o gráfico principal do separador
     # Histórico e estava a competir em altura com os cartões que o rodeiam.
     fig.update_layout(
-        height=460, margin=dict(t=34, b=40),
+        height=490, margin=dict(t=34, b=42),
         yaxis=dict(title="Índice"),
         yaxis2=dict(title="Variação homóloga (%)", overlaying="y", side="right",
                     zeroline=True, zerolinecolor=BORDA_2, showgrid=False),
@@ -1580,8 +1702,8 @@ def grafico_reparticao(sim: pd.DataFrame) -> go.Figure:
     # ela representa, que é a leitura pretendida.
     _maximo = float(dados["mecanico"].abs().max())
     fig.update_layout(
-        barmode="stack", height=max(400, 40 * len(dados)),
-        margin=dict(t=36, b=40),
+        barmode="stack", height=max(440, 44 * len(dados)),
+        margin=dict(t=36, b=42),
         legend=dict(orientation="h", y=1.12, x=0),
         xaxis_title="Euros por mês",
         xaxis=dict(range=[0, _maximo * 1.08], autorange=False),
@@ -2501,8 +2623,8 @@ with aba1:
                 marker_color=[VERMELHO if v > 0 else VERDE for v in com_dados["contributo"]],
                 hovertemplate="%{y}<br>%{x:.2f} €<extra></extra>",
             ))
-            fig.update_layout(height=max(420, 42 * len(com_dados)),
-                              margin=dict(t=12, b=40, l=10, r=20),
+            fig.update_layout(height=max(450, 45 * len(com_dados)),
+                              margin=dict(t=12, b=42, l=10, r=20),
                               xaxis_title="Euros por mês")
             # O zero é a leitura central deste gráfico, separa quem agrava de
             # quem alivia, e vinha com o mesmo peso das linhas de grelha.
@@ -3574,8 +3696,8 @@ with aba6:
                     name="Consumo", marker_color=VERDE, customdata=_extra,
                     hovertemplate="<b>%{y}</b><br>Consumo: %{x:+.1f}%"
                                   + _qualifica + "<extra></extra>"))
-                figo.update_layout(barmode="group", height=max(440, 40 * len(_ord)),
-                                   margin=dict(t=12, b=44, l=10, r=10),
+                figo.update_layout(barmode="group", height=max(470, 43 * len(_ord)),
+                                   margin=dict(t=12, b=46, l=10, r=10),
                                    xaxis_title="Variação desde o início da série (%)",
                                    legend=dict(orientation="h", y=-0.07))
                 figo.update_xaxes(zeroline=True, zerolinecolor=TEXTO_3, zerolinewidth=1.5)
@@ -3834,6 +3956,9 @@ with aba3:
         editado = st.data_editor(
             editor, width="stretch", hide_index=True,
             key=f"editor_iva_{cenario}",
+            # Linhas com mais ar. O quadro é o controlo central do separador e
+            # tinha densidade de folha de cálculo.
+            row_height=42,
             # A taxa atual **não é editável**: é apurada, não escolhida.
             disabled=["Grupo", "Valor (€)", "Taxa média efetiva (%)"],
             column_config={
@@ -4070,10 +4195,11 @@ with aba3:
             "ao preço." if _sobe else
             "Parte da descida do imposto que ficou na margem em vez de descer o preço.")
 
+        # A descrição diz só a base: a composição, o cenário e a repercussão
+        # passaram a estar no próprio cartão do resultado, e repeti-las aqui
+        # punha a mesma frase duas vezes com um centímetro de intervalo.
         secao("Resultado do cenário",
-              f"Para um agregado com <strong>{composicao}</strong>, na base "
-              f"<strong>{base_ancora['nome']}</strong>, com repercussão de "
-              f"<strong>{ao_consumidor}%</strong>.",
+              f"Na base <strong>{base_ancora['nome']}</strong>.",
               grupo="02 · Resultado do cenário")
 
         # A nova despesa mensal é o número que o cenário produz: passa a
@@ -4084,14 +4210,20 @@ with aba3:
         # agregado: a seta por omissão do Streamlit pintava a poupança de
         # vermelho e a fatia capturada na margem de verde a subir, as duas ao
         # contrário do que significam (auditoria de 12.08.2026, L20).
+        # A leitura desta secção e a passagem da despesa atual para a do
+        # cenário, e a diferenca entre as duas. As tres grandezas ficam no mesmo
+        # cartao, em tres registos: o valor de partida em corpo de metadado, o
+        # valor novo como numero de capa, a diferenca a direita.
         _efeito = res["efetivo"]
         indicador_principal(
             "Nova despesa alimentar mensal",
             euro(res["novo_valor"]),
-            contexto=(f"Despesa atual <strong>{euro(despesa_mensal)}</strong> · "
-                      f"cenário <strong>{CENARIOS[cenario][0]}</strong>"),
+            antes=f"Despesa atual <strong>{euro(despesa_mensal)}</strong> por mês",
+            contexto=(f"Cenário <strong>{CENARIOS[cenario][0]}</strong> · "
+                      f"repercussão de <strong>{ao_consumidor}%</strong> · "
+                      f"agregado com <strong>{composicao}</strong>"),
             sec_valor=(euro(_efeito) if abs(_efeito) > 0.005 else None),
-            sec_rotulo="variação da despesa",
+            sec_rotulo="variação por mês",
             sec_cor=(None if abs(_efeito) <= 0.005
                      else (VERDE if _efeito < 0 else VERMELHO)))
 
@@ -4438,6 +4570,12 @@ with aba3:
         st.caption(f"**Fonte:** {IVA_ZERO_QUINTIS_FONTE}.")
 
 
+        # Bloco de fecho, emitido antes do ramo condicional: o quadro das taxas
+        # em vigor depende do apuramento por subclasse, mas o detalhe da
+        # simulação, mais abaixo, não depende — e sem isto ficava um bloco
+        # recolhível órfão, sem cabeçalho, nas sessões sem apuramento.
+        bloco("05 · Contexto e limitações")
+
         if _res_iva:
             # A descrição anterior descrevia o comportamento **anterior a
             # 11.08.2026** e estava escrita no presente: dizia que aplicar uma
@@ -4457,14 +4595,13 @@ with aba3:
             # encontrada uma vez por quem teve de decidir (Inês, 13.08.2026).
             secao("Onde há margem para atuar",
                   # (o subtítulo continua abaixo)
-                  "Quanto da despesa alimentar segue hoje cada taxa legal. Uma medida "
+                  "Quanto da despesa alimentar segue hoje cada taxa legal. Uma medida "  # noqa: E501
                   "só pode descer o imposto onde ele existe: a parcela que já está à "
                   "taxa reduzida limita o alcance de qualquer redução que não seja a "
                   "isenção total. Foi essa a fronteira que a medida de 2023 encontrou, "
                   f"isentou {IVA_ZERO_N_ALIMENTOS} alimentos, “a maioria com taxa anterior "
                   "de 6%”, e por isso foi uma isenção do que já estava no mínimo, e não "
-                  "uma descida de taxa.",
-                  grupo="05 · Onde há margem para atuar")
+                  "uma descida de taxa.")
             w1, w2, w3, w4 = st.columns(4)
             w1.metric("À taxa reduzida (6%)", f"{percentagem(_res_iva['taxa_6_pct'], sinal=False)}",
                       help="Parcela do cabaz alimentar que está seguramente a 6%.")
@@ -4500,7 +4637,7 @@ with aba3:
                 "Indeterminado": r.indeterminado_pct,
             } for r in _comp_iva.itertuples()])
             st.dataframe(
-                _tab_iva, width="stretch", hide_index=True,
+                _tab_iva, width="stretch", hide_index=True, row_height=42,
                 column_config={
                     "Taxa efetiva": st.column_config.NumberColumn(
                         format="%.1f%%",
@@ -4544,7 +4681,6 @@ with aba3:
                 file_name="composicao_iva_por_taxa.csv", mime="text/csv")
 
 
-        bloco("06 · Contexto e detalhe do cálculo")
         with st.expander("Ver detalhe da simulação"):
             det = sim[["classe", "valor", "taxa_atual", "taxa_cenario",
                        "base", "mecanico", "efetivo", "margem", "novo_valor"]].copy()
