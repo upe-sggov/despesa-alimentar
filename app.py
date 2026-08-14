@@ -150,7 +150,11 @@ html, body, .stApp,
 [data-testid="stMetricValue"], [data-testid="stMetricLabel"],
 [data-testid="stMetricDelta"], [data-testid="stCaptionContainer"],
 [data-testid="stCaptionContainer"] p, [data-testid="stDataFrame"],
-[data-testid="stExpander"] summary, .stTabs [data-baseweb="tab"],
+[data-testid="stExpander"] summary,
+/* O rótulo do separador é um contentor de markdown que assume o `bodyFont` do
+   tema (Source Sans) em vez de herdar: sem esta entrada saía fora da Lexend. */
+.stTabs [data-testid="stTab"],
+.stTabs [data-testid="stTab"] [data-testid="stMarkdownContainer"],
 button, input, select, textarea {{
   font-family: var(--sg-tipo);
   font-feature-settings: "tnum" 0;
@@ -245,13 +249,27 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   padding: 1.35rem 2rem 1.45rem; margin: 0 0 var(--sg-e3);
   display: flex; flex-direction: column; gap: 1rem; box-shadow: none;
 }}
-/* Tudo o que está sobre o verde é branco por omissão, declarado com a mesma
-   especificidade (0,1,1) das regras genéricas do markdown e depois delas na
-   folha, para que nenhuma regra herdada lhe volte a ganhar. Os dois níveis
-   secundários descem para .86 de opacidade: sobre o verde SGGov isso dá um
-   contraste de 4,6:1, ainda acima do mínimo de 4,5:1, ao contrário dos .72
-   anteriores, que ficavam em 3,7:1. */
-.sg-cabecalho :is(p, h1) {{ color: #fff; }}
+/* Contraste do masthead. O Streamlit injeta, por emotion, a regra
+   `"h1, h2, h3, h4, h5, h6": {{ color: inherit }}` sobre o contentor de
+   markdown (ver StreamlitMarkdown, função `Kf`). O seletor gerado é
+   `.css-hash h1`, de especificidade (0,1,1) — **empatada** com a que aqui
+   estava, `.sg-cabecalho :is(p, h1)`. Um empate resolve-se por ordem no
+   documento, o que torna o resultado dependente da ordem de injeção das
+   folhas e explica o título a sair escuro sobre o verde.
+   Passa a (0,2,1), ancorada no contentor real, o que ganha sem depender de
+   ordem nenhuma. O `!important` é a segunda linha de defesa e está limitado
+   à **cor dos quatro elementos do masthead**: é texto sobre fundo verde, onde
+   uma regressão não é um detalhe estético mas uma falha de contraste.
+   Os dois níveis secundários usam .86 de opacidade: sobre o verde SGGov dá
+   4,6:1, acima do mínimo de 4,5:1 (os .72 anteriores davam 3,7:1). */
+[data-testid="stMarkdownContainer"] .sg-cabecalho,
+[data-testid="stMarkdownContainer"] .sg-cabecalho :is(p, h1) {{
+  color: #fff !important;
+}}
+[data-testid="stMarkdownContainer"] .sg-cabecalho .sg-cabecalho__uni,
+[data-testid="stMarkdownContainer"] .sg-cabecalho .sg-cabecalho__sub {{
+  color: rgba(255,255,255,.86) !important;
+}}
 .sg-cabecalho__marca {{ display: flex; align-items: center; gap: .85rem; }}
 .sg-cabecalho__logo {{
   width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%;
@@ -261,21 +279,24 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   font-size: .6875rem; font-weight: 600; letter-spacing: .16em;
   text-transform: uppercase; margin: 0; line-height: 1.25;
 }}
-.sg-cabecalho :is(p).sg-cabecalho__uni {{
+.sg-cabecalho__uni {{
   font-size: .75rem; font-weight: 400; margin: .18rem 0 0; line-height: 1.25;
-  color: rgba(255,255,255,.86); letter-spacing: .005em;
+  letter-spacing: .005em;
 }}
-.sg-cabecalho__titulo {{
+/* O tamanho e o peso do título têm de vencer o `h1: {{ fontSize, fontWeight }}`
+   que a mesma função `Kf` injeta, e que está em (0,1,1). */
+[data-testid="stMarkdownContainer"] h1.sg-cabecalho__titulo {{
   font-size: 1.875rem; font-weight: 600; letter-spacing: -.028em;
-  margin: 0; line-height: 1.15;
+  margin: 0; padding: 0; line-height: 1.15;
 }}
-.sg-cabecalho :is(p).sg-cabecalho__sub {{
-  font-size: .875rem; margin: .38rem 0 0; color: rgba(255,255,255,.86);
+.sg-cabecalho__sub {{
+  font-size: .875rem; margin: .38rem 0 0;
   max-width: 100ch; line-height: 1.5;
 }}
 @media (max-width: 640px) {{
   .sg-cabecalho {{ padding: 1.2rem 1.2rem 1.3rem; gap: .9rem; }}
-  .sg-cabecalho__titulo {{ font-size: 1.375rem; }}
+  /* Acompanha a especificidade da regra acima, senão perde para ela. */
+  [data-testid="stMarkdownContainer"] h1.sg-cabecalho__titulo {{ font-size: 1.375rem; }}
 }}
 
 /* ---------- barra de estado dos dados --------------------------------- */
@@ -403,7 +424,12 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   font-size: .8125rem; color: var(--sg-texto-3); margin: .55rem 0 0;
   line-height: 1.4; font-variant-numeric: tabular-nums;
 }}
-.sg-hero__v {{
+/* Ancorado no contentor de markdown, em (0,2,1). O Streamlit define o corpo de
+   letra no próprio `stMarkdownContainer` (`fontSize: fontSizes.md`) e estilos
+   de `p` em (0,1,1); uma declaração de classe simples, em (0,1,0), fica
+   dependente de ordem. Aqui não fica: os 36 px passam a ganhar sempre.
+   Sem `!important` — a especificidade chega. */
+[data-testid="stMarkdownContainer"] p.sg-hero__v {{
   font-size: 2.25rem; font-weight: 700; letter-spacing: -.035em; line-height: 1;
   color: var(--sg-texto); margin: .55rem 0 0; font-variant-numeric: tabular-nums;
 }}
@@ -414,7 +440,11 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 .sg-hero__c strong {{ color: var(--sg-texto-2); font-weight: 600; }}
 .sg-hero__s {{ text-align: right; padding-bottom: .3rem; }}
-.sg-hero__sv {{
+/* Mesmo tratamento do valor de capa, pela mesma razão: é o nível 2 da escala e
+   tem de ficar a meio caminho entre os 36 px e os 13 px do metadado. A cor é
+   definida em linha quando a variação tem sinal, e o `style` de elemento ganha
+   a esta regra, que é o comportamento pretendido. */
+[data-testid="stMarkdownContainer"] p.sg-hero__sv {{
   font-size: 1.375rem; font-weight: 700; letter-spacing: -.025em; line-height: 1;
   margin: 0; color: var(--sg-texto); font-variant-numeric: tabular-nums;
 }}
@@ -424,7 +454,8 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 @media (max-width: 700px) {{
   .sg-hero {{ padding: 1.45rem 1.35rem 1.2rem; }}
-  .sg-hero__v {{ font-size: 1.875rem; }}
+  /* Acompanha a especificidade da regra acima, senão perde para ela. */
+  [data-testid="stMarkdownContainer"] p.sg-hero__v {{ font-size: 1.875rem; }}
   .sg-hero__s {{ text-align: left; }}
 }}
 
@@ -515,58 +546,64 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 .sg-reparticao__rot {{ font-size: .75rem; color: var(--sg-texto-3); margin-top: .15rem; }}
 
 /* ---------- separadores ------------------------------------------------ */
-/* A navegação passa a **quebrar para uma segunda linha** em vez de deslizar
-   na horizontal. Com `overflow-x: auto` e `nowrap`, em larguras intermédias o
-   BaseWeb encolhia e reticenciava o último separador ("Metodologia e…"), que
-   é justamente o que não pode acontecer numa barra de navegação. O indicador
-   de separador ativo deixa de ser a barra absoluta do BaseWeb, que se
-   desalinharia na segunda linha, e passa a ser um filete no próprio botão. */
-.stTabs [data-baseweb="tab-list"] {{
-  display: flex; flex-wrap: wrap; overflow: visible;
-  column-gap: 1.75rem; row-gap: 0; background: transparent;
-  border-bottom: 1px solid var(--sg-borda);
-  margin: var(--sg-e3) 0 var(--sg-e4); padding: 0;
+/* **Todo o CSS anterior desta secção apontava para `[data-baseweb="tab-list"]`
+   e `[data-baseweb="tab"]`, que não existem nesta versão do Streamlit.** As
+   regras não acertavam em nada, e era por isso que o último separador continuava
+   cortado e a seta de deslocamento continuava a aparecer, por muito que se
+   aumentasse a dose.
+   O separador é hoje construído sobre react-aria, não sobre BaseWeb. A árvore
+   real é:
+     div.stTabs[data-testid="stTabs"]        <- position: relative quando excede
+       └ div                                  <- invólucro
+          └ div  (overflow-x: auto, gap)      <- é **este** que desliza
+             └ div[data-testid="stTab"] …     <- cada separador
+       └ button[data-testid="stTabsScrollLeft"|"stTabsScrollRight"]
+   O contentor que desliza não tem `data-testid`, e identifica-se pelo que
+   contém: `div:has(> [data-testid="stTab"])`. Com quebra de linha deixa de
+   haver transbordo, o observador de dimensões nunca marca `isOverflowing`, e
+   as setas não chegam a ser montadas.
+   Nenhuma destas regras precisa de `!important`: `:has()` traz a
+   especificidade do seu argumento, o que põe o seletor em (0,2,1) contra os
+   (0,1,0) das classes geradas por emotion. */
+.stTabs div:has(> [data-testid="stTab"]) {{
+  display: flex; flex-wrap: wrap;
+  overflow-x: visible; overflow-y: visible;
+  column-gap: 1.75rem; row-gap: 0;
+  margin: var(--sg-e3) 0 var(--sg-e4);
 }}
-.stTabs [data-baseweb="tab"] {{
-  flex: 0 0 auto; height: auto; padding: .7rem 0; background: transparent;
-  border-radius: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
+.stTabs [data-testid="stTab"] {{
+  flex: 0 0 auto; height: auto; padding: .7rem 0;
   font-size: .8125rem; font-weight: 500; color: var(--sg-texto-3);
   white-space: nowrap;
 }}
-/* O rótulo vem dentro de um <p> com estilos próprios do Streamlit. */
-.stTabs [data-baseweb="tab"] :is(p, div, span) {{
-  font-size: inherit; font-weight: inherit; color: inherit; white-space: nowrap;
+.stTabs [data-testid="stTab"]:hover {{ color: var(--sg-texto); }}
+.stTabs [data-testid="stTab"][data-selected] {{
+  color: var(--sg-verde); font-weight: 600;
 }}
-/* Nenhum nível da barra de navegação corta texto. O BaseWeb aplica
-   `overflow: hidden` e reticências em mais do que um contentor, e desligá-las
-   só no botão não chega: era daí que vinha o “Metodologia e…”. O `!important`
-   é deliberado, porque as regras do BaseWeb entram por emotion, com
-   especificidade mais alta do que qualquer seletor razoável desta folha. */
-.stTabs > div,
-.stTabs [data-baseweb="tab-list"],
-.stTabs [data-baseweb="tab"],
-.stTabs [data-baseweb="tab"] * {{
-  overflow: visible !important; text-overflow: clip !important;
-  max-width: none !important; min-width: 0;
+/* O rótulo é um contentor de markdown com estilos próprios: herda os do
+   separador para que peso e corpo sigam o estado ativo. */
+.stTabs [data-testid="stTab"] [data-testid="stMarkdownContainer"],
+.stTabs [data-testid="stTab"] [data-testid="stMarkdownContainer"] p {{
+  font-size: inherit; font-weight: inherit; color: inherit;
+  white-space: nowrap; overflow: visible; text-overflow: clip;
 }}
-.stTabs [data-baseweb="tab"]:hover {{ background: transparent; color: var(--sg-texto); }}
-.stTabs [aria-selected="true"] {{
-  color: var(--sg-verde); font-weight: 600; border-bottom-color: var(--sg-verde);
+/* O indicador de separador ativo é um elemento absoluto **dentro** de cada
+   separador, e não uma barra única sobre a lista: sobrevive à quebra de linha
+   sem ajuste nenhum. Fica com o verde institucional. */
+.stTabs [data-testid="stTab"][data-selected] .react-aria-SelectionIndicator {{
+  background-color: var(--sg-verde);
 }}
-.stTabs [data-baseweb="tab-highlight"],
-.stTabs [data-baseweb="tab-border"] {{ display: none; }}
-/* Sem transbordo horizontal não há setas de deslocamento a mostrar; se a
-   versão do BaseWeb as emitir à mesma, ficam fora do caminho. */
-.stTabs [data-baseweb="tab-list"] > button[aria-label*="scroll" i],
-.stTabs [data-baseweb="tab-list"] ~ button[aria-label*="scroll" i] {{ display: none; }}
+/* Rede de segurança, para o caso de uma janela ser redimensionada antes de a
+   quebra ser recalculada. */
+[data-testid="stTabsScrollLeft"], [data-testid="stTabsScrollRight"] {{ display: none; }}
 /* Em larguras intermédias encolhe-se o **intervalo** entre separadores, nunca
    o corpo da letra: um rótulo ilegível não é melhor do que um rótulo cortado.
    Esgotado o intervalo, a barra quebra para uma segunda linha. */
 @media (max-width: 1320px) {{
-  .stTabs [data-baseweb="tab-list"] {{ column-gap: 1.25rem; }}
+  .stTabs div:has(> [data-testid="stTab"]) {{ column-gap: 1.25rem; }}
 }}
 @media (max-width: 1100px) {{
-  .stTabs [data-baseweb="tab-list"] {{ column-gap: 1rem; }}
+  .stTabs div:has(> [data-testid="stTab"]) {{ column-gap: 1rem; }}
 }}
 
 /* ---------- indicadores secundários (st.metric) ------------------------ */
@@ -582,9 +619,24 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   min-height: 7.5rem; box-shadow: none;
 }}
 [data-testid="stSidebar"] [data-testid="stMetric"] {{ min-height: 0; }}
+/* Rótulos a duas linhas, sem reticências. O `st.metric` desenha o rótulo com
+   `<Markdown … truncate>`, e essa opção injeta, no contentor **e** no seu <p>:
+     overflow: hidden; white-space: nowrap; text-overflow: ellipsis
+   (ver StreamlitMarkdown, o ramo `...truncate && {{…}}`). Era daí que vinham os
+   “AGREGADO MÉDIO NACIONAL (2,…”. Anula-se nos dois níveis, com (0,2,0) e
+   (0,2,1) contra os (0,1,0) e (0,1,1) do emotion: sem `!important`.
+   `min-height` reserva as duas linhas para que os cartões de uma fila não
+   fiquem desalinhados por o vizinho ter rótulo mais curto. */
+[data-testid="stMetricLabel"] [data-testid="stMarkdownContainer"],
+[data-testid="stMetricLabel"] [data-testid="stMarkdownContainer"] p {{
+  white-space: normal; overflow: visible; text-overflow: clip;
+  line-height: 1.45;
+}}
+[data-testid="stMetricLabel"] {{ overflow: visible; }}
 [data-testid="stMetricLabel"] p {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .08em;
   text-transform: uppercase; color: var(--sg-texto-3); line-height: 1.45;
+  min-height: 2.1em;
 }}
 /* Nível 2 da escala: 22 px contra os 36 px do indicador de capa e os 13 px do
    metadado. Desceu de 23 px para abrir a distância ao número de capa, e não o
@@ -669,13 +721,18 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 
 /* ---------- barra lateral ---------------------------------------------- */
-/* Barra lateral mais estreita, para devolver cerca de 64 px ao conteúdo
-   analítico. O `!important` é necessário porque o Streamlit fixa a largura por
-   estilo em linha, e uma declaração `!important` da folha de autor ganha-lhe.
-   17rem ainda acomoda os dois campos de composição lado a lado. */
+/* A largura da barra lateral **não é imposta**. O Streamlit desenha-a com
+   `re-resizable`, que escreve a largura em `style` no próprio elemento e a
+   guarda em `localStorage` sob a chave `sidebarWidth`. Forçá-la por CSS exige
+   `!important`, e um `!important` de folha de autor ganha também ao estilo que
+   o arrasto escreve: a pega deixava de ter efeito. Não existe, nesta versão,
+   opção de configuração para a largura inicial (confirmado em
+   `st.set_page_config` e nas opções de tema).
+   Com os separadores a quebrar de linha, a largura da barra deixou de ser
+   necessária ao layout, pelo que se prefere a funcionalidade nativa: quem
+   quiser 17rem arrasta uma vez e o Streamlit passa a lembrar-se. */
 [data-testid="stSidebar"] {{
   background: var(--sg-superficie); border-right: 1px solid var(--sg-borda);
-  width: 17rem !important; min-width: 17rem !important;
 }}
 [data-testid="stSidebarUserContent"] {{ padding: 1.05rem 1.15rem 2.5rem; }}
 [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {{ font-size: .8125rem; }}
