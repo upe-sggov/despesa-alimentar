@@ -275,11 +275,18 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%;
   background: #fff; padding: 2px; display: block;
 }}
-.sg-cabecalho__inst {{
+/* A mesma correção de especificidade que os títulos levaram, agora nos <p>.
+   O Streamlit declara `fontSize` sobre `p` dentro do `stMarkdownContainer`, em
+   (0,1,1); uma classe simples, em (0,1,0), perde. Foi por isto que **todos**
+   os parágrafos de componente desta aplicação vinham a render aos 16 px de
+   omissão em vez do corpo aqui declarado, enquanto os separadores e os títulos
+   — que já estavam ancorados — saíam certos. Daqui para baixo, todo o <p> com
+   classe `sg-` traz o contentor e a tag no seletor, ficando em (0,2,1). */
+[data-testid="stMarkdownContainer"] p.sg-cabecalho__inst {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .16em;
   text-transform: uppercase; margin: 0; line-height: 1.25;
 }}
-.sg-cabecalho__uni {{
+[data-testid="stMarkdownContainer"] p.sg-cabecalho__uni {{
   font-size: .75rem; font-weight: 400; margin: .18rem 0 0; line-height: 1.25;
   letter-spacing: .005em;
 }}
@@ -289,7 +296,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   font-size: 1.5rem; font-weight: 600; letter-spacing: -.022em;
   margin: 0; padding: 0; line-height: 1.2;
 }}
-.sg-cabecalho__sub {{
+[data-testid="stMarkdownContainer"] p.sg-cabecalho__sub {{
   font-size: .875rem; margin: .38rem 0 0;
   max-width: 100ch; line-height: 1.5;
 }}
@@ -309,7 +316,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   background: transparent; border: 0; border-bottom: 1px solid var(--sg-borda-1);
   border-radius: 0; padding: .1rem 0 .85rem; margin: 0; box-shadow: none;
 }}
-.sg-estado__t {{
+[data-testid="stMarkdownContainer"] p.sg-estado__t {{
   font-size: .625rem; font-weight: 600; letter-spacing: .15em;
   text-transform: uppercase; color: var(--sg-texto-3); margin: 0 0 .5rem;
 }}
@@ -350,7 +357,8 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    da Inês (13.08.2026). A medida tipográfica de 72-74 caracteres favorece a
    leitura de texto corrido, mas estas são frases curtas de enquadramento e
    ficavam a meio da página, com o gráfico ou o quadro a ocupar o resto. */
-.sg-pagina__s {{ font-size: .8125rem; color: var(--sg-texto-2); margin: .55rem 0 0;
+[data-testid="stMarkdownContainer"] p.sg-pagina__s {{
+  font-size: .8125rem; color: var(--sg-texto-2); margin: .55rem 0 0;
   line-height: 1.65; }}
 
 .sg-secao {{ margin: var(--sg-e4) 0 var(--sg-e2); }}
@@ -360,7 +368,8 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   font-size: 1.125rem; font-weight: 600; letter-spacing: -.012em;
   color: var(--sg-texto); margin: 0; padding: 0; line-height: 1.32;
 }}
-.sg-secao__d {{ font-size: .75rem; color: var(--sg-texto-3); margin: .5rem 0 0;
+[data-testid="stMarkdownContainer"] p.sg-secao__d {{
+  font-size: .75rem; color: var(--sg-texto-3); margin: .5rem 0 0;
   line-height: 1.6; }}
 /* Título de secção com (i). É o único caso em que o cabeçalho vem do Streamlit
    e não do nosso HTML: é o que dá acesso ao painel de ajuda, onde cabe a nota
@@ -389,7 +398,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 .sg-bloco--topo {{ margin-top: var(--sg-e4); }}
 .sg-bloco--so {{ margin-bottom: 0; }}
-.sg-bloco__r {{
+[data-testid="stMarkdownContainer"] p.sg-bloco__r {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .12em;
   text-transform: uppercase; color: var(--sg-verde); margin: 0; line-height: 1.4;
 }}
@@ -411,9 +420,11 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 
 .sg-comp {{ margin: var(--sg-e3) 0 .6rem; }}
-.sg-comp__t {{ font-size: .8125rem; font-weight: 600; letter-spacing: .01em;
+[data-testid="stMarkdownContainer"] p.sg-comp__t {{
+  font-size: .8125rem; font-weight: 600; letter-spacing: .01em;
   color: var(--sg-texto); margin: 0; line-height: 1.42; }}
-.sg-comp__d {{ font-size: .75rem; color: var(--sg-texto-3); margin: .3rem 0 0;
+[data-testid="stMarkdownContainer"] p.sg-comp__d {{
+  font-size: .75rem; color: var(--sg-texto-3); margin: .3rem 0 0;
   line-height: 1.58; }}
 
 /* ---------- indicador principal (KPI de capa) -------------------------- */
@@ -434,12 +445,12 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   gap: 1.1rem 2.5rem; flex-wrap: wrap;
 }}
 .sg-hero__p {{ min-width: min(100%, 15rem); }}
-.sg-hero__r {{
+[data-testid="stMarkdownContainer"] p.sg-hero__r {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .10em;
   text-transform: uppercase; color: var(--sg-texto-3); margin: 0; line-height: 1.4;
 }}
 /* Valor de partida, quando o cartão mostra uma transição (simulador de IVA). */
-.sg-hero__antes {{
+[data-testid="stMarkdownContainer"] p.sg-hero__antes {{
   font-size: .8125rem; color: var(--sg-texto-3); margin: .55rem 0 0;
   line-height: 1.4; font-variant-numeric: tabular-nums;
 }}
@@ -452,7 +463,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   font-size: 2rem; font-weight: 700; letter-spacing: -.03em; line-height: 1;
   color: var(--sg-texto); margin: .55rem 0 0; font-variant-numeric: tabular-nums;
 }}
-.sg-hero__c {{
+[data-testid="stMarkdownContainer"] p.sg-hero__c {{
   font-size: .75rem; color: var(--sg-texto-3); margin: 1.3rem 0 0;
   padding-top: 1rem; border-top: 1px solid var(--sg-grelha);
   line-height: 1.58;
@@ -467,7 +478,7 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   font-size: 1.25rem; font-weight: 700; letter-spacing: -.022em; line-height: 1;
   margin: 0; color: var(--sg-texto); font-variant-numeric: tabular-nums;
 }}
-.sg-hero__sr {{
+[data-testid="stMarkdownContainer"] p.sg-hero__sr {{
   font-size: .78rem; color: var(--sg-texto-3); margin: .4rem 0 0;
   letter-spacing: .01em;
 }}
@@ -506,9 +517,11 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   margin: .3rem 0 0; padding-left: calc(7px + .5rem); }}
 /* Mesmo corpo do valor de um indicador secundário: os cartões de grupo e os
    `st.metric` são o mesmo degrau da escala, e tinham 24 px contra 22 px. */
-.sg-cartao__valor {{ font-size: 1.375rem; font-weight: 700; letter-spacing: -.03em;
+[data-testid="stMarkdownContainer"] p.sg-cartao__valor {{
+  font-size: 1.375rem; font-weight: 700; letter-spacing: -.03em;
   color: var(--sg-texto); margin: 1.35rem 0 0; line-height: 1; }}
-.sg-cartao__desc {{ font-size: .78rem; color: var(--sg-texto-3); margin: .42rem 0 0;
+[data-testid="stMarkdownContainer"] p.sg-cartao__desc {{
+  font-size: .78rem; color: var(--sg-texto-3); margin: .42rem 0 0;
   line-height: 1.5; }}
 /* Duas linhas, não uma: a variação homóloga e o contributo passaram a viver
    uma sobre a outra, cada uma com o seu rótulo. Antes a variação estava solta
@@ -535,7 +548,12 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   padding: 1.3rem 1.75rem 1.35rem; margin: var(--sg-e3) 0; font-size: .8125rem;
   line-height: 1.7; color: var(--sg-texto-2); box-shadow: none;
 }}
-.sg-nota__t {{
+/* Aqui não basta o par contentor+tag. O rótulo da nota é um <p> **dentro** de
+   `.sg-nota`, pelo que apanha também a regra de corpo da própria nota, mais
+   abaixo, que está em (0,2,1): o rótulo saía a 13 px e a cinzento, em vez dos
+   11 px a dourado declarados aqui. Somar a classe da caixa põe este seletor em
+   (0,3,1) e resolve, sem depender da ordem das duas regras. */
+[data-testid="stMarkdownContainer"] .sg-nota p.sg-nota__t {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .12em;
   text-transform: uppercase; color: var(--sg-dourado); margin: 0 0 .65rem;
 }}
@@ -550,7 +568,9 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 .sg-nota li {{ margin-bottom: .45rem; }}
 .sg-nota--alerta {{ border-left-color: var(--sg-vermelho); }}
-.sg-nota--alerta .sg-nota__t {{ color: var(--sg-vermelho); }}
+/* Acompanha a especificidade da regra do rótulo, senão perde para ela. */
+[data-testid="stMarkdownContainer"] .sg-nota--alerta p.sg-nota__t {{
+  color: var(--sg-vermelho); }}
 
 /* ---------- repartição consumidor / margem ---------------------------- */
 .sg-reparticao {{
@@ -763,34 +783,37 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 /* Tracking mais curto em tudo o que é versalete. O espaçamento largo dava a
    estes rótulos uma presença que não corresponde ao seu lugar na hierarquia:
    são etiquetas, não títulos. O corpo de letra não desce; só o tracking. */
-.sg-lateral__t {{
+[data-testid="stMarkdownContainer"] p.sg-lateral__t {{
   font-size: .75rem; font-weight: 600; letter-spacing: .10em;
   text-transform: uppercase; color: var(--sg-verde); margin: 0;
 }}
-.sg-lateral__d {{ font-size: .75rem; color: var(--sg-texto-3); margin: .35rem 0 0;
+[data-testid="stMarkdownContainer"] p.sg-lateral__d {{
+  font-size: .75rem; color: var(--sg-texto-3); margin: .35rem 0 0;
   line-height: 1.55; }}
 /* Rótulo de grupo. As margens encolheram: a barra lateral tinha mais espaço
    vertical do que controlos, e obrigava a deslocar a página para chegar ao
    botão de recarregamento. */
-.sg-grupo {{
+[data-testid="stMarkdownContainer"] p.sg-grupo {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .08em;
   text-transform: uppercase; color: var(--sg-texto-3);
   margin: 1.3rem 0 .45rem; padding-top: .9rem;
   border-top: 1px solid var(--sg-borda);
 }}
-.sg-grupo--primeiro {{ margin-top: 1.15rem; }}
+/* A regra acima declara `margin` completa em (0,2,1); a variante tem de subir
+   ao mesmo nível para lhe alterar o topo. */
+[data-testid="stMarkdownContainer"] p.sg-grupo--primeiro {{ margin-top: 1.15rem; }}
 /* Metadado da barra lateral: rótulo pequeno, valor um degrau acima. É a mesma
    linguagem da barra de estado do corpo da página. */
 .sg-lateral__meta {{ margin: 0 0 .6rem; }}
-.sg-lateral__meta-r {{
+[data-testid="stMarkdownContainer"] p.sg-lateral__meta-r {{
   font-size: .625rem; font-weight: 500; letter-spacing: .1em;
   text-transform: uppercase; color: var(--sg-texto-3); margin: 0; line-height: 1.4;
 }}
-.sg-lateral__meta-v {{
+[data-testid="stMarkdownContainer"] p.sg-lateral__meta-v {{
   font-size: .8125rem; font-weight: 600; color: var(--sg-texto); margin: .1rem 0 0;
   line-height: 1.35; font-variant-numeric: tabular-nums;
 }}
-.sg-lateral__rodape {{
+[data-testid="stMarkdownContainer"] p.sg-lateral__rodape {{
   font-size: .6875rem; letter-spacing: .06em; color: var(--sg-texto-3);
   margin: 1.75rem 0 0; padding-top: .9rem;
   border-top: 1px solid var(--sg-borda); line-height: 1.5;
@@ -801,11 +824,15 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   border-top: 1px solid var(--sg-borda-2); }}
 .sg-rodape__l {{ display: flex; align-items: baseline;
   justify-content: space-between; gap: .6rem 2rem; flex-wrap: wrap; }}
-.sg-rodape__org {{ font-size: .6875rem; font-weight: 600; letter-spacing: .14em;
+[data-testid="stMarkdownContainer"] p.sg-rodape__org {{
+  font-size: .6875rem; font-weight: 600; letter-spacing: .14em;
   text-transform: uppercase; color: var(--sg-texto-2); margin: 0; }}
-.sg-rodape__uni {{ font-size: .75rem; color: var(--sg-texto-3); margin: .3rem 0 0; }}
-.sg-rodape__app {{ font-size: .75rem; color: var(--sg-texto-3); margin: 0; }}
-.sg-rodape__nota {{ font-size: .72rem; color: var(--sg-texto-3); margin: 1.35rem 0 0;
+[data-testid="stMarkdownContainer"] p.sg-rodape__uni {{
+  font-size: .75rem; color: var(--sg-texto-3); margin: .3rem 0 0; }}
+[data-testid="stMarkdownContainer"] p.sg-rodape__app {{
+  font-size: .75rem; color: var(--sg-texto-3); margin: 0; }}
+[data-testid="stMarkdownContainer"] p.sg-rodape__nota {{
+  font-size: .72rem; color: var(--sg-texto-3); margin: 1.35rem 0 0;
   max-width: 92ch; line-height: 1.62; }}
 
 /* Esconde o rodapé próprio do Streamlit, não o rodapé institucional. */
@@ -835,7 +862,7 @@ footer:not(.sg-rodape) {{ visibility: hidden; }}
   [data-testid="stMarkdownContainer"] :is(p, li):not([class*="sg-"]) {{
     font-size: .875rem;
   }}
-  .sg-pagina__s {{ font-size: .875rem; }}
+  [data-testid="stMarkdownContainer"] p.sg-pagina__s {{ font-size: .875rem; }}
 }}
 
 /* ---------- larguras intermédias --------------------------------------- */
