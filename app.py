@@ -839,6 +839,62 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 /* Esconde o rodapé próprio do Streamlit, não o rodapé institucional. */
 footer:not(.sg-rodape) {{ visibility: hidden; }}
 
+/* ---------- voltar ao topo ---------------------------------------------- */
+/* Uma **âncora**, e não um botão com script. O `st.markdown` insere HTML em
+   bruto, mas o navegador não executa `<script>` inserido por essa via: qualquer
+   solução com JavaScript seria inerte aqui. Um `href="#topo"` manda o navegador
+   trazer o topo à vista, e quem faz o deslocamento é o próprio contentor do
+   Streamlit, seja ele qual for, sem que a regra precise de o saber.
+
+   Da mesma restrição decorre que **fica sempre visível**: aparecer só depois de
+   se ter descido exigiria observar a posição de deslocamento, que é trabalho de
+   script.
+
+   O seletor repete `[data-testid="stMarkdownContainer"] a` de propósito. A regra
+   genérica das ligações, lá em cima, tem especificidade (0,1,1) e declara `color`
+   e `border-bottom`; uma `.sg-subir` sozinha tem (0,1,0) e **perderia as duas**,
+   ficando um botão azul com um risco por baixo. É a mesma armadilha que o bloco
+   do texto corrente documenta.
+
+   Sem sombra, como tudo o resto nesta aplicação: a profundidade faz-se com
+   borda. E a cor não é decorativa, o repouso é superfície neutra e o verde
+   (identidade) entra só na interação. */
+[data-testid="stMarkdownContainer"] a.sg-subir {{
+  position: fixed; right: 1.5rem; bottom: 4.25rem; z-index: 90;
+  width: 2.25rem; height: 2.25rem;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--sg-superficie); color: var(--sg-texto-3);
+  border: 1px solid var(--sg-borda-2); border-radius: var(--sg-raio);
+  text-decoration: none;
+}}
+/* A seta é desenhada com dois lados de uma caixa rodada 45°: não é emoji nem
+   ficheiro, e herda `currentColor`, pelo que acompanha o estado sem uma regra
+   própria. O mesmo critério do favicon, que é o símbolo da SGGov e não um
+   emoji, e o dos marcadores das tabelas, que são texto. */
+[data-testid="stMarkdownContainer"] a.sg-subir::before {{
+  content: ""; width: .5rem; height: .5rem; margin-top: .2rem;
+  border-left: 1.5px solid currentColor; border-top: 1.5px solid currentColor;
+  transform: rotate(45deg);
+}}
+[data-testid="stMarkdownContainer"] a.sg-subir:hover {{
+  background: var(--sg-verde); border-color: var(--sg-verde); color: #fff;
+}}
+[data-testid="stMarkdownContainer"] a.sg-subir:focus-visible {{
+  outline: 2px solid var(--sg-azul); outline-offset: 2px;
+}}
+/* O `bottom` afasta-se mais do que a margem natural porque o Streamlit
+   Community Cloud desenha o seu emblema «Manage app» exatamente neste canto, e
+   os dois sobrepunham-se. Em execução local sobra espaço; alojada, não sobrava.
+   Em ecrã estreito encolhe e encosta-se, para tapar menos conteúdo. */
+@media (max-width: 640px) {{
+  [data-testid="stMarkdownContainer"] a.sg-subir {{
+    right: 1rem; bottom: 3.75rem; width: 2rem; height: 2rem;
+  }}
+}}
+/* Impede que o alvo da âncora fique encostado ao limite superior do contentor,
+   por baixo da barra do Streamlit. */
+.sg-cabecalho {{ scroll-margin-top: 1rem; }}
+
 /* ---------- profundidade: borda, nunca sombra -------------------------- */
 [data-testid="stDataFrame"], [data-testid="stExpander"], [data-testid="stMetric"],
 [data-testid="stAlertContainer"], [data-testid="stPopoverBody"],
@@ -1853,7 +1909,7 @@ _logo_html = (
     f'alt="Secretaria-Geral do Governo">' if LOGO else ""
 )
 st.markdown(f"""
-<header class="sg-cabecalho">
+<header class="sg-cabecalho" id="topo">
   <div class="sg-cabecalho__marca">
     {_logo_html}
     <div>
@@ -6816,3 +6872,18 @@ st.markdown(f"""
   <p class="sg-rodape__nota">{RODAPE}</p>
 </footer>
 """, unsafe_allow_html=True)
+
+# --------------------------------------------------------------------------
+# Voltar ao topo
+# --------------------------------------------------------------------------
+# Emitido no fim e não junto ao cabeçalho: sendo `position: fixed`, o sítio no
+# documento não altera onde aparece, e aqui fica arrumado com o resto do que é
+# moldura da página em vez de conteúdo.
+#
+# O rótulo vai em `aria-label` porque a seta é desenhada em CSS e o elemento não
+# tem texto: sem ele, um leitor de ecrã anunciaria uma ligação sem nome. O
+# `title` dá a mesma informação a quem usa rato e hesita.
+st.markdown(
+    '<a class="sg-subir" href="#topo" aria-label="Voltar ao topo do documento" '
+    'title="Voltar ao topo"></a>',
+    unsafe_allow_html=True)
