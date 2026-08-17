@@ -818,7 +818,11 @@ IVA_ZERO_CITACAO = (
 )
 
 # Taxa de variação em cadeia em maio de 2023, em pontos percentuais.
-# (quintil, IPC bens alimentares, rubricas afetadas, IPC bens alimentares, IPC total)
+# (quintil, rubricas alimentares abrangidas pela isenção, bens alimentares, IPC total)
+# A ordem é esta e importa: a primeira coluna é a que sustenta o argumento do
+# simulador, e as duas seguintes situam-na. Confirma-se pelos valores, o alívio
+# nas rubricas abrangidas é sempre maior do que no conjunto dos alimentares, e
+# este maior do que no IPC total.
 #
 # Sobre a unidade: o rótulo é o do original, e o original não é consistente
 # consigo próprio. O gráfico da p. 9 diz “Taxa de variação em cadeia em maio de

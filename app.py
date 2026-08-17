@@ -46,7 +46,8 @@ from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FO
                         IDF_PESO_ALIMENTAR, IDF_QUINTIS,
                         LIMITE_ANOS_SOFI, LIMITE_DIAS_OBSERVATORIO,
                         LIMITES_FRESCURA,
-                        SOFI_CUSTO, SOFI_FONTE, SOFI_INCAPACIDADE, SOFI_MILHOES,
+                        SOFI_CUSTO, SOFI_EDICAO, SOFI_FONTE, SOFI_INCAPACIDADE,
+                        SOFI_MILHOES,
                         ANO_BASE_VIES,
                         AZUL, CINZENTO, CLASSES, CLASSES_FONTE, CODIGOS,
                         COICOP_ALIMENTAR, DOURADO, ORGANISMO,
@@ -2012,8 +2013,8 @@ with st.sidebar:
 
     if not base_ancora.get("plausivel", True):
         st.error(
-            f"**A base ativa ({base_ancora['nome']}) está fora do intervalo plausível** "
-            f", {euro(media_agregado)}/mês por agregado. Verifique o registo de ligações "
+            f"**A base ativa ({base_ancora['nome']}) está fora do intervalo plausível**, "
+            f"{euro(media_agregado)}/mês por agregado. Verifique o registo de ligações "
             "no separador Metodologia. **Não use estes números.**"
         )
     elif _outra_suspeita:
@@ -2293,8 +2294,8 @@ def _nomes_classes(codigos):
 
 if _sem_peso:
     st.error(
-        f"**{len(_sem_peso)} das nove classes não têm ponderador nesta sessão** "
-        f", {_nomes_classes(_sem_peso)}. A despesa foi repartida apenas pelas "
+        f"**{len(_sem_peso)} das nove classes não têm ponderador nesta sessão**, "
+        f"{_nomes_classes(_sem_peso)}. A despesa foi repartida apenas pelas "
         f"restantes {9 - len(_sem_peso)}, pelo que **todas as quotas e todos os "
         "valores em euros estão sobrestimados**. Consulte o registo de ligações "
         "no separador Metodologia."
@@ -2652,8 +2653,8 @@ with aba1:
                 rmmg_legal = round(sm_pt["valor"] * 12 / 14)
                 refs.append({
                     "ref": f"{trabalhadores} × salário mínimo",
-                    "detalhe": (f"Média mensal bruta de 14 mensalidades, {sm_pt['periodo']} "
-                                f", o valor legal da RMMG é de {rmmg_legal} €/mês"),
+                    "detalhe": (f"Média mensal bruta de 14 mensalidades, {sm_pt['periodo']}; "
+                                f"o valor legal da RMMG é de {rmmg_legal} €/mês"),
                     "mensal": sm_pt["valor"] * trabalhadores,
                     "natureza": "bruto",
                 })
@@ -3025,7 +3026,7 @@ with aba1:
             f"Não paga uma dieta saudável ({_ano_sofi})",
             f"{_sofi_pt:.1f}%".replace(".", ","),
             help=("Custo da dieta mais barata que cumpre os requisitos nutricionais. "
-                  "FAO, SOFI 2026."))
+                  f"FAO, SOFI {SOFI_EDICAO}."))
         t3.metric(
             "Peso no orçamento do 1.º quintil",
             f"{IDF_PESO_ALIMENTAR['q1']:.1f}%".replace(".", ","),
@@ -3560,7 +3561,7 @@ with aba2:
             _anos_decorridos = max(_ano_fim - _ano_base, 1)
 
             k1, k2, k3 = st.columns(3)
-            k1.metric(f"Cabaz fixo (subida desde dez/{str(_ano_base)[2:]}",
+            k1.metric(f"Cabaz fixo (subida desde dez/{str(_ano_base)[2:]})",
                       percentagem(_subida_fixo),
                       help="Ponderadores congelados no ano-base, como num cabaz de "
                            "composição fixa.")
@@ -5589,8 +5590,8 @@ with aba5:
                         "tem verba alguma para eles e a Lista II (1.12) cobre apenas os “flocos "
                         "prensados simples de cereais e leguminosas sem adições de açúcar”."
                     )
-                    with st.expander("O que a Autoridade Tributária já decidiu (informações "
-                                     "vinculativas"):
+                    with st.expander("O que a Autoridade Tributária já decidiu "
+                                     "(informações vinculativas)"):
                         st.markdown(
                             "As informações vinculativas da AT (artigo 68.º do CPPT) são a via para "
                             "fechar as atribuições que aqui aparecem como **predominantes**: são "
@@ -5823,8 +5824,8 @@ with aba5:
 
     Coeficientes menores significam que cada pessoa a mais custa menos, o que **comprime as
     diferenças** entre agregados de dimensão diferente. Um agregado menor do que a média
-    aproxima-se dela por cima (o valor sobe. Um agregado maior aproxima-se dela por baixo) o
-    valor desce. O ponto de viragem é exatamente a dimensão média.
+    aproxima-se dela por cima (o valor sobe); um agregado maior aproxima-se dela por baixo
+    (o valor desce). O ponto de viragem é exatamente a dimensão média.
 
     Não é um artefacto do cálculo: é o que qualquer normalização por escala de equivalência
     produz. É também a razão pela qual a aplicação apresenta sempre um intervalo, e não um valor
@@ -6158,8 +6159,8 @@ o IDF e o EU-SILC são ambos inquéritos a agregados residentes.*
                 """)
             else:
                 st.warning("""
-**Bases estatísticas próximas, mas não idênticas.** Com a base **IDF**, o **numerador**, a
-despesa alimentar (e o **denominador**) o rendimento do EU-SILC, vêm ambos de **inquéritos a
+**Bases estatísticas próximas, mas não idênticas.** Com a base **IDF**, o **numerador** (a
+despesa alimentar) e o **denominador** (o rendimento do EU-SILC) vêm ambos de **inquéritos a
 agregados residentes**, o que elimina a maior parte da incompatibilidade que afeta a base das
 Contas Nacionais.
 
@@ -6548,7 +6549,7 @@ repartição de um valor total por essas proporções. É por isso que a tabela 
                 } for r in _fresc.itertuples()])
                 st.dataframe(_tab_f, width="stretch", hide_index=True)
                 st.caption(
-                    "**Parou** (a série deixou de avançar. **Dentro do prazo**) está a "
+                    "**Parou**, a série deixou de avançar. **Dentro do prazo**, está a "
                     "publicar como esperado. **A decorrer**, o período mais recente ainda "
                     "está a decorrer: a série está à frente da data corrente e a idade é "
                     "zero. **Não verificável**, período não interpretável; não é acusação, "
@@ -6692,14 +6693,18 @@ Chamar-lhe cabaz seria prometer o que não entrega.
        apuramento e a atribuição por predominância; a sensibilidade a ambas está apresentada como
        intervalo. Ver o painel “Quanto do cabaz segue cada taxa” no separador do IVA.
     7. **A repercussão está calibrada, mas continua a ser o parâmetro decisivo.** Parte de
-       95%, derivado da avaliação do Banco de Portugal ao “IVA zero” de 2023, a medida
-       idêntica, no mesmo país.
+       @RHO_LIM@ %, derivado da avaliação do Banco de Portugal ao “IVA zero” de 2023, a
+       medida idêntica, no mesmo país.
        Mesmo calibrado, é o número que mais move o resultado: qualquer valor do simulador é
        condicional a ele e deve ser apresentado como intervalo. E a estimativa vem de uma medida
        **temporária e mediática**, avaliada ao longo de quatro meses, uma alteração permanente
        e discreta pode repercutir-se menos.
     8. **A extrapolação agregada é ilustrativa.** Não é uma estimativa de custo orçamental.
-            """)
+            """
+            # O valor por defeito da repercussão sai do `config`, como em todo o
+            # resto da aplicação. Estava inscrito à mão neste ponto, e é o
+            # padrão que as auditorias já apanharam quatro vezes (C2/E9/K8/L16).
+            .replace("@RHO_LIM@", numero(REPERCUSSAO_PADRAO * 100, 0)))
             st.warning("""
     **9 · O preço usado não é o preço que uma família concreta paga.** Há duas razões distintas,
     e ambas devem ser declaradas:
