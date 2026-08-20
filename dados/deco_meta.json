@@ -1,0 +1,17 @@
+{
+  "extraido_em": "2026-08-20",
+  "fonte": "DECO PROteste, cabaz essencial de 63 bens alimentares",
+  "endereco": "https://www.deco.proteste.pt/familia-consumo/supermercado/noticias/precos-estao-aumentar-alimentos",
+  "titulo_grafico": "Cabaz alimentar desde 2022, 22/07/2026",
+  "data_referencia": "2026-08-19",
+  "valor_atual": 253.55,
+  "primeiro_periodo": "2022-01-05",
+  "ultimo_periodo": "2026-08-19",
+  "observacoes": 242,
+  "tabelas_top10": [
+    "desde_2022",
+    "desde_janeiro",
+    "semanal"
+  ],
+  "falhas": []
+}

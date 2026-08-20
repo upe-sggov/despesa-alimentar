@@ -1168,6 +1168,10 @@ ESCALAS_TESTE_INTERVALO = (10, 13)
 # tolera um período em atraso e apanha o segundo.
 LIMITE_DIAS_OBSERVATORIO = 60
 
+# A DECO PROteste publica o cabaz essencial todas as quartas-feiras. Catorze
+# dias tolera uma semana em atraso e apanha a segunda.
+LIMITE_DIAS_DECO = 14
+
 # O SOFI é anual, publicado a meio do ano seguinte ao de referência. Dois anos
 # de distância do último ano da série significa que houve uma edição por
 # incorporar.

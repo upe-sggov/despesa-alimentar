@@ -29,9 +29,16 @@ comparar Portugal com os restantes Estados-Membros.
 
 ## O que a aplicação faz
 
-A aplicação organiza-se em seis separadores.
+A aplicação organiza-se em sete separadores.
 
-**1 · Despesa e composição.** A despesa alimentar mensal por agregado, a partir
+**1 · Evolução do Cabaz.** Preço do cabaz essencial da DECO PROteste (63 bens
+alimentares, composição fixa), série completa desde janeiro de 2022, com as
+variações face à semana anterior, desde o início do ano e desde o início da
+série, e os produtos que mais aumentaram em três janelas de comparação. É uma
+referência externa e privada, não o indicador que os restantes separadores
+calculam — ver [«Despesa alimentar» e não «cabaz»](#despesa-alimentar-e-não-cabaz).
+
+**2 · Despesa e composição.** A despesa alimentar mensal por agregado, a partir
 de uma de **duas bases oficiais à escolha** — o IDF ou as Contas Nacionais —,
 atualizada ao mês mais recente pelo índice de preços. A aplicação reparte-a pelas
 nove classes COICOP e aplica a cada uma a sua variação homóloga, devolvendo o
@@ -39,23 +46,23 @@ contributo de cada tipo de produto para o agravamento. Inclui o **cabaz por
 quintil de rendimento**, o esforço face a três referências de rendimento e os
 **três limiares de acessibilidade alimentar**.
 
-**2 · Histórico.** Série mensal do índice de preços alimentares e da variação
+**3 · Histórico.** Série mensal do índice de preços alimentares e da variação
 homóloga, e a medição do **viés de substituição** — cabaz de composição fixa
 contra índice de Törnqvist.
 
-**3 · Da produção ao consumo.** Preços do mesmo produto nas duas pontas da
+**4 · Da produção ao consumo.** Preços do mesmo produto nas duas pontas da
 cadeia, a partir do Observatório de Preços Agroalimentar do GPP. Responde a
 *«onde na cadeia está o aumento?»* — que nenhum outro separador toca.
 
-**4 · Simulador de IVA.** Permite definir uma taxa por classe e, sobretudo,
+**5 · Simulador de IVA.** Permite definir uma taxa por classe e, sobretudo,
 regular a **repercussão** — a fração da alteração de imposto que chega ao preço
 final. Mostra quanto poupa o consumidor, quanto fica na margem do operador e
 qual a variação de receita.
 
-**5 · Comparação UE-27.** Inflação alimentar harmonizada de Portugal face à
+**6 · Comparação UE-27.** Inflação alimentar harmonizada de Portugal face à
 UE-27 e aos países selecionados, com ordenação do último mês disponível.
 
-**6 · Fontes e método.** O quadro dos **seis instrumentos** que o debate público
+**7 · Fontes e método.** O quadro dos **seis instrumentos** que o debate público
 confunde, a proveniência de cada elemento, o registo das ligações da sessão e as
 limitações a declarar.
 
@@ -97,12 +104,17 @@ despesa-alimentar/
 │   ├── config.py           # COICOP, países, cores, IDF por quintil, SOFI
 │   ├── eurostat.py         # acesso aos dados (duas vias independentes)
 │   ├── calculos.py         # decomposição, IVA, quintis, Törnqvist, escalas
-│   └── observatorio.py     # leitura e análise dos dados do GPP
+│   ├── observatorio.py     # leitura e análise dos dados do GPP
+│   └── deco.py             # leitura e variações do cabaz da DECO PROteste
 ├── scripts/
-│   └── recolher_observatorio.py   # recolha do Observatório (passo manual)
-├── dados/
-│   ├── observatorio.csv           # série recolhida, versionada
-│   └── observatorio_meta.json     # data de extração e cobertura
+│   ├── recolher_observatorio.py   # recolha do Observatório (passo manual)
+│   └── recolher_deco.py           # recolha do cabaz DECO (passo manual)
+├── dados/                          # não versionado (ver .gitignore); gerado pelos scripts acima
+│   ├── observatorio.csv
+│   ├── observatorio_meta.json
+│   ├── deco_cabaz.csv
+│   ├── deco_top10.csv
+│   └── deco_meta.json
 ├── docs/
 │   └── 2026-08-07_levantamento_lacunas.md   # apuramento e decisões
 └── tests/
@@ -114,11 +126,12 @@ A separação entre **acesso a dados** (`eurostat.py`, `observatorio.py`),
 testar a lógica sem levantar a interface, e substituir a fonte de dados sem tocar
 no resto.
 
-**Duas fontes não vêm de API** e exigem atualização manual, por só serem
-publicadas em documento: o **FAO SOFI** (inscrito em `src/config.py`, atualizar a
-cada edição anual) e o **Observatório do GPP** (recolhido por script para
-`dados/`, atualizar quando sair novo período de quatro semanas). Ambas estão
-assinaladas como tal na interface.
+**Três fontes não vêm de API** e exigem atualização manual: o **FAO SOFI**
+(inscrito em `src/config.py`, atualizar a cada edição anual), o **Observatório
+do GPP** (recolhido por script para `dados/`, atualizar quando sair novo
+período de quatro semanas) e o **cabaz da DECO PROteste** (idem, atualizar
+quando a DECO publicar nova semana, às quartas-feiras). Todas estão assinaladas
+como tal na interface.
 
 ---
 
@@ -349,6 +362,38 @@ momento. Deflacioná-los pela média anual do índice desconta duas vezes parte 
 efeito-preço e nenhuma vez outra parte. A direção pode manter-se; a magnitude não
 é defensável.
 
+### Evolução do Cabaz — DECO PROteste
+
+Referência externa, não o indicador que a aplicação calcula (ver [«Despesa
+alimentar» e não «cabaz»](#despesa-alimentar-e-não-cabaz)). A DECO PROteste
+acompanha, desde janeiro de 2022, o preço absoluto de um cabaz de composição
+fixa de 63 bens alimentares essenciais, recolhido semanalmente nas principais
+cadeias com loja online.
+
+**A DECO não tem API pública.** O artigo semanal que publica o valor embute os
+gráficos como infografias Infogram, e cada uma expõe os seus dados numa
+variável JavaScript da própria página do embed — não é um mecanismo
+documentado nem estável, é o que existe. A recolha é por isso um passo
+explícito, como a do Observatório:
+
+```
+python scripts/recolher_deco.py
+```
+
+Escreve `dados/deco_cabaz.csv` (série completa), `dados/deco_top10.csv` (os
+produtos que mais aumentaram, em três janelas — última semana, desde janeiro,
+desde 2022) e `dados/deco_meta.json`. **Convém correr o script quando a DECO
+publicar nova semana** — a aplicação mostra sempre a data de referência e avisa
+se o valor tiver mais de catorze dias.
+
+**Fragilidade a declarar.** Os identificadores dos embeds Infogram descobrem-se
+a cada execução, por correspondência entre o título de cada infografia e a
+série pretendida; se a DECO mudar esses títulos ou deixar de usar o Infogram, a
+recolha falha de forma visível, e não em silêncio. As três variações
+apresentadas (semana anterior, desde janeiro, desde o início da série) são
+calculadas a partir dos próprios pontos do gráfico, e não do texto do artigo,
+precisamente para não dependerem de como a DECO redige a notícia nessa semana.
+
 ### Da produção ao consumo — Observatório de Preços
 
 Todos os outros indicadores medem o que o consumidor paga ou quanto as famílias
@@ -366,8 +411,9 @@ explícito:
 python scripts/recolher_observatorio.py
 ```
 
-Escreve `dados/observatorio.csv` e `dados/observatorio_meta.json`, ambos
-versionados e com data de extração. Qualquer número apresentado é reconstituível.
+Escreve `dados/observatorio.csv` e `dados/observatorio_meta.json`, com data de
+extração. A pasta `dados/` não é versionada (ver `.gitignore`); cada ambiente
+corre o script depois de clonar. Qualquer número apresentado é reconstituível.
 **Convém correr o script quando sair novo período** — a aplicação mostra sempre a
 data da última recolha.
 

@@ -15,7 +15,7 @@ import streamlit as st
 
 from pathlib import Path
 
-from src import eurostat, observatorio
+from src import deco, eurostat, observatorio
 from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
                           comparar_ponderadores, composicao_iva,
                           composicao_quintis, decompor, despesa_do_agregado,
@@ -44,7 +44,7 @@ from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FO
                         IDF_ALIMENTAR_ANUAL,
                         IDF_JANELA_FONTE, IDF_JANELA_RECOLHA,
                         IDF_PESO_ALIMENTAR, IDF_QUINTIS,
-                        LIMITE_ANOS_SOFI, LIMITE_DIAS_OBSERVATORIO,
+                        LIMITE_ANOS_SOFI, LIMITE_DIAS_DECO, LIMITE_DIAS_OBSERVATORIO,
                         LIMITES_FRESCURA,
                         SOFI_CUSTO, SOFI_EDICAO, SOFI_FONTE, SOFI_INCAPACIDADE,
                         SOFI_MILHOES,
@@ -2389,10 +2389,159 @@ def painel(nome: str):
         )
 
 
-aba1, aba2, aba6, aba3, aba4, aba5 = st.tabs([
-    "Despesa e composição", "Histórico", "Da produção ao consumo",
+abaD, aba1, aba2, aba6, aba3, aba4, aba5 = st.tabs([
+    "Evolução do Cabaz", "Despesa e composição", "Histórico", "Da produção ao consumo",
     "Simulador de IVA", "Comparação UE-27", "Metodologia e fontes",
 ])
+
+# ==========================================================================
+# ABA D, Evolução do Cabaz
+# ==========================================================================
+with abaD:
+    with painel("Evolução do Cabaz"):
+        titulo_pagina(
+            "Evolução do cabaz essencial (DECO PROteste)",
+            "Preço de uma cesta de 63 bens alimentares essenciais, de composição fixa, "
+            "seguida pela DECO PROteste desde janeiro de 2022. Não é o indicador que esta "
+            "aplicação calcula, é uma referência externa e privada, que complementa a "
+            "leitura da despesa alimentar apresentada nos restantes separadores.")
+
+        _serie_deco, _top10_deco, _meta_deco = deco.carregar()
+
+        if _serie_deco.empty:
+            st.warning(
+                "**Sem dados recolhidos.** A DECO PROteste não tem API pública: a série é "
+                "obtida por `scripts/recolher_deco.py`, que escreve `dados/deco_cabaz.csv`. "
+                "Execute o script para preencher este separador."
+            )
+        else:
+            _var_deco = deco.variacoes(_serie_deco)
+            _sv = _var_deco["semana_anterior"]
+            _dj = _var_deco["desde_ano_corrente"]
+            _di = _var_deco["desde_inicio"]
+
+            _fresc_deco = frescura_do_observatorio(
+                _var_deco["atual"]["data"], _meta_deco.get("extraido_em"),
+                LIMITE_DIAS_DECO, cadencia_dias=7)
+            if _fresc_deco["parada"]:
+                st.warning(
+                    f"**Este valor tem mais de {numero(LIMITE_DIAS_DECO)} dias.** "
+                    "A DECO publica semanalmente, às quartas-feiras; confirme antes de o "
+                    "citar como situação corrente."
+                )
+
+            indicador_principal(
+                "Cabaz essencial DECO PROteste",
+                euro(_var_deco["atual"]["valor"]),
+                contexto=(f"Semana de {_var_deco['atual']['data'].strftime('%d/%m/%Y')} "
+                          "· 63 bens alimentares essenciais, composição fixa"),
+                sec_valor=(percentagem(_sv["delta_pct"])
+                           if _sv.get("delta_pct") is not None else None),
+                sec_rotulo="face à semana anterior",
+                sec_cor=(None if _sv.get("delta_pct") is None
+                         else (VERMELHO if _sv["delta_pct"] > 0 else VERDE)))
+
+            nota("Não é o indicador desta aplicação", f"""
+                A DECO PROteste soma o <strong>preço absoluto</strong> de uma lista fixa de
+                63 produtos, sem ponderação pelo consumo real das famílias e sem cobrir o
+                comércio tradicional. A <strong>despesa alimentar</strong>, que é o que os
+                restantes separadores medem, reparte a despesa efetiva das famílias pelos
+                grupos de produtos, com base no índice de preços do INE/Eurostat. Ver
+                “Porque é que se diz despesa alimentar e não cabaz”, no separador
+                Metodologia. Fonte: <a href="{_meta_deco.get('endereco', '#')}"
+                target="_blank" rel="noopener noreferrer">{_meta_deco.get('fonte',
+                'DECO PROteste')}</a>, extraído em {_meta_deco.get('extraido_em', '—')}.""")
+
+            secao("Evolução desde 2022",
+                  f"Preço semanal do cabaz, de {_di['data'].strftime('%d/%m/%Y')} a "
+                  f"{_var_deco['atual']['data'].strftime('%d/%m/%Y')}.",
+                  grupo="01 · Evolução do cabaz")
+
+            d1, d2, d3 = st.columns(3)
+            d1.metric("Semana anterior", euro(_sv["valor"]),
+                      delta=(f"{euro(_sv['delta'])} ({percentagem(_sv['delta_pct'])})"
+                             if _sv.get("delta_pct") is not None else None),
+                      delta_color="inverse")
+            d2.metric(f"Primeira semana de {_dj['data'].year}", euro(_dj["valor"]),
+                      delta=(f"{euro(_dj['delta'])} ({percentagem(_dj['delta_pct'])})"
+                             if _dj.get("delta_pct") is not None else None),
+                      delta_color="inverse")
+            d3.metric(f"Início da série ({_di['data'].strftime('%m/%Y')})", euro(_di["valor"]),
+                      delta=(f"{euro(_di['delta'])} ({percentagem(_di['delta_pct'])})"
+                             if _di.get("delta_pct") is not None else None),
+                      delta_color="inverse")
+
+            figD = go.Figure()
+            figD.add_trace(go.Scatter(
+                x=_serie_deco["data"], y=_serie_deco["valor"], mode="lines",
+                line=dict(color=VERMELHO, width=2.5),
+                fill="tozeroy", fillcolor="rgba(208,33,23,0.08)",
+                hovertemplate="%{x|%d/%m/%Y}<br>%{y:.2f} €<extra></extra>"))
+            figD.update_layout(
+                height=420, margin=dict(t=12, b=10, l=10, r=10),
+                yaxis_title="Preço do cabaz (€)")
+            grafico(figD)
+
+            st.download_button(
+                "Descarregar série do cabaz DECO (CSV com fonte)",
+                csv_com_fonte(
+                    _serie_deco.rename(columns={"data": "Data", "valor": "Preço do cabaz (€)"}),
+                    "Cabaz essencial DECO PROteste - serie desde 2022", dados,
+                    fonte=_meta_deco.get("fonte", "DECO PROteste"),
+                    conjuntos=["DECO PROteste"],
+                    extra=[("Endereco", _meta_deco.get("endereco", "-")),
+                           ("Extraido em", _meta_deco.get("extraido_em", "-"))]),
+                "deco_cabaz.csv", "text/csv")
+
+            secao("Produtos que mais aumentaram",
+                  "Três janelas de comparação: a última semana, desde a primeira semana "
+                  "do ano corrente, e desde o início da monitorização em 2022.",
+                  grupo="02 · Produtos")
+
+            if _top10_deco.empty:
+                st.info("Sem tabelas de produtos nesta recolha.")
+            else:
+                _rotulos_top10 = {
+                    "semanal": "Última semana",
+                    "desde_janeiro": f"Desde janeiro de {_dj['data'].year}",
+                    "desde_2022": "Desde 2022",
+                }
+                _disponiveis = [c for c in _rotulos_top10
+                                if c in set(_top10_deco["tabela"])]
+                _subabas = st.tabs([_rotulos_top10[c] for c in _disponiveis])
+                for _chave, _sub in zip(_disponiveis, _subabas):
+                    with _sub:
+                        _t = (_top10_deco[_top10_deco["tabela"] == _chave]
+                              .sort_values("aumento_pct", ascending=True))
+                        _custom = list(zip(
+                            _t["preco_atual"].astype(float),
+                            _t["unidade_preco"], _t["aumento_valor"].astype(float)))
+                        figT = go.Figure(go.Bar(
+                            y=_t["produto"], x=_t["aumento_pct"], orientation="h",
+                            marker_color=VERMELHO, customdata=_custom,
+                            hovertemplate="<b>%{y}</b><br>+%{x:.0f}%"
+                                          "<br>Preço atual: %{customdata[0]:.2f} %{customdata[1]}"
+                                          "<br>Aumento: +%{customdata[2]:.2f} €"
+                                          "<extra></extra>"))
+                        figT.update_layout(
+                            height=max(320, 36 * len(_t)),
+                            margin=dict(t=12, b=10, l=10, r=10),
+                            xaxis_title="Aumento (%)")
+                        grafico(figT)
+
+                st.download_button(
+                    "Descarregar produtos com maior aumento (CSV com fonte)",
+                    csv_com_fonte(
+                        _top10_deco.rename(columns={
+                            "tabela": "Janela", "produto": "Produto",
+                            "preco_atual": "Preço atual", "unidade_preco": "Unidade",
+                            "aumento_valor": "Aumento (€)", "aumento_pct": "Aumento (%)"}),
+                        "Produtos com maior aumento - DECO PROteste", dados,
+                        fonte=_meta_deco.get("fonte", "DECO PROteste"),
+                        conjuntos=["DECO PROteste"],
+                        extra=[("Endereco", _meta_deco.get("endereco", "-")),
+                               ("Extraido em", _meta_deco.get("extraido_em", "-"))]),
+                    "deco_top10.csv", "text/csv")
 
 # ==========================================================================
 # ABA 1, Despesa e composição
