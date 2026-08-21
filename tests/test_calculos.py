@@ -1892,27 +1892,123 @@ def test_a_app_mostra_a_nota_dos_agregados():
 
 
 # --------------------- linha de proveniencia dos graficos, 20.08.2026
-def _proveniencia(*a, **k):
+def _espaco_da_proveniencia():
     """
-    Extrai `proveniencia` do app e executa-a isolada, no mesmo molde do
-    `_csv_com_fonte`: a funcao so depende dos formatadores de data do config,
-    logo nao precisa do Streamlit nem da rede.
+    Extrai do app as funcoes da linha de proveniencia e executa-as isoladas, no
+    mesmo molde do `_csv_com_fonte`: dependem so de formatadores do config, logo
+    nao precisam do Streamlit nem da rede.
+
+    Sao tres e nao uma porque a frase foi repartida: o carimbo vai dentro da
+    figura, a base de calculo por baixo, e a `proveniencia` junta as duas para o
+    que nao e figura. Carregam-se no mesmo espaco para que a `proveniencia`
+    encontre as outras duas (20.08.2026).
     """
     from pathlib import Path
 
-    from src.config import mes_extenso, mes_homologo
+    from src.config import POR_CODIGO, mes_extenso, mes_homologo, numero
 
     fonte = (Path(__file__).resolve().parent.parent / "app.py").read_text(
         encoding="utf-8")
-    inicio = fonte.index("def proveniencia(")
-    fim = fonte.index("\ndef ", inicio + 1)
-    espaco = {"mes_extenso": mes_extenso, "mes_homologo": mes_homologo}
-    exec(compile(fonte[inicio:fim], "app.py", "exec"), espaco)
-    return espaco["proveniencia"](*a, **k)
+    espaco = {"mes_extenso": mes_extenso, "mes_homologo": mes_homologo,
+              "POR_CODIGO": POR_CODIGO, "numero": numero}
+    for nome in ("carimbo_do_grafico", "base_de_calculo", "nota_desalinhamento",
+                 "proveniencia"):
+        i = fonte.index(f"def {nome}(")
+        exec(compile(fonte[i:fonte.index("\ndef ", i + 1)], "app.py", "exec"),
+             espaco)
+    return espaco
+
+
+def _proveniencia(*a, **k):
+    return _espaco_da_proveniencia()["proveniencia"](*a, **k)
 
 
 def _dados_de_teste():
     return {"mes_variacoes": "2026-06", "ano_pesos": "2026"}
+
+
+def test_o_carimbo_e_a_base_repartem_a_proveniencia_sem_a_repetir():
+    """
+    O carimbo vai dentro da figura e a base de calculo por baixo. Se as duas
+    trouxessem a frase inteira, ficavam duas legendas encostadas a dizer o mesmo
+    (relatado pela Ines, 20.08.2026). Cada elemento aparece de um lado so.
+    """
+    esp = _espaco_da_proveniencia()
+    base = {"nome": "IDF 2022/2023", "ano_base": "2022/2023"}
+    dados = _dados_de_teste()
+
+    carimbo = esp["carimbo_do_grafico"](dados, mes_indice="2026-06")
+    calculo = esp["base_de_calculo"](dados, base, mes_indice="2026-06")
+
+    # O que identifica o quadro esta no carimbo, que e o que viaja com a imagem.
+    assert "Eurostat" in carimbo and "junho de 2026" in carimbo
+    # E nao se repete por baixo.
+    assert "Eurostat" not in calculo
+
+    # A base de calculo esta so por baixo, que e onde ha espaco para ela.
+    assert "Ponderadores de 2026" in calculo and "IDF 2022/2023" in calculo
+    assert "Ponderadores" not in carimbo and "IDF" not in carimbo
+
+    # Juntas dao a frase inteira, que e o que vai para o que nao e figura.
+    inteira = esp["proveniencia"](dados, base, mes_indice="2026-06")
+    assert carimbo in inteira and calculo in inteira
+
+
+def test_o_carimbo_do_grafico_cabe_numa_linha():
+    """
+    Vai em corpo 10 dentro da figura. Uma frase que atravesse o grafico todo
+    deixa de ser carimbo e passa a ser estorvo.
+    """
+    esp = _espaco_da_proveniencia()
+    carimbo = esp["carimbo_do_grafico"](_dados_de_teste(), mes_indice="2026-06")
+    assert len(carimbo) < 130, f"{len(carimbo)} caracteres: {carimbo}"
+
+
+def test_o_grafico_aceita_carimbo_e_abre_espaco_para_ele():
+    """
+    Nao basta passar o texto: sem aumentar a margem inferior, a anotacao sai
+    fora da figura ou por cima do titulo do eixo.
+    """
+    fonte = _fonte("app.py")
+    i = fonte.index("def grafico(")
+    trecho = fonte[i:fonte.index("\ndef ", i + 1)]
+    assert "rodape" in trecho
+    assert "add_annotation" in trecho
+    assert "margin" in trecho
+
+
+def test_a_nota_de_desalinhamento_so_aparece_quando_ha_desalinhamento():
+    """
+    O caso normal e estarem todas as classes no mesmo mes. Uma nota permanente
+    a dizer que esta tudo bem treina o leitor a ignorar as notas.
+    """
+    esp = _espaco_da_proveniencia()
+    nota = esp["nota_desalinhamento"]
+
+    assert nota({}) is None
+    assert nota({"variacoes_desalinhadas": {}}) is None
+
+    uma = nota({"variacoes_desalinhadas": {"CP0112": "2026-05"}})
+    assert uma is not None and "Uma classe entra" in uma
+    assert "Carne" in uma, uma
+
+    duas = nota({"variacoes_desalinhadas": {"CP0112": "2026-05",
+                                            "CP0113": "2026-05"}})
+    assert "2 classes entram" in duas
+    assert "Carne" in duas and "Peixe e produtos do mar" in duas
+
+
+def test_a_app_mostra_a_nota_de_desalinhamento_junto_dos_graficos():
+    """
+    A declaracao completa fica no topo da pagina, a mais de mil linhas dos
+    contributos por grupo. Tem de aparecer tambem onde produz efeito.
+    """
+    fonte = _fonte("app.py")
+    assert fonte.count("_desal_nota") >= 3      # calculo + duas utilizacoes
+    # Calculado fora do `if` do grafico: se os contributos nao tiverem dados, os
+    # cartoes aparecem na mesma e a nota tem de existir.
+    i = fonte.index("_desal_nota = nota_desalinhamento(dados)")
+    assert fonte.index("if _desal_nota:") > i
 
 
 def test_a_proveniencia_declara_as_tres_datas():
@@ -1951,7 +2047,7 @@ def test_a_proveniencia_nao_mostra_codigos_de_conjunto():
 
     for codigo in ("prc_hicp", "nama_10", "ilc_", "lfst_", "earn_mw", "CP011"):
         assert codigo not in linha, f"{codigo} nao pode aparecer no corpo: {linha}"
-    assert "índice harmonizado de preços no consumidor" in linha
+    assert "índice harmonizado de preços" in linha
 
 
 def test_a_proveniencia_acompanha_a_base_escolhida():

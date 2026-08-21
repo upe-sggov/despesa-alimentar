@@ -1794,9 +1794,101 @@ def estilo_grafico(fig: go.Figure) -> go.Figure:
     return fig
 
 
-def grafico(fig: go.Figure, **kwargs) -> None:
-    """Aplica a linguagem visual comum e apresenta o gráfico."""
-    st.plotly_chart(estilo_grafico(fig), width="stretch", **kwargs)
+def grafico(fig: go.Figure, rodape: str | None = None, **kwargs) -> None:
+    """
+    Aplica a linguagem visual comum e apresenta o gráfico.
+
+    `rodape` carimba o texto **dentro da figura**, em corpo pequeno, por baixo
+    do eixo. Uma legenda em HTML por baixo do gráfico não acompanha a imagem:
+    quem copie o gráfico para uma nota ou uma apresentação fica com um quadro
+    sem data nenhuma. O carimbo viaja com ela (20.08.2026).
+
+    A margem inferior é aumentada para o acolher, e a posição é calculada a
+    partir dela, para não colidir com o título do eixo, que fica mais acima.
+    """
+    fig = estilo_grafico(fig)
+    if rodape:
+        base = fig.layout.margin.b if fig.layout.margin.b is not None else 40
+        fig.update_layout(margin=dict(b=base + 30))
+        fig.add_annotation(
+            text=rodape, xref="paper", yref="paper", x=0, y=0,
+            xanchor="left", yanchor="top", yshift=-(base + 14),
+            showarrow=False, align="left",
+            font=dict(family=TIPO, size=10, color=TEXTO_3))
+    st.plotly_chart(fig, width="stretch", **kwargs)
+
+
+def carimbo_do_grafico(dados: dict, mes_indice: str | None = None,
+                       variacao: bool = True) -> str:
+    """
+    O que tem de viajar com a imagem: fonte e período, e mais nada.
+
+    É a metade da proveniência que identifica o quadro. A outra metade, a base
+    de cálculo, fica em `base_de_calculo`, por baixo do gráfico. Repartir em vez
+    de duplicar: com a frase inteira nos dois sítios, o leitor via duas legendas
+    encostadas a dizer o mesmo (decisão da Inês, 20.08.2026).
+    """
+    mes = dados.get("mes_variacoes")
+    mes_nivel = mes_indice or mes
+
+    if mes and variacao:
+        periodo = f"variação de {mes_homologo(mes)} para {mes_extenso(mes)}"
+    elif mes_nivel:
+        periodo = f"valores a preços de {mes_extenso(mes_nivel)}"
+    else:
+        periodo = "período não determinado"
+
+    # Curto de propósito: vai em corpo 10 dentro da figura. “Eurostat / INE”
+    # em vez de “Eurostat, compilado pelo INE”, e sem “no consumidor”, poupa
+    # quase trinta caracteres sem perder a atribuição. O nome por extenso e a
+    # distinção entre IPC e IHPC estão na metodologia.
+    return f"Fonte: Eurostat / INE, índice harmonizado de preços · {periodo}"
+
+
+def base_de_calculo(dados: dict, base: dict | None = None,
+                    mes_indice: str | None = None) -> str:
+    """
+    A outra metade: com que ponderadores se repartiu e sobre que nível.
+
+    Fica de fora do carimbo por não ser o que identifica o quadro, e por não
+    caber em corpo 10 sem atravessar a figura toda.
+    """
+    partes = []
+    if dados.get("ano_pesos"):
+        partes.append(f"Ponderadores de {dados['ano_pesos']}.")
+    if base:
+        ano = str(base.get("ano_base") or "")
+        nivel = base["nome"] if (not ano or ano in base["nome"]) \
+            else f"{base['nome']} ({ano})"
+        mes_nivel = mes_indice or dados.get("mes_variacoes")
+        if mes_nivel:
+            nivel += f", indexado a {mes_extenso(mes_nivel)}"
+        partes.append(f"Nível de despesa: {nivel}.")
+    return " ".join(partes)
+
+
+def nota_desalinhamento(dados: dict) -> str | None:
+    """
+    Aviso curto para junto do gráfico, quando nem todas as classes são do mesmo
+    período.
+
+    A declaração completa está no topo da página, mas o topo fica a mais de mil
+    linhas dos contributos por grupo, e é ali que o desalinhamento produz
+    efeito: são aquelas barras que misturam meses. Devolve None quando está tudo
+    alinhado, que é o caso normal (20.08.2026).
+    """
+    desal = dados.get("variacoes_desalinhadas") or {}
+    if not desal:
+        return None
+    nomes = [POR_CODIGO[c]["nome"] if c in POR_CODIGO else c
+             for c in sorted(desal)]
+    quantos = ("Uma classe entra" if len(nomes) == 1
+               else f"{numero(len(nomes))} classes entram")
+    return (f"**Nem todas as classes são do mesmo mês.** {quantos} com a última "
+            f"observação disponível, anterior à das restantes: "
+            f"{', '.join(nomes)}. Entram assim em vez de saírem do cálculo, "
+            "porque excluí-las faria as outras absorver a despesa toda. Ver o "
+            "aviso no topo da página.")
 
 
 def proveniencia(dados: dict, base: dict | None = None,
@@ -1829,33 +1921,17 @@ def proveniencia(dados: dict, base: dict | None = None,
     composição da despesa: aí a janela homóloga não é o período de referência do
     que está no ecrã, e anunciá-la seria dizer que o gráfico responde a uma
     pergunta que não responde.
+
+    **Onde usar esta e onde usar as duas metades.** Num gráfico, a identificação
+    vai carimbada dentro da figura (`carimbo_do_grafico`, via `grafico(rodape=)`)
+    e a base de cálculo por baixo (`base_de_calculo`): repartidas, não repetidas.
+    Esta função junta as duas e serve o que **não é figura**, como o detalhe por
+    grupo, que são cartões e não tem imagem nenhuma para carimbar.
     """
-    partes = ["Fonte: Eurostat, índice harmonizado de preços no consumidor, "
-              "compilado pelo INE."]
-
-    mes = dados.get("mes_variacoes")
-    mes_nivel = mes_indice or mes
-
-    if mes and variacao:
-        partes.append(f"Período de referência: {mes_extenso(mes)}, face a "
-                      f"{mes_homologo(mes)}.")
-    elif mes_nivel:
-        partes.append(f"Valores a preços de {mes_extenso(mes_nivel)}.")
-
-    if dados.get("ano_pesos"):
-        partes.append(f"Ponderadores de {dados['ano_pesos']}.")
-
-    if base:
-        # O nome do IDF já traz o período (“IDF 2022/2023”), o das Contas
-        # Nacionais não. Repetir dava “IDF 2022/2023 (2022/2023)”.
-        ano = str(base.get("ano_base") or "")
-        nivel = base["nome"] if (not ano or ano in base["nome"]) \
-            else f"{base['nome']} ({ano})"
-        if mes_nivel:
-            nivel += f", indexado a {mes_extenso(mes_nivel)}"
-        partes.append(f"Nível de despesa: {nivel}.")
-
-    return " ".join(partes)
+    return " ".join(p for p in (
+        carimbo_do_grafico(dados, mes_indice, variacao) + ".",
+        base_de_calculo(dados, base, mes_indice),
+    ) if p)
 
 
 def grafico_composicao(df: pd.DataFrame) -> go.Figure:
@@ -3039,6 +3115,10 @@ with aba1:
         # passa a ser nomeada pelos dois extremos, aqui e no detalhe por grupo.
         _janela = (f"de {mes_homologo(ultimo_mes)} para {mes_extenso(ultimo_mes)}"
                    if ultimo_mes and ultimo_mes != "—" else "nos últimos 12 meses")
+        # Calculado uma vez para as duas secções que o usam, e fora do `if` do
+        # gráfico: se os contributos não tiverem dados, os cartões continuam a
+        # aparecer e a nota tem de existir na mesma.
+        _desal_nota = nota_desalinhamento(dados)
         secao("Contributo de cada grupo para a variação anual",
               f"Euros de variação <strong>{_janela}</strong> atribuíveis a cada "
               "grupo, positivos à direita, negativos à esquerda.",
@@ -3059,12 +3139,17 @@ with aba1:
             # O zero é a leitura central deste gráfico, separa quem agrava de
             # quem alivia, e vinha com o mesmo peso das linhas de grelha.
             fig.update_xaxes(zeroline=True, zerolinecolor=TEXTO_3, zerolinewidth=1.5)
-            grafico(fig)
+            grafico(fig, rodape=carimbo_do_grafico(dados,
+                                                   mes_indice=ancora.get("mes")))
             st.caption("Vermelho: grupos que encareceram e agravam a despesa. "
                        "Verde: grupos que baixaram e a aliviam. A linha vertical "
                        "marca o zero.")
-            st.caption(proveniencia(dados, base_ancora,
-                                    mes_indice=ancora.get("mes")))
+            st.caption(base_de_calculo(dados, base_ancora,
+                                       mes_indice=ancora.get("mes")))
+            # O desalinhamento entre classes é declarado no topo da página, a
+            # mais de mil linhas daqui. É nestas barras que ele produz efeito.
+            if _desal_nota:
+                st.caption(_desal_nota)
 
         # ---- composição da despesa ----
         # A caixa que estava à direita do donut explicava os **cartões**, dizia-o
@@ -3084,13 +3169,15 @@ with aba1:
                  f"<strong>{dados['ano_pesos']}</strong>."
                  if dados.get("ano_pesos") else ""),
               grupo="04 · Composição da despesa")
-        grafico(grafico_composicao(df_decomp))
         # Este gráfico não mostra variação nenhuma, logo a janela homóloga não é
         # o seu período de referência. O que o data são duas outras coisas: o
         # ano dos ponderadores, que decide a repartição, e o mês a que o nível
         # de despesa está indexado.
-        st.caption(proveniencia(dados, base_ancora,
-                                mes_indice=ancora.get("mes"), variacao=False))
+        grafico(grafico_composicao(df_decomp),
+                rodape=carimbo_do_grafico(dados, mes_indice=ancora.get("mes"),
+                                          variacao=False))
+        st.caption(base_de_calculo(dados, base_ancora,
+                                   mes_indice=ancora.get("mes")))
 
         # ---- detalhe por grupo ----
         secao("Cada grupo em detalhe",
@@ -3102,8 +3189,14 @@ with aba1:
             cols = st.columns(3)
             for col, (_, linha) in zip(cols, df_decomp.iloc[inicio:inicio + 3].iterrows()):
                 col.markdown(cartao_classe(linha), unsafe_allow_html=True)
+        # Aqui a proveniência vai inteira: são cartões, não há figura para
+        # carimbar, logo não há nada de que repartir.
         st.caption(proveniencia(dados, base_ancora,
                                 mes_indice=ancora.get("mes")))
+        # É nos cartões que a taxa de cada classe aparece isolada, e por isso é
+        # aqui que uma classe de outro mês mais engana.
+        if _desal_nota:
+            st.caption(_desal_nota)
 
         # ---- cabaz por quintil de rendimento ----
         # O `st.divider()` que abria esta secção saiu: passou a ser um bloco
