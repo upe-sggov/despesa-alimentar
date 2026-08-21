@@ -1843,6 +1843,60 @@ def test_variacao_de_portugal_pedida_na_mesma_janela_do_indice():
     assert "desde_variacao" not in trecho
 
 
+# --------------------- observacoes nao sao periodos decorridos, 20.08.2026
+def test_observatorio_distingue_observacoes_de_periodos_decorridos():
+    """
+    `n_periodos` conta **observacoes**, nao periodos decorridos, e a aplicacao
+    dizia "N periodos de quatro semanas", o que convidava a multiplicar N por
+    quatro para saber a duracao da janela.
+
+    So esta certo nas series seguidas. O Arroz Carolino tem 16 observacoes num
+    intervalo de quatro anos, nao de 64 semanas (relatado pela Ines,
+    20.08.2026).
+    """
+    import pandas as pd
+
+    from src.observatorio import variacoes
+
+    def linha(produto, fase, dia, preco):
+        return {"setor": "s", "produto": produto, "fase": fase,
+                "inicio": pd.Timestamp(dia), "preco": preco, "unidade": "€/kg"}
+
+    # Serie seguida: quatro observacoes de quatro em quatro semanas.
+    seguida = [linha("Seguido", f, d, p)
+               for f in ("consumo", "producao")
+               for d, p in (("2022-01-03", 1.0), ("2022-01-31", 1.1),
+                            ("2022-02-28", 1.2), ("2022-03-28", 1.3))]
+    # Com falhas: duas observacoes nos mesmos tres meses.
+    falhada = [linha("Falhado", f, d, p)
+               for f in ("consumo", "producao")
+               for d, p in (("2022-01-03", 1.0), ("2022-03-28", 1.3))]
+
+    var = variacoes(pd.DataFrame(seguida + falhada)).set_index("produto")
+
+    s, f = var.loc["Seguido"], var.loc["Falhado"]
+    # A janela e a mesma nos dois; o que muda e quantas leituras tem dentro.
+    assert s["inicio"] == f["inicio"] and s["fim"] == f["fim"]
+    assert int(s["periodos_esperados"]) == int(f["periodos_esperados"]) == 4
+
+    assert int(s["n_periodos"]) == 4 and not bool(s["tem_falhas"])
+    assert int(f["n_periodos"]) == 2 and bool(f["tem_falhas"])
+
+
+def test_a_app_nao_chama_periodos_de_quatro_semanas_ao_que_sao_observacoes():
+    """
+    A expressao so pode sobrar onde se fala da **cadencia de publicacao**, que e
+    mesmo de quatro em quatro semanas, e nunca onde se conta o que uma janela
+    tem dentro.
+    """
+    fonte = _fonte("app.py")
+
+    for marca in ("n_periodos']} períodos de quatro",
+                  "n_periodos'])} períodos de quatro",
+                  "e {_n_max} períodos de quatro"):
+        assert marca not in fonte, marca
+
+
 # --------------------- o README nao pode envelhecer em silencio, 20.08.2026
 def _meta_observatorio():
     import json

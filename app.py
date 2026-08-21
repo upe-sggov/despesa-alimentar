@@ -4240,12 +4240,21 @@ with aba6:
             # produtos (auditoria de 10.08.2026, C4).
             if not _com_prod.empty:
                 _n_min, _n_max = int(_com_prod["n_periodos"].min()), int(_com_prod["n_periodos"].max())
+                # “N períodos de quatro semanas” dizia-se aqui, e induzia em
+                # erro: convidava a multiplicar N por quatro para saber a
+                # duração da janela, o que só está certo nas séries sem falhas.
+                # O Arroz Carolino tem 16 observações num intervalo de quatro
+                # anos, não de 64 semanas (relatado pela Inês, 20.08.2026).
+                _c_falhas = int(_com_prod["tem_falhas"].sum())
                 _cap_janela = (
                     f"Cada produto é medido **no seu próprio período comum às duas fases**, "
-                    f"entre {_n_min} e {_n_max} períodos de quatro semanas, conforme o produto. "
-                    "As janelas estão na tabela abaixo; **as variações não são comparáveis entre "
-                    "produtos com janelas diferentes**. Só os produtos com série de produção "
-                    "aparecem aqui."
+                    f"entre {_n_min} e {_n_max} observações, conforme o produto. O Observatório "
+                    "publica de quatro em quatro semanas, mas **o número de observações não dá a "
+                    "duração da janela**: há séries com falhas. As janelas e as contagens estão "
+                    "na tabela abaixo; **as variações não são comparáveis entre produtos com "
+                    "janelas diferentes**. Só os produtos com série de produção aparecem aqui."
+                    + (f" {_c_falhas} destes produtos têm falhas na série."
+                       if _c_falhas else "")
                 )
             else:
                 _cap_janela = "Só os produtos com série de produção aparecem aqui."
@@ -4311,7 +4320,11 @@ with aba6:
                     "Produto": r.produto,
                     "Janela medida": (f"{r.inicio.strftime('%m/%Y')} – "
                                       f"{r.fim.strftime('%m/%Y')}"),
-                    "Períodos": int(r.n_periodos),
+                    # “Observações” e não “Períodos”: é a contagem de leituras,
+                    # e a coluna ao lado diz quantas caberiam na janela, para
+                    # que as séries com falhas se distingam das seguidas.
+                    "Observações": int(r.n_periodos),
+                    "Caberiam na janela": int(r.periodos_esperados),
                     # Mesmas casas decimais do hover: é o mesmo número, e lido
                     # com precisão diferente nos dois sítios dava a impressão de
                     # serem dois.
@@ -4394,9 +4407,8 @@ with aba6:
     as duas pontas passa de {euro(_d['diferenca_inicial'])} para {euro(_d['diferenca_final'])}
     por {_d['unidade'] or 'unidade'}.
 
-    **Não é uma variação anual.** São {int(_d['n_periodos'])} períodos de quatro semanas, e o
-    valor acumulado nesse intervalo não se compara com as variações homólogas dos outros
-    separadores.
+    **Não é uma variação anual.** É o acumulado ao longo de {int(_d['n_periodos'])} observações
+    nesse intervalo, e não se compara com as variações homólogas dos outros separadores.
 
     Nenhum índice de preços mostra isto: para o IHPC, é apenas mais um produto que subiu. Mantém-se
     integralmente a ressalva acima, o alargamento da diferença não é, por si, margem de ninguém, e
@@ -4430,9 +4442,14 @@ with aba6:
                       f"{mes_extenso(_linha['fim'].strftime('%Y-%m'))}")
             _fim_geral = _var["fim"].max()
             _mais_curta = _linha["fim"] < _fim_geral
+            _falhas_p = (
+                f" A série tem **falhas**: são {int(_linha['n_periodos'])} observações num "
+                f"intervalo onde caberiam {int(_linha['periodos_esperados'])}, porque o "
+                "Observatório não publicou este produto em todos os períodos."
+                if _linha["tem_falhas"] else "")
             st.caption(
-                f"**{_escolhido}: {_jan_p}**, {int(_linha['n_periodos'])} períodos de quatro "
-                f"semanas. No consumo, {_pct_obs(_linha['consumo_var'])}"
+                f"**{_escolhido}: {_jan_p}**, {int(_linha['n_periodos'])} observações. "
+                f"No consumo, {_pct_obs(_linha['consumo_var'])}"
                 + (f"; na produção, {_pct_obs(_linha['producao_var'])}"
                    if _linha["tem_producao"] else "")
                 + ". É a variação **acumulada nessa janela**, não uma variação anual."
@@ -4441,6 +4458,7 @@ with aba6:
                    f"({mes_extenso(_fim_geral.strftime('%Y-%m'))}), porque a sua série de "
                    "produção para aí. O valor não é comparável com o dos produtos de janela "
                    "mais longa." if _mais_curta else "")
+                + _falhas_p
             )
 
             if _serie.empty:

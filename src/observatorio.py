@@ -50,6 +50,9 @@ def carregar() -> tuple[pd.DataFrame, dict]:
     return df, meta
 
 
+CADENCIA_DIAS = 28  # o Observatório publica de quatro em quatro semanas
+
+
 def variacoes(df: pd.DataFrame) -> pd.DataFrame:
     """
     Uma linha por produto, com a variação de cada fase entre a primeira e a
@@ -59,6 +62,14 @@ def variacoes(df: pd.DataFrame) -> pd.DataFrame:
     terminam antes das de consumo, cebola e brócolo em 2023, por exemplo. Se
     cada fase fosse medida no seu próprio intervalo, comparar-se-iam variações
     de períodos diferentes, e a diferença entre elas não significaria nada.
+
+    `n_periodos` é o **número de observações** usadas, e não o número de
+    períodos decorridos. Nem sempre coincidem: seis dos 39 produtos têm falhas
+    na série, e o Arroz Carolino é o caso extremo, com 16 observações num
+    intervalo que comportaria 53. Daí `periodos_esperados`, que é quantas
+    observações caberiam na janela à cadência de publicação, e permite a quem
+    apresenta os números dizer que a série tem falhas em vez de deixar supor
+    que “16 períodos de quatro semanas” são 64 semanas (20.08.2026).
     """
     if df.empty or not {"setor", "produto", "fase", "inicio", "preco"}.issubset(df.columns):
         return pd.DataFrame()
@@ -110,6 +121,12 @@ def variacoes(df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
 
     out = pd.DataFrame(linhas)
+    # Quantas observações caberiam na janela, à cadência de publicação. Menos do
+    # que isto significa série com falhas, e é o que distingue “45 observações
+    # seguidas” de “16 observações espalhadas por quatro anos”.
+    dias = (out["fim"] - out["inicio"]).dt.days
+    out["periodos_esperados"] = (dias / CADENCIA_DIAS).round().astype(int) + 1
+    out["tem_falhas"] = out["n_periodos"] < out["periodos_esperados"] - 1
     out["padrao"] = out.apply(_classificar, axis=1)
     return out.sort_values("consumo_var", ascending=False).reset_index(drop=True)
 
