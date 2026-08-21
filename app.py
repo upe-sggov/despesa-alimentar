@@ -1292,7 +1292,8 @@ def carregar_dados(anos_historico: int = 6):
     # chamava-lhe “líquido”, que é o contrário do que é, e fazia-o justamente
     # no painel de rastreabilidade e sobre a distinção que a aplicação declara
     # não ser um detalhe (auditoria de 12.08.2026, L5).
-    _ROTULO_SME = "Salário médio bruto (massa salarial ÷ TCO)"
+    _ROTULO_SME = ("Salário médio bruto (massa salarial ÷ trabalhadores "
+                   "por conta de outrem)")
     try:
         sme_df, via11 = eurostat.salario_medio(list(PAISES.keys()), ano - JANELA)
         registo.append((_ROTULO_SME, via11, len(sme_df)))
@@ -1436,9 +1437,11 @@ def carregar_dados(anos_historico: int = 6):
             else:
                 rejeitados.append(candidato)
     if rejeitados:
+        _quantos_rej = ("valores implausíveis" if len(rejeitados) > 1
+                        else "valor implausível")
         registo.append(
             ("N.º de agregados, verificação",
-             f"{len(rejeitados)} valor(es) implausível(eis), o primeiro "
+             f"{len(rejeitados)} {_quantos_rej}, o primeiro "
              f"{numero(rejeitados[0])}; ignorados", 0)
         )
 
@@ -1709,7 +1712,7 @@ def ancora_oficial(dados: dict, agregados: int) -> dict | None:
 # Eurostat, e o do cabaz por quintil, cujos níveis são do INE. São ficheiros
 # que saem da aplicação e circulam sozinhos: o cabeçalho é a única coisa que
 # resta a acompanhá-los (auditoria de 11.08.2026, E6).
-FONTE_EUROSTAT = "Eurostat (indice harmonizado de precos e contas nacionais)"
+FONTE_EUROSTAT = "Eurostat (índice harmonizado de preços e contas nacionais)"
 
 
 def csv_com_fonte(df: pd.DataFrame, titulo: str, dados: dict, extra=None,
@@ -1731,19 +1734,19 @@ def csv_com_fonte(df: pd.DataFrame, titulo: str, dados: dict, extra=None,
 
     linhas = [
         f"# {titulo}",
-        "# Produzido por: Unidade de Pesquisa e Estatisticas (UPE) - DSSD - Secretaria-Geral do Governo",
+        "# Produzido por: Unidade de Pesquisa e Estatísticas (UPE), DSSD, Secretaria-Geral do Governo",
         f"# Fonte dos dados: {fonte}",
-        f"# Conjuntos consultados nesta sessao: {conjuntos_txt}",
-        f"# Ultimo mes disponivel: {dados.get('mes_variacoes') or '-'}",
+        f"# Conjuntos consultados nesta sessão: {conjuntos_txt}",
+        f"# Último mês disponível: {dados.get('mes_variacoes') or '-'}",
         f"# Ponderadores de: {dados.get('ano_pesos') or '-'}",
-        f"# Ancora das Contas Nacionais: {dados.get('despesa_ano') or '-'} "
-        f"(a app usa duas bases - ver a linha 'Base de calculo' quando presente)",
-        f"# Extraido em: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        f"# Âncora das Contas Nacionais: {dados.get('despesa_ano') or '-'} "
+        f"(a aplicação usa duas bases; ver a linha 'Base de cálculo' quando presente)",
+        f"# Extraído em: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
     ]
     for chave, valor in (extra or []):
         linhas.append(f"# {chave}: {valor}")
     linhas += [
-        "# Documento de trabalho interno - nao constitui posicao oficial da Secretaria-Geral do Governo.",
+        "# Documento de trabalho interno. Não constitui posição oficial da Secretaria-Geral do Governo.",
         "",
     ]
     corpo = df.to_csv(index=False, sep=";", decimal=",")
@@ -2184,9 +2187,9 @@ with st.sidebar:
                    if BASE_POR_DEFEITO in _bases_disp else 0),
             format_func=lambda k: BASES_ANCORA[k]["nome"],
             label_visibility="collapsed",
-            help=("As duas fontes oficiais medem coisas diferentes e divergem por um fator "
-                  "próximo de 2. Nenhuma é a resposta certa: o valor real está entre as duas. "
-                  "Ver separador Metodologia."),
+            help=("As duas fontes oficiais medem grandezas diferentes e divergem por um fator "
+                  "próximo de 2. Nenhuma das duas mede isoladamente a grandeza pretendida, "
+                  "pelo que a aplicação apresenta o intervalo. Ver separador Metodologia."),
         )
     base_ancora = ancora["bases"][base_chave]
     outra_chave = next((k for k in ancora["bases"] if k != base_chave), None)
@@ -2270,7 +2273,7 @@ with st.sidebar:
         st.error(
             f"**A base ativa ({base_ancora['nome']}) está fora do intervalo plausível**, "
             f"{euro(media_agregado)}/mês por agregado. Verifique o registo de ligações "
-            "no separador Metodologia. **Não use estes números.**"
+            "no separador Metodologia. **Os valores apresentados não devem ser utilizados.**"
         )
     elif _outra_suspeita:
         # A base ativa está sã, mas a outra não, e a outra aparece em três
@@ -2291,9 +2294,9 @@ with st.sidebar:
     adultos = ca.number_input(
         "Com 14+ anos", min_value=1, max_value=10, value=2, step=1,
         help=("Todas as pessoas com 14 ou mais anos, incluindo jovens dependentes. "
-              "A partir dessa idade, a escala de equivalência atribui o mesmo peso "
-              "alimentar, um jovem de 15 anos come como um adulto, mesmo que não "
-              "aufira rendimento."))
+              "A partir dessa idade, a escala de equivalência atribui a mesma "
+              "ponderação alimentar de um adulto, independentemente de a pessoa "
+              "auferir rendimento próprio."))
     criancas = cb.number_input(
         "Menos de 14 anos", min_value=0, max_value=10, value=0, step=1,
         help=("14 anos é o limiar definido pelas próprias escalas de equivalência "
@@ -2325,8 +2328,9 @@ with st.sidebar:
         format_func=lambda k: (ESCALAS[k]["nome"]
                                + (", apurada" if k == _escala_apurada else "")),
         help=("Como se ajusta a despesa ao número de pessoas. A assinalada como "
-              "“apurada” é a que, no teste contra o IDF 2022/2023, fica mais perto da "
-              "despesa alimentar observada. Ver separador Metodologia."),
+              "“apurada” é a que, no teste contra o Inquérito às Despesas das Famílias "
+              "(IDF) de 2022/2023, fica mais perto da despesa alimentar observada. "
+              "Ver separador Metodologia."),
     )
     if _escala_apurada and escala_chave != _escala_apurada:
         st.caption(
@@ -2370,32 +2374,32 @@ with st.sidebar:
             ]), width="stretch", hide_index=True)
 
         st.markdown(f"""
-**Porque é que a escala com coeficientes menores dá aqui um valor {'menor' if maior_que_media else 'maior'}?**
+**Efeito dos coeficientes da escala sobre o valor apurado**
 
 O ponto de partida é sempre o **agregado médio português, {('%.2f' % dim_efetiva).replace('.', ',')} pessoas**.
-A escala não serve para calcular a despesa a partir do zero: serve para **ajustar** desse
-agregado médio para o seu. E é aplicada aos **dois lados** do cálculo, ao seu agregado e ao
-agregado médio que serve de referência.
+A escala não calcula a despesa a partir do zero: **ajusta** desse agregado médio para o agregado
+selecionado, e é aplicada aos **dois lados** do cálculo, ao agregado selecionado e ao agregado
+médio que serve de referência.
 
-Daí resulta um comportamento que à primeira vista surpreende:
+Daí resulta o comportamento seguinte:
 
-| O seu agregado | Escala com economias de escala mais fortes dá… |
+| Agregado selecionado | Escala com economias de escala mais fortes |
 |---|---|
 | **Menor** que {('%.2f' % dim_efetiva).replace('.', ',')} pessoas | valor **mais alto** |
 | **Maior** que {('%.2f' % dim_efetiva).replace('.', ',')} pessoas | valor **mais baixo** |
 
-A razão: coeficientes menores significam que **cada pessoa a mais custa menos**. Isso
-comprime as diferenças entre agregados de dimensão diferente, todos se aproximam da média.
-Um casal, sendo **menor** que a média, aproxima-se dela *por cima*; um casal com três filhos,
-sendo **maior**, aproxima-se dela *por baixo*.
+Coeficientes menores significam que **cada pessoa adicional acresce menos**. Isso comprime as
+diferenças entre agregados de dimensão diferente, aproximando todos da média. Um casal, sendo
+**menor** que a média, aproxima-se dela por cima; um casal com três filhos, sendo **maior**,
+aproxima-se dela por baixo.
 
-O ponto de viragem é exatamente a dimensão média. Com {pessoas} pessoa{'s' if pessoas > 1 else ''},
-está **{'acima' if maior_que_media else 'abaixo'}** dela.
+O ponto de viragem é a dimensão média. O agregado selecionado, com {pessoas}
+pessoa{'s' if pessoas > 1 else ''}, situa-se **{'acima' if maior_que_media else 'abaixo'}** dessa dimensão.
         """)
         st.caption(
-            "É por isto que a aplicação apresenta sempre um intervalo: nenhuma das três escalas "
-            "é a resposta certa para a alimentação, e a escolha entre elas altera o resultado "
-            "em sentidos diferentes consoante a dimensão do agregado."
+            "É por esta razão que a aplicação apresenta sempre um intervalo: nenhuma das três "
+            "escalas reproduz exatamente a despesa alimentar observada, e a escolha entre elas "
+            "altera o resultado em sentidos diferentes consoante a dimensão do agregado."
         )
 
     _agr_txt = numero(agregados)
@@ -2483,15 +2487,17 @@ if not _paradas.empty:
         f"máximo {numero(r.limite_dias)}. {r.porque}"
         for r in _paradas.itertuples()
     )
+    _quantas_p = ("séries do Eurostat deixaram" if len(_paradas) > 1
+                  else "série do Eurostat deixou")
     st.error(
-        f"**{len(_paradas)} série(s) do Eurostat deixaram de avançar.** "
-        "Não é falha de rede nem atraso de publicação: o pedido foi bem "
-        "sucedido e os dados vieram, apenas não são recentes.\n\n"
+        f"**{len(_paradas)} {_quantas_p} de avançar.** "
+        "Não é falha de rede nem atraso de publicação: o pedido foi bem-sucedido "
+        "e os dados vieram; apenas não são recentes.\n\n"
         f"{_linhas_p}\n\n"
         "**A causa mais provável é o conjunto ter sido arquivado** e substituído "
         "por outro, como aconteceu na passagem para a ECOICOP versão 2. Confirme "
-        "no catálogo do Eurostat, o título dos conjuntos arquivados costuma "
-        "trazer o intervalo de anos, antes de citar estes números."
+        "no catálogo do Eurostat antes de citar estes valores: o título dos "
+        "conjuntos arquivados indica habitualmente o intervalo de anos coberto."
     )
 
 # --- barra de estado dos dados ---
@@ -2593,15 +2599,15 @@ def painel(nome: str):
 
 
 abaD, aba1, aba2, aba6, aba3, aba4, aba5 = st.tabs([
-    "Evolução do Cabaz", "Despesa e composição", "Histórico", "Da produção ao consumo",
+    "Evolução do cabaz", "Despesa e composição", "Histórico", "Da produção ao consumo",
     "Simulador de IVA", "Comparação UE-27", "Metodologia e fontes",
 ])
 
 # ==========================================================================
-# ABA D, Evolução do Cabaz
+# ABA D, Evolução do cabaz
 # ==========================================================================
 with abaD:
-    with painel("Evolução do Cabaz"):
+    with painel("Evolução do cabaz"):
         titulo_pagina(
             "Evolução do cabaz essencial (DECO PROteste)",
             "Preço de uma cesta de 63 bens alimentares essenciais, de composição fixa, "
@@ -2650,7 +2656,7 @@ with abaD:
                 comércio tradicional. A <strong>despesa alimentar</strong>, que é o que os
                 restantes separadores medem, reparte a despesa efetiva das famílias pelos
                 grupos de produtos, com base no índice de preços do INE/Eurostat. Ver
-                “Porque é que se diz despesa alimentar e não cabaz”, no separador
+                “Distinção entre despesa alimentar e cabaz”, no separador
                 Metodologia. Fonte: <a href="{_meta_deco.get('endereco', '#')}"
                 target="_blank" rel="noopener noreferrer">{_meta_deco.get('fonte',
                 'DECO PROteste')}</a>, extraído em {_meta_deco.get('extraido_em', '—')}.""")
@@ -2689,11 +2695,11 @@ with abaD:
                 "Descarregar série do cabaz DECO (CSV com fonte)",
                 csv_com_fonte(
                     _serie_deco.rename(columns={"data": "Data", "valor": "Preço do cabaz (€)"}),
-                    "Cabaz essencial DECO PROteste - serie desde 2022", dados,
+                    "Cabaz essencial DECO PROteste, série desde 2022", dados,
                     fonte=_meta_deco.get("fonte", "DECO PROteste"),
                     conjuntos=["DECO PROteste"],
-                    extra=[("Endereco", _meta_deco.get("endereco", "-")),
-                           ("Extraido em", _meta_deco.get("extraido_em", "-"))]),
+                    extra=[("Endereço", _meta_deco.get("endereco", "-")),
+                           ("Extraído em", _meta_deco.get("extraido_em", "-"))]),
                 "deco_cabaz.csv", "text/csv")
 
             secao("Produtos que mais aumentaram",
@@ -2739,11 +2745,11 @@ with abaD:
                             "tabela": "Janela", "produto": "Produto",
                             "preco_atual": "Preço atual", "unidade_preco": "Unidade",
                             "aumento_valor": "Aumento (€)", "aumento_pct": "Aumento (%)"}),
-                        "Produtos com maior aumento - DECO PROteste", dados,
+                        "Produtos com maior aumento, DECO PROteste", dados,
                         fonte=_meta_deco.get("fonte", "DECO PROteste"),
                         conjuntos=["DECO PROteste"],
-                        extra=[("Endereco", _meta_deco.get("endereco", "-")),
-                               ("Extraido em", _meta_deco.get("extraido_em", "-"))]),
+                        extra=[("Endereço", _meta_deco.get("endereco", "-")),
+                               ("Extraído em", _meta_deco.get("extraido_em", "-"))]),
                     "deco_top10.csv", "text/csv")
 
 # ==========================================================================
@@ -2945,15 +2951,15 @@ with aba1:
               "<strong>Aqui o denominador é o rendimento, não a despesa.</strong> "
               "O coeficiente de Engel, em cima, e o peso no orçamento por quintil, "
               "mais abaixo, repartem o que as famílias <em>gastam</em>. Esta mede "
-              "quanto do que <em>recebem</em> é absorvido pela comida, e é a única "
+              "quanto do que <em>recebem</em> é absorvido pela alimentação, e é a única "
               "<strong>das três</strong> que responde à composição escolhida na barra "
               "lateral.",
               ajuda=("Estes valores são **limites superiores**, a despesa e o rendimento "
                      "vêm de fontes com bases estatísticas diferentes, e combiná-las "
                      "sobrestima o esforço. Leia as **diferenças entre composições** e a "
                      "**direção** como informativas, e o **nível** como majorante. O "
-                     "desenvolvimento está em “O que estes números assumem”, no "
-                     "separador Metodologia."))
+                     "desenvolvimento está em “Pressupostos subjacentes a estes valores”, "
+                     "no separador Metodologia."))
 
         rendimentos = dados.get("rendimento") or {}
         sm_pt = (dados.get("salario") or {}).get("PT")
@@ -3032,9 +3038,10 @@ with aba1:
                 if dependentes:
                     st.warning(f"""
     **{dependentes} pessoa{'s' if dependentes > 1 else ''} com 14 ou mais anos sem rendimento
-    próprio.** Adolescentes, estudantes ou outros dependentes **comem como adultos**, a escala de
-    equivalência atribui-lhes o mesmo peso alimentar, mas **não trazem receita**. É a composição
-    em que o esforço alimentar é mais elevado, e a que os indicadores médios menos revelam.
+    próprio.** A escala de equivalência atribui a adolescentes, estudantes e outros dependentes
+    **a mesma ponderação alimentar de um adulto**, mas estes **não auferem rendimento**. É a
+    composição em que o esforço alimentar é mais elevado e a que os indicadores médios menos
+    evidenciam.
                     """)
 
             # --- construir as referências disponíveis ---
@@ -3045,7 +3052,8 @@ with aba1:
                 refs.append({
                     "ref": "Rendimento das famílias (EU-SILC)",
                     "detalhe": (f"{'Médio' if indic_r == 'MEAN_EI' else 'Mediano'} equivalente "
-                                f"{r['ano']} × {('%.2f' % ue_ocde).replace('.', ',')} unidades"),
+                                f"{r['ano']} × {('%.2f' % ue_ocde).replace('.', ',')} unidades. "
+                                "Estatísticas do Rendimento e Condições de Vida (EU-SILC)"),
                     "mensal": r["valor"] * ue_ocde / 12,
                     "natureza": "líquido",
                 })
@@ -3069,7 +3077,8 @@ with aba1:
                 refs.append({
                     "ref": f"{trabalhadores} × salário mínimo",
                     "detalhe": (f"Média mensal bruta de 14 mensalidades, {sm_pt['periodo']}; "
-                                f"o valor legal da RMMG é de {rmmg_legal} €/mês"),
+                                "o valor legal da retribuição mínima mensal garantida "
+                                f"(RMMG) é de {rmmg_legal} €/mês"),
                     "mensal": sm_pt["valor"] * trabalhadores,
                     "natureza": "bruto",
                 })
@@ -3103,7 +3112,7 @@ with aba1:
                 hovertemplate="%{y}: %{x:.1f}% do rendimento<extra></extra>"))
             figR.update_layout(height=max(270, 74 * len(refs)),
                                margin=dict(t=22, b=42, l=10, r=72),
-                               xaxis_title="Fatia do rendimento absorvida pela alimentação (%)",
+                               xaxis_title="Proporção do rendimento absorvida pela alimentação (%)",
                                showlegend=False)
             grafico(figR)
 
@@ -3166,7 +3175,7 @@ with aba1:
         # gráfico: se os contributos não tiverem dados, os cartões continuam a
         # aparecer e a nota tem de existir na mesma.
         _desal_nota = nota_desalinhamento(dados)
-        secao("Contributo de cada grupo para a variação anual",
+        secao("Contributo de cada grupo para a variação homóloga",
               f"Euros de variação <strong>{_janela}</strong> atribuíveis a cada "
               "grupo, positivos à direita, negativos à esquerda.",
               ajuda=_ajuda_adit, grupo="03 · Onde está a variação")
@@ -3228,10 +3237,10 @@ with aba1:
 
         # ---- detalhe por grupo ----
         secao("Cada grupo em detalhe",
-              "Para cada grupo: quanto se gasta por mês, que fatia do cabaz representa, "
-              f"quanto subiram os seus preços <strong>{_janela}</strong>, e quantos "
-              "euros do agravamento desse período vêm desse grupo. Os nove contributos "
-              "somam o agravamento total.")
+              "Para cada grupo: quanto se gasta por mês, que proporção do cabaz representa, "
+              f"quanto variaram os seus preços <strong>{_janela}</strong>, e quantos "
+              "euros da variação desse período são atribuíveis a esse grupo. Os nove "
+              "contributos somam a variação total.")
         for inicio in range(0, len(df_decomp), 3):
             cols = st.columns(3)
             for col, (_, linha) in zip(cols, df_decomp.iloc[inicio:inicio + 3].iterrows()):
@@ -3305,8 +3314,9 @@ with aba1:
         } for r in df_quintis.itertuples()])
         st.dataframe(tab_q, width="stretch", hide_index=True)
         st.caption(
-            "Ponderação do **IDF 2022/2023**, não do IHPC, é a única fonte aberta que "
-            "mede agregados residentes. Ver Metodologia."
+            "Ponderação do **IDF 2022/2023**, e não do índice harmonizado de preços no "
+            "consumidor (IHPC): é a única fonte aberta que mede agregados residentes. "
+            "Ver Metodologia."
         )
 
         # O agravamento só soma as classes com variação; o orçamento é sempre o
@@ -3317,7 +3327,8 @@ with aba1:
             _falta_q = df_quintis.attrs.get("classes_sem_variacao") or []
             st.warning(
                 f"**Cobertura parcial: {percentagem(_cob_q * 100, sinal=False)} da despesa alimentar.** "
-                f"{len(_falta_q)} classe(s) sem variação homóloga nesta sessão, "
+                f"{len(_falta_q)} {'classes' if len(_falta_q) > 1 else 'classe'} sem "
+                f"variação homóloga nesta sessão, "
                 f"{_nomes_classes(_falta_q)}. As colunas **Inflação 12m** e "
                 "**Agravamento** medem só as classes cobertas, mas a coluna "
                 "**Agravamento / orçamento** divide pelo orçamento **total** do "
@@ -3345,26 +3356,26 @@ with aba1:
         _frase_esforco = ""
         if _q1.agravamento_orcamento is not None and _q5.agravamento_orcamento is not None:
             _frase_esforco = (
-                f"Repare-se no que acontece se se olhar só para os euros: o agravamento dos "
-                f"últimos 12 meses é <em>maior</em> no quintil mais rico "
+                f"Medido em euros, o agravamento dos últimos 12 meses é <em>maior</em> no "
+                f"quintil de rendimento mais elevado "
                 f"(<strong>{euro(_q5.agravamento)}</strong> contra "
-                f"<strong>{euro(_q1.agravamento)}</strong>), simplesmente porque gasta mais em "
-                f"comida. Medido contra o orçamento de cada um, inverte-se: "
+                f"<strong>{euro(_q1.agravamento)}</strong>), por este registar maior despesa "
+                f"alimentar. Medido contra o orçamento de cada um, a relação inverte-se: "
                 f"<strong>{numero(_q1.agravamento_orcamento, 2)}%</strong> do orçamento do "
                 f"1.º quintil contra <strong>{numero(_q5.agravamento_orcamento, 2)}%</strong> "
                 f"do 5.º. "
             )
 
-        nota("O efeito regressivo está na exposição, não na taxa", f"""
+        nota("O efeito distributivo decorre da exposição, não da taxa", f"""
           A alimentação absorve <strong>{numero(_q1.peso_orcamento, 1)}%</strong> do orçamento do
-          quintil mais pobre e <strong>{numero(_q5.peso_orcamento, 1)}%</strong> do mais rico, um
-          rácio de <strong>{numero(_racio, 2)}</strong>. {_frase_taxa}Concluir daí que a inflação
-          alimentar é distributivamente neutra seria um erro de leitura: o mesmo aumento
-          percentual incide sobre uma fatia do orçamento <strong>{numero(_racio, 1)} vezes
-          maior</strong> em baixo da distribuição, e sobre um orçamento total que é menos de
-          metade.<br><br>{_frase_esforco}É por isto que nenhuma destas colunas deve ser lida
-          isoladamente: a taxa sozinha sugere neutralidade, os euros sozinhos sugerem o
-          contrário do que se passa.""")
+          quintil de menor rendimento e <strong>{numero(_q5.peso_orcamento, 1)}%</strong> do de
+          maior rendimento, um rácio de <strong>{numero(_racio, 2)}</strong>. {_frase_taxa}A
+          proximidade das taxas entre quintis não implica neutralidade distributiva: o mesmo
+          aumento percentual incide sobre uma proporção do orçamento <strong>{numero(_racio, 1)}
+          vezes maior</strong> na base da distribuição, e sobre um orçamento total que é menos de
+          metade.<br><br>{_frase_esforco}Nenhuma destas colunas deve por isso ser lida
+          isoladamente: a taxa, só por si, sugere neutralidade; os euros, só por si, sugerem o
+          inverso.""")
 
         cq1, cq2 = st.columns([3, 2])
         with cq1:
@@ -3418,13 +3429,13 @@ with aba1:
         st.download_button(
             "Descarregar cabaz por quintil (CSV)",
             csv_com_fonte(df_quintis, "Cabaz alimentar por quintil de rendimento", dados,
-                          fonte=("INE, Inquerito as Despesas das Familias 2022/2023 "
-                                 "(niveis e estrutura) + Eurostat, IHPC (variacoes de preco)"),
+                          fonte=("INE, Inquérito às Despesas das Famílias 2022/2023 "
+                                 "(níveis e estrutura); Eurostat, IHPC (variações de preço)"),
                           conjuntos=[eurostat.HICP_MENSAL],
                           extra=[
-                              ("Niveis e ponderacao", "INE, IDF 2022/2023, quadros Q.2.11.a e Q.2.11.b"),
-                              ("Variacoes de preco", "Eurostat, prc_hicp_minr (IHPC, ECOICOP v2)"),
-                              ("Nota", "Niveis do IDF tal como medidos, sem reescalamento"),
+                              ("Níveis e ponderação", "INE, IDF 2022/2023, quadros Q.2.11.a e Q.2.11.b"),
+                              ("Variações de preço", "Eurostat, prc_hicp_minr (IHPC, ECOICOP v2)"),
+                              ("Nota", "Níveis do IDF tal como medidos, sem reescalamento"),
                           ]),
             file_name="cabaz_por_quintil.csv", mime="text/csv")
 
@@ -3432,10 +3443,11 @@ with aba1:
         # Mesmo tratamento das anteriores: o `st.divider()` deu lugar ao filete
         # do bloco analítico.
         secao("Acessibilidade alimentar (três limiares, três respostas)",
-              "“Conseguir pagar a comida” não é uma grandeza única. Consoante o limiar "
-              "que se escolha, Portugal parece estar muito bem ou bastante mal, com "
-              "dados oficiais em ambos os casos. Por isso os três aparecem sempre em "
-              "conjunto.", grupo="06 · Acessibilidade alimentar")
+              "A capacidade para suportar a despesa alimentar não é uma grandeza única. "
+              "Consoante o limiar adotado, os resultados para Portugal variam de forma "
+              "substancial, com dados oficiais em qualquer dos casos. Os três limiares "
+              "são por isso apresentados em conjunto.",
+              grupo="06 · Acessibilidade alimentar")
 
         _priv = dados.get("privacao", pd.DataFrame())
         _priv_pt = pd.DataFrame()
@@ -3472,14 +3484,16 @@ with aba1:
             help=("Não conseguir pagar uma refeição com carne, frango ou peixe, ou equivalente "
                   "vegetariano, de dois em dois dias. Fonte: Eurostat, EU-SILC."))
         t2.metric(
-            f"Não paga uma dieta saudável ({_ano_sofi})",
+            f"Sem capacidade para uma dieta saudável ({_ano_sofi})",
             f"{_sofi_pt:.1f}%".replace(".", ","),
-            help=("Custo da dieta mais barata que cumpre os requisitos nutricionais. "
-                  f"FAO, SOFI {SOFI_EDICAO}."))
+            help=("População que não consegue suportar o custo da dieta mais barata que "
+                  "cumpre os requisitos nutricionais. Fonte: FAO, relatório The State of "
+                  f"Food Security and Nutrition in the World (SOFI), edição de {SOFI_EDICAO}."))
         t3.metric(
             "Peso no orçamento do 1.º quintil",
             f"{IDF_PESO_ALIMENTAR['q1']:.1f}%".replace(".", ","),
-            help="INE, IDF 2022/2023. Não é privação, é exposição.")
+            help=("INE, IDF 2022/2023. Não mede privação, mede exposição da despesa "
+                  "alimentar no orçamento."))
 
         _texto_sev = (f"**{('%.1f' % _sev).replace('.', ',')}%**" if _sev is not None
                       else "o indicador de privação severa")
@@ -3488,24 +3502,25 @@ with aba1:
         # Em tópicos, e não em prosa corrida: são três definições paralelas, e a
         # prosa obrigava a reconstruir a que número se referia cada frase
         # (decisão da Inês, 13.08.2026).
-        nota("Porque é que estes três números não se substituem uns aos outros", f"""
+        nota("Os três indicadores não são substituíveis entre si", f"""
           Medem exigências muito diferentes.
           <ul>
             <li><strong>Privação severa ({_texto_sev})</strong>, limiar <strong>muito
-                baixo</strong>: mede algo próximo da fome, e está em mínimo de série.</li>
+                baixo</strong>: mede uma situação próxima da carência alimentar e regista o
+                valor mínimo da série.</li>
             <li><strong>Dieta saudável inacessível
-                ({('%.1f' % _sofi_pt).replace('.', ',')}%)</strong>, o nível intermédio, e é
-                onde está o problema real: essa fração da população não consegue pagar uma
+                ({('%.1f' % _sofi_pt).replace('.', ',')}%)</strong>, o nível intermédio e o mais
+                abrangente: é a proporção da população que não consegue suportar o custo de uma
                 dieta nutricionalmente adequada{_texto_milhoes}.</li>
-            <li><strong>Peso no orçamento do 1.º quintil</strong>, não é privação nenhuma: é
-                <strong>exposição</strong>, quanto do orçamento dos 20% mais pobres vai para
-                comida.</li>
+            <li><strong>Peso no orçamento do 1.º quintil</strong>, que não mede privação: mede
+                <strong>exposição</strong>, ou seja, que proporção do orçamento dos 20% de menor
+                rendimento é afeta à alimentação.</li>
           </ul>
-          Apresentar apenas o primeiro daria uma leitura indevidamente tranquilizadora: sugeriria
-          um problema de <strong>{percentagem(_sev, sinal=False) if _sev is not None else '≈2%'}</strong> da
-          população, quando por um limiar nutricionalmente defensável são
-          <strong>{percentagem(_sofi_pt, sinal=False)}</strong>.
-          <strong>A fome severa recuou; a impossibilidade de comer bem não.</strong>""")
+          Apresentado isoladamente, o primeiro indicador circunscreveria a questão a
+          <strong>{percentagem(_sev, sinal=False) if _sev is not None else '≈2%'}</strong> da
+          população, quando por um limiar nutricionalmente definido a proporção é de
+          <strong>{percentagem(_sofi_pt, sinal=False)}</strong>. Os dois indicadores registam
+          evoluções distintas e devem ser lidos em conjunto.""")
 
         ca1, ca2 = st.columns(2)
         with ca1:
@@ -3517,7 +3532,7 @@ with aba1:
                        "Percentagem que <strong>não consegue pagar uma refeição com carne, "
                        "frango ou peixe</strong> (ou equivalente vegetariano) de dois em "
                        "dois dias. <strong>Cada linha mede a percentagem dentro do seu "
-                       "próprio grupo</strong>, e não a fatia da população: por isso as "
+                       "próprio grupo</strong>, e não a proporção da população: por isso as "
                        "três não se somam.")
             if _priv_pt.empty:
                 st.info("Série indisponível nesta sessão. Ver o registo de ligações "
@@ -3551,7 +3566,7 @@ with aba1:
                 # cabeçalho do Streamlit, que a esta escala, dentro de uma coluna,
                 # sob um título de componente, sairia maior do que o título que o
                 # encima.
-                with st.popover("Como ler", icon=":material/info:"):
+                with st.popover("Leitura do gráfico", icon=":material/info:"):
                     st.markdown(
                         "**O que cada linha é.** *Em risco de pobreza:* quem tem rendimento "
                         "equivalente **abaixo de 60% da mediana nacional**, é uma medida de "
@@ -3565,17 +3580,18 @@ with aba1:
                         # não ao número. É o padrão que o C5 fechou em nove sítios e
                         # que sobreviveu neste (auditoria de 11.08.2026, E8).
                         st.markdown(
-                            f"**A conclusão.** Em {_ano_sev}, "
-                            f"**{percentagem(_sev_pobres, sinal=False)}** entre quem está em risco "
-                            f"de pobreza, contra **{percentagem(_sev, sinal=False)}** no total, "
-                            f"**{numero(_sev_pobres / _sev, 1)}×** mais. Ler só o valor nacional "
-                            "sugeriria um problema residual; repartido, vê-se que não "
-                            "desapareceu, **concentrou-se**."
+                            f"**Leitura.** Em {_ano_sev}, "
+                            f"**{percentagem(_sev_pobres, sinal=False)}** entre a população em "
+                            f"risco de pobreza, contra **{percentagem(_sev, sinal=False)}** no "
+                            f"total, um valor **{numero(_sev_pobres / _sev, 1)}×** superior. O "
+                            "valor nacional, tomado isoladamente, não evidencia esta "
+                            "concentração."
                         )
 
         with ca2:
             componente("Custo de uma dieta saudável",
-                       "PPP$ por pessoa e por dia. Mínimo normativo, não despesa observada.")
+                       "Dólares em paridade de poder de compra (PPP$) por pessoa e por dia. "
+                       "Mínimo normativo, não despesa observada.")
             figc = go.Figure()
             _cores_c = {"Portugal": VERDE, "Europa": AZUL,
                         "Europa do Sul": DOURADO, "Espanha": "#7a5ea8"}
@@ -3597,18 +3613,19 @@ with aba1:
 
         _custo_pt = SOFI_CUSTO["Portugal"][_ano_sofi]
         _custo_es = SOFI_CUSTO["Espanha"][_ano_sofi]
-        st.success(f"""
-    **O confronto com Espanha é o dado mais forte deste bloco.**
+        st.info(f"""
+    **Comparação com Espanha**
 
-    Portugal e Espanha têm custo de uma dieta saudável praticamente igual,
+    Portugal e Espanha registam um custo da dieta saudável praticamente idêntico,
     **{('%.2f' % _custo_pt).replace('.', ',')}** contra
-    **{('%.2f' % _custo_es).replace('.', ',')} PPP$** por pessoa e por dia. Mas
-    **{('%.1f' % _sofi_pt).replace('.', ',')}%** da população portuguesa não consegue pagá-la,
-    contra **{('%.1f' % _sofi_es).replace('.', ',')}%** da espanhola.
+    **{('%.2f' % _custo_es).replace('.', ',')} PPP$** por pessoa e por dia. A proporção da
+    população que não consegue suportar esse custo é de
+    **{('%.1f' % _sofi_pt).replace('.', ',')}%** em Portugal e de
+    **{('%.1f' % _sofi_es).replace('.', ',')}%** em Espanha.
 
-    Com o mesmo preço e resultados tão diferentes, **a diferença não está nos preços, está nos
-    rendimentos e na sua distribuição**. É a demonstração mais limpa de que um indicador de preços
-    não é um indicador de acessibilidade, e vem com um par comparável em vez de uma afirmação.
+    Com custos equivalentes e resultados divergentes, **a diferença não é atribuível ao nível de
+    preços**, o que remete para o nível dos rendimentos e para a sua distribuição. O par ilustra
+    a distinção entre um indicador de preços e um indicador de acessibilidade.
         """)
 
         # O bloco “O que estes indicadores não são” passou para as “Limitações a
@@ -3727,14 +3744,14 @@ with aba1:
                          })
             st.download_button(
                 "Descarregar tabela (CSV)",
-                csv_com_fonte(tabela, "Decomposicao por grupo de produto", dados,
-                              # A ancora pode ser do INE (IDF) ou do Eurostat
-                              # (Contas Nacionais): o cabecalho segue a que
+                csv_com_fonte(tabela, "Decomposição por grupo de produto", dados,
+                              # A âncora pode ser do INE (IDF) ou do Eurostat
+                              # (Contas Nacionais): o cabeçalho segue a que
                               # estiver ativa.
-                              fonte=(f"{base_ancora['fonte']} (ancora da despesa) + "
-                                     "Eurostat, IHPC (ponderadores e variacoes)"),
-                              extra=[("Base de calculo", base_ancora["nome"]),
-                                     ("Composicao do agregado", composicao),
+                              fonte=(f"{base_ancora['fonte']} (âncora da despesa); "
+                                     "Eurostat, IHPC (ponderadores e variações)"),
+                              extra=[("Base de cálculo", base_ancora["nome"]),
+                                     ("Composição do agregado", composicao),
                                      ("Escala", ESCALAS[escala_chave]["nome"])]),
                 f"despesa_alimentar_decomposicao_{date.today()}.csv", "text/csv",
                 width="stretch")
@@ -3820,8 +3837,8 @@ with aba2:
                 st.info(
                     f"**Variação acumulada no intervalo escolhido: {percentagem(acum)}**, "
                     f"de {mes_pt(inicio_sel)} a {mes_pt(fim_sel)}. "
-                    "É frequentemente a leitura mais eloquente: a taxa homóloga de um mês "
-                    "isolado diz pouco; o acumulado desde uma data de referência diz muito."
+                    "A taxa homóloga de um mês isolado tem alcance limitado; a variação "
+                    "acumulada desde uma data de referência caracteriza melhor o período."
                 )
 
         var_pt = dados["var_pt"]
@@ -3845,21 +3862,22 @@ with aba2:
         # ---------- o que está por trás da inflação alimentar ----------
         agr_esp = dados.get("agregados_especiais")
         if agr_esp is not None and not agr_esp.empty:
-            secao("O que está por trás da subida",
-                  "A alimentação não é um bloco homogéneo: frescos e transformados "
-                  "obedecem a lógicas diferentes, e distingui-los muda a resposta "
-                  "de política.", grupo="02 · Frescos e transformados")
+            secao("Composição da variação: frescos e transformados",
+                  "A alimentação não constitui um agregado homogéneo: os produtos não "
+                  "transformados e os transformados respondem a determinantes distintos.",
+                  grupo="02 · Frescos e transformados")
             st.info("""
-    A alimentação não é um bloco homogéneo. **Os frescos e os transformados obedecem a lógicas
-    diferentes**, e distingui-los muda a resposta de política:
+    A alimentação não constitui um agregado homogéneo. **Os produtos não transformados e os
+    transformados respondem a determinantes distintos:**
 
-    - **Não transformados** (carne, peixe, fruta, legumes) reagem a clima, sazonalidade e custos de
-      transporte. Uma subida aqui é tipicamente **choque de oferta**.
+    - **Não transformados** (carne, peixe, fruta, legumes) respondem a condições climáticas,
+      sazonalidade e custos de transporte. Uma subida nesta componente está tipicamente associada
+      a um **choque de oferta**.
     - **Transformados** (pão, laticínios, conservas) refletem custos de produção e distribuição já
-      incorporados. Uma subida aqui tende a ser **mais persistente**.
+      incorporados. Uma subida nesta componente tende a ser **mais persistente**.
 
-    Um choque de oferta em frescos não se combate com os mesmos instrumentos que uma inflação
-    instalada nos transformados. Daí que a decomposição não seja um detalhe técnico.
+    As duas componentes têm, por isso, origens e durações diferentes, e a distinção é relevante
+    para caracterizar a natureza da variação observada.
             """)
 
             pt_esp = agr_esp[agr_esp["geo"] == "PT"]
@@ -3965,8 +3983,8 @@ with aba2:
                     st.download_button(
                         "Descarregar (CSV com fonte)",
                         csv_com_fonte(pd.DataFrame(linhas_a).drop(columns=["Tipo"]),
-                                      "Decomposicao da inflacao alimentar", dados,
-                                      extra=[("Mes de referencia", ult_esp)]),
+                                      "Decomposição da inflação alimentar", dados,
+                                      extra=[("Mês de referência", ult_esp)]),
                         # Nome distinto do CSV da decomposição por grupo, no
                         # separador 1: os dois saíam como
                         # `despesa_alimentar_decomposicao_<data>.csv` e ficavam
@@ -3980,8 +3998,8 @@ with aba2:
         if not _cmp_idx.empty and len(_cmp_idx) >= 3:
             secao("Cabaz fixo contra cabaz que acompanha o consumo",
                   "A crítica central ao cabaz de composição fixa é que não acompanha a "
-                  "substituição de consumo. Aqui essa crítica é medida, em vez de afirmada"
-                  ", comparando um índice de ponderadores congelados com um índice "
+                  "substituição de consumo. Nesta secção essa crítica é quantificada"
+                  ", comparando um índice de ponderadores fixos com um índice "
                   "superlativo de Törnqvist, que usa a média dos ponderadores dos dois "
                   "extremos de cada ano.", grupo="03 · Viés de substituição")
 
@@ -4053,24 +4071,24 @@ with aba2:
             grafico(figt)
 
             st.info(f"""
-    **O resultado não é o que a crítica ao cabaz fixo faria esperar, e isso importa.**
+    **O resultado difere do que a crítica ao cabaz de composição fixa antecipa.**
 
-    Em {_anos_decorridos} anos, congelar os ponderadores das nove classes sobrestima a subida em
+    Em {_anos_decorridos} anos, a fixação dos ponderadores das nove classes sobrestima a subida em
     **{pontos(_vies, sufixo=" pontos de índice")}**, cerca de
     **{pontos(_vies / _anos_decorridos, sufixo=" p.p. por ano")}**. Sobre uma subida
-    acumulada de {percentagem(_subida_torn)}, é residual.
+    acumulada de {percentagem(_subida_torn)}, o efeito é residual.
 
-    A razão é que **a substituição relevante acontece dentro das classes, não entre elas**. Trocar
-    novilho por frango não muda o peso da carne; trocar marca própria por marca de fabricante não
-    muda o peso de nada. Nove classes COICOP são uma grelha demasiado grossa para ver o que as
-    famílias efetivamente fazem.
+    A razão é que **a substituição relevante ocorre dentro das classes e não entre elas**. A
+    substituição entre cortes de carne não altera o ponderador da carne; a substituição entre
+    marca própria e marca de fabricante não altera nenhum ponderador. Nove classes COICOP
+    constituem um nível de agregação insuficiente para captar essas alterações de consumo.
 
-    **A conclusão prática tem dois lados.** Primeiro: quem atacar o índice oficial invocando viés
-    de substituição *entre grupos de alimentos* está a invocar um efeito que aqui se mede e é
-    pequeno. Segundo, e mais importante: isto **não absolve** o cabaz de composição fixa. O problema
-    de um cabaz de 63 produtos com quantidades fixas é de outra ordem, não capta a mudança de
-    marca, de calibre, de embalagem nem de insígnia, e nenhuma dessas é observável nestes dados.
-    O efeito que se mede aqui é o menor dos dois; o maior fica por medir.
+    **Este resultado tem duas implicações.** Primeira: o viés de substituição *entre grupos de
+    alimentos*, medido nestes dados, é reduzido. Segunda: o resultado **não é extensível** a um
+    cabaz de composição fixa ao nível do produto. Um cabaz de 63 produtos com quantidades fixas
+    não capta a mudança de marca, de calibre, de embalagem nem de insígnia, e nenhuma dessas
+    dimensões é observável nestes dados. O efeito medido aqui é o menor dos dois; o maior não é
+    quantificável com as fontes disponíveis.
             """)
 
             _excl = _cmp_idx.attrs.get("classes_excluidas") or []
@@ -4109,20 +4127,20 @@ with aba2:
     dezembro de y usa a média dos ponderadores de y e de y+1. Para o último elo, o ponderador de
     y+1 ainda não está publicado e repete-se o de y.
 
-    Não é o Törnqvist exato. É a melhor aproximação sem microdados de despesa anuais, e o facto de
-    a série resultante acompanhar de perto o IHPC oficial, que é construído por outra via, é
-    indício de que a aproximação se comporta.
+    Não é o Törnqvist exato. É a melhor aproximação possível sem microdados de despesa anuais, e o
+    facto de a série resultante acompanhar de perto o IHPC oficial, que é construído por outra
+    via, é indício da adequação da aproximação.
                 """)
 
             st.download_button(
                 "Descarregar comparação de índices (CSV)",
-                csv_com_fonte(_cmp_idx, "Vies de substituicao - cabaz fixo contra Tornqvist", dados,
-                              fonte="Eurostat, IHPC (ECOICOP v2) - calculo da UPE",
+                csv_com_fonte(_cmp_idx, "Viés de substituição, cabaz fixo contra Törnqvist", dados,
+                              fonte="Eurostat, IHPC (ECOICOP v2); cálculo da UPE",
                               conjuntos=[eurostat.HICP_MENSAL, eurostat.HICP_PONDERADORES],
                               extra=[
                                   ("Base", f"dezembro de {_ano_base} = 100"),
-                                  ("Series", "prc_hicp_minr (indice por classe) e prc_hicp_iw"),
-                                  ("Nota", "Tornqvist aproximado - ver metodologia no separador"),
+                                  ("Séries", "prc_hicp_minr (índice por classe) e prc_hicp_iw"),
+                                  ("Nota", "Törnqvist aproximado; ver a metodologia no separador"),
                               ]),
                 file_name="vies_substituicao.csv", mime="text/csv")
 
@@ -4134,8 +4152,8 @@ with aba2:
 
         st.download_button(
             "Descarregar série completa (CSV com fonte)",
-            csv_com_fonte(junto, "Serie do indice de precos alimentares - Portugal", dados,
-                          extra=[("Base do indice", base), ("Classe COICOP", "CP011")]),
+            csv_com_fonte(junto, "Série do índice de preços alimentares, Portugal", dados,
+                          extra=[("Base do índice", base), ("Classe COICOP", "CP011")]),
             f"despesa_alimentar_serie_{date.today()}.csv", "text/csv",
         )
 
@@ -4147,10 +4165,11 @@ with aba6:
         titulo_pagina(
             "Da produção ao consumo",
             "Todos os outros indicadores desta ferramenta medem o que o consumidor paga "
-            "ou quanto as famílias gastam. Nenhum diz se a subida nasceu na exploração "
-            "agrícola, na transformação ou na distribuição. O Observatório de Preços "
-            "Agroalimentar do GPP é a única fonte pública que segue o mesmo produto nas "
-            "duas pontas da cadeia.")
+            "ou quanto as famílias gastam. Nenhum identifica se a variação teve origem na "
+            "exploração agrícola, na transformação ou na distribuição. O Observatório de "
+            "Preços Agroalimentar do Gabinete de Planeamento, Políticas e Administração "
+            "Geral (GPP) é a única fonte pública que segue o mesmo produto nas duas pontas "
+            "da cadeia.")
 
         _obs, _obs_meta = observatorio.carregar()
         if _obs.empty:
@@ -4343,11 +4362,11 @@ with aba6:
                     "**De que é esta percentagem.** É a variação do **preço em euros por "
                     "unidade** em cada fase, entre o primeiro e o último período da coluna "
                     "“Janela medida”, que é a janela **comum às duas fases**, para que as duas "
-                    "colunas sejam comparáveis entre si. Não é uma quota nem uma fatia de nada: "
+                    "colunas sejam comparáveis entre si. Não é uma quota nem uma proporção: "
                     "*+20%* significa que o preço nessa fase está 20% acima do que estava no "
                     "início da janela. A última coluna é a variação da **diferença** entre as "
-                    "duas pontas, e vale a ressalva do topo do separador: essa diferença não é "
-                    "a margem de ninguém."
+                    "duas pontas, e mantém-se a ressalva do topo do separador: essa diferença "
+                    "não corresponde à margem de nenhum operador."
                 )
 
             # ---- o que os padrões significam ----
@@ -4397,8 +4416,8 @@ with aba6:
                 # meses, que é o que o resto da aplicação mede (20.08.2026).
                 _jan_d = (f"{mes_extenso(_d['inicio'].strftime('%Y-%m'))} a "
                           f"{mes_extenso(_d['fim'].strftime('%Y-%m'))}")
-                st.error(f"""
-    **{_d['produto']} é o caso mais nítido, e o que justifica este separador.**
+                st.info(f"""
+    **{_d['produto']} apresenta a maior divergência entre as duas fases da cadeia.**
 
     Entre **{_jan_d}**, o preço na produção
     **desce {percentagem(abs(_d['producao_var']), sinal=False)}** enquanto o
@@ -4406,14 +4425,15 @@ with aba6:
     as duas pontas passa de {euro(_d['diferenca_inicial'])} para {euro(_d['diferenca_final'])}
     por {_d['unidade'] or 'unidade'}.
 
-    **Não é a variação homóloga.** É o **acumulado** ao longo de {int(_d['n_periodos'])}
-    observações nesse intervalo, ou seja, a distância entre os dois extremos da janela. A
-    variação homóloga, que é o que os outros separadores medem, compara cada mês com o mesmo mês
-    do ano anterior, e as duas não se comparam entre si.
+    **Não é a variação homóloga.** É a variação **acumulada** ao longo de
+    {int(_d['n_periodos'])} observações nesse intervalo, ou seja, a distância entre os dois
+    extremos da janela. A variação homóloga, que é o que os outros separadores medem, compara
+    cada mês com o mesmo mês do ano anterior, e as duas não são comparáveis entre si.
 
-    Nenhum índice de preços mostra isto: para o IHPC, é apenas mais um produto que subiu. Mantém-se
-    integralmente a ressalva acima, o alargamento da diferença não é, por si, margem de ninguém, e
-    pode refletir mudança de forma do produto entre as duas fases.
+    Os índices de preços no consumidor não captam esta decomposição: para o IHPC, trata-se de mais
+    um produto cujo preço subiu. Mantém-se integralmente a ressalva acima: o alargamento da
+    diferença não corresponde, por si, à margem de nenhum operador, e pode refletir a mudança de
+    forma do produto entre as duas fases.
                 """)
 
             # ---- detalhe por produto ----
@@ -4502,15 +4522,16 @@ with aba6:
                 "Descarregar série completa do Observatório (CSV)",
                 csv_com_fonte(
                     _obs.assign(inicio=_obs["inicio"].dt.strftime("%Y-%m-%d")),
-                    "Observatorio de Precos Agroalimentar - producao e consumo", dados,
-                    # Nao e Eurostat: estes dados nunca passaram por la.
-                    fonte="GPP - Gabinete de Planeamento, Politicas e Administracao Geral",
+                    "Observatório de Preços Agroalimentar, produção e consumo", dados,
+                    # Não é Eurostat: estes dados nunca passaram por lá.
+                    fonte="GPP, Gabinete de Planeamento, Políticas e Administração Geral",
                     conjuntos=[],
                     extra=[
-                        ("Fonte", "GPP - Observatorio de Precos Agroalimentar"),
+                        ("Fonte", "GPP, Observatório de Preços Agroalimentar"),
                         ("Recolha", _obs_meta.get("extraido_em", "-")),
                         ("Script", "scripts/recolher_observatorio.py"),
-                        ("Nota", "A diferenca consumo-producao nao e margem de nenhum operador"),
+                        ("Nota", "A diferença entre consumo e produção não corresponde "
+                                 "à margem de nenhum operador"),
                     ]),
                 file_name="observatorio_precos.csv", mime="text/csv")
 
@@ -4527,7 +4548,7 @@ with aba3:
 
         CENARIOS = {
             "manual": ("Definir manualmente", None),
-            "zero": ("“Cabaz zero”, isenção total (precedente 2023-24)", 0.0),
+            "zero": ("“Cabaz zero”, isenção total (precedente de 2023-2024)", 0.0),
             "seis": ("Taxa reduzida (6%) em tudo", 6.0),
             "treze": ("Taxa intermédia (13%) em tudo", 13.0),
         }
@@ -4632,8 +4653,9 @@ with aba3:
                 "Taxa média efetiva (%)": st.column_config.NumberColumn(
                     format="%.1f%%",
                     help=("A taxa única que suporta o mesmo imposto que o conjunto dos "
-                          "produtos do grupo. Não é uma taxa legal e ninguém a paga, é "
-                          "apurada a partir da composição do grupo por subclasse."
+                          "produtos do grupo. Não corresponde a nenhuma taxa legal "
+                          "aplicada: é apurada a partir da composição do grupo por "
+                          "subclasse."
                           if _tem_apuramento else
                           "Sem os ponderadores por subclasse nesta sessão, esta coluna "
                           "**não é uma taxa efetiva**: é a taxa predefinida do grupo, que "
@@ -4647,28 +4669,30 @@ with aba3:
              if _tem_apuramento else
              "**A coluna do meio é, nesta sessão, a taxa predefinida do grupo**, o apuramento "
              "por subclasse não está disponível, ver o aviso acima. Não é editável. ")
-            + "Só a **taxa do cenário** é sua: é a alavanca de política. Só estão disponíveis "
-            "as taxas que existem no Código do IVA, isenção, 6%, 13% e 23%."
+            + "A **taxa do cenário** é o único parâmetro definido pelo utilizador. Só estão "
+            "disponíveis as taxas que existem no Código do IVA, isenção, 6%, 13% e 23%."
             + ("" if cenario == "manual" else
                " Escolha “Definir manualmente”, acima, para as alterar grupo a grupo.")
         )
 
         if cenario == "zero":
-            nota("Precedente: o “cabaz zero” de 2023-24", """
+            nota("Precedente: o “cabaz zero” de 2023-2024", """
               Entre abril de 2023 e janeiro de 2024 vigorou em Portugal a isenção de IVA
               sobre uma lista taxativa de 46 bens alimentares essenciais (Lei n.º 17/2023,
-              de 14 de abril). Duas lições ficam desse precedente. Primeira: a medição
-              <strong>depende de quem mede</strong>, a ASAE apurou −10,14% entre 18.04 e
-              04.09.2023; a DECO, sobre os 41 produtos do seu cabaz abrangidos pela isenção,
-              apurou −8,45% ao fim de três meses. Listas, períodos e critérios de recolha
-              diferentes dão resultados diferentes para a mesma medida. Segunda, e mais
-              relevante: no balanço final do período (18.04.2023 a 04.01.2024) esse cabaz de
-              41 produtos tinha <strong>subido 4,71%</strong> (de 136,83 € para 143,28 €),
-              o efeito da isenção foi sendo erodido pela subida dos preços de base até ser
-              superado. Uma descida de IVA desloca o nível de preços uma vez; não trava a
-              tendência. É este tipo de leitura que o cursor de repercussão permite explorar.""")
+              de 14 de abril). Duas observações decorrem desse precedente. Primeira: o
+              resultado <strong>depende do universo medido</strong>. A ASAE apurou −10,14%
+              entre 18 de abril e 4 de setembro de 2023; a DECO, sobre os 41 produtos do seu
+              cabaz abrangidos pela isenção, apurou −8,45% ao fim de três meses. Listas,
+              períodos e critérios de recolha diferentes produzem resultados diferentes para
+              a mesma medida. Segunda: no balanço final do período (18 de abril de 2023 a 4
+              de janeiro de 2024) esse cabaz de 41 produtos tinha <strong>subido
+              4,71%</strong> (de 136,83 € para 143,28 €), tendo o efeito da isenção sido
+              progressivamente compensado pela subida dos preços de base. O efeito de uma
+              alteração de taxa sobre o nível de preços é pontual e não altera, por si, a
+              trajetória subsequente. O cursor de repercussão permite explorar esta
+              distinção.""")
 
-        componente("Quanto da descida do imposto chega ao preço na prateleira?")
+        componente("Fração da redução do imposto transmitida ao preço final")
         # O valor de partida é calibrado, não escolhido: vem da avaliação do
         # Banco de Portugal ao “IVA zero” de 2023. Até 12.08.2026 partia de
         # 40%, um parâmetro de trabalho sem fonte portuguesa, que a
@@ -4687,11 +4711,11 @@ with aba3:
   <div class="sg-reparticao__par">
     <div style="flex:1">
       <div class="sg-reparticao__val" style="color:{VERDE}">{ao_consumidor} cêntimos</div>
-      <div class="sg-reparticao__rot">descem o preço, poupança do consumidor</div>
+      <div class="sg-reparticao__rot">reduzem o preço final, poupança do consumidor</div>
     </div>
     <div style="flex:1">
       <div class="sg-reparticao__val" style="color:{DOURADO}">{na_margem} cêntimos</div>
-      <div class="sg-reparticao__rot">ficam na margem de quem vende</div>
+      <div class="sg-reparticao__rot">são retidos na margem do operador</div>
     </div>
   </div>
 </div>
@@ -4701,27 +4725,28 @@ with aba3:
         _est_rho = estimativas_repercussao()
 
         with st.expander(
-                f"Porque é que este cursor parte de {numero(_rho_central * 100, 0)}% "
-                "(a calibração)"):
+                f"Calibração do valor de partida do cursor "
+                f"({numero(_rho_central * 100, 0)}%)"):
             st.markdown("""
-    Quando o Estado baixa o IVA, **não é garantido que o preço na loja desça na mesma medida**.
-    Parte da descida pode ficar retida na margem de quem vende. A esse fenómeno chama-se
-    *repercussão*, e é o parâmetro que decide se uma descida de IVA beneficia o consumidor ou o
-    operador. **É o número que mais move o resultado desta ferramenta**: a poupança é
-    proporcional a ele, pelo que entre 0% e 100% vai de zero ao máximo, nenhuma outra
+    Quando o Estado reduz o IVA, **não é garantido que o preço final desça na mesma medida**.
+    Parte da redução pode ficar retida na margem do operador. A esse fenómeno chama-se
+    *repercussão*, e é o parâmetro que determina a repartição do efeito entre consumidor e
+    operador. **É o parâmetro que mais influencia o resultado desta ferramenta**: a poupança é
+    proporcional a ele, pelo que entre 0% e 100% varia de zero ao máximo. Nenhuma outra
     incerteza desta aplicação tem esta amplitude.
 
     ##### Portugal já correu esta experiência
 
-    A Lei n.º 17/2023, de 14 de abril, isentou de IVA 46 bens alimentares entre 18.04.2023 e
-    04.01.2024, a maioria com taxa anterior de 6%. O **Banco de Portugal** avaliou a
-    repercussão por quatro vias independentes. Não é um caso análogo noutro país e noutro setor:
-    é **a medida idêntica, no mesmo país, no retalho alimentar**.
+    A Lei n.º 17/2023, de 14 de abril, isentou de IVA 46 bens alimentares entre 18 de abril de
+    2023 e 4 de janeiro de 2024, a maioria com taxa anterior de 6%. O **Banco de Portugal**
+    avaliou a repercussão por quatro vias independentes. Não se trata de um caso análogo noutro
+    país e noutro setor: é **a medida idêntica, no mesmo país, no retalho alimentar**.
 
     ##### Como se extrai a repercussão dos números publicados
 
-    O BdP publica a variação **observada** e a variação **mecânica**, a que haveria se a descida
-    chegasse toda ao preço. A repercussão é o quociente das duas:
+    O Banco de Portugal publica a variação **observada** e a variação **mecânica**, que é a que
+    resultaria se a redução fosse integralmente transmitida ao preço. A repercussão é o quociente
+    das duas:
     """)
             st.latex(r"\rho = \frac{\text{variação observada}}{\text{variação mecânica}}"
                      r"\qquad\text{com}\qquad "
@@ -4735,18 +4760,19 @@ with aba3:
                     for _, r in _est_rho.iterrows())
             )
             st.markdown(f"""
-    **Nenhum destes ρ é citado, todos são calculados aqui**, a partir dos dois números que o BdP
-    publica. A coluna é um cálculo desta aplicação sobre dados do Banco de Portugal.
+    **Nenhum destes ρ é citado; todos são calculados aqui**, a partir dos dois valores que o Banco
+    de Portugal publica. A coluna é um cálculo desta aplicação sobre dados do Banco de Portugal.
 
-    **Verificação de que a nossa aritmética coincide com a deles:** os óleos alimentares estavam a
-    23%, e o BdP publica um efeito mecânico de −18,7%. A fórmula desta aplicação dá
-    **{numero(efeito_mecanico_pct(23, 0), 2).replace("-", "−")}%**. Coincide, e está travado
-    por teste, se não coincidisse, a derivação acima não valeria nada.
+    **Verificação da concordância aritmética:** os óleos alimentares estavam a 23% e o Banco de
+    Portugal publica um efeito mecânico de −18,7%. A fórmula desta aplicação dá
+    **{numero(efeito_mecanico_pct(23, 0), 2).replace("-", "−")}%**. Os valores coincidem, e a
+    coincidência está verificada por teste automático; sem ela, a derivação acima não seria
+    válida.
 
-    **Porque é que a diluição não estraga o quociente:** as rubricas do IHPC incluem bens não
-    abrangidos pela medida, o que atenua o observado *e* o mecânico. Como atenua os dois na mesma
-    proporção, o quociente sobrevive. É por isso que esta derivação é legítima apesar da
-    granularidade insuficiente que o próprio BdP assinala.
+    **Efeito da diluição sobre o quociente:** as rubricas do IHPC incluem bens não abrangidos pela
+    medida, o que atenua a variação observada *e* a mecânica. Como atenua ambas na mesma
+    proporção, o quociente mantém-se. É por essa razão que a derivação é admissível apesar da
+    granularidade insuficiente que o próprio Banco de Portugal assinala.
 
     ##### Porquê {numero(_rho_central * 100, 0)}% e não a média das quatro
 
@@ -4757,32 +4783,34 @@ with aba3:
     {numero(_est_rho['rho'].iloc[0] * 100, 1)}%, que é a única cujo contrafactual o BdP
     declara **estatisticamente confirmado**.
 
-    **É a mais alta das duas, e não a mais conservadora**, a de controlo da área do euro dá
-    {numero(_est_rho['rho'].iloc[1] * 100, 1)}%. Escolhe-se pela qualidade do contrafactual, não
-    por prudência, e é por isso que a estimativa mais baixa não desaparece: **é o extremo
-    inferior da banda** apresentada com os indicadores, que vai de
+    **É a mais alta das duas, e não a mais conservadora**: a de controlo da área do euro dá
+    {numero(_est_rho['rho'].iloc[1] * 100, 1)}%. O critério é a qualidade do contrafactual e não a
+    prudência, e é por essa razão que a estimativa mais baixa não é descartada: **constitui o
+    extremo inferior da banda** apresentada com os indicadores, que vai de
     **{numero(_rho_lo * 100, 1)}%** (área do euro) a **{numero(_rho_hi * 100, 0)}%** (integral).
-    Quem quiser a leitura conservadora arrasta o cursor para os {numero(_rho_lo * 100, 0)}% e a
-    aplicação recalcula tudo.
+    A leitura conservadora obtém-se fixando o cursor nos {numero(_rho_lo * 100, 0)}%, com
+    recálculo automático de todos os valores.
 
-    ##### Ressalvas, fazem parte da estimativa, não são rodapé
+    ##### Ressalvas que integram a estimativa
 
-    1. O próprio BdP alerta para **desvios-padrão elevados** e recomenda cautela na interpretação.
-    2. Foi uma medida **temporária, taxativa e muito mediática**, com pressões de custo a montante
-       já em queda e acompanhamento público do setor. Uma alteração permanente e discreta pode
-       repercutir-se menos.
-    3. A janela avaliada vai até **agosto de 2023, quatro meses**. Não há aqui evidência sobre
-       erosão a prazo. Repercussão alta e efeito duradouro são coisas diferentes: no balanço de
-       todo o período o cabaz da DECO tinha **subido 4,71%**, com a inflação de base a superar a
-       descida do imposto.
-    4. A evidência robusta é sobre cortes **a partir de 6%**. Para os 23% há um único produto.
-    5. Os valores acima de 100% das duas estimativas de preços online não são adotados: por
-       defeito não se usa mais do que repercussão integral.
+    1. O próprio Banco de Portugal assinala **desvios-padrão elevados** e recomenda cautela na
+       interpretação.
+    2. Tratou-se de uma medida **temporária, taxativa e com forte exposição pública**, com
+       pressões de custo a montante já em redução e acompanhamento público do setor. Uma
+       alteração permanente e sem essa exposição pode repercutir-se menos.
+    3. A janela avaliada estende-se até **agosto de 2023, quatro meses**. Não existe, nesta
+       avaliação, evidência sobre a erosão do efeito a prazo. Repercussão elevada e efeito
+       duradouro são propriedades distintas: no balanço de todo o período, o cabaz da DECO tinha
+       **subido 4,71%**, com a inflação de base a superar a redução do imposto.
+    4. A evidência robusta incide sobre reduções **a partir de 6%**. Para a taxa de 23% existe um
+       único produto.
+    5. Os valores acima de 100% das duas estimativas de preços em linha não são adotados: por
+       omissão não se admite repercussão superior à integral.
 
-    ##### E um ponto que a simulação torna visível
+    ##### Efeito adicional que a simulação evidencia
 
-    **A repercussão decide sobretudo quem fica com o dinheiro** (o consumidor ou a margem) e só
-    marginalmente quanto o Estado deixa de cobrar. Numa isenção total a receita cessante é
+    **A repercussão determina sobretudo a repartição do efeito** entre consumidor e operador, e só
+    marginalmente o montante que o Estado deixa de cobrar. Numa isenção total a receita cessante é
     independente da repercussão; numa redução parcial não é, porque uma repercussão menor mantém
     o preço final mais alto e, com ele, uma base tributável maior. No exemplo de 106 € com descida
     de 23% para 6%, a receita cessante vai de **−13,82 €** (repercussão 0%) a **−14,65 €**
@@ -4910,8 +4938,8 @@ with aba3:
         if fig_rep is not None:
             secao("Como se reparte o benefício",
                   "<strong>Cada barra é o efeito total da medida nesse grupo, dividido "
-                  "em duas partes.</strong> A verde, o que desce o preço na prateleira; "
-                  "a dourado, o que fica na margem de quem vende.",
+                  "em duas partes.</strong> A verde, o que reduz o preço final; "
+                  "a dourado, o que é retido na margem do operador.",
                   grupo="03 · Como se distribui o benefício")
         else:
             secao("Como se reparte o benefício", grupo="03 · Como se distribui o benefício")
@@ -4926,7 +4954,7 @@ with aba3:
         # coisa, o quanto o resultado se move quando se puxa cada pressuposto,
         # e ocupavam quatro parágrafos de texto corrido no meio da leitura.
         # Passam a um bloco recolhível único (decisão da Inês, 13.08.2026).
-        with st.expander("Quanto é que estes valores podem variar"):
+        with st.expander("Amplitude de variação destes valores"):
             if abs(_band_rho[1][0] - _band_rho[0][0]) > 0.005:
                 st.caption(
                     f"**Sensibilidade à repercussão, a maior incerteza desta ferramenta.** "
@@ -4936,7 +4964,8 @@ with aba3:
                     f"do euro) e {numero(_rho_hi * 100, 0)}% (repercussão integral), a poupança "
                     f"mensal fica entre **{euro(_band_rho[0][0])}** e **{euro(_band_rho[1][0])}**, "
                     f"e a agregada anual entre **{milhoes(_band_rho[0][1])}** e "
-                    f"**{milhoes(_band_rho[1][1])}**. Mova o cursor para ver qualquer outro valor."
+                    f"**{milhoes(_band_rho[1][1])}**. Qualquer outro valor pode ser obtido "
+                    "no cursor."
                 )
 
             # Sensibilidade às parcelas atribuídas **por predominância**. Até
@@ -4966,10 +4995,10 @@ with aba3:
                     "bacalhau seco a 6%, onde o fumado fica a 23%; os pré-preparados a 23%. Se "
                     "**todas** essas atribuições estivessem erradas ao mesmo tempo e no mesmo "
                     f"sentido, a poupança mensal ficaria entre **{euro(_res_band_pred[0])}** e "
-                    f"**{euro(_res_band_pred[1])}**. É um **limite exterior, não um intervalo "
-                    "plausível**: ninguém sustenta que todo o pão vendido seja pré-cozido "
-                    "congelado. Serve para mostrar que esta parcela pesa mais do que a "
-                    "indeterminada, logo abaixo, e é por isso que passou a ter banda."
+                    f"**{euro(_res_band_pred[1])}**. É um **limite exterior e não um intervalo "
+                    "plausível**: não há fundamento para admitir que a totalidade do pão vendido "
+                    "seja pré-cozido congelado. O seu propósito é evidenciar que esta parcela "
+                    "tem maior peso do que a indeterminada, apresentada a seguir."
                 )
 
             if _res_band is not None and abs(_res_band[1] - _res_band[0]) > 0.005:
@@ -5039,17 +5068,18 @@ with aba3:
             "escolhida na barra lateral**, só com a base de despesa e com o cenário."
         )
 
-        with st.expander("O que estes dois números são, exatamente"):
+        with st.expander("Definição dos dois indicadores agregados"):
             st.markdown(
-                f"**Porquê {numero(agregados)} agregados.** É o total mais recente "
-                f"({dados.get('agregados_ano') or '—'}), porque o que se extrapola é o "
-                "efeito de uma medida sobre o país de hoje. É por isso um número "
+                f"**Número de agregados utilizado ({numero(agregados)}).** É o total mais "
+                f"recente ({dados.get('agregados_ano') or '—'}), porque o que se extrapola é "
+                "o efeito de uma medida sobre a população atual. É por isso um número "
                 "diferente do denominador da âncora das Contas Nacionais, que tem de "
                 "ser o do ano da despesa.\n\n"
-                "**Porquê o agregado médio e não a composição escolhida.** Multiplicar "
-                "uma despesa já ajustada a uma composição específica pelo total nacional "
-                "contaria o país inteiro como se fosse todo composto dessa maneira. O "
-                "erro mede-se: −14% para dois adultos, +92% para cinco."
+                "**Utilização do agregado médio e não da composição selecionada.** "
+                "Multiplicar uma despesa já ajustada a uma composição específica pelo total "
+                "nacional equivaleria a admitir que todos os agregados do país têm essa "
+                "composição. O desvio resultante é quantificável: −14% para dois adultos "
+                "e +92% para cinco."
             )
             if base_chave == "contas":
                 # Cada passo está justificado, B2 para o denominador, A3 para o
@@ -5117,12 +5147,12 @@ with aba3:
         # uma decisão de política exige (auditoria de 12.08.2026, F3).
         # ------------------------------------------------------------------
 
-        secao("Quem recebe o quê (a distribuição, medida em 2023)",
+        secao("Distribuição do efeito por quintil de rendimento (medida em 2023)",
               grupo="04 · Efeito por rendimento")
         st.caption(
-            "O simulador diz **quanto** vale a medida; esta secção diz **a quem** chega. O Banco "
-            "de Portugal mediu as duas coisas no “IVA zero” de 2023, e apontam em sentidos "
-            "opostos sem que nenhuma esteja errada.  \n"
+            "O simulador quantifica **o montante** da medida; esta secção caracteriza **a quem** "
+            "chega. O Banco de Portugal mediu ambas as dimensões no “IVA zero” de 2023, com "
+            "resultados que apontam em sentidos opostos sem que nenhum esteja incorreto.  \n"
             f"A medida entrou em vigor a **{IVA_ZERO_INICIO}** e isentou um cabaz de "
             f"**{IVA_ZERO_N_ALIMENTOS} alimentos**, a maioria já à taxa reduzida."
         )
@@ -5146,7 +5176,7 @@ with aba3:
             if not _ref_inf.empty:
                 _txt_ref = (" A tracejado, a média de todas as famílias "
                             f"({pontos(float(_ref_inf['Bens alimentares afetados'].iloc[0]), casas=1)}).")
-            componente("Alívio na inflação: maior em baixo do que no topo",
+            componente("Redução da inflação: maior nos quintis inferiores de rendimento",
                        "Quanto desceram, em maio de 2023, os preços dos produtos abrangidos "
                        "pelo IVA zero, face ao mês anterior." + _txt_ref)
             _qs_inf = _inf[_inf["Quintil"] != "Total de famílias"]
@@ -5165,20 +5195,21 @@ with aba3:
             grafico(_fig_inf)
 
         with _q2:
-            componente("Afetação do dinheiro público: maior no topo do que em baixo",
-                       "De cada 100 € que o Estado gastou em cada medida, quanto chegou aos "
-                       "20% mais pobres e quanto chegou aos 20% mais ricos.")
+            componente("Afetação do custo orçamental: maior nos quintis superiores de rendimento",
+                       "De cada 100 € de custo orçamental de cada medida, que parcela foi "
+                       "afeta aos 20% de menor rendimento e que parcela aos 20% de maior "
+                       "rendimento.")
             _afet = pd.DataFrame(IVA_ZERO_AFETACAO_ORCAMENTAL,
                                  columns=["Medida", "pobres", "ricos"])
             _fig_af = go.Figure()
             _fig_af.add_trace(go.Bar(
-                y=_afet["Medida"], x=_afet["pobres"], name="Para os 20% mais pobres",
+                y=_afet["Medida"], x=_afet["pobres"], name="20% de menor rendimento",
                 orientation="h", marker_color=VERDE,
-                hovertemplate="%{y}<br>20% mais pobres: %{x}%<extra></extra>"))
+                hovertemplate="%{y}<br>20% de menor rendimento: %{x}%<extra></extra>"))
             _fig_af.add_trace(go.Bar(
-                y=_afet["Medida"], x=_afet["ricos"], name="Para os 20% mais ricos",
+                y=_afet["Medida"], x=_afet["ricos"], name="20% de maior rendimento",
                 orientation="h", marker_color=DOURADO,
-                hovertemplate="%{y}<br>20% mais ricos: %{x}%<extra></extra>"))
+                hovertemplate="%{y}<br>20% de maior rendimento: %{x}%<extra></extra>"))
             _fig_af.update_layout(
                 barmode="group", height=320, margin=dict(t=32, b=34, l=10, r=10),
                 legend=dict(orientation="h", y=1.16, x=0),
@@ -5214,21 +5245,22 @@ with aba3:
         _frase_pico = ""
         if _pico is not None and _q_ordem and _pico[0] != _q_ordem[0][0]:
             _frase_pico = (
-                f"O alívio <strong>não cresce de forma regular ao longo da distribuição</strong>: "
-                f"o maior é no {_pico[0]} ({pontos(_pico[1], casas=1)}), não no primeiro quintil. "
-                f"O contraste que se sustenta é o dos extremos. ")
-        nota("As duas leituras são verdadeiras ao mesmo tempo", f"""
-          A redução do IVA <strong>alivia</strong> mais quem tem menos,
-          {pontos(_pp_q1, casas=1)} no Q1 contra {pontos(_pp_q5, casas=1)} no Q5, porque a
-          alimentação pesa mais no seu cabaz, e ao mesmo tempo <strong>entrega</strong> mais
-          dinheiro a quem tem mais: {_iva_ricos}% do custo orçamental vai para os 20% mais
-          ricos e {_iva_pobres}% para os 20% mais pobres. O Banco de Portugal é explícito
-          quanto à consequência: “{_html(IVA_ZERO_CITACAO)}”.
+                f"A redução <strong>não cresce de forma regular ao longo da distribuição</strong>: "
+                f"o valor mais elevado situa-se no {_pico[0]} ({pontos(_pico[1], casas=1)}) e não "
+                f"no primeiro quintil. O contraste que a série sustenta é o dos extremos. ")
+        nota("As duas leituras são simultaneamente válidas", f"""
+          A redução do IVA produz maior <strong>redução da inflação</strong> nos quintis de menor
+          rendimento, {pontos(_pp_q1, casas=1)} no Q1 contra {pontos(_pp_q5, casas=1)} no Q5,
+          por a alimentação ter maior peso no seu cabaz, e <strong>afeta</strong> simultaneamente
+          maior parcela do custo orçamental aos quintis de maior rendimento:
+          {_iva_ricos}% para os 20% de maior rendimento e {_iva_pobres}% para os 20% de menor
+          rendimento. O Banco de Portugal pronuncia-se expressamente sobre esta consequência:
+          “{_html(IVA_ZERO_CITACAO)}”.
           <br><br>
-          {_frase_pico}Das {len(IVA_ZERO_AFETACAO_ORCAMENTAL)} medidas de 2023 avaliadas, esta é a
-          <strong>menos focalizada</strong>. Não diz que a medida é má, diz que
-          <strong>o instrumento é largo</strong>, e que comparar só o custo total entre medidas
-          ignora metade da questão.""", alerta=True)
+          {_frase_pico}Das {len(IVA_ZERO_AFETACAO_ORCAMENTAL)} medidas de 2023 avaliadas, é a que
+          dirige menor parcela do custo orçamental ao quintil de menor rendimento. As duas
+          dimensões são independentes, pelo que a comparação entre medidas apenas pelo custo
+          total não é suficiente.""", alerta=True)
         st.caption(f"**Fonte:** {IVA_ZERO_QUINTIS_FONTE}.")
 
 
@@ -5255,15 +5287,15 @@ with aba3:
             # (decisão da Inês, 13.08.2026).
             # O precedente de 2023 não é ilustração: é a mesma fronteira, já
             # encontrada uma vez por quem teve de decidir (Inês, 13.08.2026).
-            secao("Onde há margem para atuar",
+            secao("Repartição da despesa alimentar pelas taxas legais de IVA",
                   # (o subtítulo continua abaixo)
-                  "Quanto da despesa alimentar segue hoje cada taxa legal. Uma medida "  # noqa: E501
-                  "só pode descer o imposto onde ele existe: a parcela que já está à "
-                  "taxa reduzida limita o alcance de qualquer redução que não seja a "
-                  "isenção total. Foi essa a fronteira que a medida de 2023 encontrou, "
-                  f"isentou {IVA_ZERO_N_ALIMENTOS} alimentos, “a maioria com taxa anterior "
-                  "de 6%”, e por isso foi uma isenção do que já estava no mínimo, e não "
-                  "uma descida de taxa.")
+                  "Que proporção da despesa alimentar segue hoje cada taxa legal. Uma "  # noqa: E501
+                  "redução de imposto só produz efeito sobre a parcela onde existe imposto "
+                  "a reduzir: a fração já sujeita à taxa reduzida limita o alcance de "
+                  "qualquer alteração que não seja a isenção total. Foi essa a delimitação "
+                  f"aplicável à medida de 2023, que isentou {IVA_ZERO_N_ALIMENTOS} alimentos, "
+                  "“a maioria com taxa anterior de 6%”, constituindo por isso uma isenção "
+                  "sobre uma base já sujeita à taxa mínima e não uma redução de taxa.")
             w1, w2, w3, w4 = st.columns(4)
             w1.metric("À taxa reduzida (6%)", f"{percentagem(_res_iva['taxa_6_pct'], sinal=False)}",
                       help="Parcela do cabaz alimentar que está seguramente a 6%.")
@@ -5304,8 +5336,8 @@ with aba3:
                     "Taxa efetiva": st.column_config.NumberColumn(
                         format="%.1f%%",
                         help=("A taxa única que suporta o mesmo imposto que o conjunto dos "
-                              "produtos do grupo. É a taxa de partida da simulação, não é "
-                              "uma taxa legal e ninguém a paga.")),
+                              "produtos do grupo. É a taxa de partida da simulação e não "
+                              "corresponde a nenhuma taxa legal aplicada.")),
                     **{c: st.column_config.NumberColumn(format="%.1f%%")
                        for c in ("A 6%", "A 13%", "A 23%", "Indeterminado")},
                 })
@@ -5316,7 +5348,7 @@ with aba3:
                 "em que ela mais se afasta da taxa reduzida: são grupos maioritariamente a "
                 "6% que contêm produtos à taxa normal."
             )
-            with st.expander("Como ler o quadro acima"):
+            with st.expander("Leitura do quadro acima"):
                 st.markdown(
                     "Cada linha reparte **um grupo**, não o cabaz: as colunas “A 6%”, "
                     "“A 13%”, “A 23%” e “Indeterminado” somam 100% dentro do grupo. "
@@ -5334,12 +5366,12 @@ with aba3:
                 )
             st.download_button(
                 "Descarregar composição por taxa (CSV)",
-                csv_com_fonte(_comp_iva, "Composicao do cabaz alimentar por taxa de IVA", dados,
-                              fonte=("Codigo do IVA, Listas I e II (leitura da UPE) + Eurostat, "
+                csv_com_fonte(_comp_iva, "Composição do cabaz alimentar por taxa de IVA", dados,
+                              fonte=("Código do IVA, Listas I e II (leitura da UPE); Eurostat, "
                                      "prc_hicp_iw (ponderadores por subclasse)"),
                               conjuntos=[eurostat.HICP_PONDERADORES],
                               extra=[("Ano dos ponderadores", dados.get("ano_pesos_subclasses") or "-"),
-                                     ("AVISO", "A parcela indeterminada nao e arbitrada")]),
+                                     ("AVISO", "A parcela indeterminada não é arbitrada")]),
                 file_name="composicao_iva_por_taxa.csv", mime="text/csv")
 
 
@@ -5352,20 +5384,20 @@ with aba3:
             st.dataframe(det.round(2), width="stretch", hide_index=True)
             st.download_button(
                 "Descarregar simulação (CSV com fonte)",
-                csv_com_fonte(det.round(2), "Simulacao de alteracao do IVA", dados,
-                              # Despesa oficial, mas taxas e repercussao sao do
-                              # utilizador: o cabecalho tem de o dizer.
-                              fonte=("Eurostat (despesa e precos) + parametros do utilizador "
-                                     "(taxas de IVA e repercussao) - NAO e uma fonte oficial "
+                csv_com_fonte(det.round(2), "Simulação de alteração do IVA", dados,
+                              # Despesa oficial, mas taxas e repercussão são do
+                              # utilizador: o cabeçalho tem de o dizer.
+                              fonte=("Eurostat (despesa e preços); parâmetros do utilizador "
+                                     "(taxas de IVA e repercussão). NÃO é uma fonte oficial "
                                      "no seu conjunto"),
-                              extra=[("Cenario", CENARIOS[cenario][0]),
-                                     ("Repercussao assumida", f"{repercussao*100:.0f}%"),
-                                     ("Composicao do agregado", composicao),
+                              extra=[("Cenário", CENARIOS[cenario][0]),
+                                     ("Repercussão assumida", f"{repercussao*100:.0f}%"),
+                                     ("Composição do agregado", composicao),
                                      ("Taxa de partida",
-                                      "taxa media efetiva apurada por subclasse (COICOP 2018)"
+                                      "taxa média efetiva apurada por subclasse (COICOP 2018)"
                                       if _tem_apuramento else
-                                      "taxa predefinida do grupo - apuramento indisponivel"),
-                                     ("AVISO", "A taxa do cenario e a repercussao sao parametros do utilizador, nao dados oficiais")]),
+                                      "taxa predefinida do grupo; apuramento indisponível"),
+                                     ("AVISO", "A taxa do cenário e a repercussão são parâmetros do utilizador, não dados oficiais")]),
                 f"despesa_alimentar_simulacao_iva_{date.today()}.csv", "text/csv",
             )
 
@@ -5383,9 +5415,9 @@ with aba4:
         # se identificar pelo primeiro carácter do rótulo. Passa a haver chaves
         # estáveis, e o rótulo é só o que se apresenta.
         VISTAS = {
-            "precos": "Quão caros são os alimentos",
-            "esforco": "Que fatia do orçamento consomem",
-            "ritmo": "A que ritmo estão a subir",
+            "precos": "Nível de preços",
+            "esforco": "Peso no orçamento das famílias",
+            "ritmo": "Ritmo de variação dos preços",
         }
         bloco("01 · A leitura", topo=True)
         vista = st.radio(
@@ -5397,11 +5429,12 @@ with aba4:
         ver_esforco = vista == "esforco"
 
         st.info(
-            "**São três perguntas diferentes.** “Quão caros são” compara o *nível* dos preços entre "
-            "países. “Que fatia do orçamento consomem” mede o *esforço* das famílias, quanto do que "
-            "gastam vai para comida. “A que ritmo sobem” compara a *inflação*. Um país pode ter "
-            "preços baixos e ainda assim um esforço alimentar elevado, se os rendimentos forem "
-            "baixos, e é esse cruzamento que interessa à política."
+            "**As três vistas respondem a questões distintas.** O *nível de preços* compara o "
+            "nível dos preços entre países. O *peso no orçamento* mede o esforço das famílias, "
+            "ou seja, que proporção da sua despesa total é afeta à alimentação. O *ritmo de "
+            "variação* compara a inflação. Um país pode registar preços baixos e, ainda assim, "
+            "um esforço alimentar elevado, se os rendimentos forem baixos, pelo que as três "
+            "leituras devem ser consideradas em conjunto."
         )
 
         pli = dados.get("pli")
@@ -5412,7 +5445,7 @@ with aba4:
                 st.warning(
                     "O índice de nível de preços não está disponível nesta sessão. "
                     "Consulte o registo de ligações no separador Metodologia. "
-                    "Use entretanto a vista “A que ritmo estão a subir”."
+                    "Está entretanto disponível a vista “Ritmo de variação dos preços”."
                 )
             else:
                 # A categoria efetivamente obtida determina o rótulo: a reserva
@@ -5501,20 +5534,20 @@ with aba4:
                 # metodologia (Inês, 13.08.2026). Fica o que é preciso para não ler
                 # o gráfico ao contrário, que é rácio de despesa, não de
                 # rendimento, e o resto está no separador Metodologia.
-                secao("Que fatia do orçamento consomem",
-                      "De cada 100 € que as famílias gastam em <em>tudo</em>, casa, "
-                      "transportes, saúde, lazer, quanto vai para alimentação. É "
-                      "<strong>despesa sobre despesa</strong>, e não despesa sobre "
-                      "rendimento.",
+                secao("Peso da alimentação no orçamento das famílias",
+                      "De cada 100 € que as famílias gastam na totalidade dos bens e "
+                      "serviços, incluindo habitação, transportes, saúde e lazer, que "
+                      "parcela é afeta à alimentação. É <strong>despesa sobre "
+                      "despesa</strong>, e não despesa sobre rendimento.",
                       grupo="02 · Esforço alimentar", topo=True,
                       ajuda=(
                           "**Não confundir com o “esforço alimentar”** do separador Despesa "
                           "e composição. São rácios diferentes:\n\n"
                           "| | Numerador | Denominador |\n"
                           "|---|---|---|\n"
-                          "| **Aqui** | O que as famílias gastam em **comida** | O que as "
-                          "famílias gastam em **tudo** |\n"
-                          "| **Esforço alimentar** | O que o agregado gasta em **comida** | "
+                          "| **Aqui** | O que as famílias gastam em **alimentação** | O que as "
+                          "famílias gastam na **totalidade dos bens e serviços** |\n"
+                          "| **Esforço alimentar** | O que o agregado gasta em **alimentação** | "
                           "O que o agregado **recebe** |\n\n"
                           "Por isso **este indicador não responde à composição do agregado** "
                           "escolhida na barra lateral: é um rácio macroeconómico nacional, e "
@@ -5536,10 +5569,11 @@ with aba4:
                 ue_e = engel.get("EU27_2020")
                 if pt_e:
                     e1, e2, e3 = st.columns(3)
-                    e1.metric(f"Portugal ({pt_e['ano']}), do que gastam",
+                    e1.metric(f"Portugal ({pt_e['ano']}), proporção do consumo",
                               f"{pt_e['quota']:.1f}%".replace(".", ","),
-                              help=("De cada 100 € que as famílias portuguesas gastam em tudo"
-                                    ", casa, transportes, saúde, lazer, esta fração vai para "
+                              help=("De cada 100 € que as famílias portuguesas gastam na "
+                                    "totalidade dos bens e serviços, incluindo habitação, "
+                                    "transportes, saúde e lazer, esta é a proporção afeta à "
                                     "alimentação. Não envolve salários nem rendimentos."))
                     if ue_e:
                         dif = pt_e["quota"] - ue_e["quota"]
@@ -5563,12 +5597,13 @@ with aba4:
                                    annotation_position="top")
                 figE.update_layout(height=max(380, 38 * len(df_e)),
                                    margin=dict(t=44, b=42, l=10, r=82),
-                                   xaxis_title="Fatia do consumo das famílias gasta em alimentação (%)",
+                                   xaxis_title="Proporção do consumo das famílias afeta à alimentação (%)",
                                    showlegend=False)
                 grafico(figE)
                 st.caption(
-                    "Barras mais longas significam **maior esforço alimentar**: mais do orçamento "
-                    "familiar absorvido por comida, menos disponível para tudo o resto. "
+                    "Barras mais longas significam **maior esforço alimentar**: maior parcela do "
+                    "orçamento familiar absorvida pela alimentação e menor disponibilidade para "
+                    "as restantes despesas. "
                     "Fonte: Eurostat, Contas Nacionais (COICOP 2018), rácio entre a despesa "
                     "alimentar e o consumo total das famílias. Publicação anual. Os conjuntos "
                     "exatos estão no separador Metodologia."
@@ -5576,18 +5611,18 @@ with aba4:
 
                 with st.expander("Descarregar dados do esforço"):
                     tab_e = df_e[["pais", "quota", "ano"]].copy()
-                    tab_e.columns = ["País", "Fatia do consumo em alimentação (%)", "Ano"]
-                    tab_e["Fatia do consumo em alimentação (%)"] = \
-                        tab_e["Fatia do consumo em alimentação (%)"].round(1)
-                    st.dataframe(tab_e.sort_values("Fatia do consumo em alimentação (%)",
+                    tab_e.columns = ["País", "Proporção do consumo em alimentação (%)", "Ano"]
+                    tab_e["Proporção do consumo em alimentação (%)"] = \
+                        tab_e["Proporção do consumo em alimentação (%)"].round(1)
+                    st.dataframe(tab_e.sort_values("Proporção do consumo em alimentação (%)",
                                                    ascending=False),
                                  width="stretch", hide_index=True)
                     st.download_button(
                         "CSV com fonte",
-                        csv_com_fonte(tab_e, "Coeficiente de Engel - esforco alimentar", dados,
+                        csv_com_fonte(tab_e, "Coeficiente de Engel, esforço alimentar", dados,
                                       fonte="Eurostat, Contas Nacionais (COICOP 2018)",
                                       conjuntos=[eurostat.CONTAS_NACIONAIS],
-                                      extra=[("Indicador", "Despesa alimentar / consumo total das familias"),
+                                      extra=[("Indicador", "Despesa alimentar sobre consumo total das famílias"),
                                              ("Conjunto",
                                               f"{eurostat.CONTAS_NACIONAIS}, "
                                               f"CP011 / {eurostat.TOTAL_CONSUMO}")]),
@@ -5733,10 +5768,10 @@ with aba4:
                     tb = tb.sort_values("Variação homóloga (%)", ascending=False)
                     st.download_button(
                         "Descarregar comparação (CSV com fonte)",
-                        csv_com_fonte(tb, "Comparacao europeia da inflacao alimentar", dados,
+                        csv_com_fonte(tb, "Comparação europeia da inflação alimentar", dados,
                                       fonte="Eurostat, IHPC (ECOICOP v2)",
                                       conjuntos=[eurostat.HICP_MENSAL],
-                                      extra=[("Mes de referencia", ultimo),
+                                      extra=[("Mês de referência", ultimo),
                                              ("Grupo", grupo_sel)]),
                         f"despesa_alimentar_ue27_{date.today()}.csv", "text/csv")
 
@@ -5757,7 +5792,7 @@ with aba5:
         # cinco blocos documentais, que é o que permite procurar.
         bloco("01 · Conceitos e definições", topo=True)
 
-        with st.expander("O que é (e o que não é) “o cabaz”", expanded=True):
+        with st.expander("Delimitação do conceito de cabaz", expanded=True):
             st.markdown("""
     **Não existe um cabaz alimentar oficial em Portugal.** Existem pelo menos seis instrumentos,
     com naturezas e finalidades diferentes, que o debate público tende a fundir num só. A primeira
@@ -5787,16 +5822,16 @@ with aba5:
             """)
 
             st.warning("""
-    **Ponto central para leitura pública.** O número que domina o noticiário, “o cabaz custa X
-    euros e atingiu novo máximo”, é o da DECO. É um indicador legítimo e útil enquanto
-    *sinalizador de tendência de preços no retalho alimentar*, mas **não é um indicador de custo de
-    vida nem de acessibilidade alimentar**. Um cabaz que sobe de preço não implica que as famílias
-    estejam a gastar mais em alimentação: podem estar a substituir produtos, a mudar de insígnia ou
-    a reduzir quantidades. Essa substituição é, ela própria, uma perda de bem-estar, e é
-    justamente o que um cabaz de composição fixa não consegue ver.
+    **Ponto central para leitura pública.** O indicador com maior difusão pública, habitualmente
+    referido como o preço do cabaz e o seu valor máximo, é o da DECO PROteste. É um indicador
+    legítimo e útil enquanto sinalizador de tendência de preços no retalho alimentar, mas **não é
+    um indicador de custo de vida nem de acessibilidade alimentar**. A subida do preço de um cabaz
+    não implica que as famílias estejam a gastar mais em alimentação: podem estar a substituir
+    produtos, a mudar de insígnia ou a reduzir quantidades. Essa substituição constitui, ela
+    própria, uma perda de bem-estar, e é precisamente o que um cabaz de composição fixa não capta.
             """)
 
-        with st.expander("O que é o IHPC e porque não é o mesmo que o IPC"):
+        with st.expander("O IHPC e a sua distinção face ao IPC"):
             st.markdown("""
     O **IHPC, Índice Harmonizado de Preços no Consumidor** é o índice de inflação construído
     segundo metodologia comum a todos os Estados-Membros, precisamente para que os valores sejam
@@ -5905,9 +5940,9 @@ with aba5:
 
     ##### O que está no valor e não responde à pergunta desta ferramenta
 
-    A ferramenta pergunta quanto gasta uma família portuguesa em comida. As Contas Nacionais
-    respondem a quanto se consumiu em alimentos no território. A diferença entre as duas perguntas
-    tem componentes identificáveis, e todas empurram o valor no mesmo sentido:
+    A ferramenta mede quanto gasta uma família portuguesa em alimentação. As Contas Nacionais
+    medem quanto se consumiu em alimentos no território. A diferença entre as duas grandezas tem
+    componentes identificáveis, e todas deslocam o valor no mesmo sentido:
 
     | Componente | Porque não responde à pergunta da ferramenta |
     |---|---|
@@ -5939,8 +5974,9 @@ with aba5:
     | **2020** | **129 986 M€** | **124 709 M€** | **+5 277 M€ (4,2%)** |
     | 2024 | 192 796 M€ | 171 641 M€ | +21 155 M€ (12,3%) |
 
-    A diferença desceu 61% no ano em que o turismo parou, e recuperou depois. Nada além do turismo
-    produz esse padrão.
+    A diferença desceu 61% no ano em que o turismo parou e recuperou depois. O padrão é consistente
+    com o efeito do turismo e não foram identificadas outras explicações compatíveis com esta
+    evolução.
 
     **O peso dos não residentes na alimentação é pequeno.** Em 2020:
 
@@ -5949,8 +5985,9 @@ with aba5:
     | Restauração (divisão 11) | **−36,6%** |
     | Alimentação em casa (grupo 01.1) | **+3,1%** |
 
-    Se a despesa alimentar em casa fosse materialmente de não residentes, teria **caído** em 2020.
-    Subiu. Quem visita Portugal come em restaurantes; não cozinha em casa.
+    Se a despesa alimentar em casa fosse materialmente atribuível a não residentes, teria
+    **descido** em 2020. Subiu. A despesa dos não residentes concentra-se na restauração e não
+    na alimentação adquirida para consumo doméstico.
 
     **Ressalva.** 2020 teve dois efeitos opostos sobre a alimentação em casa: os residentes
     substituíram restaurante por casa (a subir) e os visitantes desapareceram (a descer). O saldo
@@ -6046,9 +6083,9 @@ with aba5:
                 "do grupo tal como ele é hoje consumido."
             )
             st.markdown(
-                "Usar esta taxa é **matematicamente idêntico** a simular escalão a escalão, não "
-                "uma aproximação, a demonstração e a verificação numérica estão no separador do "
-                "IVA, em “Como se calcula a taxa média efetiva”."
+                "Usar esta taxa é **matematicamente idêntico** a simular escalão a escalão e não "
+                "constitui uma aproximação. A demonstração e a verificação numérica constam de "
+                "“Cálculo da taxa média efetiva e sua suficiência”, nesta página."
             )
 
         # Derivação da taxa de partida do simulador. Vive aqui, e não no
@@ -6057,11 +6094,11 @@ with aba5:
         # (decisão da Inês, 13.08.2026). Os nomes vêm do separador do IVA,
         # que corre antes deste; se lá tiver falhado, este bloco não entra.
         if _tem_apuramento and not _comp_iva.empty:
-            with st.expander("Como se calcula a taxa média efetiva e porque é que basta"):
+            with st.expander("Cálculo da taxa média efetiva e sua suficiência"):
                 st.markdown("""
     **O que é.** A taxa média efetiva de um grupo é **a taxa única que suporta o mesmo imposto que
-    o conjunto dos produtos desse grupo**. Não é uma taxa legal, e ninguém a paga: é uma medida
-    da carga fiscal média do grupo, tal como ele é hoje consumido.
+    o conjunto dos produtos desse grupo**. Não corresponde a nenhuma taxa legal aplicada: é uma
+    medida da carga fiscal média do grupo, tal como ele é hoje consumido.
 
     **Como se obtém.** Primeiro apura-se a fração do preço que é imposto, ponderando as subclasses:
                 """)
@@ -6191,7 +6228,8 @@ with aba5:
                     with st.expander("O que a Autoridade Tributária já decidiu "
                                      "(informações vinculativas)"):
                         st.markdown(
-                            "As informações vinculativas da AT (artigo 68.º do CPPT) são a via para "
+                            "As informações vinculativas da AT (artigo 68.º do Código de "
+                            "Procedimento e de Processo Tributário, CPPT) são a via para "
                             "fechar as atribuições que aqui aparecem como **predominantes**: são "
                             "questões de leitura das Listas, não de estatística. Cada ficha decide "
                             "sobre produtos concretos, e o que decide vincula a Administração.\n"
@@ -6284,12 +6322,12 @@ with aba5:
         # Estava no separador UE-27, antes do primeiro número da vista do esforço.
         # É a definição de um indicador e a explicação de uma divergência entre
         # bases: matéria de metodologia (decisão da Inês, 13.08.2026).
-        with st.expander("O coeficiente de Engel (o que é e porque tem dois valores)"):
+        with st.expander("O coeficiente de Engel e os seus dois valores"):
             _eng_m = intervalo_engel((dados.get("engel") or {}).get("PT"))
             st.markdown(f"""
     É a **fração do consumo total das famílias que vai para alimentação**. Chama-se assim por
     **Ernst Engel**, o estatístico que em 1857 formulou a regularidade que ainda hoje se verifica:
-    *quanto menor o rendimento, maior a fatia do orçamento gasta em comida*.
+    *quanto menor o rendimento, maior a proporção do orçamento afeta à alimentação*.
 
     É um dos indicadores mais antigos e mais robustos de bem-estar económico, e comparável entre
     países sem conversão cambial, por ser um rácio.
@@ -6309,7 +6347,7 @@ with aba5:
     serve, e essa é válida porque todos os países entram pela mesma via.
             """)
 
-        with st.expander("Duas bases de ponderação (qual serve para quê)"):
+        with st.expander("Duas bases de ponderação e respetiva aplicação"):
             st.markdown("""
     A aplicação usa **duas** estruturas de ponderação, e não é indiferente qual se aplica a quê.
     A regra é simples:
@@ -6398,8 +6436,9 @@ with aba5:
 
         with st.expander("Escalas de equivalência"):
             st.markdown(
-                "Duas pessoas não gastam o dobro de uma: compra-se a granel, desperdiça-se menos, "
-                "aproveitam-se sobras. As escalas traduzem essa partilha em coeficientes."
+                "Duas pessoas não gastam o dobro de uma: há partilha de compras, aquisição em "
+                "maiores quantidades e menor desperdício. As escalas traduzem essa partilha em "
+                "coeficientes."
             )
             st.dataframe(pd.DataFrame([
                 {"Escala": ESCALAS[k]["nome"], "1.º adulto": ESCALAS[k]["primeiro"],
@@ -6416,9 +6455,9 @@ with aba5:
     partir do zero: **ajusta** desse agregado médio para o agregado em análise, e é aplicada aos
     **dois lados** do rácio, ao numerador e ao denominador.
 
-    Daqui decorre um comportamento que à primeira vista surpreende: como o denominador também
-    depende da escala, **o efeito de mudar de escala inverte-se** conforme o agregado seja maior
-    ou menor do que a média nacional.
+    Daqui decorre uma propriedade que importa reter: como o denominador também depende da escala,
+    **o efeito de mudar de escala inverte-se** conforme o agregado seja maior ou menor do que a
+    média nacional.
 
     Coeficientes menores significam que cada pessoa a mais custa menos, o que **comprime as
     diferenças** entre agregados de dimensão diferente. Um agregado menor do que a média
@@ -6434,7 +6473,8 @@ with aba5:
             st.markdown("""
     A escala OCDE modificada é a norma europeia para o *rendimento*, e foi construída para o
     consumo total, em que a partilha da habitação gera fortes economias de escala. Na alimentação
-    essas economias são mais fracas, não se partilha uma refeição como se partilha um teto.
+    essas economias são mais fracas, por a partilha de refeições não gerar poupança equivalente à
+    da partilha da habitação.
 
     A ressalva não fica pelo qualitativo: **o IDF 2022/2023 permite medi-la.** O teste
     restringe-se a agregados **sem crianças dependentes**, onde a escala é mais limpa, e compara o
@@ -6477,7 +6517,7 @@ with aba5:
                     _dmt = float(_mod["desvio_total"].iloc[0])
                     _do = float(_org["desvio_alimentar"].iloc[0])
                     st.success(f"""
-    **A ressalva confirma-se, e o controlo é o que torna o teste convincente.**
+    **A ressalva confirma-se, e o controlo sobre a despesa total reforça a robustez do teste.**
 
     Na alimentação, a escala OCDE modificada **subestima** o custo dos agregados maiores em
     **{('%+.1f' % _dm).replace('.', ',')}%**. Na despesa total, aquilo para que a escala foi
@@ -6554,19 +6594,21 @@ with aba5:
 
 
         # ---- gráfico do cruzamento das escalas ----
-        with st.expander("Porque é que as escalas dão resultados diferentes e cruzam"):
+        with st.expander("Divergência e cruzamento das três escalas"):
             st.markdown(f"""
-Cada escala responde à mesma pergunta de forma diferente: **quanto custa cada pessoa a mais?**
+Cada escala responde de forma diferente à mesma questão: **qual o acréscimo de despesa por cada
+pessoa adicional?**
 
-| Escala | 1.ª pessoa | Cada pessoa a mais |
+| Escala | 1.ª pessoa | Cada pessoa adicional |
 |---|---|---|
 | Per capita | 1,0 | **1,0**, sem partilha |
 | OCDE original | 1,0 | **0,7**, desconto moderado |
 | OCDE modificada | 1,0 | **0,5**, desconto forte |
 
-O que confunde: **todas partem do mesmo sítio**, a despesa do agregado médio português, com
-**{('%.2f' % dim_efetiva).replace('.', ',')} pessoas**. A escala não calcula do zero: distribui
-a partir dessa referência. Por isso **as três cruzam-se exatamente nessa dimensão**.
+As três escalas **partem do mesmo ponto de referência**, a despesa do agregado médio português,
+com **{('%.2f' % dim_efetiva).replace('.', ',')} pessoas**. A escala não calcula a despesa a
+partir do zero: distribui a partir dessa referência. É por essa razão que **as três se cruzam
+exatamente nessa dimensão**.
             """)
 
             tam = [1, 1.5, 2, 2.5, 3, 4, 5, 6]
@@ -6594,16 +6636,17 @@ a partir dessa referência. Por isso **as três cruzam-se exatamente nessa dimen
                                hovermode="x unified")
             grafico(figS)
 
-            st.success("""
-**A leitura do gráfico, é isto que responde à dúvida.**
+            st.info("""
+**Leitura do gráfico**
 
-**À esquerda do cruzamento**, agregados **menores** que a média: a OCDE modificada dá valores
-**mais altos**. Se cada pessoa a mais custa pouco (0,5), então ter menos gente do que a média
-**poupa pouco**, fica-se perto do valor médio. Na per capita, em que cada pessoa vale a
-totalidade, ter menos gente **desconta muito mais**.
+**À esquerda do cruzamento**, agregados **menores** do que a média: a OCDE modificada produz
+valores **mais altos**. Se cada pessoa adicional acresce pouco (0,5), ter menos pessoas do que a
+média **reduz pouco** a despesa, e o valor mantém-se próximo do médio. Na escala per capita, em
+que cada pessoa conta pela totalidade, ter menos pessoas **reduz muito mais** a despesa.
 
-**À direita**, agregados **maiores**: inverte-se. Se cada pessoa a mais custa pouco, acrescentar
-gente **aumenta pouco**, e a OCDE modificada passa a dar os valores mais baixos.
+**À direita**, agregados **maiores**: a relação inverte-se. Se cada pessoa adicional acresce
+pouco, acrescentar pessoas **aumenta pouco** a despesa, e a OCDE modificada passa a produzir os
+valores mais baixos.
 
 **Em resumo:** desconto forte **comprime** as diferenças, aproximando todos os agregados da
 média; desconto fraco **amplifica-as**. O cruzamento está sempre na dimensão média, porque é aí
@@ -6612,7 +6655,7 @@ que não há nada a descontar nem a acrescentar.
 
 
 
-        with st.expander("Rendimento e salários (o que é bruto e o que é líquido)"):
+        with st.expander("Rendimento e salários: distinção entre bruto e líquido"):
             # O exemplo “920 € legal, 1 073 € difundido” estava inscrito à mão e
             # envelhece de seis em seis meses, quando o Eurostat publica o
             # semestre seguinte. Sai da série (auditoria de 12.08.2026, L16).
@@ -6667,7 +6710,7 @@ que não há nada a descontar nem a acrescentar.
     @EXEMPLO_RMMG@
 
     A aplicação usa o valor do Eurostat, e usa-o de propósito: a despesa alimentar é mensal e
-    recorrente, pelo que a base correta para a fatia do orçamento é a **média mensal do rendimento
+    recorrente, pelo que a base correta para o peso no orçamento é a **média mensal do rendimento
     anual**, com os subsídios distribuídos pelos 12 meses. Usar o valor legal atribuiria ao mês de
     dezembro um esforço alimentar que na prática se dilui. O que estava errado era o rótulo, não
     o número: a aplicação chamava-lhe “valor legal”, e não é.
@@ -6702,7 +6745,7 @@ que não há nada a descontar nem a acrescentar.
         # Vinte linhas sobre **uma** das três referências, mais dez de nota de
         # fonte. O conteúdo é bom e fica; deixa é de ser a primeira coisa que
         # se lê a seguir ao gráfico (Inês, 13.08.2026).
-        with st.expander("Porque é que o salário mínimo não é um caso extremo"):
+        with st.expander("Posição do salário mínimo na distribuição salarial"):
             st.markdown(
                 "Não é o agregado típico, é o **limiar inferior** da distribuição. Mas "
                 "está longe de ser um caso extremo: em 2025 a RMMG equivalia a **91% do "
@@ -6725,7 +6768,7 @@ que não há nada a descontar nem a acrescentar.
                 "2024, ainda assim o **mais elevado da área do euro**."
             )
 
-        with st.expander("O que estes números assumem (leitura obrigatória)"):
+        with st.expander("Pressupostos subjacentes a estes valores"):
             if base_chave == "contas":
                 if _racio_cn_silc is not None:
                     _frase_racio = (
@@ -6837,8 +6880,8 @@ os lados escalam de forma idêntica. A subida com o número de pessoas resulta, 
 economias de escala genuinamente mais fracas do que o consumo total; mas a **magnitude**
 depende da escala escolhida.
 
-**Como usar:** leia a **direção** como robusta e o **valor exato** como condicional. Teste
-sempre a sensibilidade mudando a escala na barra lateral.
+**Utilização recomendada:** a **direção** do resultado é robusta; o **valor exato** é condicional
+à escala adotada. A sensibilidade pode ser testada alterando a escala na barra lateral.
             """)
 
         bloco("04 · Dados, atualização e rastreabilidade")
@@ -7089,16 +7132,16 @@ oficial daquele grupo: de quanto subiram os preços face ao mesmo mês do ano an
 Se o grupo vale hoje *Vᵢ* e os preços subiram *gᵢ* por cento, há um ano valia *Vᵢ/(1+gᵢ)*:
             """)
             st.latex(r"\text{contributo}_i = V_i - \frac{V_i}{1+g_i} = V_i \cdot \frac{g_i}{1+g_i}")
-            st.success("""
-**Exemplo com números.** Suponha despesa alimentar mensal de **400 €**, e que o grupo “carne”
-tem ponderador 42,3 ‰ numa soma de 195,0 ‰:
+            st.info("""
+**Exemplo numérico.** Para uma despesa alimentar mensal de **400 €**, com o grupo “carne” a
+registar um ponderador de 42,3 ‰ numa soma de 195,0 ‰:
 
 1. **Quota** = 42,3 ÷ 195,0 = **21,7%**
 2. **Valor** = 400 € × 0,217 = **86,77 €**
 3. **Variação** = 4,8% (lida diretamente do Eurostat)
 4. **Contributo** = 86,77 × 0,048 ÷ 1,048 = **3,97 €**
 
-Interpretação: dos euros a mais que a família gasta por mês face ao ano passado, **3,97 €**
+Interpretação: do acréscimo de despesa mensal face ao ano anterior, **3,97 €**
 devem-se à carne. Somando os nove contributos obtém-se exatamente o agravamento total, é uma
 propriedade verificada por teste automático.
             """)
@@ -7109,7 +7152,7 @@ repartição de um valor total por essas proporções. É por isso que a tabela 
 **reconstituição**, e não uma medição.
             """)
 
-        with st.expander("Estas séries ainda estão a avançar?"):
+        with st.expander("Estado de atualização das séries"):
             st.markdown("""
     **Uma série que responde não é uma série que avança.** Um conjunto arquivado devolve HTTP 200
     e dados bem formados, apenas parou. Sem esta verificação, um conjunto nessas condições passa
@@ -7177,21 +7220,21 @@ repartição de um valor total por essas proporções. É por isso que a tabela 
 
         bloco("05 · Nomenclatura, âmbito e limitações")
 
-        with st.expander("Porque é que se diz “despesa alimentar” e não “cabaz”"):
+        with st.expander("Distinção entre despesa alimentar e cabaz"):
             st.markdown("""
 Os dois termos designam objetos diferentes, e a aplicação usa apenas o primeiro para o que
 mede. “Cabaz” aparece só quando se fala de cabazes **de terceiros** ou do “cabaz zero” de 2023.
 
 | | **Cabaz** | **Despesa alimentar** |
 |---|---|---|
-| O que é | Lista de produtos com quantidades definidas | Quanto uma família gasta em comida |
+| O que é | Lista de produtos com quantidades definidas | Quanto uma família gasta em alimentação |
 | Como se obtém | Somando os preços dos artigos da lista | Repartindo despesa efetiva por grupos |
 | Unidade natural | Um ato de compra | Um mês |
 | Quantidades | Fixas e conhecidas | Não existem, só euros |
 
 Esta aplicação **não tem cabaz nenhum**: não conhece quantidades, não observa preços de
 produtos, não tem lista de artigos. Tem despesa em euros e variações de preço oficiais.
-Chamar-lhe cabaz seria prometer o que não entrega.
+A designação cabaz não corresponde, por isso, ao que a ferramenta mede.
 
             """)
         with st.expander("De onde vem a classificação COICOP"):
@@ -7244,7 +7287,7 @@ Chamar-lhe cabaz seria prometer o que não entrega.
     Com a migração, as duas fontes passaram a estar **na mesma classificação**.
             """)
 
-        with st.expander("Porquê “crianças com menos de 14 anos” e não outra idade"):
+        with st.expander("O limiar dos 14 anos nas escalas de equivalência"):
             st.markdown("""
     O limiar dos 14 anos **não é uma escolha desta aplicação nem a definição demográfica de
     criança**. É o limiar inscrito nas próprias escalas de equivalência:
@@ -7289,7 +7332,8 @@ Chamar-lhe cabaz seria prometer o que não entrega.
        sua **taxa média efetiva**, apurada dos ponderadores por subclasse, e não com a taxa
        predominante. Subsiste como aproximação a parcela **indeterminada** do
        apuramento e a atribuição por predominância; a sensibilidade a ambas está apresentada como
-       intervalo. Ver o painel “Quanto do cabaz segue cada taxa” no separador do IVA.
+       intervalo. Ver o painel “Repartição da despesa alimentar pelas taxas legais de IVA”, no
+       separador do simulador de IVA.
     7. **A repercussão está calibrada, mas continua a ser o parâmetro decisivo.** Parte de
        @RHO_LIM@ %, derivado da avaliação do Banco de Portugal ao “IVA zero” de 2023, a
        medida idêntica, no mesmo país.

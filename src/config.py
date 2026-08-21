@@ -925,7 +925,8 @@ COD_AGREGADOS = [a["cod"] for a in AGREGADOS]
 # esconder: sem esta nota, o leitor soma as duas parcelas, não lhe dá o total, e
 # não tem como saber porquê. Sem códigos de conjunto, que vivem na metodologia.
 AGREGADOS_NOTA = (
-    "**A linha do total não é a soma das outras duas, e é de propósito.** Mede a "
+    "**A linha do total não corresponde à soma das outras duas, e a diferença é "
+    "esperada.** Mede a "
     "alimentação e as bebidas não alcoólicas, que é o universo do resto da "
     "aplicação. As duas linhas que a decompõem seguem a convenção do Eurostat "
     "para separar frescos de transformados, e nessa convenção os transformados "
@@ -1322,7 +1323,7 @@ SOFI_MILHOES = {2017: 2.3, 2019: 1.6, 2020: 1.7, 2021: 1.6,
 ORGANISMO = "Secretaria-Geral do Governo"
 UNIDADE = "DSSD · Unidade de Pesquisa e Estatísticas"
 RODAPE = (
-    "Ferramenta de trabalho interno, não constitui posição oficial da "
+    "Ferramenta de trabalho interno. Não constitui posição oficial da "
     "Secretaria-Geral do Governo. Os dados são obtidos em direto do Eurostat; "
     "o valor de referência do cabaz e as taxas de IVA são parâmetros do utilizador."
 )
