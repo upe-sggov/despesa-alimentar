@@ -2999,7 +2999,11 @@ with aba1:
             # A coluna do contador estreita com ele: com o campo limitado a
             # 9rem, um terço da largura deixava um vazio entre o contador e o
             # texto que o qualifica, e os dois lêem-se como um só bloco.
-            ca_, cb_ = st.columns([1, 3])
+            #
+            # Um sexto, e não um quarto: a um quarto o vazio continuava grande
+            # de mais (Inês, 20.08.2026). Abaixo disto o rótulo do contador
+            # deixa de caber numa linha, que é o que fixa o limite.
+            ca_, cb_ = st.columns([1, 5])
             with ca_:
                 trabalhadores = st.number_input(
                     "Quantos auferem rendimento", min_value=1, max_value=int(adultos),
