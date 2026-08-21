@@ -4233,6 +4233,16 @@ with aba6:
             secao("Os dois lados da cadeia, por produto",
                   "Variação do preço em cada fase, produto a produto, na janela "
                   "comum às duas.", grupo="01 · Panorama da cadeia")
+            # As percentagens vão **formatadas em Python**, e não por `%{x:+.1f}`
+            # no modelo do hover do Plotly, que não estava a pegar (relatado pela
+            # Inês, 20.08.2026). Definida aqui, fora do `if`/`else` que se segue,
+            # porque é usada também mais abaixo em "Ver um produto em detalhe",
+            # que corre sempre — com `_com_prod` vazio essa secção ficava sem
+            # `_pct_obs` definida e rebentava com `NameError` (auditoria de
+            # 21.08.2026).
+            def _pct_obs(v):
+                return percentagem(v, casas=2) if pd.notna(v) else "—"
+
             # A janela **não é a mesma para todos os produtos**: cada variação é
             # medida no período comum às duas fases desse produto, que em vários
             # casos é bem mais curto do que a série global. A legenda anterior
@@ -4273,17 +4283,6 @@ with aba6:
                 # com que as duas fiquem a coincidir de cima para baixo. Mexer numa
                 # sem mexer na outra parte-as em silêncio.
                 _ord = _com_prod.sort_values("consumo_var")
-
-                # As percentagens vão **formatadas em Python**, e não por
-                # `%{x:+.1f}` no modelo do hover. Aquele formato não estava a
-                # pegar e o hover mostrava “92.94117647058823%”, com catorze
-                # casas e ponto decimal (relatado pela Inês, 20.08.2026). Não
-                # apurei porque falha do lado do cliente; apurei que a linha da
-                # diferença, ao lado, sempre saiu certa, e essa já ia formatada.
-                # É o caminho que se sabe que funciona, e é o único que garante
-                # a vírgula decimal em todos os números do quadro.
-                def _pct_obs(v):
-                    return percentagem(v, casas=2) if pd.notna(v) else "—"
 
                 _extra = list(zip(
                     _ord["inicio"].dt.strftime("%m/%Y"),
