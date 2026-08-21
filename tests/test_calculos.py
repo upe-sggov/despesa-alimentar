@@ -1987,18 +1987,37 @@ def test_o_readme_nao_diz_que_a_pasta_de_dados_fica_de_fora():
     assert "tem de ser enviada para o repositório" in readme
 
 
-def test_o_gitignore_da_app_recupera_a_pasta_de_dados():
+def test_os_ficheiros_de_dados_vao_para_o_repositorio():
     """
-    O `.gitignore` da raiz do repositorio tem `Dados/`, escrito para as camadas
-    do Medallion. No Windows a comparacao de nomes e indiferente a maiusculas, e
-    apanhava tambem a pasta `dados/` desta aplicacao, que ficava de fora do
-    repositorio sem que nada o dissesse.
+    As duas fontes sem API vivem em `dados/`, e o Streamlit Community Cloud nao
+    corre os scripts de recolha: se estes ficheiros nao forem seguidos pelo git,
+    os separadores do Observatorio e da DECO ficam vazios na aplicacao
+    publicada, sem erro nenhum, so sem dados.
+
+    A propriedade e serem **seguidos**, e nao o `.gitignore` ter uma linha
+    concreta. A primeira versao deste teste exigia `!dados/`, que so faz sentido
+    na copia publicada dentro do repositorio da UPE, onde o `.gitignore` da raiz
+    tem `Dados/`, escrito para as camadas do Medallion, e no Windows apanha
+    tambem esta pasta por a comparacao de nomes ser indiferente a maiusculas.
+    Aqui esse problema nao existe, e o teste falhava por uma razao que nao era a
+    sua (20.08.2026).
     """
+    import subprocess
     from pathlib import Path
 
-    gi = (Path(__file__).resolve().parent.parent / ".gitignore").read_text(
-        encoding="utf-8")
-    assert "!dados/" in gi
+    raiz = Path(__file__).resolve().parent.parent
+    if not (raiz / ".git").exists():
+        import pytest
+
+        pytest.skip("copia publicada, sem repositorio proprio")
+
+    seguidos = subprocess.run(
+        ["git", "-C", str(raiz), "ls-files", "dados"],
+        capture_output=True, text=True).stdout.split()
+
+    assert seguidos, "a pasta dados/ nao tem ficheiros seguidos pelo git"
+    for necessario in ("dados/observatorio.csv", "dados/observatorio_meta.json"):
+        assert necessario in seguidos, necessario
 
 
 # --------------------- alinhamento dos cartoes de indicador, 20.08.2026
