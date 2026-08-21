@@ -1,5 +1,5 @@
 {
-  "extraido_em": "2026-08-13",
+  "extraido_em": "2026-08-20",
   "fonte": "GPP — Observatório de Preços Agroalimentar",
   "endereco": "https://observatorioagroalimentar.gov.pt/wp-admin/admin-ajax.php",
   "acao": "get_produto_graph",
