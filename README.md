@@ -420,15 +420,31 @@ python scripts/recolher_observatorio.py
 ```
 
 Escreve `dados/observatorio.csv` e `dados/observatorio_meta.json`, com data de
-extração. A pasta `dados/` não é versionada (ver `.gitignore`); cada ambiente
-corre o script depois de clonar. Qualquer número apresentado é reconstituível.
+extração. Qualquer número apresentado é reconstituível.
 **Convém correr o script quando sair novo período** — a aplicação mostra sempre a
 data da última recolha.
 
-Recolha de 08.08.2026: **3 074 observações, 39 produtos, 20 setores**, de
-03.01.2022 a 18.05.2026. Só **17 dos 39** têm série de produção; para os restantes
+**A pasta `dados/` tem de ser enviada para o repositório.** É dela que saem o
+Observatório e o cabaz da DECO, as duas fontes sem API, e o Streamlit Community
+Cloud não corre os scripts de recolha: sem estes ficheiros, os dois separadores
+respetivos ficam vazios na aplicação publicada. Correr o script e fazer *commit*
+do resultado é o ciclo de atualização destas duas fontes.
+
+> **Se os ficheiros de `dados/` não aparecerem no `git status`**, é o
+> `.gitignore` da raiz do repositório: tem `Dados/`, escrito para as camadas do
+> Medallion em `03_Dados/`, e no Windows a comparação de nomes é indiferente a
+> maiúsculas, pelo que apanhava também esta pasta. O `.gitignore` desta
+> aplicação anula-o com `!dados/`. Confirme com
+> `git add -n -- dados`, que deve listar os cinco ficheiros.
+
+Recolha de 20.08.2026: **3 125 observações, 39 produtos, 20 setores**, de
+03.01.2022 a 15.06.2026. Só **17 dos 39** têm série de produção; para os restantes
 o Observatório publica apenas preço ao consumidor, e a aplicação distingue-os em
 vez de os omitir.
+
+> Estes quatro números não são para atualizar à mão: há um teste,
+> `test_o_readme_cita_a_recolha_em_vigor`, que os confronta com
+> `dados/observatorio_meta.json` e falha quando divergem.
 
 **Ressalva central, repetida na interface:** a diferença entre o preço no consumo
 e o preço na produção **não é a margem de ninguém**. Inclui transporte,

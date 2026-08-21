@@ -4264,28 +4264,41 @@ with aba6:
                 # com que as duas fiquem a coincidir de cima para baixo. Mexer numa
                 # sem mexer na outra parte-as em silêncio.
                 _ord = _com_prod.sort_values("consumo_var")
+
+                # As percentagens vão **formatadas em Python**, e não por
+                # `%{x:+.1f}` no modelo do hover. Aquele formato não estava a
+                # pegar e o hover mostrava “92.94117647058823%”, com catorze
+                # casas e ponto decimal (relatado pela Inês, 20.08.2026). Não
+                # apurei porque falha do lado do cliente; apurei que a linha da
+                # diferença, ao lado, sempre saiu certa, e essa já ia formatada.
+                # É o caminho que se sabe que funciona, e é o único que garante
+                # a vírgula decimal em todos os números do quadro.
+                def _pct_obs(v):
+                    return percentagem(v, casas=2) if pd.notna(v) else "—"
+
                 _extra = list(zip(
                     _ord["inicio"].dt.strftime("%m/%Y"),
                     _ord["fim"].dt.strftime("%m/%Y"),
                     _ord["n_periodos"].astype(int),
-                    [f"{v:+.1f}".replace(".", ",") if pd.notna(v) else "—"
-                     for v in _ord["diferenca_var"]],
+                    [_pct_obs(v) for v in _ord["diferenca_var"]],
                     _ord["padrao"],
+                    [_pct_obs(v) for v in _ord["producao_var"]],
+                    [_pct_obs(v) for v in _ord["consumo_var"]],
                 ))
                 _qualifica = ("<br>Janela: %{customdata[0]} – %{customdata[1]}"
                               " (%{customdata[2]} períodos)"
-                              "<br>Diferença consumo−produção: %{customdata[3]}%"
+                              "<br>Diferença consumo−produção: %{customdata[3]}"
                               "<br>Padrão: %{customdata[4]}")
                 figo = go.Figure()
                 figo.add_trace(go.Bar(
                     y=_ord["produto"], x=_ord["producao_var"], orientation="h",
                     name="Produção", marker_color=DOURADO, customdata=_extra,
-                    hovertemplate="<b>%{y}</b><br>Produção: %{x:+.1f}%"
+                    hovertemplate="<b>%{y}</b><br>Produção: %{customdata[5]}"
                                   + _qualifica + "<extra></extra>"))
                 figo.add_trace(go.Bar(
                     y=_ord["produto"], x=_ord["consumo_var"], orientation="h",
                     name="Consumo", marker_color=VERDE, customdata=_extra,
-                    hovertemplate="<b>%{y}</b><br>Consumo: %{x:+.1f}%"
+                    hovertemplate="<b>%{y}</b><br>Consumo: %{customdata[6]}"
                                   + _qualifica + "<extra></extra>"))
                 figo.update_layout(barmode="group", height=max(470, 43 * len(_ord)),
                                    margin=dict(t=12, b=46, l=10, r=10),
@@ -4299,13 +4312,12 @@ with aba6:
                     "Janela medida": (f"{r.inicio.strftime('%m/%Y')} – "
                                       f"{r.fim.strftime('%m/%Y')}"),
                     "Períodos": int(r.n_periodos),
-                    "Preço na produção: variação na janela": (
-                        f"{r.producao_var:+.1f}%".replace(".", ",")),
-                    "Preço no consumo: variação na janela": (
-                        f"{r.consumo_var:+.1f}%".replace(".", ",")),
-                    "Diferença consumo−produção": (
-                        f"{r.diferenca_var:+.1f}%".replace(".", ",")
-                        if pd.notna(r.diferenca_var) else "—"),
+                    # Mesmas casas decimais do hover: é o mesmo número, e lido
+                    # com precisão diferente nos dois sítios dava a impressão de
+                    # serem dois.
+                    "Preço na produção: variação na janela": _pct_obs(r.producao_var),
+                    "Preço no consumo: variação na janela": _pct_obs(r.consumo_var),
+                    "Diferença consumo−produção": _pct_obs(r.diferenca_var),
                     "Padrão": r.padrao,
                 } for r in _com_prod.itertuples()])
                 # A tabela recolhe-se: tudo o que ela diz está no hover das barras.
@@ -4367,13 +4379,24 @@ with aba6:
             _div = _var[_var["padrao"] == "Divergência"]
             if not _div.empty:
                 _d = _div.iloc[0]
+                # A janela vai **na frase**, e não numa legenda ao lado. Este é o
+                # texto mais citável do separador, e é lido em voz alta sem o
+                # resto do ecrã à volta: sem a janela, quem o ouve assume doze
+                # meses, que é o que o resto da aplicação mede (20.08.2026).
+                _jan_d = (f"{mes_extenso(_d['inicio'].strftime('%Y-%m'))} a "
+                          f"{mes_extenso(_d['fim'].strftime('%Y-%m'))}")
                 st.error(f"""
     **{_d['produto']} é o caso mais nítido, e o que justifica este separador.**
 
-    O preço na produção **desce {percentagem(abs(_d['producao_var']), sinal=False)}** enquanto o
+    Entre **{_jan_d}**, o preço na produção
+    **desce {percentagem(abs(_d['producao_var']), sinal=False)}** enquanto o
     preço ao consumidor **sobe {percentagem(_d['consumo_var'], sinal=False)}**. A diferença entre
     as duas pontas passa de {euro(_d['diferenca_inicial'])} para {euro(_d['diferenca_final'])}
     por {_d['unidade'] or 'unidade'}.
+
+    **Não é uma variação anual.** São {int(_d['n_periodos'])} períodos de quatro semanas, e o
+    valor acumulado nesse intervalo não se compara com as variações homólogas dos outros
+    separadores.
 
     Nenhum índice de preços mostra isto: para o IHPC, é apenas mais um produto que subiu. Mantém-se
     integralmente a ressalva acima, o alargamento da diferença não é, por si, margem de ninguém, e
@@ -4397,6 +4420,29 @@ with aba6:
 
             _serie = observatorio.serie_produto(_obs, _escolhido)
             _linha = _var[_var["produto"] == _escolhido].iloc[0]
+
+            # A janela deste produto, escrita por extenso, porque **não é a
+            # mesma para todos**. Seis dos 39 acabam antes dos restantes, por a
+            # série de produção parar mais cedo, e o leite é um deles: o seu
+            # número acaba um ano antes do dos vizinhos e nada no ecrã o dizia
+            # (relatado pela Inês, 20.08.2026).
+            _jan_p = (f"{mes_extenso(_linha['inicio'].strftime('%Y-%m'))} a "
+                      f"{mes_extenso(_linha['fim'].strftime('%Y-%m'))}")
+            _fim_geral = _var["fim"].max()
+            _mais_curta = _linha["fim"] < _fim_geral
+            st.caption(
+                f"**{_escolhido}: {_jan_p}**, {int(_linha['n_periodos'])} períodos de quatro "
+                f"semanas. No consumo, {_pct_obs(_linha['consumo_var'])}"
+                + (f"; na produção, {_pct_obs(_linha['producao_var'])}"
+                   if _linha["tem_producao"] else "")
+                + ". É a variação **acumulada nessa janela**, não uma variação anual."
+                + (f" A janela deste produto termina em "
+                   f"{mes_extenso(_linha['fim'].strftime('%Y-%m'))}, antes da dos restantes "
+                   f"({mes_extenso(_fim_geral.strftime('%Y-%m'))}), porque a sua série de "
+                   "produção para aí. O valor não é comparável com o dos produtos de janela "
+                   "mais longa." if _mais_curta else "")
+            )
+
             if _serie.empty:
                 st.info("Sem série para este produto.")
             else:

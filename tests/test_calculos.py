@@ -1843,6 +1843,91 @@ def test_variacao_de_portugal_pedida_na_mesma_janela_do_indice():
     assert "desde_variacao" not in trecho
 
 
+# --------------------- o README nao pode envelhecer em silencio, 20.08.2026
+def _meta_observatorio():
+    import json
+    from pathlib import Path
+
+    f = Path(__file__).resolve().parent.parent / "dados" / "observatorio_meta.json"
+    if not f.exists():
+        return None
+    return json.loads(f.read_text(encoding="utf-8"))
+
+
+def test_o_readme_cita_a_recolha_em_vigor():
+    """
+    O README descreve a recolha do Observatorio com numeros inscritos a mao:
+    observacoes, produtos, setores e as datas dos extremos da serie. Cada vez
+    que alguem corre `scripts/recolher_observatorio.py`, esses numeros mudam e o
+    README fica a mentir, sem nada acusar.
+
+    Foi o que aconteceu: a 20.08.2026 o README ainda descrevia a recolha de
+    08.08.2026, com 3 074 observacoes e serie ate 18.05.2026, quando o ficheiro
+    ja tinha 3 125 e ia ate 15.06.2026.
+
+    O ciclo de atualizacao destas fontes e correr o script e fazer commit do
+    resultado. Este teste poe o README dentro desse ciclo: se os numeros
+    divergirem do `observatorio_meta.json`, a bateria falha e diz qual e que
+    esta errado.
+    """
+    meta = _meta_observatorio()
+    if meta is None:
+        import pytest
+
+        pytest.skip("sem recolha do Observatorio neste ambiente")
+
+    readme = _fonte("README.md")
+
+    # Numeros com espaco fino de milhares, como o resto do documento.
+    obs = f"{meta['observacoes']:,}".replace(",", " ")
+    esperado = {
+        "observações": f"**{obs} observações",
+        "produtos": f"{meta['produtos']} produtos",
+        "setores": f"{meta['setores']} setores",
+        "primeiro período": _data_pt(meta["primeiro_periodo"]),
+        "último período": _data_pt(meta["ultimo_periodo"]),
+        "produtos com produção": f"**{len(meta['com_producao'])} dos "
+                                 f"{meta['produtos']}**",
+    }
+    for o_que, texto in esperado.items():
+        assert texto in readme, (
+            f"o README nao cita {o_que} da recolha em vigor: falta “{texto}”. "
+            "Corra o script, actualize a frase da recolha e volte a correr os testes.")
+
+
+def _data_pt(iso: str) -> str:
+    """'2026-06-15' -> '15.06.2026', a forma usada no README."""
+    ano, mes, dia = iso.split("-")
+    return f"{dia}.{mes}.{ano}"
+
+
+def test_o_readme_nao_diz_que_a_pasta_de_dados_fica_de_fora():
+    """
+    O README dizia que `dados/` nao e versionada e que cada ambiente corre o
+    script depois de clonar. No Streamlit Community Cloud ninguem corre o
+    script: seguir essa instrucao deixa os separadores do Observatorio e da DECO
+    vazios na aplicacao publicada.
+    """
+    readme = _fonte("README.md")
+
+    assert "não é versionada" not in readme
+    assert "tem de ser enviada para o repositório" in readme
+
+
+def test_o_gitignore_da_app_recupera_a_pasta_de_dados():
+    """
+    O `.gitignore` da raiz do repositorio tem `Dados/`, escrito para as camadas
+    do Medallion. No Windows a comparacao de nomes e indiferente a maiusculas, e
+    apanhava tambem a pasta `dados/` desta aplicacao, que ficava de fora do
+    repositorio sem que nada o dissesse.
+    """
+    from pathlib import Path
+
+    gi = (Path(__file__).resolve().parent.parent / ".gitignore").read_text(
+        encoding="utf-8")
+    assert "!dados/" in gi
+
+
 # --------------------- alinhamento dos cartoes de indicador, 20.08.2026
 def test_os_cartoes_de_indicador_esticam_so_quando_estao_sozinhos():
     """
