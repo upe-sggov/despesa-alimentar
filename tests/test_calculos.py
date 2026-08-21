@@ -2258,12 +2258,74 @@ def test_frescura_do_observatorio_nao_acusa_o_que_nao_percebe():
     assert f["periodos_em_falta"] is None
 
 
-def test_o_separador_do_observatorio_usa_a_ultima_observacao():
-    """A app tem de passar a data da serie, nao a da recolha."""
+def _ocorrencias(fonte: str, alvo: str):
+    """Todas as posicoes de `alvo`, e nao so a primeira."""
+    i = fonte.find(alvo)
+    while i != -1:
+        yield i
+        i = fonte.find(alvo, i + 1)
+
+
+def _argumentos(fonte: str, i: int) -> list[str]:
+    """
+    Os argumentos de topo da chamada que comeca em `i`, em texto.
+
+    Conta parenteses, chavetas e parenteses retos para nao se enganar com
+    `_meta.get("x")` nem com `_var["a"]["b"]`. Nao trata de virgulas dentro de
+    literais de texto, que nestas chamadas nao existem; se vierem a existir, e
+    aqui que se acrescenta.
+    """
+    abre = fonte.index("(", i)
+    profundidade, inicio, args = 0, abre + 1, []
+    for j in range(abre, len(fonte)):
+        c = fonte[j]
+        if c in "([{":
+            profundidade += 1
+        elif c in ")]}":
+            profundidade -= 1
+            if profundidade == 0:
+                args.append(fonte[inicio:j])
+                return [a.strip() for a in args]
+        elif c == "," and profundidade == 1:
+            args.append(fonte[inicio:j])
+            inicio = j + 1
+    raise AssertionError("chamada sem fecho de parenteses")
+
+
+def test_a_frescura_recebe_sempre_a_serie_primeiro_e_a_recolha_depois():
+    """
+    `frescura_do_observatorio` distingue duas falhas que se parecem: a fonte
+    parou de publicar, ou a recolha e que nao correu. So as distingue se lhe
+    derem as duas datas pela ordem certa - a da ultima observacao da serie
+    primeiro, a da recolha depois. Ja houve uma versao que passava so a recolha.
+
+    Este teste seguia `_fim` a 160 caracteres da **primeira** ocorrencia. Em
+    342d5f7 a seccao "Evolucao do Cabaz" acrescentou uma segunda chamada, para a
+    serie da DECO, 1 550 linhas acima da do Observatorio. A primeira ocorrencia
+    passou a ser essa, o teste comecou a falhar por a variavel ali se chamar
+    outra coisa (esta correta: e a data do ultimo ponto da serie), e a chamada
+    do Observatorio deixou de estar protegida sem nada acusar.
+
+    Ancorar uma verificacao na primeira ocorrencia de um texto e fragil: basta
+    aparecer outra antes para a guarda mudar de alvo em silencio. Passa a
+    verificar **todas** as chamadas, e a propriedade e formulada pelo que ela e,
+    e nao pelo nome que a variavel tem em cada sitio (20.08.2026).
+    """
     fonte = _fonte("app.py")
-    i = fonte.index("frescura_do_observatorio(")
-    trecho = fonte[i:i + 160]
-    assert "_fim" in trecho, trecho
+    chamadas = list(_ocorrencias(fonte, "frescura_do_observatorio("))
+
+    # Duas hoje, DECO e Observatorio. Se alguem as remover, o teste tem de dar
+    # por isso em vez de passar a verificar o vazio.
+    assert len(chamadas) >= 2, chamadas
+
+    for i in chamadas:
+        args = _argumentos(fonte, i)
+        assert len(args) >= 2, args
+        assert "extraido_em" not in args[0], (
+            f"o primeiro argumento e a data da serie, nao a da recolha: {args[0]}")
+        assert "extraido_em" in args[1], (
+            f"o segundo argumento e a data da recolha: {args[1]}")
+
     # E a chamada antiga, que media so a recolha, nao pode voltar.
     assert 'idade_fonte(_obs_meta.get("extraido_em")' not in fonte
 
