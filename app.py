@@ -2048,6 +2048,28 @@ with st.sidebar:
             + (f" Um dos extremos vem de **{outra_ancora['nome']}**, que está fora do "
                "intervalo plausível, ver o alarme na barra lateral."
                if _outra_suspeita else ""))
+        # O que separa as duas bases não é a fonte, é a pergunta: uma mede a
+        # despesa dos agregados residentes, a outra o consumo no território. O
+        # rácio é **calculado**, não inscrito: move-se com o mês do índice,
+        # porque as duas bases são indexadas a partir de períodos de referência
+        # diferentes, e um número escrito à mão desatualizava-se em silêncio
+        # (é o modo de falha que o L16 fechou noutro sítio).
+        _racio_bases = (ancora["maximo"] / ancora["minimo"]
+                        if ancora["minimo"] else None)
+        if _racio_bases and _racio_bases > 1.05:
+            _racio_txt = numero(_racio_bases, 1)
+            if base_chave == "idf":
+                _nota_base.append(
+                    "A base ativa é a que mede a **despesa das famílias residentes**; a outra "
+                    f"mede o **consumo no território** e é cerca de {_racio_txt} vezes superior, "
+                    "por razões que a metainformação do INE explica. Ver “O que são as Contas "
+                    "Nacionais e o que medem”, no separador da metodologia.")
+            else:
+                _nota_base.append(
+                    "A base ativa é a que mede o **consumo no território**, cerca de "
+                    f"{_racio_txt} vezes a **despesa das famílias residentes** medida pela outra, "
+                    "por razões que a metainformação do INE explica. Ver “O que são as Contas "
+                    "Nacionais e o que medem”, no separador da metodologia.")
     else:
         _nota_base.append(
             f"**{euro(media_agregado)}** por mês para o agregado médio, na única base "
@@ -5526,18 +5548,86 @@ with aba5:
     """)
             st.latex(r"\pi(m) = \left[ \frac{I(m,y)}{I(m,y-1)} - 1 \right] \times 100")
 
-        with st.expander("Em que conceito estão as Contas Nacionais"):
+        with st.expander("O que são as Contas Nacionais e o que medem"):
             st.markdown("""
-    As duas bases de âncora divergem por um fator próximo de 2, e a explicação que esta aplicação
-    dava para isso era **incompleta**. Dizia que as Contas Nacionais sobrestimam “porque medem o
-    consumo no território e incluem não residentes”. A primeira parte é verdade; a segunda não
-    explica a divergência.
+    As **Contas Nacionais** são o sistema de contabilidade macroeconómica do país. São elaboradas
+    pelo INE segundo o **Sistema Europeu de Contas (SEC 2010)**, norma comum a todos os
+    Estados-Membros fixada pelo Regulamento (UE) n.º 549/2013 e alterada pelo Regulamento (UE)
+    2023/734, e é delas que sai o PIB.
 
-    ##### Primeiro: em que conceito está o conjunto
+    A despesa de consumo final das famílias é uma das componentes do PIB na ótica da despesa. O
+    Regulamento (UE) 2023/734 substituiu nas contas nacionais as referências à COICOP 1999 pela
+    **COICOP 2018**, com aplicação a partir de 1 de setembro de 2024, e é da rubrica **01.1,
+    produtos alimentares**, que esta ferramenta parte.
 
-    O `nama_10_cp18` podia estar em conceito **interno** (despesa no território, turistas
-    incluídos) ou **nacional** (residentes, onde quer que gastem). O conjunto não tem dimensão que
-    o declare. Duas provas resolvem:
+    ##### Como se apura o valor
+
+    O apuramento faz-se no **Quadro de Equilíbrio de Recursos e Utilizações (QERU)**, que nas
+    contas portuguesas tem cerca de 430 produtos. Para cada produto confronta-se o que foi
+    produzido e importado com o que foi consumido pelas empresas, investido, exportado ou
+    acrescentado a existências. O consumo final das famílias é uma das colunas desse equilíbrio, e
+    o seu valor fica determinado quando o quadro fecha.
+
+    As fontes que alimentam o quadro são o inquérito às despesas das famílias, o volume de
+    negócios do comércio a retalho, a informação empresarial simplificada, a e-fatura e a
+    informação do IVA, o comércio internacional, a Balança de Pagamentos e as estatísticas do
+    turismo.
+
+    **O inquérito às despesas das famílias é o ponto de partida, mas não a palavra final.** O INE
+    declara, na metainformação deste conjunto, que a comparação dos resultados do inquérito com o
+    IVA, com o volume de negócios do retalho e com informação setorial levou à conclusão de que os
+    valores do inquérito estavam subavaliados. O valor final do consumo das famílias é por isso o
+    que resulta do equilíbrio entre a oferta e as utilizações de cada produto, não o que o
+    inquérito mediu. É esta a razão de fundo pela qual as duas bases desta ferramenta divergem.
+
+    A repartição por COICOP é feita no fim: obtém-se do QERU depois de concluído o equilíbrio,
+    aplicando ponderadores calculados para cada par COICOP/produto.
+
+    Daqui decorrem três propriedades que importam à leitura:
+
+    1. **É um total nacional, não uma média observada.** A despesa por agregado obtém-se por
+       divisão, não por medição.
+    2. **Procura ser exaustivo.** Inclui ajustamentos que nenhum inquérito capta, como gorjetas,
+       pagamentos em espécie e atividade não declarada.
+    3. **É lento.** O conjunto é transmitido nove meses após o fim do ano de referência e os
+       agregados europeus são atualizados em novembro de cada ano. A aplicação atualiza o valor ao
+       mês corrente pelo índice de preços.
+
+    ##### O que está incluído
+
+    | Está incluído | Não está incluído |
+    |---|---|
+    | Alimentos comprados em supermercado, mercearia, mercado, talho, peixaria e padaria | Refeições em restaurantes, cafés, cantinas e comida entregue ao domicílio (divisão 11) |
+    | Alimentos pré-preparados comprados no retalho | Bebidas não alcoólicas: águas, sumos, café e chá (grupo 01.2) |
+    | Compras feitas em Portugal por quem não reside no país | Bebidas alcoólicas e tabaco (divisão 02) |
+    | Bens produzidos para consumo próprio, sobretudo agrícolas | Serviços que as famílias produzem para si, como preparar refeições |
+
+    ##### O que está no valor e não responde à pergunta desta ferramenta
+
+    A ferramenta pergunta quanto gasta uma família portuguesa em comida. As Contas Nacionais
+    respondem a quanto se consumiu em alimentos no território. A diferença entre as duas perguntas
+    tem componentes identificáveis, e todas empurram o valor no mesmo sentido:
+
+    | Componente | Porque não responde à pergunta da ferramenta |
+    |---|---|
+    | Autoconsumo de bens, sobretudo agrícolas | É consumo, não é despesa. Quem come os legumes da própria horta não gasta nesses legumes |
+    | Compras de não residentes em território português | Não são famílias portuguesas. Nos alimentos o efeito é pequeno, com limite superior de 12,3% |
+    | Ajustamentos de exaustividade | Captam atividade não declarada, o que é correto para o PIB e alheio à pergunta “quanto gasta este agregado” |
+    | População institucional | O total do setor das famílias não coincide com o universo dos agregados domésticos privados pelo qual se divide |
+
+    Nenhuma destas componentes está quantificada ao nível da alimentação, e somadas não explicam um
+    fator de 2,3. Servem para saber **em que sentido** o valor macroeconómico se afasta da pergunta,
+    não para o corrigir.
+
+    ##### Em que conceito está
+
+    O conjunto está no **conceito interno**, e não é dedução: a metainformação de referência do
+    Eurostat declara-o. Mede a despesa realizada no território económico português, seja quem for
+    que a realize, e a despesa dos não residentes entra por ajustamento explícito, a partir da
+    rubrica “viagens e turismo” da Balança de Pagamentos e do inquérito ao turismo internacional. Em
+    contrapartida, exclui as compras de residentes portugueses no estrangeiro.
+
+    Os dados portugueses confirmam-no por duas vias independentes.
 
     **Identidade contabilística.** O total da desagregação por COICOP excede sistematicamente o
     `P31_S14` do `nama_10_gdp`, que é o consumo das famílias no conceito nacional:
@@ -5548,37 +5638,39 @@ with aba5:
     | **2020** | **129 986 M€** | **124 709 M€** | **+5 277 M€ (4,2%)** |
     | 2024 | 192 796 M€ | 171 641 M€ | +21 155 M€ (12,3%) |
 
-    **O ano de 2020.** A diferença desabou 61% no ano em que o turismo parou, e recuperou depois.
-    Nada além do turismo produz esse padrão. **O conjunto está no conceito interno.**
+    A diferença desceu 61% no ano em que o turismo parou, e recuperou depois. Nada além do turismo
+    produz esse padrão.
 
-    ##### Segundo: quanto é que isso contamina os alimentos
-
-    Muito menos do que o total, e é aqui que a explicação antiga falhava. Em 2020:
+    **O peso dos não residentes na alimentação é pequeno.** Em 2020:
 
     | | Variação 2020/2019 |
     |---|---|
-    | Restauração (`CP111`) | **−36,6%** |
-    | Alimentação em casa (`CP011`) | **+3,1%** |
+    | Restauração (divisão 11) | **−36,6%** |
+    | Alimentação em casa (grupo 01.1) | **+3,1%** |
 
-    Se a despesa alimentar em casa fosse materialmente de turistas, teria **caído** em 2020.
-    Subiu. Os não residentes comem em restaurantes; não cozinham em casa.
+    Se a despesa alimentar em casa fosse materialmente de não residentes, teria **caído** em 2020.
+    Subiu. Quem visita Portugal come em restaurantes; não cozinha em casa.
 
     **Ressalva.** 2020 teve dois efeitos opostos sobre a alimentação em casa: os residentes
-    substituíram restaurante por casa (a subir) e os turistas desapareceram (a descer). O saldo
-    foi +3,1%, o que **não prova que o efeito turista seja nulo**, só que é menor do que a
-    substituição. O limite superior, se os não residentes consumissem alimentos em casa na
-    proporção do seu peso no consumo total, seria 12,3%; a evidência de 2020 diz que o valor real
-    está bem abaixo disso.
+    substituíram restaurante por casa (a subir) e os visitantes desapareceram (a descer). O saldo
+    foi +3,1%, o que **não prova que o efeito seja nulo**, só que é menor do que a substituição. O
+    limite superior, se os não residentes consumissem alimentos em casa na proporção do seu peso no
+    consumo total, seria 12,3%; a evidência de 2020 indica que o valor real fica bem abaixo disso.
 
-    ##### O que isto muda
+    ##### Porque é que a aplicação apresenta duas bases
 
-    A base **continua a não se trocar**, mas por outra razão. Não é “as Contas Nacionais estão
-    contaminadas por turistas”, essa contaminação existe e é pequena nos alimentos. É que a
-    divergência de cerca de 2,3× face ao IDF **continua sem explicação completa**: a
-    sub-declaração dos inquéritos é conhecida e esperada, mas não desta ordem. Uma diferença
-    assim não se adota sem a perceber, e é por isso que a aplicação continua a apresentar as duas
-    bases como um **intervalo** em vez de escolher uma.
+    As duas bases não são duas medições independentes: o inquérito é o ponto de partida da
+    estimativa macroeconómica, que depois o corrige em alta por o considerar subavaliado. O que as
+    separa é a dimensão dessa correção, e essa não é conhecida ao nível da alimentação, porque o
+    INE não publica a taxa de cobertura por rubrica COICOP. A aplicação apresenta por isso ambas as
+    bases como um **intervalo**, e declara que o ponto central não é determinável.
             """)
+            st.caption(
+                "Fontes: Eurostat, metainformação ESMS do conjunto `nama_10_cp18`, europeia e "
+                "nacional de Portugal (§18.1, fontes de base e método de compilação); INE, "
+                "“Como se calcula o PIB”, Departamento de Contas Nacionais, novembro de 2025, "
+                "secção 3.A; Regulamento (UE) n.º 549/2013 e Regulamento (UE) 2023/734."
+            )
 
         bloco("02 · Método de cálculo e apuramento do IVA")
 

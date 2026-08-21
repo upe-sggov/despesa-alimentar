@@ -1694,13 +1694,28 @@ def test_a_ancora_das_contas_nao_atribui_a_divergencia_aos_turistas():
     nao residentes. A verificacao de 2020 mostrou que nos alimentos em casa esse
     efeito e pequeno - CP111 caiu 36,6 % e CP011 subiu 3,1 %. Este teste impede
     o regresso da explicacao errada.
+
+    A segunda asserçao seguia a palavra "sub-declaracao". A metainformacao
+    nacional do `nama_10_cp18` (ESMS de Portugal, 18.1) tornou a explicacao mais
+    precisa: o INE confrontou o inquerito com o IVA, com o volume de negocios do
+    retalho e com informacao setorial, concluiu que estava subavaliado, e fixou
+    o valor no equilibrio do QERU. O teste passa a exigir esse mecanismo, que e
+    o que substitui a atribuicao aos turistas (20.08.2026).
     """
     from src.config import BASES_ANCORA, CONCEITO_CONTAS_NACIONAIS
 
     porque = BASES_ANCORA["contas"]["porque"]
     assert "não é sobretudo por causa dos não residentes" in porque
-    assert "sub-declaração" in porque
+    assert "QERU" in porque and "subavaliados" in porque
     assert "Pequeno" in CONCEITO_CONTAS_NACIONAIS["efeito_nos_alimentos"]
+
+    # O outro lado do par tem de declarar a mesma coisa pela mesma via: e o
+    # compilador que conclui que o inquerito subestima, nao uma inferencia
+    # nossa. Sem isto, a base por defeito da aplicacao ficava sem fundamento
+    # declarado no unico sitio onde a interface o mostra.
+    porque_idf = BASES_ANCORA["idf"]["porque"]
+    assert "Subestima" in porque_idf
+    assert "INE" in porque_idf and "subavaliados" in porque_idf
 
 
 # --------------------- doutrina da AT (informacoes vinculativas), 12.08.2026

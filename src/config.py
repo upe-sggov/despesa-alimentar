@@ -924,14 +924,28 @@ DIMENSAO_RECUO_FONTE = "Eurostat, ilc_lvph01 (EU-SILC), 2025"
 # declarada pelos agregados *residentes*.
 #
 # Para 2022 as duas divergem por um fator de 2,3 na alimentação, muito acima
-# do desvio geral de 1,7 entre inquérito e Contas Nacionais. A taxa de
-# cobertura portuguesa da alimentação (44%) fica abaixo do mínimo europeu
-# (58%), e não existe exercício nacional de conciliação que permita arbitrar.
+# do desvio geral de 1,7 entre inquérito e Contas Nacionais.
 #
-# Nenhuma das duas é “a” resposta: as Contas Nacionais sobrestimam (conceito
-# interno, possível sobre-atribuição), o inquérito subestima (sub-reporte).
-# A aplicação apresenta por isso o intervalo entre ambas e deixa o utilizador
-# escolher a base de trabalho. Ver docs/2026-08-07_levantamento_lacunas.md, §2.10.
+# **As duas não são medições independentes.** A metainformação nacional do
+# `nama_10_cp18` (ESMS de Portugal, §18.1) declara que o IDF é o ponto de
+# partida da estimativa do consumo das famílias, que o INE o confrontou com o
+# IVA, com o volume de negócios do retalho e com informação setorial, que
+# concluiu que os valores do inquérito estavam subavaliados, e que o valor
+# final é o que resulta do equilíbrio do QERU. A repartição por COICOP é
+# obtida do QERU depois de fechado esse equilíbrio.
+#
+# O mecanismo da divergência está portanto documentado; a **magnitude** por
+# rubrica não está, porque o INE não publica a taxa de cobertura por classe
+# COICOP. A anomalia da alimentação (44% de cobertura, contra 66% no conjunto
+# e um mínimo europeu de 58%) continua sem número que a explique.
+#
+# Nenhuma das duas é “a” resposta para a pergunta da aplicação: as Contas
+# Nacionais respondem a “quanto se consumiu em alimentos no território”, e
+# incluem autoconsumo, não residentes e ajustamentos de exaustividade, que não
+# são despesa de agregados residentes; o inquérito subestima, por conclusão
+# declarada do próprio compilador. A aplicação apresenta por isso o intervalo
+# entre ambas e deixa o utilizador escolher a base de trabalho.
+# Ver docs/2026-08-07_levantamento_lacunas.md, §2.10.
 IDF_ALIMENTAR_ANUAL = 2872.0          # € por agregado e por ano, COICOP 01.1
 IDF_FONTE = "INE, IDF 2022/2023 (quadro Q.2.11.a)"
 
@@ -963,8 +977,11 @@ BASES_ANCORA = {
     "idf": {
         "nome": "IDF 2022/2023",
         "fonte": IDF_FONTE,
-        "porque": "Medição direta da despesa dos agregados residentes. Subestima, "
-                  "porque os inquéritos às despesas sub-reportam sistematicamente.",
+        "porque": "Medição direta da despesa dos agregados residentes. Subestima: "
+                  "é o próprio INE que declara, na metainformação das Contas "
+                  "Nacionais, ter concluído que os valores do inquérito estavam "
+                  "subavaliados quando os confrontou com o IVA, com o volume de "
+                  "negócios do retalho e com informação setorial.",
     },
     "contas": {
         # `nama_10_co3_p3` foi arquivado com a passagem à COICOP 2018 e a
@@ -975,12 +992,14 @@ BASES_ANCORA = {
                  "compiladas pelo INE), conceito **interno**: despesa no "
                  "território económico, não residentes incluídos",
         "porque": "Agregado macroeconómico dividido pelo número de agregados. "
-                  "Sobrestima, mas **não é sobretudo por causa dos não "
+                  "Mede o **consumo no território**, não a despesa das famílias "
+                  "residentes: inclui autoconsumo, compras de não residentes e "
+                  "ajustamentos de exaustividade. Sobrestima a despesa de um "
+                  "agregado, mas **não é sobretudo por causa dos não "
                   "residentes**: no caso dos alimentos consumidos em casa esse "
-                  "efeito é pequeno (ver CONCEITO_CONTAS_NACIONAIS). O grosso da "
-                  "divergência face ao IDF vem da sub-declaração dos inquéritos "
-                  "e das diferenças de cobertura, e continua por explicar na "
-                  "sua totalidade.",
+                  "efeito é pequeno (ver CONCEITO_CONTAS_NACIONAIS). O valor "
+                  "resulta do equilíbrio do QERU, que reviu em alta os "
+                  "resultados do inquérito por os ter concluído subavaliados.",
     },
 }
 BASE_POR_DEFEITO = "idf"

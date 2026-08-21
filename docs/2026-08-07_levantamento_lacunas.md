@@ -380,6 +380,78 @@ não fecha o desvio.
 
 Não avanço sem decisão sua: muda o número que a ferramenta apresenta em primeiro lugar.
 
+#### Adenda de 20.08.2026: existe exercício de conciliação, e está documentado
+
+Este apuramento assentava na premissa de que «não existe exercício nacional de conciliação que
+permita arbitrar». **A premissa está errada**, e a fonte que a desmente é aberta: a metainformação
+de referência do conjunto usado pela aplicação, no anexo nacional de Portugal
+(`nama_10_cp18_esms_pt`, secção 18.1, «Source data»).
+
+Transcrição literal:
+
+> «The HBS is the starting point for estimating the resident Households' final consumption
+> expenditure as an element of information for compiling the Supply Use Tables (SUT). However, the
+> comparison between the results obtained by the HBS and other data sources, in particular VAT
+> receipts, the turnover in retail trade and the specific information of businesses or of sectors of
+> activity, led to the conclusion that to the HBS results were undervalued. Consequently, in
+> preparing the SUT, the final value of HFCE was determined when establishing the balance between
+> the supply and the various uses of each product.»
+>
+> «HFCE is compiled using the National Accounts Product Classification and not according to the
+> COICOP. The COICOP breakdown of HFCE is obtained from the SUT data once the balancing process is
+> completed, applying weights calculated for each COICOP/Product.»
+
+O documento «Como se calcula o PIB» (INE, Departamento de Contas Nacionais, novembro de 2025,
+secção 3.A) corrobora em português e dá o vocabulário nacional: o instrumento é o **Quadro de
+Equilíbrio de Recursos e Utilizações (QERU)**, com cerca de 430 produtos, e o consumo final das
+famílias é uma das colunas do lado das utilizações.
+
+**O que isto altera neste apuramento:**
+
+1. **A conciliação existe e é o QERU.** É o exercício que o §2.11 procurava em documentos
+   metodológicos europeus e que já estava descrito na metainformação do próprio conjunto.
+2. **As duas bases não são medições independentes.** O IDF é o ponto de partida da estimativa das
+   Contas Nacionais. A frase deste documento sobre «duas fontes que não é possível arbitrar»
+   descreve mal a relação entre elas.
+3. **A sub-cobertura do inquérito deixa de ser inferência nossa.** É conclusão declarada do
+   compilador, obtida por confronto com o IVA, com o volume de negócios do retalho e com informação
+   setorial.
+4. **A opção 4 é a que o INE de facto segue**, e confirma-se o que ali se antecipava: o resultado da
+   conciliação não é um ponto intermédio, é o valor das Contas Nacionais. O inquérito é que foi
+   revisto em alta até ao valor imposto pelo equilíbrio.
+
+**O que não altera, e é a razão de a recomendação se manter:**
+
+A **magnitude** continua desconhecida ao nível da alimentação. O INE não publica a taxa de cobertura
+por rubrica COICOP, e sem ela não é possível dizer quanto do fator de 2,3 é sub-reporte do inquérito
+e quanto é âmbito do agregado macroeconómico. A anomalia dos 44% de cobertura na alimentação, contra
+66% no conjunto, continua sem número que a explique.
+
+A ela acresce agora uma lista de componentes que estão no valor macroeconómico e **não são despesa
+de agregados residentes**, todas a empurrar no mesmo sentido e nenhuma quantificada para a
+alimentação:
+
+| Componente | Porque não responde à pergunta da ferramenta |
+|---|---|
+| Autoconsumo de bens, sobretudo agrícolas | É consumo, não é despesa. Quem come os legumes da própria horta não gasta nesses legumes |
+| Compras de não residentes em território português | Não são famílias portuguesas. Nos alimentos o efeito é pequeno, com limite superior de 12,3% |
+| Ajustamentos de exaustividade | Captam atividade não declarada, o que é correto para o PIB e alheio à pergunta «quanto gasta este agregado» |
+| População institucional | O total do setor das famílias não coincide com o universo dos agregados domésticos privados pelo qual se divide |
+
+**Decisão tomada em 20.08.2026:** manter a opção 3, ou seja, o IDF por defeito e o intervalo entre
+as duas bases. A fragilidade conhecida do IDF passa a estar documentada pelo próprio INE, o que é
+melhor do que a inferência que aqui se fazia, e as Contas Nacionais respondem a uma pergunta mais
+larga do que a da ferramenta.
+
+Alterações aplicadas à aplicação na mesma data: reescrita do separador da metodologia sobre as
+Contas Nacionais, que passa a explicar o QERU e o âmbito do valor; nova linha no cartão da âncora a
+distinguir as duas perguntas, com o rácio entre bases calculado e não inscrito; atualização de
+`BASES_ANCORA` em `src/config.py`, que mostrava na interface a afirmação agora superada.
+
+**Via encerrada.** O caminho para resolver a magnitude seria pedir ao INE a taxa de cobertura por
+rubrica COICOP entre o IDF e o QERU. Fica registado como não prosseguível: a ferramenta só usa
+fontes abertas, e esse apuramento não está publicado.
+
 ### 2.11 Referências metodológicas sobre a conciliação micro-macro
 
 Dois documentos do Eurostat, verificados em 07.08.2026. **Resolvem o método, não o número.**
