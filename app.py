@@ -773,6 +773,27 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 [data-testid="stWidgetLabel"] p {{
   font-size: .75rem; font-weight: 500; color: var(--sg-texto-2);
 }}
+/* Contadores estreitos, fora da barra lateral. Um `number_input` ocupa a coluna
+   toda, e numa coluna larga isso punha o “−” e o “+” a quatrocentos píxeis do
+   número que alteram: o controlo deixava de se ler como um contador
+   (relatado pela Inês, 20.08.2026).
+
+   Duas larguras, e não uma. O contentor limita-se ao suficiente para o rótulo
+   caber numa linha, o que também encosta o (i) ao texto em vez de o deixar
+   perdido na margem direita. O campo, esse, é bem mais estreito, e é o que põe
+   os botões junto ao número. Limitar só o contentor não chegava: os botões são
+   alinhados à direita do campo, logo é a largura **do campo** que os afasta.
+
+   O `:not` do rótulo em vez de `> div`: o rótulo é um `<label>` nesta versão do
+   Streamlit, mas já houve versões em que estes contentores mudaram de elemento,
+   e a exclusão por identificador sobrevive a isso. */
+[data-testid="stNumberInput"] {{ max-width: 15rem; }}
+[data-testid="stNumberInput"] > :not([data-testid="stWidgetLabel"]) {{
+  max-width: 9rem;
+}}
+[data-testid="stSidebar"] [data-testid="stNumberInput"],
+[data-testid="stSidebar"] [data-testid="stNumberInput"]
+    > :not([data-testid="stWidgetLabel"]) {{ max-width: none; }}
 /* Na barra lateral os botões são ações secundárias, não chamadas à ação. */
 [data-testid="stSidebar"] .stButton > button {{
   border-color: var(--sg-borda-1); color: var(--sg-texto-2);
@@ -2975,7 +2996,10 @@ with aba1:
                 "Consulte o registo de ligações no separador Metodologia."
             )
         else:
-            ca_, cb_ = st.columns([1, 2])
+            # A coluna do contador estreita com ele: com o campo limitado a
+            # 9rem, um terço da largura deixava um vazio entre o contador e o
+            # texto que o qualifica, e os dois lêem-se como um só bloco.
+            ca_, cb_ = st.columns([1, 3])
             with ca_:
                 trabalhadores = st.number_input(
                     "Quantos auferem rendimento", min_value=1, max_value=int(adultos),
