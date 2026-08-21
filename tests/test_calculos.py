@@ -1897,6 +1897,25 @@ def test_a_app_nao_chama_periodos_de_quatro_semanas_ao_que_sao_observacoes():
         assert marca not in fonte, marca
 
 
+def test_o_observatorio_nao_opoe_o_acumulado_a_uma_variacao_anual():
+    """
+    "Variacao anual" e ambiguo: tanto se le como "face ao ano anterior" quanto
+    como "por ano", que no Observatorio seria o ritmo medio anual, outra conta.
+    O peixe ilustra os tres numeros, todos certos: +25,89% acumulados desde
+    2022, +5,31% por ano em media, +15,16% nos ultimos doze meses.
+
+    O resto da aplicacao diz sempre "variacao homologa", e e esse o termo que
+    tem de opor-se ao acumulado (pergunta da Ines, 20.08.2026).
+    """
+    fonte = _fonte("app.py")
+
+    assert "não uma variação anual" not in fonte
+    assert "**Não é uma variação anual.**" not in fonte
+    # E o termo certo tem de estar la, nos dois sitios que opunham os conceitos.
+    assert fonte.count("**variação homóloga**") >= 1
+    assert "**Não é a variação homóloga.**" in fonte
+
+
 # --------------------- o README nao pode envelhecer em silencio, 20.08.2026
 def _meta_observatorio():
     import json

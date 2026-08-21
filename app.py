@@ -4407,8 +4407,10 @@ with aba6:
     as duas pontas passa de {euro(_d['diferenca_inicial'])} para {euro(_d['diferenca_final'])}
     por {_d['unidade'] or 'unidade'}.
 
-    **Não é uma variação anual.** É o acumulado ao longo de {int(_d['n_periodos'])} observações
-    nesse intervalo, e não se compara com as variações homólogas dos outros separadores.
+    **Não é a variação homóloga.** É o **acumulado** ao longo de {int(_d['n_periodos'])}
+    observações nesse intervalo, ou seja, a distância entre os dois extremos da janela. A
+    variação homóloga, que é o que os outros separadores medem, compara cada mês com o mesmo mês
+    do ano anterior, e as duas não se comparam entre si.
 
     Nenhum índice de preços mostra isto: para o IHPC, é apenas mais um produto que subiu. Mantém-se
     integralmente a ressalva acima, o alargamento da diferença não é, por si, margem de ninguém, e
@@ -4452,7 +4454,13 @@ with aba6:
                 f"No consumo, {_pct_obs(_linha['consumo_var'])}"
                 + (f"; na produção, {_pct_obs(_linha['producao_var'])}"
                    if _linha["tem_producao"] else "")
-                + ". É a variação **acumulada nessa janela**, não uma variação anual."
+                # “Variação anual” é ambíguo: tanto se lê como “face ao ano
+                # anterior” quanto como “por ano”, que aqui seria outra conta.
+                # O resto da aplicação diz sempre “variação homóloga”, e é esse
+                # o termo que tem de estar aqui (pergunta da Inês, 20.08.2026).
+                + ". É a variação **acumulada nessa janela**, ou seja, quanto o preço está "
+                  "acima do que estava no início. Não é a **variação homóloga**, a subida "
+                  "face ao mesmo mês do ano anterior, que é o que os outros separadores medem."
                 + (f" A janela deste produto termina em "
                    f"{mes_extenso(_linha['fim'].strftime('%Y-%m'))}, antes da dos restantes "
                    f"({mes_extenso(_fim_geral.strftime('%Y-%m'))}), porque a sua série de "
