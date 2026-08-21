@@ -1843,6 +1843,54 @@ def test_variacao_de_portugal_pedida_na_mesma_janela_do_indice():
     assert "desde_variacao" not in trecho
 
 
+# --------------------- agregados do indice: o total nao pode trazer tabaco
+def test_o_total_dos_agregados_nao_inclui_alcool_nem_tabaco():
+    """
+    A linha do total era o agregado especial `FOOD`, rotulado "Alimentacao e
+    bebidas (total)". Nao e isso que ele mede. Verificado nos ponderadores do
+    Eurostat (Portugal, 2026): CP01 = 207,35 e CP02 = 32,19 somam 239,54, que e
+    exatamente o ponderador de FOOD, e a igualdade repete-se em todos os anos
+    desde 1996. FOOD inclui bebidas alcoolicas e tabaco.
+
+    Em Portugal a diferenca era pequena, 2,3% contra 2,2% em julho de 2026, mas
+    o mesmo grafico mostra a UE-27, onde FOOD dava 1,2% e CP01 0,6%: o dobro,
+    por causa do tabaco, que sobe por via do imposto e nao do mercado alimentar
+    (20.08.2026).
+    """
+    from src.config import AGREGADOS, COD_AGREGADOS
+
+    assert "FOOD" not in COD_AGREGADOS
+    assert "CP01" in COD_AGREGADOS
+
+    total = [a for a in AGREGADOS if a["cod"] == "CP01"]
+    assert len(total) == 1
+    # O rotulo tem de dizer o que a linha e. "Alimentacao e bebidas" sozinho
+    # sugeria um universo que incluia o alcool.
+    assert "não alcoólicas" in total[0]["nome"]
+
+
+def test_a_nota_dos_agregados_declara_a_incoerencia():
+    """
+    O total deixou de ser a soma exata das duas parcelas do grafico: os
+    agregados especiais so existem na forma que inclui alcool e tabaco. Quem
+    somar as duas linhas nao chega ao total, e tem de poder saber porque.
+    """
+    from src.config import AGREGADOS_NOTA, AGREGADOS_NOTA_FONTE
+
+    assert "não é a soma" in AGREGADOS_NOTA
+    assert "tabaco" in AGREGADOS_NOTA
+    assert AGREGADOS_NOTA_FONTE.startswith("Eurostat")
+    # Vale a regra do corpo: sem codigos de conjunto.
+    for codigo in ("prc_hicp", "FOOD", "CP01", "CP02"):
+        assert codigo not in AGREGADOS_NOTA, codigo
+
+
+def test_a_app_mostra_a_nota_dos_agregados():
+    """Nao basta existir no config: tem de estar por baixo do grafico."""
+    fonte = _fonte("app.py")
+    assert "AGREGADOS_NOTA" in fonte
+
+
 # --------------------- linha de proveniencia dos graficos, 20.08.2026
 def _proveniencia(*a, **k):
     """

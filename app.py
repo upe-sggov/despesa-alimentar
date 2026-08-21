@@ -30,6 +30,7 @@ from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
                           sensibilidade_escalas, simular_iva, taxas_efetivas,
                           testar_escalas, unidades_equivalentes)
 from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
+                        AGREGADOS_NOTA, AGREGADOS_NOTA_FONTE,
                         BASE_POR_DEFEITO, BASES_ANCORA, COD_AGREGADOS,
                         DIMENSAO_RECUO, DIMENSAO_RECUO_FONTE,
                         ESCALAS_TESTE_COMPOSICAO, ESCALAS_TESTE_FONTE,
@@ -3713,7 +3714,7 @@ with aba2:
     diferentes**, e distingui-los muda a resposta de política:
 
     - **Não transformados** (carne, peixe, fruta, legumes) reagem a clima, sazonalidade e custos de
-      transporte. Uma subida aqui é tipicamente **choque de oferta**: passa, mas dói no imediato.
+      transporte. Uma subida aqui é tipicamente **choque de oferta**.
     - **Transformados** (pão, laticínios, conservas) refletem custos de produção e distribuição já
       incorporados. Uma subida aqui tende a ser **mais persistente**.
 
@@ -3783,6 +3784,14 @@ with aba2:
                 grafico(figA)
                 if so_alim:
                     st.caption("A tracejado, os agregados de enquadramento, não são alimentação.")
+                # A incoerência entre o total e as duas parcelas é declarada
+                # aqui, e não escondida: quem some as duas linhas não chega ao
+                # total, e tem de poder saber porquê sem sair do gráfico.
+                # Sem linha de proveniência: estes agregados publicam antes do
+                # índice por classe e o gráfico é cortado pelo cursor, pelo que
+                # o mês aqui não é o `mes_variacoes` que a `proveniencia` usa. O
+                # período deste gráfico é o que os avisos acima já declaram.
+                st.caption(AGREGADOS_NOTA + f" ({AGREGADOS_NOTA_FONTE}.)")
 
                 ult_esp = meses_esp[-1]
                 linhas_a = []

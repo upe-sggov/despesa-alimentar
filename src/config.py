@@ -855,6 +855,42 @@ IVA_ZERO_AFETACAO_ORCAMENTAL = [
 # Agregados especiais do índice, permitem separar o que é choque conjuntural
 # do que é inflação estrutural, e situar a alimentação no conjunto dos preços.
 # --------------------------------------------------------------------------
+# O total era o agregado especial `FOOD`, rotulado “Alimentação e bebidas
+# (total)”. Não é isso que ele mede. Verificado a 20.08.2026 contra os
+# ponderadores do Eurostat (`prc_hicp_iw`, Portugal, 2026):
+#
+#   CP01  Produtos alimentares e bebidas não alcoólicas     207,35 ‰
+#   CP02  Bebidas alcoólicas e tabaco                        32,19 ‰
+#   soma                                                    239,54 ‰
+#   FOOD                                                    239,54 ‰
+#
+# São o mesmo número, e a igualdade repete-se em **todos** os anos desde 1996.
+# `FOOD` = `CP01` + `CP02`, ou seja, inclui bebidas alcoólicas e tabaco, que
+# valem 13,4% do agregado.
+#
+# Em Portugal a contaminação era pequena no momento da verificação, mas o
+# gráfico mostra também a UE-27, e aí **duplicava a leitura**. Julho de 2026:
+#
+#              CP01    FOOD    CP02
+#   Portugal    2,2%    2,3%    2,6%
+#   UE-27       0,6%    1,2%    3,9%
+#
+# A linha europeia dizia 1,2% quando a alimentação e as bebidas não alcoólicas
+# subiam 0,6%. A diferença é o tabaco, que sobe por via do imposto especial de
+# consumo e não por dinâmica do mercado alimentar. Um agregado rotulado
+# “alimentação” não pode duplicar por causa disso.
+#
+# `FOOD_NP` + `FOOD_P` dão os mesmos 239,54 ‰ (84,32 + 155,22). Como o tabaco
+# não cabe nos frescos, está do lado dos **transformados**, misturado com o pão
+# e os laticínios, e o seu preço sobe por via do imposto especial de consumo,
+# não por dinâmica do mercado alimentar.
+#
+# O total passa a ser `CP01`, que é o universo que o resto da aplicação usa e o
+# que a metodologia declara. A contrapartida é que o total deixa de ser a soma
+# exata das duas parcelas do gráfico: os agregados especiais só existem nesta
+# forma. A incoerência é declarada em `AGREGADOS_NOTA`, e é preferível a um
+# total que diz “alimentação” e traz tabaco lá dentro (decisão da Inês,
+# 20.08.2026).
 AGREGADOS = [
     # --- a alimentação por dentro: são componentes do objeto do estudo ---
     {"cod": "FOOD_NP", "nome": "Alimentos não transformados", "cor": "#D02117", "larg": 2.4,
@@ -862,9 +898,13 @@ AGREGADOS = [
                                        "os choques de oferta aparecem primeiro."},
     {"cod": "FOOD_P", "nome": "Alimentos transformados", "cor": "#BE9C54", "larg": 2.4,
      "grupo": "alimentacao", "porque": "Pão, laticínios, conservas. Refletem custos de "
-                                       "produção e distribuição, não o tempo que fez."},
-    {"cod": "FOOD", "nome": "Alimentação e bebidas (total)", "cor": "#0E7433", "larg": 2.8,
-     "grupo": "alimentacao", "porque": "O agregado que o debate público chama “alimentação”."},
+                                       "produção e distribuição, não o tempo que fez. "
+                                       "Nesta convenção do Eurostat inclui também as "
+                                       "bebidas alcoólicas e o tabaco."},
+    {"cod": "CP01", "nome": "Alimentação e bebidas não alcoólicas", "cor": "#0E7433", "larg": 2.8,
+     "grupo": "alimentacao", "porque": "O universo que o resto da aplicação mede. Não é a "
+                                       "soma exata das duas linhas acima: aquelas incluem "
+                                       "álcool e tabaco, esta não."},
     # --- enquadramento: não são alimentação, servem de referência ---
     # `TOTAL` e não `CP00`: na ECOICOP versão 2 o agregado de todos os produtos
     # mudou de código. `CP00` devolve HTTP 400 em `prc_hicp_minr`, e a via de
@@ -880,6 +920,22 @@ AGREGADOS = [
 ]
 
 COD_AGREGADOS = [a["cod"] for a in AGREGADOS]
+
+# Vai por baixo do gráfico dos agregados. Declara a incoerência em vez de a
+# esconder: sem esta nota, o leitor soma as duas parcelas, não lhe dá o total, e
+# não tem como saber porquê. Sem códigos de conjunto, que vivem na metodologia.
+AGREGADOS_NOTA = (
+    "**A linha do total não é a soma das outras duas, e é de propósito.** Mede a "
+    "alimentação e as bebidas não alcoólicas, que é o universo do resto da "
+    "aplicação. As duas linhas que a decompõem seguem a convenção do Eurostat "
+    "para separar frescos de transformados, e nessa convenção os transformados "
+    "**incluem bebidas alcoólicas e tabaco**, que valem cerca de 13% desse "
+    "conjunto. A diferença entre o total e a soma é sobretudo tabaco, cujo preço "
+    "sobe por via do imposto especial de consumo e não por dinâmica do mercado "
+    "alimentar."
+)
+AGREGADOS_NOTA_FONTE = ("Eurostat, ponderadores do índice harmonizado, Portugal, "
+                        "verificado em 20 de agosto de 2026")
 
 # --------------------------------------------------------------------------
 # Países para comparação europeia

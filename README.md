@@ -237,18 +237,26 @@ harmonizado de preços no consumidor (IHPC) compilado pelos institutos nacionais
 
 | Elemento | Conjunto de dados | O que mede | Frequência |
 |---|---|---|---|
-| Despesa alimentar (âncora) | `nama_10_co3_p3` | Despesa efetiva em euros, Contas Nacionais | Anual |
-| Consumo total das famílias | `nama_10_co3_p3` | Denominador do coeficiente de Engel | Anual |
+| Despesa alimentar (âncora) | `nama_10_cp18` | Despesa efetiva em euros, Contas Nacionais | Anual |
+| Consumo total das famílias | `nama_10_cp18` | Denominador do coeficiente de Engel | Anual |
 | Dimensão média do agregado | `ilc_lvph01` | N.º médio de pessoas | Anual |
 | Número de agregados | `lfst_hhnhtych` (recuo: Censos 2021) | Divisor da despesa nacional | Anual |
-| Ponderadores por grupo | `prc_hicp_inw` | Fração de cada mil euros de consumo (‰) | Anual |
-| Índice de preços | `prc_hicp_midx` | Nível do índice — não são euros | Mensal |
-| Variação homóloga | `prc_hicp_manr` | Subida face ao mesmo mês do ano anterior | Mensal |
+| Ponderadores por grupo | `prc_hicp_iw` | Fração de cada mil euros de consumo (‰) | Anual |
+| Índice de preços | `prc_hicp_minr` (unidade do índice) | Nível do índice — não são euros | Mensal |
+| Variação homóloga | `prc_hicp_minr` (unidade `RCH_A`) | Subida face ao mesmo mês do ano anterior | Mensal |
 | Nível de preços comparado | `prc_ppp_ind_1` | Quão caros são os alimentos (UE-27 = 100) | Anual |
 | Rendimento equivalente | `ilc_di03` | Rendimento líquido médio e mediano (EU-SILC) | Anual |
 | Salário mínimo | `earn_mw_cur` | Valor bruto legal mensal | Semestral |
 | Salário médio | `nama_10_a10` ÷ `nama_10_a10_e` | Remuneração média bruta dos trabalhadores por conta de outrem | Anual |
-| Decomposição da inflação | `prc_hicp_manr` | Alimentos transformados e não transformados; total e subjacente como enquadramento | Mensal |
+| Decomposição da inflação | `prc_hicp_minr` | Alimentos transformados e não transformados; total e subjacente como enquadramento | Mensal |
+
+> **Nota sobre os códigos.** Este quadro listou durante algum tempo `prc_hicp_manr`,
+> `prc_hicp_inw`, `prc_hicp_midx` e `nama_10_co3_p3`, que a aplicação deixou de usar.
+> O índice e a variação homóloga passaram a vir do mesmo conjunto, `prc_hicp_minr`,
+> distinguidos pela unidade, e a âncora migrou para `nama_10_cp18` com a passagem à
+> COICOP 2018. Corrigido a 20 de agosto de 2026. A lista viva está sempre em
+> `src/eurostat.py` e no separador **Fontes e método** da aplicação, que mostra os
+> conjuntos efetivamente consultados em cada sessão.
 
 **Códigos obtidos por tentativa.** Três destes conjuntos usam nomenclaturas que não coincidem
 com a COICOP do índice de preços, e cujos códigos exatos não foi possível verificar à distância:
@@ -288,7 +296,7 @@ da ferramenta, apurada na aferição de 7 de agosto de 2026.
 
 | Base | Como se obtém | Enviesamento |
 |---|---|---|
-| **Contas Nacionais** (`nama_10_co3_p3`, COICOP 01.1) | Agregado macroeconómico ÷ n.º de agregados ÷ 12 | **Sobrestima** — mede o consumo *no território*, incluindo o de não residentes |
+| **Contas Nacionais** (`nama_10_cp18`, COICOP 01.1) | Agregado macroeconómico ÷ n.º de agregados ÷ 12 | **Sobrestima** — mede o consumo *no território*, incluindo o de não residentes |
 | **IDF 2022/2023** (INE, quadro Q.2.11.a) | Medição direta da despesa declarada pelos agregados residentes | **Subestima** — os inquéritos às despesas sub-reportam sistematicamente |
 
 Cada uma é atualizada para o mês corrente pelo índice de preços, a partir do seu
@@ -326,7 +334,7 @@ explícita:
 | | Ponderador | Responde a |
 |---|---|---|
 | **Estrutura e distribuição** | INE, IDF 2022/2023, por quintil | Quem gasta o quê, e que parte do orçamento leva |
-| **Movimento dos preços** | Eurostat, `prc_hicp_inw` (IHPC), revisto anualmente | Quanto subiu cada grupo, e quanto contribuiu |
+| **Movimento dos preços** | Eurostat, `prc_hicp_iw` (IHPC), revisto anualmente | Quanto subiu cada grupo, e quanto contribuiu |
 
 A razão é conceptual. O Documento Metodológico do IPC (INE, 2023) afirma que
 «o IHPC inclui a despesa realizada pelos não residentes ("turistas") no
@@ -596,11 +604,11 @@ Aqui o objeto é produzir números — e esses são oficiais.
 
 A aplicação tenta as vias por esta ordem:
 
-1. **SDMX 2.1** — `…/sdmx/2.1/data/prc_hicp_manr/M.RCH_A.CP011.PT?format=SDMX-CSV`
+1. **SDMX 2.1** — `…/sdmx/2.1/data/prc_hicp_minr/M.RCH_A.CP011.PT?format=SDMX-CSV`
    O filtro segue no próprio caminho do endereço, pelo que a seleção é
    obrigatoriamente feita no servidor do Eurostat. É a via preferida: evita
    respostas demasiado grandes.
-2. **API Statistics** — `…/statistics/1.0/data/prc_hicp_manr?coicop=CP011&geo=PT&…`
+2. **API Statistics** — `…/statistics/1.0/data/prc_hicp_minr?coicop18=CP011&geo=PT&…`
    Filtros por parâmetro, resposta em JSON-stat. Usada se a primeira falhar.
 
 O separador *Fontes e método* mostra, em cada sessão, qual das vias foi
