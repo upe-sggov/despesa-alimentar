@@ -650,17 +650,36 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 
 /* ---------- indicadores secundários (st.metric) ------------------------ */
 /* Subordinados ao KPI de capa: mesma linguagem, metade do corpo do número. */
-/* Altura mínima, e não `height: 100%`: um rótulo de duas linhas
-   (“Agravamento nos últimos 12 meses”) ao lado de um de uma linha dava dois
-   cartões de alturas diferentes na mesma fila. Esticar os contentores
-   intermédios do Streamlit, como se faz nos cartões de grupo, partiria as
-   colunas que têm um indicador **e** uma legenda por baixo. */
+/* O `min-height` é um piso, e sozinho não chegava: alinhava a fila quando a
+   diferença vinha do rótulo, mas não quando vinha do conteúdo. Um cartão com
+   variação percentual por baixo do valor ao lado de um sem ela ficava mais
+   alto, e a fila desalinhava na base (relatado pela Inês, 20.08.2026).
+
+   `height: 100%` no cartão só funciona se o que está por cima também esticar,
+   como nos cartões de grupo. O que travou esta correção da primeira vez foi o
+   receio de partir as colunas que têm um indicador **e** uma legenda por baixo,
+   onde esticar o indicador o faria comer a coluna toda.
+
+   A guarda resolve-o: a cadeia só estica quando o indicador é **filho único**
+   da sua coluna. Havendo legenda por baixo, há dois contentores, `:only-child`
+   não pega, e essas colunas ficam exatamente como estavam. O `height: 100%` do
+   cartão é inofensivo aí, porque uma altura em percentagem contra um pai de
+   altura automática resolve para automático. */
 [data-testid="stMetric"] {{
   background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
   border-radius: var(--sg-raio); padding: 1.3rem 1.4rem 1.35rem;
-  min-height: 7.5rem; box-shadow: none;
+  min-height: 7.5rem; height: 100%; box-shadow: none;
 }}
-[data-testid="stSidebar"] [data-testid="stMetric"] {{ min-height: 0; }}
+[data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) {{
+  align-items: stretch;
+}}
+[data-testid="stColumn"]:has([data-testid="stElementContainer"]:only-child
+    > [data-testid="stMetric"]) > div,
+[data-testid="stColumn"]:has([data-testid="stElementContainer"]:only-child
+    > [data-testid="stMetric"]) [data-testid="stVerticalBlock"],
+[data-testid="stColumn"] [data-testid="stElementContainer"]:only-child:has(
+    > [data-testid="stMetric"]) {{ height: 100%; }}
+[data-testid="stSidebar"] [data-testid="stMetric"] {{ min-height: 0; height: auto; }}
 /* Rótulos a duas linhas, sem reticências. O `st.metric` desenha o rótulo com
    `<Markdown … truncate>`, e essa opção injeta, no contentor **e** no seu <p>:
      overflow: hidden; white-space: nowrap; text-overflow: ellipsis

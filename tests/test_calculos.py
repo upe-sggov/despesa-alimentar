@@ -1843,6 +1843,57 @@ def test_variacao_de_portugal_pedida_na_mesma_janela_do_indice():
     assert "desde_variacao" not in trecho
 
 
+# --------------------- alinhamento dos cartoes de indicador, 20.08.2026
+def test_os_cartoes_de_indicador_esticam_so_quando_estao_sozinhos():
+    """
+    Os cartoes de uma fila tinham alturas diferentes: o `min-height` alinhava-os
+    quando a diferenca vinha do rotulo, mas nao quando vinha do conteudo, e um
+    cartao com variacao percentual ficava mais alto do que um sem ela.
+
+    A correcao estica a cadeia de contentores, como nos cartoes de grupo. O que
+    a travou da primeira vez foi o receio de partir as colunas que tem um
+    indicador **e** uma legenda por baixo. A guarda e o `:only-child`: sem ela, a
+    regra volta a apanhar essas colunas e o indicador come a coluna toda.
+
+    Este teste existe para que ninguem a remova por a achar supérflua.
+    """
+    fonte = _fonte("app.py")
+
+    i = fonte.index('[data-testid="stMetric"] {{')
+    fim = fonte.index('[data-testid="stSidebar"] [data-testid="stMetric"]', i)
+    regra = fonte[i:fim]
+
+    assert "height: 100%" in regra
+    assert "align-items: stretch" in regra
+    # A guarda, nas tres pernas do seletor que estica a cadeia.
+    assert regra.count(":only-child") == 3, regra
+
+
+def test_a_folha_de_estilo_tem_as_chavetas_equilibradas():
+    """
+    O CSS e uma f-string de mais de oitocentas linhas com as chavetas duplicadas.
+    Uma chaveta simples esquecida rebenta a formatacao inteira em silencio: o
+    Python nao acusa, e a pagina fica sem estilo nenhum.
+    """
+    import re
+
+    fonte = _fonte("app.py")
+    i = fonte.index('st.markdown(f"""')
+    f = fonte.index('""", unsafe_allow_html=True)', i)
+    bruto = fonte[i + len('st.markdown(f"""'):f]
+
+    # Interpolacoes {VAR} fora do caminho, depois chavetas duplas -> simples.
+    css = re.sub(r"(?<!\{)\{[A-Za-z_][A-Za-z0-9_\.\[\]'\"]*\}", "VALOR", bruto)
+    css = css.replace("{{", "{").replace("}}", "}")
+
+    assert css.count("{") == css.count("}")
+    profundidade = 0
+    for linha in css.splitlines():
+        profundidade += linha.count("{") - linha.count("}")
+        assert profundidade >= 0, linha
+    assert profundidade == 0
+
+
 # --------------------- agregados do indice: o total nao pode trazer tabaco
 def test_o_total_dos_agregados_nao_inclui_alcool_nem_tabaco():
     """
