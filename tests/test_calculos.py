@@ -1843,6 +1843,108 @@ def test_variacao_de_portugal_pedida_na_mesma_janela_do_indice():
     assert "desde_variacao" not in trecho
 
 
+# --------------------- linha de proveniencia dos graficos, 20.08.2026
+def _proveniencia(*a, **k):
+    """
+    Extrai `proveniencia` do app e executa-a isolada, no mesmo molde do
+    `_csv_com_fonte`: a funcao so depende dos formatadores de data do config,
+    logo nao precisa do Streamlit nem da rede.
+    """
+    from pathlib import Path
+
+    from src.config import mes_extenso, mes_homologo
+
+    fonte = (Path(__file__).resolve().parent.parent / "app.py").read_text(
+        encoding="utf-8")
+    inicio = fonte.index("def proveniencia(")
+    fim = fonte.index("\ndef ", inicio + 1)
+    espaco = {"mes_extenso": mes_extenso, "mes_homologo": mes_homologo}
+    exec(compile(fonte[inicio:fim], "app.py", "exec"), espaco)
+    return espaco["proveniencia"](*a, **k)
+
+
+def _dados_de_teste():
+    return {"mes_variacoes": "2026-06", "ano_pesos": "2026"}
+
+
+def test_a_proveniencia_declara_as_tres_datas():
+    """
+    O periodo de referencia estava a tres ecras dos numeros que o usam. A linha
+    tem de trazer as tres datas que o grafico combina, e nao so a mais recente:
+    a janela homologa, o ano dos ponderadores e o mes a que o nivel esta
+    indexado.
+    """
+    base = {"nome": "IDF 2022/2023", "ano_base": "2022/2023"}
+    linha = _proveniencia(_dados_de_teste(), base, mes_indice="2026-06")
+
+    assert "junho de 2026" in linha
+    assert "junho de 2025" in linha          # o outro extremo da janela
+    assert "Ponderadores de 2026" in linha
+    assert "IDF 2022/2023" in linha
+    # O nome do IDF ja traz o periodo; repetido dava "IDF 2022/2023 (2022/2023)".
+    assert "(2022/2023)" not in linha
+    # O das Contas Nacionais nao traz, e ai o ano tem de aparecer.
+    cn = _proveniencia(_dados_de_teste(), {"nome": "Contas Nacionais", "ano_base": 2024},
+                       mes_indice="2026-06")
+    assert "Contas Nacionais (2024)" in cn
+
+
+def test_a_proveniencia_nao_mostra_codigos_de_conjunto():
+    """
+    Os codigos do Eurostat vivem no separador da metodologia, com a ligacao para
+    o databrowser. No corpo fica o nome da coisa: quem usa a aplicacao nao sabe
+    o que e um `prc_hicp_minr` e nao tem de saber (decisao da Ines, 20.08.2026).
+
+    Os cabecalhos dos CSV sao a excecao deliberada, e por isso nao entram aqui:
+    esses ficheiros saem da aplicacao e circulam sem o ecra ao lado.
+    """
+    base = {"nome": "Contas Nacionais", "ano_base": 2024}
+    linha = _proveniencia(_dados_de_teste(), base, mes_indice="2026-06")
+
+    for codigo in ("prc_hicp", "nama_10", "ilc_", "lfst_", "earn_mw", "CP011"):
+        assert codigo not in linha, f"{codigo} nao pode aparecer no corpo: {linha}"
+    assert "índice harmonizado de preços no consumidor" in linha
+
+
+def test_a_proveniencia_acompanha_a_base_escolhida():
+    """
+    A ultima parte da linha muda com a base da barra lateral. E a razao de a
+    frase ser produzida por uma funcao e nao escrita em cada legenda: escrita a
+    mao, ficaria a dizer IDF num ecra que mostra Contas Nacionais.
+    """
+    dados = _dados_de_teste()
+    idf = _proveniencia(dados, {"nome": "IDF 2022/2023", "ano_base": "2022/2023"},
+                        mes_indice="2026-06")
+    cn = _proveniencia(dados, {"nome": "Contas Nacionais", "ano_base": 2024},
+                       mes_indice="2026-06")
+
+    assert "IDF 2022/2023" in idf and "Contas Nacionais" not in idf
+    assert "Contas Nacionais" in cn and "IDF" not in cn
+
+
+def test_a_proveniencia_omite_a_janela_quando_nao_ha_variacao():
+    """
+    A composicao da despesa nao mostra variacao nenhuma. Anunciar ali uma janela
+    homologa seria dizer que o grafico responde a uma pergunta que nao responde.
+    """
+    base = {"nome": "IDF 2022/2023", "ano_base": "2022/2023"}
+    linha = _proveniencia(_dados_de_teste(), base, mes_indice="2026-06",
+                          variacao=False)
+
+    assert "face a" not in linha
+    assert "junho de 2025" not in linha
+    assert "a preços de junho de 2026" in linha
+    assert "Ponderadores de 2026" in linha
+
+
+def test_a_proveniencia_sobrevive_a_falta_de_dados():
+    """Sem mes e sem ponderadores, a linha encolhe em vez de estourar."""
+    linha = _proveniencia({}, None)
+
+    assert linha.startswith("Fonte: Eurostat")
+    assert "None" not in linha
+
+
 def test_ha_recurso_se_a_serie_longa_falhar():
     """Se o pedido extra falhar, o grafico tem de continuar a funcionar."""
     import io

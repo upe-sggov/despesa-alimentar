@@ -1284,6 +1284,42 @@ def mes_pt(periodo: str) -> str:
         return str(periodo)
 
 
+MESES_PT_EXTENSO = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                    "julho", "agosto", "setembro", "outubro", "novembro",
+                    "dezembro"]
+
+
+def mes_extenso(periodo) -> str:
+    """
+    Converte '2026-06' em 'junho de 2026'.
+
+    A forma curta (`mes_pt`) serve os cartões e a barra de estado, onde o espaço
+    manda. Esta serve as linhas de proveniência, que são para ler devagar e para
+    citar fora da aplicação, e onde o Livro de Estilo da SGGov pede a data por
+    extenso.
+    """
+    try:
+        ano, mes = str(periodo).split("-")[:2]
+        return f"{MESES_PT_EXTENSO[int(mes) - 1]} de {ano}"
+    except (ValueError, IndexError):
+        return str(periodo)
+
+
+def mes_homologo(periodo) -> str:
+    """
+    O mesmo mês do ano anterior, por extenso: '2026-06' devolve 'junho de 2025'.
+
+    Existe para que as secções possam nomear **os dois extremos** da janela
+    homóloga. “Últimos 12 meses” não diz de que doze meses se trata, e a data em
+    falta é justamente a que o leitor precisa para verificar o número na fonte.
+    """
+    try:
+        ano, mes = str(periodo).split("-")[:2]
+        return f"{MESES_PT_EXTENSO[int(mes) - 1]} de {int(ano) - 1}"
+    except (ValueError, IndexError):
+        return str(periodo)
+
+
 def euro(valor, casas: int = 2) -> str:
     """Formata em euros com convenção portuguesa (vírgula decimal)."""
     if valor is None:

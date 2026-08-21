@@ -53,7 +53,8 @@ from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FO
                         COICOP_ALIMENTAR, DOURADO, ORGANISMO,
                         PAISES, PAISES_POR_DEFEITO, POR_CODIGO, RODAPE,
                         UNIDADE, VERDE, VERMELHO,
-                        euro, mes_pt, milhoes, numero, percentagem, pontos)
+                        euro, mes_extenso, mes_homologo, mes_pt, milhoes,
+                        numero, percentagem, pontos)
 
 LOGO = ""
 try:
@@ -1797,6 +1798,65 @@ def grafico(fig: go.Figure, **kwargs) -> None:
     st.plotly_chart(estilo_grafico(fig), width="stretch", **kwargs)
 
 
+def proveniencia(dados: dict, base: dict | None = None,
+                 mes_indice: str | None = None, variacao: bool = True) -> str:
+    """
+    Linha de proveniência de um gráfico: fonte, período de referência,
+    ponderadores e nível de despesa, numa só frase.
+
+    Existe porque o período de referência estava a três ecrãs de distância dos
+    números que o usam. Aparecia no indicador de capa, na barra de estado e na
+    barra lateral, e em nenhum dos gráficos, pelo que quem olhasse para os
+    contributos não tinha como saber a que mês se referiam (relatado pela Inês,
+    20.08.2026).
+
+    **Sem códigos de conjunto.** `prc_hicp_minr` e companhia não dizem nada a
+    quem usa a aplicação. Quem os quiser tem-nos no separador da metodologia,
+    com a ligação para o *databrowser* do Eurostat; no corpo fica o nome da
+    coisa (decisão da Inês, 20.08.2026).
+
+    Uma função e não uma frase escrita em cada sítio, por duas razões: as datas
+    aparecem em vários pontos e à mão acabariam por divergir; e a última parte
+    **muda com a base escolhida na barra lateral**, que é precisamente o que
+    ninguém se lembraria de atualizar numa legenda distante.
+
+    `mes_indice` é o mês a que a âncora foi indexada, que pode não coincidir com
+    o mês das variações: são séries diferentes e uma pode publicar antes da
+    outra. Sem ele, assume-se o mês das variações.
+
+    `variacao=False` para os gráficos que não mostram variação nenhuma, como a
+    composição da despesa: aí a janela homóloga não é o período de referência do
+    que está no ecrã, e anunciá-la seria dizer que o gráfico responde a uma
+    pergunta que não responde.
+    """
+    partes = ["Fonte: Eurostat, índice harmonizado de preços no consumidor, "
+              "compilado pelo INE."]
+
+    mes = dados.get("mes_variacoes")
+    mes_nivel = mes_indice or mes
+
+    if mes and variacao:
+        partes.append(f"Período de referência: {mes_extenso(mes)}, face a "
+                      f"{mes_homologo(mes)}.")
+    elif mes_nivel:
+        partes.append(f"Valores a preços de {mes_extenso(mes_nivel)}.")
+
+    if dados.get("ano_pesos"):
+        partes.append(f"Ponderadores de {dados['ano_pesos']}.")
+
+    if base:
+        # O nome do IDF já traz o período (“IDF 2022/2023”), o das Contas
+        # Nacionais não. Repetir dava “IDF 2022/2023 (2022/2023)”.
+        ano = str(base.get("ano_base") or "")
+        nivel = base["nome"] if (not ano or ano in base["nome"]) \
+            else f"{base['nome']} ({ano})"
+        if mes_nivel:
+            nivel += f", indexado a {mes_extenso(mes_nivel)}"
+        partes.append(f"Nível de despesa: {nivel}.")
+
+    return " ".join(partes)
+
+
 def grafico_composicao(df: pd.DataFrame) -> go.Figure:
     """
     Repartição da despesa alimentar pelos nove grupos, em **ranking horizontal**.
@@ -2274,7 +2334,11 @@ está **{'acima' if maior_que_media else 'abaixo'}** dela.
     # versalete, valor um degrau acima.
     st.markdown(
         f'<div class="sg-lateral__meta">'
-        f'<p class="sg-lateral__meta-r">Última atualização</p>'
+        # “Última atualização” a apontar para o mês do dado era a confusão que
+        # o README diz querer evitar, entre a data da consulta e a data do dado.
+        # O “Obtidos às”, logo abaixo, é que é a data da consulta, e só faz
+        # sentido por contraste com um rótulo que diga a outra coisa.
+        f'<p class="sg-lateral__meta-r">Período de referência</p>'
         f'<p class="sg-lateral__meta-v">{_html(mes_pt(ultimo_mes))}</p></div>'
         f'<div class="sg-lateral__meta">'
         f'<p class="sg-lateral__meta-r">Obtidos às</p>'
@@ -2970,9 +3034,13 @@ with aba1:
                 "no indicador de topo é a oficial**, para que seja verificável na "
                 "fonte; os euros são os desta decomposição."
             )
+        # “Últimos 12 meses” não dizia de que doze meses se tratava. A janela
+        # passa a ser nomeada pelos dois extremos, aqui e no detalhe por grupo.
+        _janela = (f"de {mes_homologo(ultimo_mes)} para {mes_extenso(ultimo_mes)}"
+                   if ultimo_mes and ultimo_mes != "—" else "nos últimos 12 meses")
         secao("Contributo de cada grupo para a variação anual",
-              "Euros de variação nos últimos 12 meses atribuíveis a cada grupo, "
-              "positivos à direita, negativos à esquerda.",
+              f"Euros de variação <strong>{_janela}</strong> atribuíveis a cada "
+              "grupo, positivos à direita, negativos à esquerda.",
               ajuda=_ajuda_adit, grupo="03 · Onde está a variação")
         com_dados = df_decomp.dropna(subset=["contributo"]).sort_values("contributo")
         if com_dados.empty:
@@ -2994,6 +3062,8 @@ with aba1:
             st.caption("Vermelho: grupos que encareceram e agravam a despesa. "
                        "Verde: grupos que baixaram e a aliviam. A linha vertical "
                        "marca o zero.")
+            st.caption(proveniencia(dados, base_ancora,
+                                    mes_indice=ancora.get("mes")))
 
         # ---- composição da despesa ----
         # A caixa que estava à direita do donut explicava os **cartões**, dizia-o
@@ -3008,20 +3078,31 @@ with aba1:
         secao("Como se distribui a despesa",
               "Fração da despesa alimentar mensal que vai para cada grupo de produtos, "
               "do maior para o menor. Cada barra é o <strong>peso</strong> do grupo no "
-              "cabaz, não a variação dos seus preços.",
+              "cabaz, não a variação dos seus preços."
+              + (f" Repartição segundo os ponderadores oficiais de "
+                 f"<strong>{dados['ano_pesos']}</strong>."
+                 if dados.get("ano_pesos") else ""),
               grupo="04 · Composição da despesa")
         grafico(grafico_composicao(df_decomp))
+        # Este gráfico não mostra variação nenhuma, logo a janela homóloga não é
+        # o seu período de referência. O que o data são duas outras coisas: o
+        # ano dos ponderadores, que decide a repartição, e o mês a que o nível
+        # de despesa está indexado.
+        st.caption(proveniencia(dados, base_ancora,
+                                mes_indice=ancora.get("mes"), variacao=False))
 
         # ---- detalhe por grupo ----
         secao("Cada grupo em detalhe",
               "Para cada grupo: quanto se gasta por mês, que fatia do cabaz representa, "
-              "quanto subiram os seus preços face ao <strong>mesmo mês do ano "
-              "passado</strong>, e quantos euros do agravamento total dos últimos 12 "
-              "meses vêm desse grupo. Os nove contributos somam o agravamento total.")
+              f"quanto subiram os seus preços <strong>{_janela}</strong>, e quantos "
+              "euros do agravamento desse período vêm desse grupo. Os nove contributos "
+              "somam o agravamento total.")
         for inicio in range(0, len(df_decomp), 3):
             cols = st.columns(3)
             for col, (_, linha) in zip(cols, df_decomp.iloc[inicio:inicio + 3].iterrows()):
                 col.markdown(cartao_classe(linha), unsafe_allow_html=True)
+        st.caption(proveniencia(dados, base_ancora,
+                                mes_indice=ancora.get("mes")))
 
         # ---- cabaz por quintil de rendimento ----
         # O `st.divider()` que abria esta secção saiu: passou a ser um bloco
