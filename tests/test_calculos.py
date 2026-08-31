@@ -1974,16 +1974,64 @@ def _data_pt(iso: str) -> str:
     return f"{dia}.{mes}.{ano}"
 
 
+def test_o_readme_cita_a_contagem_de_testes_em_vigor():
+    """
+    O README anuncia quantos testes protegem os calculos, em dois sitios: na
+    arvore de ficheiros e na instrucao de os correr antes de mexer nos calculos.
+    Os dois numeros envelheceram sem nada acusar: diziam 38 e 13 quando a
+    bateria ja tinha 155.
+
+    E o mesmo defeito do `test_o_readme_cita_a_recolha_em_vigor`, e leva o mesmo
+    remedio: quem acrescenta um teste passa a ter de acertar o README, porque a
+    bateria fica vermelha ate isso acontecer.
+
+    Nao se compara com a contagem do pytest, que nao se obtem de dentro de uma
+    bateria a correr, mas sim com o numero de funcoes de teste. As duas so
+    coincidem enquanto nao houver parametrizacoes, e e por isso que ha uma
+    asercao a proibi-las: se um dia forem precisas, este teste tem de mudar de
+    metodo antes (31.08.2026).
+    """
+    import re
+
+    fonte = _fonte("tests/test_calculos.py")
+
+    assert not re.search(r"@pytest\.mark\.parametr", fonte), (
+        "a bateria passou a ter parametrizações, e o número de funções deixou "
+        "de ser o número de testes que o pytest conta. Este teste tem de passar "
+        "a apurar a contagem por outra via antes de continuar a servir.")
+
+    quantos = len(re.findall(r"^def test_", fonte, re.M))
+
+    readme = _fonte("README.md")
+    citados = set(re.findall(r"(\d+)\s+testes", readme))
+
+    assert citados, ("o README deixou de dizer quantos testes tem. Se foi "
+                     "deliberado, apague também este teste; caso contrário, "
+                     f"reponha a contagem, que hoje é de {quantos}.")
+    assert citados == {str(quantos)}, (
+        f"o README diz {', '.join(sorted(citados))} testes e a bateria tem "
+        f"{quantos}. Corrija a contagem nos sítios onde ela aparece.")
+
+
 def test_o_readme_nao_diz_que_a_pasta_de_dados_fica_de_fora():
     """
     O README dizia que `dados/` nao e versionada e que cada ambiente corre o
     script depois de clonar. No Streamlit Community Cloud ninguem corre o
     script: seguir essa instrucao deixa os separadores do Observatorio e da DECO
     vazios na aplicacao publicada.
+
+    A verificacao so procurava a forma feminina, e a arvore de ficheiros dizia
+    "nao versionado", no masculino, a uma letra de distancia da asercao. Passou
+    despercebido onze dias. Agora vale para as duas formas: o que nao pode ficar
+    escrito e a afirmacao, nao uma das suas flexoes (31.08.2026).
     """
     readme = _fonte("README.md")
 
-    assert "não é versionada" not in readme
+    for forma in ("não é versionada", "não versionada", "não versionado"):
+        assert forma not in readme, (
+            f"o README volta a dizer que a pasta `dados/` é “{forma}”. É o "
+            "contrário do que o `.gitignore` faz, com o `!dados/` explícito, e "
+            "deixa os separadores do Observatório e da DECO vazios na nuvem.")
     assert "tem de ser enviada para o repositório" in readme
 
 
@@ -2105,7 +2153,13 @@ def test_a_nota_dos_agregados_declara_a_incoerencia():
     """
     from src.config import AGREGADOS_NOTA, AGREGADOS_NOTA_FONTE
 
-    assert "não é a soma" in AGREGADOS_NOTA
+    # Fiscalizar a substancia e nao a redacao: a nota tem de negar a soma logo
+    # na abertura, seja com "nao e a soma", "nao corresponde a soma" ou outra
+    # formulacao. Prender o teste a uma frase exata so o partia a cada
+    # reescrita, sem apanhar o erro que interessa, que e inverter o sentido
+    # (31.08.2026).
+    abertura = AGREGADOS_NOTA.split(".")[0]
+    assert "soma" in abertura and "não" in abertura
     assert "tabaco" in AGREGADOS_NOTA
     assert AGREGADOS_NOTA_FONTE.startswith("Eurostat")
     # Vale a regra do corpo: sem codigos de conjunto.

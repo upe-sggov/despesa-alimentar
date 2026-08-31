@@ -109,7 +109,7 @@ despesa-alimentar/
 ├── scripts/
 │   ├── recolher_observatorio.py   # recolha do Observatório (passo manual)
 │   └── recolher_deco.py           # recolha do cabaz DECO (passo manual)
-├── dados/                          # não versionado (ver .gitignore); gerado pelos scripts acima
+├── dados/                          # versionado, e tem de ser: a nuvem não corre os scripts
 │   ├── observatorio.csv
 │   ├── observatorio_meta.json
 │   ├── deco_cabaz.csv
@@ -118,7 +118,7 @@ despesa-alimentar/
 ├── docs/
 │   └── 2026-08-07_levantamento_lacunas.md   # apuramento e decisões
 └── tests/
-    └── test_calculos.py    # 38 testes dos cálculos analíticos
+    └── test_calculos.py    # 156 testes dos cálculos analíticos
 ```
 
 A separação entre **acesso a dados** (`eurostat.py`, `observatorio.py`),
@@ -1065,7 +1065,7 @@ ECOICOP versão 2. Se os códigos `CP011x` deixarem de responder, basta atualiza
 campo `cod` em `CLASSES`; o resto da aplicação não precisa de alterações.
 
 **Antes de qualquer alteração aos cálculos**, correr `python -m pytest tests/ -v`.
-Os 13 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
+Os 156 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
 casos-limite conhecidos.
 
 ---

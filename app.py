@@ -874,9 +874,14 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   font-size: .75rem; color: var(--sg-texto-3); margin: .3rem 0 0; }}
 [data-testid="stMarkdownContainer"] p.sg-rodape__app {{
   font-size: .75rem; color: var(--sg-texto-3); margin: 0; }}
+/* Sem `max-width`: a nota acompanha a largura da linha de cima, que é um flex
+   com `space-between` e já ia de ponta a ponta. Tinha 92ch, medida de leitura
+   confortável, mas deixava a nota a terminar a meio da folha enquanto o resto
+   do rodapé chegava à margem, e o desalinhamento lia-se como defeito
+   (decisão da Inês, 31.08.2026). */
 [data-testid="stMarkdownContainer"] p.sg-rodape__nota {{
   font-size: .72rem; color: var(--sg-texto-3); margin: 1.35rem 0 0;
-  max-width: 92ch; line-height: 1.62; }}
+  line-height: 1.62; }}
 
 /* Esconde o rodapé próprio do Streamlit, não o rodapé institucional. */
 footer:not(.sg-rodape) {{ visibility: hidden; }}
@@ -6888,8 +6893,24 @@ depende da escala escolhida.
 
         with st.expander("Como a aplicação se mantém atualizada"):
             st.markdown("""
-    **Não há dados gravados na aplicação.** Nada é fixado no código: em cada arranque, a aplicação
-    pede ao Eurostat as séries de que precisa e usa **a observação mais recente de cada uma**.
+    **Os dados seguem três regimes distintos**, e a diferença entre eles determina o que está
+    atualizado sozinho e o que exige que alguém intervenha.
+
+    **(i) Em direto, a cada arranque.** As séries do Eurostat não estão gravadas em lado nenhum: em
+    cada arranque a aplicação pede-as e usa **a observação mais recente de cada uma**. É o regime da
+    esmagadora maioria dos números, e é dele que trata o resto deste bloco.
+
+    **(ii) Recolhas versionadas, com data de extração.** O **cabaz da DECO PROteste** e o
+    **Observatório de Preços do GPP** não têm interface de acesso automatizado. São recolhidos por
+    script para ficheiros guardados no repositório, e só mudam quando alguém corre o script e regista
+    o resultado. Cada um dos dois separadores mostra a data da recolha em vigor, e avisa quando ela
+    envelhece ou quando a fonte deixa de publicar.
+
+    **(iii) Constantes transcritas de publicações oficiais.** Alguns valores estão inscritos no
+    código, com fonte e data, porque a origem é um documento e não uma série consultável: o **IDF
+    2022/2023** do INE, o **SOFI** da FAO, a avaliação do **Banco de Portugal** ao IVA zero de 2023,
+    que calibra a repercussão, e os **Censos 2021**, que servem de recuo ao número de agregados.
+    Mudam por revisão editorial, à cadência da publicação que os origina.
 
     **Como escolhe o valor mais recente.** Para cada série, ordena as observações por período e fica
     com a última. Isso funciona qualquer que seja a periodicidade, mensal (`2026-06`), semestral
@@ -6949,9 +6970,11 @@ depende da escala escolhida.
             _dif_comum = (abs(_lfs_comum / AGREGADOS_CENSOS - 1) * 100
                           if _lfs_comum else None)
             st.markdown("""
-    Todos os dados quantitativos são obtidos em direto do **Eurostat**, que difunde as estatísticas
-    compiladas pelos institutos nacionais, no caso português, o **INE**. As ligações abrem
-    diretamente o conjunto no Data Browser do Eurostat.
+    O quadro seguinte reúne os conjuntos pedidos em direto ao **Eurostat**, que difunde as
+    estatísticas compiladas pelos institutos nacionais, no caso português, o **INE**. As ligações
+    abrem diretamente o conjunto no Data Browser do Eurostat. Os dados dos outros dois regimes, as
+    recolhas por script e as constantes transcritas, estão identificados mais abaixo e nos
+    separadores onde são usados.
 
     | Elemento | Conjunto | O que mede | Frequência |
     |---|---|---|---|

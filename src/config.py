@@ -1322,10 +1322,23 @@ SOFI_MILHOES = {2017: 2.3, 2019: 1.6, 2020: 1.7, 2021: 1.6,
 # --------------------------------------------------------------------------
 ORGANISMO = "Secretaria-Geral do Governo"
 UNIDADE = "DSSD · Unidade de Pesquisa e Estatísticas"
+# Reescrito em 31.08.2026. A versão anterior dizia que "o valor de referência
+# do cabaz e as taxas de IVA são parâmetros do utilizador", e nenhuma das duas
+# metades se mantinha: o valor de referência passou a vir da `ancora_oficial`
+# (IDF e Contas Nacionais), fora do alcance do utilizador, e a taxa atual está
+# bloqueada no editor, que só aceita a do cenário. Dizia também que os dados vêm
+# todos em direto do Eurostat, quando a DECO e o Observatório do GPP são
+# recolhas datadas lidas de CSV. E "cabaz" tinha passado a designar outra coisa
+# na aplicação, o cabaz da DECO, pelo que a palavra confundia dois conceitos.
 RODAPE = (
     "Ferramenta de trabalho interno. Não constitui posição oficial da "
-    "Secretaria-Geral do Governo. Os dados são obtidos em direto do Eurostat; "
-    "o valor de referência do cabaz e as taxas de IVA são parâmetros do utilizador."
+    "Secretaria-Geral do Governo. Os dados do Eurostat são obtidos em direto; "
+    "os das restantes fontes provêm de recolhas datadas e identificadas em cada "
+    "quadro. As taxas de IVA do cenário e os restantes parâmetros do simulador "
+    "são definidos pelo utilizador, e os resultados são condicionais à "
+    "repercussão assumida. Os valores carecem de reconfirmação junto das fontes "
+    "primárias antes de utilização em suporte à decisão ou em comunicação "
+    "pública."
 )
 
 MESES_PT = ["jan", "fev", "mar", "abr", "mai", "jun",
