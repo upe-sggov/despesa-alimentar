@@ -3269,8 +3269,10 @@ with aba1:
             if sme_pt:
                 refs.append({
                     "ref": f"{trabalhadores} × salário médio",
+                    # Sem `**`: vai para uma célula da coluna “Detalhe”, e um
+                    # quadro de dados não interpreta markdown nenhum.
                     "detalhe": (f"Massa salarial ÷ trabalhadores por conta de outrem, "
-                                f"{sme_pt['ano']}, **inclui tempo parcial**, pelo que fica "
+                                f"{sme_pt['ano']}; inclui tempo parcial, pelo que fica "
                                 "abaixo do salário de um trabalhador a tempo inteiro"),
                     "mensal": sme_pt["valor"] * trabalhadores / 12,
                     "natureza": "bruto",
@@ -3730,10 +3732,14 @@ with aba1:
             help=("INE, IDF 2022/2023. Não mede privação, mede exposição da despesa "
                   "alimentar no orçamento."))
 
-        _texto_sev = (f"**{('%.1f' % _sev).replace('.', ',')}%**" if _sev is not None
+        # Sem `**`: estas duas entram na `nota`, que é HTML de bloco, e em HTML
+        # de bloco o markdown não é interpretado. Saíam ao leitor com os
+        # asteriscos à vista (relatado pela Inês, 01.09.2026). O primeiro já cai
+        # dentro de um <strong> na lista abaixo, e por isso não leva nenhum.
+        _texto_sev = (f"{('%.1f' % _sev).replace('.', ',')}%" if _sev is not None
                       else "o indicador de privação severa")
-        _texto_milhoes = (f", cerca de **{numero(_sofi_pessoas, 1)} milhões de pessoas**"
-                          if _sofi_pessoas else "")
+        _texto_milhoes = (f", cerca de <strong>{numero(_sofi_pessoas, 1)} milhões "
+                          f"de pessoas</strong>" if _sofi_pessoas else "")
         # Em tópicos, e não em prosa corrida: são três definições paralelas, e a
         # prosa obrigava a reconstruir a que número se referia cada frase
         # (decisão da Inês, 13.08.2026).
@@ -6542,11 +6548,18 @@ with aba5:
                                 f"**Processo {_f['processo']}**, despacho de {_f['despacho']}, "
                                 f"{_f['orgao']}. *{_f['assunto']}.*"
                             )
-                            st.dataframe(
-                                pd.DataFrame(
-                                    [{"Subclasse": _c, "O que a ficha decide": _t}
-                                     for _c, _t in _f["decide"]]),
-                                width="stretch", hide_index=True)
+                            # Em lista e não em quadro. Eram duas colunas, um
+                            # código e um parágrafo, o que já é uma lista de
+                            # definições e não dados tabulares. E os textos
+                            # marcam a **cláusula decisiva** de cada ficha, que
+                            # é o que interessa reter: num quadro esse negrito
+                            # saía com os asteriscos à vista, porque uma célula
+                            # não interpreta markdown (relatado pela Inês,
+                            # 01.09.2026). Apagar as marcas resolvia o defeito
+                            # e perdia a informação; deixá-las num contentor que
+                            # as entende resolve os dois.
+                            st.markdown("\n".join(
+                                f"- `{_c}` · {_t}" for _c, _t in _f["decide"]))
                         st.success(
                             "**O princípio que sustenta este quadro**, na formulação da ficha "
                             f"24929: “{PRINCIPIO_LISTA_TAXATIVA}”\n\n"

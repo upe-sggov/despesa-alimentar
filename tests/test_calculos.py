@@ -2735,6 +2735,68 @@ def test_a_app_mostra_a_nota_de_desalinhamento_junto_dos_graficos():
     assert fonte.index("if _desal_nota:") > i
 
 
+def test_nenhum_asterisco_de_markdown_chega_ao_ecra():
+    """
+    O negrito de markdown so funciona onde markdown e interpretado. Em dois
+    sitios nao e, e la os `**` saem ao leitor com os asteriscos a vista:
+
+      HTML de bloco   o conteudo de uma linha que comeca por <div>, <p>, <ul>…
+                      passa em bruto, por regra do CommonMark. E o caso dos
+                      ajudantes `nota`, `secao` e `indicador_principal`, que
+                      montam HTML
+      celulas         um quadro de dados nunca interpreta markdown
+
+    A Ines apanhou nove ocorrencias a olho, a 01.09.2026, e nenhum teste as
+    apanhava. Este corre a aplicacao e olha para o que ela **desenha**, que e a
+    unica forma de as ver: na fonte um `**` e legitimo ou nao consoante o
+    contentor onde acaba, e isso nao se le sem executar.
+    """
+    import re
+    from pathlib import Path
+
+    import pytest
+    from streamlit.testing.v1 import AppTest
+
+    raiz = Path(__file__).resolve().parent.parent
+    app = AppTest.from_file(str(raiz / "app.py"), default_timeout=300).run()
+
+    # A aplicacao obtem os dados em directo do Eurostat. Sem rede nao ha ecra
+    # para inspeccionar, e este e o unico teste da bateria que precisa dela:
+    # salta, em vez de acusar de vermelho uma coisa que nao esta partida.
+    if app.exception or not app.dataframe:
+        pytest.skip("a aplicacao nao carregou (sem rede?), nada para inspeccionar")
+
+    negrito = re.compile(r"\*\*[^*\n]{1,120}\*\*")
+    bloco = re.compile(r"^\s*<(div|p|section|header|footer|ul|ol|table|h[1-6])\b",
+                       re.I)
+
+    fugas = []
+    for m in app.markdown:
+        v = str(m.value)
+        if "<style" in v or not bloco.match(v):
+            continue
+        fugas += [("HTML de bloco", x) for x in negrito.findall(v)]
+
+    for d in list(app.dataframe) + list(app.get("data_editor")):
+        try:
+            df = d.value
+        except Exception:                                      # noqa: BLE001
+            continue
+        for c in df.columns:
+            fugas += [("cabeçalho de quadro", x) for x in negrito.findall(str(c))]
+            if df[c].dtype == object:
+                for cel in df[c].dropna().astype(str).unique():
+                    fugas += [(f"célula, coluna {c}", x)
+                              for x in negrito.findall(cel)]
+
+    assert not fugas, (
+        "negrito de markdown onde ele nao e interpretado, sai com os "
+        "asteriscos a vista:\n"
+        + "\n".join(f"  [{onde}] {q}" for onde, q in fugas)
+        + "\n\nEm HTML use <strong>; num quadro, ou tire as marcas, ou mude o "
+          "conteudo para um contentor que as entenda.")
+
+
 def test_os_rotulos_das_bases_nao_trazem_sigla_nem_data():
     """
     Regra do Livro de Estilo, aplicada a 01.09.2026: o rotulo de uma base e a
@@ -2925,7 +2987,11 @@ def test_nao_ha_api_depreciada_do_streamlit():
     # — o parametro passou a estar la, e nao em catorze sitios. O limiar
     # acompanha essa centralizacao; o que o teste guarda continua a ser o
     # mesmo: que a migracao nao foi desfeita por apagamento.
-    assert fonte.count('width="stretch"') >= 25
+    #
+    # Desceu de 25 para 24 a 01.09.2026: o quadro das fichas da AT passou a
+    # lista de markdown, e levou com ele o seu `width`. Foi remocao de um
+    # elemento, nao de um parametro.
+    assert fonte.count('width="stretch"') >= 24
     # E que os graficos continuam a passar todos pelo ajudante, em vez de
     # voltarem a chamar o Streamlit diretamente com a API antiga.
     assert fonte.count("st.plotly_chart(") == 1, (
