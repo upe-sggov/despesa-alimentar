@@ -726,18 +726,18 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
    receio de partir as colunas que têm um indicador **e** uma legenda por baixo,
    onde esticar tudo faria o indicador comer a coluna inteira.
 
-   A primeira guarda foi `:only-child`: a cadeia só esticava quando o indicador
-   era filho único da coluna. Resolvia a fila em que **nenhuma** coluna tem
-   legenda, e só essa. Bastando uma tê-la, o cartão dessa coluna parava onde a
-   legenda começava e a fila desalinhava na base, que é o defeito que a regra
-   existe para corrigir (relatado pela Inês, 01.09.2026).
+   A guarda resolve-o: a cadeia só estica quando o indicador é **filho único**
+   da sua coluna. Havendo legenda por baixo, há dois contentores, `:only-child`
+   não pega, e essas colunas ficam exatamente como estavam. O `height: 100%` do
+   cartão é inofensivo aí, porque uma altura em percentagem contra um pai de
+   altura automática resolve para automático.
 
-   O que estica passa a ser o **contentor do indicador**, e não tudo o que está
-   na coluna. O bloco vertical do Streamlit já é uma caixa flexível em coluna:
-   com `flex` no contentor do cartão, ele absorve o espaço livre e a legenda
-   fica na sua altura natural, por baixo. Os cartões alinham em cima e em baixo,
-   a legenda não é esticada, e o receio inicial deixa de se aplicar porque nada
-   além do cartão cresce. */
+   Isso deixava a coluna com legenda desalinhada na base, e a 01.09.2026tentei
+   corrigi-lo por CSS: tirar a guarda e fazer crescer o contentor do indicador
+   com `flex`. **Não pegou.** Nesta versão o contentor é desenhado por um
+   mecanismo próprio do Streamlit (`minStretchBehavior`), e a folha de autor não
+   o vence. Ficou o que funciona, e a legenda saiu da coluna para debaixo da
+   fila, onde alias contextualiza os tres cartoes e nao so um. */
 [data-testid="stMetric"] {{
   background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
   border-radius: var(--sg-raio); padding: 1.3rem 1.4rem 1.35rem;
@@ -746,11 +746,12 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 [data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) {{
   align-items: stretch;
 }}
-[data-testid="stColumn"]:has([data-testid="stMetric"]) > div,
-[data-testid="stColumn"]:has([data-testid="stMetric"])
-    [data-testid="stVerticalBlock"] {{ height: 100%; }}
-[data-testid="stColumn"] [data-testid="stElementContainer"]:has(
-    > [data-testid="stMetric"]) {{ flex: 1 1 auto; }}
+[data-testid="stColumn"]:has([data-testid="stElementContainer"]:only-child
+    > [data-testid="stMetric"]) > div,
+[data-testid="stColumn"]:has([data-testid="stElementContainer"]:only-child
+    > [data-testid="stMetric"]) [data-testid="stVerticalBlock"],
+[data-testid="stColumn"] [data-testid="stElementContainer"]:only-child:has(
+    > [data-testid="stMetric"]) {{ height: 100%; }}
 /* Rótulos a duas linhas, sem reticências. O `st.metric` desenha o rótulo com
    `<Markdown … truncate>`, e essa opção injeta, no contentor **e** no seu <p>:
      overflow: hidden; white-space: nowrap; text-overflow: ellipsis
@@ -3025,10 +3026,6 @@ with aba1:
                             "consta da tabela por quintil, mais abaixo. Comparação "
                             "europeia no separador UE-27, que usa as Contas Nacionais "
                             "por serem a única base comparável entre países."))
-            # Linha de proveniência, e por isso com as datas: aqui a data é
-            # informação, não etiqueta.
-            r3.caption(f"Inquérito às Despesas das Famílias 2022/2023 · Contas "
-                       f"Nacionais {_eng['ano_contas']}, ver Metodologia")
         else:
             r3.markdown(
             f"<p class='sg-comp__d' style='padding-top:14px'>"
@@ -3036,6 +3033,20 @@ with aba1:
             f"com a dimensão média portuguesa ({dim_txt} pessoas). Os valores mais abaixo "
             f"estão ajustados para <strong>{composicao}</strong>.</p>",
             unsafe_allow_html=True)
+
+        # Fora das colunas, e por duas razões. A visual: dentro da terceira, o
+        # cartão parava onde ela começava e a fila desalinhava na base, porque a
+        # regra que estica os cartões só age quando o indicador é filho único da
+        # coluna. Tentei corrigi-lo por CSS e não pegou, o contentor é desenhado
+        # por um mecanismo próprio do Streamlit que a folha de autor não vence.
+        #
+        # A editorial, que é a que a justifica mesmo: estas são as duas bases em
+        # que assentam **os três** cartões, e não só o do coeficiente de Engel.
+        # Uma nota só contextualiza o bloco inteiro (relatado pela Inês,
+        # 01.09.2026).
+        if eng_pt:
+            st.caption(f"Inquérito às Despesas das Famílias 2022/2023 · Contas "
+                       f"Nacionais {_eng['ano_contas']}, ver Metodologia")
 
         if outra_ancora is not None:
             nota("O valor exato não é determinável, use o intervalo", f"""
@@ -3583,7 +3594,16 @@ with aba1:
           isoladamente: a taxa, só por si, sugere neutralidade; os euros, só por si, sugerem o
           inverso.""")
 
-        cq1, cq2 = st.columns([3, 2])
+        # Era [3, 2], e os dois gráficos ficavam apertados. A legenda das nove
+        # classes ocupava um terço da figura da esquerda, em coluna, e o que
+        # sobrava para as barras não chegava; à direita, os nomes das classes no
+        # eixo comiam quase toda a largura da coluna.
+        #
+        # A legenda desceu para baixo das barras, na horizontal, e essa largura
+        # voltou para a figura. As colunas ficam iguais: o gráfico da direita
+        # precisa dela para os nomes do eixo, e o da esquerda já não a gasta com
+        # a legenda (pedido da Inês, 01.09.2026).
+        cq1, cq2 = st.columns([1, 1])
         with cq1:
             componente("A composição muda, não só o nível",
                        "Fração da despesa alimentar de cada quintil que vai para cada grupo.")
@@ -3598,10 +3618,17 @@ with aba1:
                     marker_color=cor_classe(classe["cod"]),
                     hovertemplate="%{x}<br>" + classe["nome"] + ": %{y:.1f}%<extra></extra>",
                 ))
-            figq.update_layout(barmode="stack", height=470,
-                               margin=dict(t=12, b=34, l=10, r=10),
+            # A legenda em baixo, na horizontal. `b` sobe de 34 para 150 para
+            # lhe abrir lugar: são nove nomes longos, e ao pé da figura eles
+            # partem-se em três ou quatro filas. A altura total sobe com ela,
+            # senão o que a legenda ganha vinha das barras.
+            figq.update_layout(barmode="stack", height=560,
+                               margin=dict(t=12, b=150, l=10, r=10),
                                yaxis_title="% da despesa alimentar",
-                               legend=dict(font=dict(size=10)))
+                               legend=dict(orientation="h", font=dict(size=10),
+                                           yanchor="top", y=-0.12,
+                                           xanchor="left", x=0,
+                                           traceorder="normal"))
             figq.update_yaxes(range=[0, 100])
             grafico(figq)
         with cq2:
@@ -3621,7 +3648,9 @@ with aba1:
                 marker_color=[AZUL if v > 0 else DOURADO for v in df_delta["delta"]],
                 hovertemplate="%{y}<br>%{x:+.1f} p.p.<extra></extra>",
             ))
-            figd.update_layout(height=470, margin=dict(t=12, b=34, l=10, r=10),
+            # A mesma altura da figura da esquerda, para as duas assentarem na
+            # mesma linha. Acompanha a subida que a legenda lá provocou.
+            figd.update_layout(height=560, margin=dict(t=12, b=34, l=10, r=10),
                                xaxis_title="p.p. (Q5 − Q1)")
             figd.update_xaxes(zeroline=True, zerolinecolor=TEXTO_3, zerolinewidth=1.5)
             grafico(figd)

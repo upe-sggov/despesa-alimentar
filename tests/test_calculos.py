@@ -2092,24 +2092,25 @@ def test_os_ficheiros_de_dados_vao_para_o_repositorio():
 
 
 # --------------------- alinhamento dos cartoes de indicador, 20.08.2026
-def test_os_cartoes_de_indicador_alinham_em_cima_e_em_baixo():
+def test_os_cartoes_de_indicador_esticam_so_quando_estao_sozinhos():
     """
     Os cartoes de uma fila tinham alturas diferentes: o `min-height` alinhava-os
-    quando a diferenca vinha do rotulo, mas nao quando vinha do conteudo.
+    quando a diferenca vinha do rotulo, mas nao quando vinha do conteudo, e um
+    cartao com variacao percentual ficava mais alto do que um sem ela.
 
-    A primeira correcao esticava a cadeia so quando o indicador era filho unico
-    da coluna (`:only-child`), por receio de que, havendo legenda por baixo,
-    esticar tudo fizesse o indicador comer a coluna inteira. Isso resolvia a
-    fila em que **nenhuma** coluna tem legenda, e so essa: em "Referencia
-    nacional" o terceiro cartao parava onde a legenda comecava, e a fila
-    desalinhava na base (relatado pela Ines, 01.09.2026).
+    A correcao estica a cadeia de contentores, como nos cartoes de grupo. O que
+    a travou da primeira vez foi o receio de partir as colunas que tem um
+    indicador **e** uma legenda por baixo. A guarda e o `:only-child`: sem ela, a
+    regra volta a apanhar essas colunas e o indicador come a coluna toda.
 
-    Passa a esticar o **contentor do indicador**, com `flex`, dentro do bloco
-    vertical que o Streamlit ja desenha como caixa flexivel em coluna. O cartao
-    absorve o espaco livre, a legenda fica na sua altura natural, e nada alem do
-    cartao cresce, que era o receio original.
+    A 01.09.2026 tentei tirar a guarda e fazer crescer o contentor do indicador
+    com `flex`, para alinhar tambem a coluna com legenda. Nao pegou: nesta
+    versao o contentor e desenhado por um mecanismo proprio do Streamlit e a
+    folha de autor nao o vence. A guarda voltou, e o caso que a motivava
+    resolveu-se do outro lado, tirando a legenda de dentro da coluna, o que e
+    `test_a_fila_da_referencia_nacional_e_so_de_indicadores`.
 
-    Este teste existe para que a mecanica nao seja desfeita por distraccao.
+    Este teste existe para que ninguem a remova por a achar supérflua.
     """
     fonte = _fonte("app.py")
 
@@ -2119,13 +2120,34 @@ def test_os_cartoes_de_indicador_alinham_em_cima_e_em_baixo():
 
     assert "height: 100%" in regra
     assert "align-items: stretch" in regra
-    assert "flex: 1 1 auto" in regra, (
-        "o contentor do indicador deixou de crescer, e a fila volta a "
-        "desalinhar na coluna que tem legenda por baixo")
-    # A guarda antiga nao pode voltar: era ela que excluia exactamente a coluna
-    # que este teste existe para corrigir.
-    assert ":only-child" not in regra, (
-        "`:only-child` exclui a coluna com legenda, que e o caso a corrigir")
+    # A guarda, nas tres pernas do seletor que estica a cadeia.
+    assert regra.count(":only-child") == 3, regra
+
+
+def test_a_fila_da_referencia_nacional_e_so_de_indicadores():
+    """
+    A regra acima so alinha as colunas cujo indicador e filho unico. Enquanto a
+    legenda de proveniencia esteve dentro da terceira coluna, o cartao dela
+    parava onde a legenda comecava e a fila desalinhava na base.
+
+    A legenda saiu para debaixo da fila, o que resolve o alinhamento e e melhor
+    editorialmente: cita as duas bases em que assentam **os tres** cartoes, e
+    nao so o do coeficiente de Engel.
+    """
+    import re
+
+    fonte = _fonte("app.py")
+    i = fonte.index("r1, r2, r3 = st.columns(")
+    fim = fonte.index("# ---- ", i)
+    trecho = fonte[i:fim]
+
+    escritos = set(re.findall(r"^\s*(r[123])\.(\w+)\(", trecho, re.M))
+    permitido = {("r1", "metric"), ("r2", "metric"), ("r3", "metric"),
+                 ("r3", "markdown")}          # o ramo sem coeficiente de Engel
+    assert escritos <= permitido, (
+        f"a fila da referencia nacional recebeu {escritos - permitido}. Uma "
+        "coluna com indicador **e** outra coisa deixa de alinhar na base: o "
+        "que nao for indicador vai para debaixo da fila.")
 
 
 def test_a_folha_de_estilo_tem_as_chavetas_equilibradas():
