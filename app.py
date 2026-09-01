@@ -440,14 +440,6 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 .sg-bloco--topo {{ margin-top: var(--sg-e4); }}
 .sg-bloco--so {{ margin-bottom: 0; }}
-/* Sem filete: o bloco abre o separador e não tem nada por cima de que se
-   separar. É o caso dos parâmetros de “Despesa e composição”, que são o
-   primeiro elemento a seguir às abas: ali a linha ficava a flutuar em espaço
-   vazio. Não se resolveu no `--topo` porque esse não quer dizer “primeiro da
-   página”, quer dizer “menos margem em cima”, e é usado também no bloco 02 da
-   comparação europeia, onde o filete separa mesmo dois blocos (pedido da Inês,
-   01.09.2026). */
-.sg-bloco--nu {{ border-top: 0; padding-top: 0; }}
 [data-testid="stMarkdownContainer"] p.sg-bloco__r {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .12em;
   text-transform: uppercase; color: var(--sg-verde); margin: 0; line-height: 1.4;
@@ -1206,8 +1198,7 @@ def indice_metodologia(consulta: str) -> None:
 
 
 def secao(titulo: str, descricao: str | None = None, topo: bool = False,
-          ajuda: str | None = None, grupo: str | None = None,
-          filete: bool = True) -> None:
+          ajuda: str | None = None, grupo: str | None = None) -> None:
     """
     Cabeçalho de secção. `ajuda` aceita markdown e aparece num **(i)** ao lado do
     título, é onde vai a nota que interessa a quem a procura e estorva quem não
@@ -1218,15 +1209,10 @@ def secao(titulo: str, descricao: str | None = None, topo: bool = False,
     `grupo` promove a secção a **início de bloco analítico**: acrescenta-lhe o
     filete e o rótulo numerado por cima do título. É o degrau que separa os
     grandes blocos de uma página das secções dentro de cada um.
-
-    `filete=False` tira essa linha, para o bloco que abre um separador e não tem
-    nada por cima de que se separar. Não se resolveu pelo `topo` porque esse não
-    quer dizer “primeiro da página”, quer dizer “menos margem em cima”, e é
-    usado também onde o filete separa mesmo dois blocos.
     """
     desc = f'<p class="sg-secao__d">{descricao}</p>' if descricao else ""
     olho = _olho(grupo) if grupo else ""
-    extra = (" sg-bloco--topo" if topo else "") + ("" if filete else " sg-bloco--nu")
+    extra = " sg-bloco--topo" if topo else ""
     if ajuda:
         if grupo:
             # O título vem do Streamlit no elemento seguinte; o CSS encosta-o
@@ -2515,6 +2501,21 @@ abaD, aba1, aba2, aba6, aba3, aba4, aba5 = st.tabs([
 # ordem de execução, e não a ordem visual das abas. O `with aba1:` volta a
 # abrir mais abaixo para o resto do separador (decisão da Inês, 31.08.2026).
 with aba1:
+    # O título da página abre o separador, como em todos os outros. Estava
+    # escrito mais abaixo, com os parâmetros à frente dele, e este era o único
+    # separador que começava por um rótulo de bloco numerado em vez do seu
+    # nome. Sobe para aqui, e com ele volta o filete por cima do primeiro
+    # bloco, que passou a ter alguma coisa de que se separar (pedido da Inês,
+    # 01.09.2026).
+    #
+    # Sem `painel` à volta: é uma emissão de markdown fixo, não há aqui nada que
+    # possa falhar, e um `try` que nunca dispara é ruído.
+    titulo_pagina(
+        "Despesa alimentar das famílias",
+        "Repartição, evolução e esforço da despesa alimentar do agregado "
+        "escolhido. A base de cálculo e a composição definem-se no bloco "
+        "seguinte.")
+
     # O bloco não tinha cabeçalho: os controlos abriam o separador sem nada os
     # nomear. Não se chamam “cenário” de propósito, que nesta aplicação cenário
     # é o do simulador de IVA, e o mesmo termo para duas coisas diferentes é o
@@ -2524,7 +2525,7 @@ with aba1:
           "Definem a base de despesa e o agregado a que se referem todos os "
           "valores deste separador. O simulador de IVA herda daqui a base de "
           "cálculo; os restantes separadores não respondem a estes parâmetros.",
-          grupo="01 · Parâmetros", topo=True, filete=False)
+          grupo="01 · Parâmetros", topo=True)
 
     # --- base de cálculo: as duas fontes oficiais não coincidem ---
     # As opções são **as bases efetivamente calculáveis nesta sessão**, e não a
@@ -3083,11 +3084,9 @@ with abaD:
 # ==========================================================================
 with aba1:
     with painel("Despesa e composição"):
-        titulo_pagina(
-            "Despesa alimentar das famílias",
-            "Repartição, evolução e esforço da despesa alimentar do agregado "
-            "escolhido. A base de cálculo e a composição definem-se no bloco acima.")
-
+        # O título da página está escrito lá em cima, antes dos parâmetros, que
+        # é onde tem de aparecer. Aqui continua o resto do separador.
+        #
         # Sem o mês: o indicador de capa, logo a seguir, di-lo em corpo grande.
         faixa_fonte(mes=False)
 
