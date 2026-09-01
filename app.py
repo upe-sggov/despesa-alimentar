@@ -2385,7 +2385,13 @@ with aba1:
     # mesmo nivel, e empilhados empurravam o primeiro indicador do separador
     # para fora do ecra (pedido da Inês, 01.09.2026). A escala leva mais
     # largura por o nome da opcao trazer os coeficientes atras.
-    _c_base, _c_comp, _c_esc = st.columns([1, 1, 1.25], gap="large")
+    #
+    # A quarta coluna fica vazia de proposito. Sem ela as tres esticavam-se pela
+    # pagina toda e os controlos afastavam-se uns dos outros, cada um sozinho no
+    # seu terco; o vazio a direita junta-os a esquerda e da aos expansores uma
+    # largura que corresponde ao que eles explicam (01.09.2026).
+    _c_base, _c_comp, _c_esc, _c_vazia = st.columns(
+        [0.85, 1, 1.5, 0.75], gap="medium")
 
     with _c_base:
         st.markdown('<p class="sg-grupo sg-grupo--primeiro">Base de cálculo</p>',
@@ -2414,6 +2420,11 @@ with aba1:
                       "próximo de 2. Nenhuma das duas mede isoladamente a grandeza pretendida, "
                       "pelo que a aplicação apresenta o intervalo. Ver separador Metodologia."),
             )
+        # Lugar do expansor da proveniência, preenchido mais abaixo. Fica nesta
+        # coluna porque é a base que ele explica, de onde vem o valor, com que
+        # denominador e em que ano: não tem nada que ver com a escala.
+        _slot_proveniencia = st.container()
+
         base_ancora = ancora["bases"][base_chave]
         outra_chave = next((k for k in ancora["bases"] if k != base_chave), None)
         outra_ancora = ancora["bases"][outra_chave] if outra_chave else None
@@ -2479,6 +2490,10 @@ with aba1:
                 f"(**{ESCALAS[_escala_apurada]['nome'].split(' (')[0]}**). Ver o teste no "
                 f"separador Metodologia."
             )
+
+        # Lugar do comparador das escalas, preenchido mais abaixo: precisa da
+        # `faixa`, que só existe depois de os três parâmetros estarem lidos.
+        _slot_escalas = st.container()
 
 
     # As duas legendas (o intervalo entre bases e a idade da base) recolheram-se
@@ -2589,98 +2604,104 @@ with aba1:
               f"escala {ESCALAS[escala_chave]['nome']}")
     vezes_ano = 12
 
-    # O grupo “Despesa estimada” repetia na barra lateral o indicador que abre o
-    # separador Despesa e composição, mesmo rótulo, mesmo valor, e agora também
-    # a mesma posição, logo abaixo. Saiu, e com ele o cabeçalho do grupo: o que
-    # resta é o comparador das escalas, que pertence ao seletor de escala logo
-    # acima e não existe em mais lado nenhum (decisão da Inês, 13.08.2026).
-    with st.expander("Comparar as três escalas"):
-        maior_que_media = pessoas > dim_efetiva
-        st.dataframe(
-            pd.DataFrame([
-                {"Escala": ESCALAS[k]["nome"].split(" (")[0],
-                 "Coeficientes": f"{ESCALAS[k]['primeiro']:.0f} / "
-                                 f"{ESCALAS[k]['adulto']:.1f} / "
-                                 f"{ESCALAS[k]['crianca']:.1f}".replace(".", ","),
-                 "Despesa (€)": round(faixa["por_escala"][k], 2)}
-                for k in ESCALAS
-            ]), width="stretch", hide_index=True)
+    # Cada expansor vai para dentro da coluna do que explica, e não à
+    # largura da página: ocupavam a folha toda para qualificar um
+    # controlo que ocupa um terço dela (pedido da Inês, 01.09.2026).
+    with _slot_escalas:
+        # O grupo “Despesa estimada” repetia na barra lateral o indicador que abre o
+        # separador Despesa e composição, mesmo rótulo, mesmo valor, e agora também
+        # a mesma posição, logo abaixo. Saiu, e com ele o cabeçalho do grupo: o que
+        # resta é o comparador das escalas, que pertence ao seletor de escala logo
+        # acima e não existe em mais lado nenhum (decisão da Inês, 13.08.2026).
+        with st.expander("Comparar as três escalas"):
+            maior_que_media = pessoas > dim_efetiva
+            st.dataframe(
+                pd.DataFrame([
+                    {"Escala": ESCALAS[k]["nome"].split(" (")[0],
+                     "Coeficientes": f"{ESCALAS[k]['primeiro']:.0f} / "
+                                     f"{ESCALAS[k]['adulto']:.1f} / "
+                                     f"{ESCALAS[k]['crianca']:.1f}".replace(".", ","),
+                     "Despesa (€)": round(faixa["por_escala"][k], 2)}
+                    for k in ESCALAS
+                ]), width="stretch", hide_index=True)
 
-        st.markdown(f"""
-**Efeito dos coeficientes da escala sobre o valor apurado**
+            st.markdown(f"""
+    **Efeito dos coeficientes da escala sobre o valor apurado**
 
-O ponto de partida é sempre o **agregado médio português, {('%.2f' % dim_efetiva).replace('.', ',')} pessoas**.
-A escala não calcula a despesa a partir do zero: **ajusta** desse agregado médio para o agregado
-selecionado, e é aplicada aos **dois lados** do cálculo, ao agregado selecionado e ao agregado
-médio que serve de referência.
+    O ponto de partida é sempre o **agregado médio português, {('%.2f' % dim_efetiva).replace('.', ',')} pessoas**.
+    A escala não calcula a despesa a partir do zero: **ajusta** desse agregado médio para o agregado
+    selecionado, e é aplicada aos **dois lados** do cálculo, ao agregado selecionado e ao agregado
+    médio que serve de referência.
 
-Daí resulta o comportamento seguinte:
+    Daí resulta o comportamento seguinte:
 
-| Agregado selecionado | Escala com economias de escala mais fortes |
-|---|---|
-| **Menor** que {('%.2f' % dim_efetiva).replace('.', ',')} pessoas | valor **mais alto** |
-| **Maior** que {('%.2f' % dim_efetiva).replace('.', ',')} pessoas | valor **mais baixo** |
+    | Agregado selecionado | Escala com economias de escala mais fortes |
+    |---|---|
+    | **Menor** que {('%.2f' % dim_efetiva).replace('.', ',')} pessoas | valor **mais alto** |
+    | **Maior** que {('%.2f' % dim_efetiva).replace('.', ',')} pessoas | valor **mais baixo** |
 
-Coeficientes menores significam que **cada pessoa adicional acresce menos**. Isso comprime as
-diferenças entre agregados de dimensão diferente, aproximando todos da média. Um casal, sendo
-**menor** que a média, aproxima-se dela por cima; um casal com três filhos, sendo **maior**,
-aproxima-se dela por baixo.
+    Coeficientes menores significam que **cada pessoa adicional acresce menos**. Isso comprime as
+    diferenças entre agregados de dimensão diferente, aproximando todos da média. Um casal, sendo
+    **menor** que a média, aproxima-se dela por cima; um casal com três filhos, sendo **maior**,
+    aproxima-se dela por baixo.
 
-O ponto de viragem é a dimensão média. O agregado selecionado, com {pessoas}
-pessoa{'s' if pessoas > 1 else ''}, situa-se **{'acima' if maior_que_media else 'abaixo'}** dessa dimensão.
-        """)
-        st.caption(
-            "É por esta razão que a aplicação apresenta sempre um intervalo: nenhuma das três "
-            "escalas reproduz exatamente a despesa alimentar observada, e a escolha entre elas "
-            "altera o resultado em sentidos diferentes consoante a dimensão do agregado."
-        )
-
-    _agr_txt = numero(agregados)
-    _mes_txt = mes_pt(ancora["mes"]) if ancora["mes"] else "—"
-    _den = base_ancora.get("denominador")
-    # O denominador da âncora das Contas Nacionais, independentemente da base
-    # escolhida: a Metodologia explica-o sempre, e o `_den` acima é None quando
-    # a base ativa é a do IDF, que não passa por divisão nenhuma.
-    _den_contas = (ancora["bases"].get("contas") or {}).get("denominador") or {
-        "valor": agregados, "ano": dados.get("agregados_ano") or "—"}
-    with st.expander("De onde vem este valor"):
-        if base_chave == "contas":
-            _den_txt = numero(_den["valor"]) if _den else _agr_txt
-            _proveniencia = (
-                "Da **despesa alimentar de todas as famílias portuguesas** registada nas Contas "
-                f"Nacionais, dividida pelo número de agregados desse mesmo ano ({_den_txt} em "
-                f"{_den['ano'] if _den else '—'}), atualizada ao mês corrente pelo índice oficial "
-                "de preços e ajustada à composição indicada acima."
+    O ponto de viragem é a dimensão média. O agregado selecionado, com {pessoas}
+    pessoa{'s' if pessoas > 1 else ''}, situa-se **{'acima' if maior_que_media else 'abaixo'}** dessa dimensão.
+            """)
+            st.caption(
+                "É por esta razão que a aplicação apresenta sempre um intervalo: nenhuma das três "
+                "escalas reproduz exatamente a despesa alimentar observada, e a escolha entre elas "
+                "altera o resultado em sentidos diferentes consoante a dimensão do agregado."
             )
-        else:
-            _proveniencia = (
-                "Da **despesa alimentar declarada pelos agregados** no Inquérito às Despesas das "
-                "Famílias do INE, atualizada ao mês corrente pelo índice oficial de preços e "
-                "ajustada à composição indicada acima. Não passa por divisão de nenhum agregado "
-                "macroeconómico: é medição direta."
-            )
-        if base_chave == "contas" and _den:
-            _linha_agr = (f"**Denominador:** {_den['fonte']}, {_den['ano']}, "
-                          "o mesmo ano da despesa")
-            if _den["desfasamento"]:
+
+
+    with _slot_proveniencia:
+        _agr_txt = numero(agregados)
+        _mes_txt = mes_pt(ancora["mes"]) if ancora["mes"] else "—"
+        _den = base_ancora.get("denominador")
+        # O denominador da âncora das Contas Nacionais, independentemente da base
+        # escolhida: a Metodologia explica-o sempre, e o `_den` acima é None quando
+        # a base ativa é a do IDF, que não passa por divisão nenhuma.
+        _den_contas = (ancora["bases"].get("contas") or {}).get("denominador") or {
+            "valor": agregados, "ano": dados.get("agregados_ano") or "—"}
+        with st.expander("De onde vem este valor"):
+            if base_chave == "contas":
+                _den_txt = numero(_den["valor"]) if _den else _agr_txt
+                _proveniencia = (
+                    "Da **despesa alimentar de todas as famílias portuguesas** registada nas Contas "
+                    f"Nacionais, dividida pelo número de agregados desse mesmo ano ({_den_txt} em "
+                    f"{_den['ano'] if _den else '—'}), atualizada ao mês corrente pelo índice oficial "
+                    "de preços e ajustada à composição indicada acima."
+                )
+            else:
+                _proveniencia = (
+                    "Da **despesa alimentar declarada pelos agregados** no Inquérito às Despesas das "
+                    "Famílias do INE, atualizada ao mês corrente pelo índice oficial de preços e "
+                    "ajustada à composição indicada acima. Não passa por divisão de nenhum agregado "
+                    "macroeconómico: é medição direta."
+                )
+            if base_chave == "contas" and _den:
                 _linha_agr = (f"**Denominador:** {_den['fonte']}, {_den['ano']}, "
-                              f"**{_den['desfasamento']} ano(s) de desfasamento** face à "
-                              f"despesa, que é de {base_ancora['ano_base']}")
-        else:
-            _linha_agr = f"**N.º de agregados:** {agr_fonte}"
-        st.markdown(
-            _proveniencia + "\n\n"
-            + _linha_agr + "  \n"
-            + f"**Base de despesa:** {base_ancora['nome']} ({base_ancora['ano_base']}), "
-            f"a preços de {_mes_txt}  \n"
-            f"**Fonte:** {base_ancora['fonte']}\n\n"
-            f"*{base_ancora['porque']}*\n\n"
-            + (f"Na outra base, {outra_ancora['nome']}, o mesmo agregado médio daria "
-               f"**{euro(outra_ancora['valor'])}** por mês."
-               if outra_ancora is not None else
-               "A outra base oficial não está disponível nesta sessão, pelo que não há "
-               "intervalo a apresentar.")
-        )
+                              "o mesmo ano da despesa")
+                if _den["desfasamento"]:
+                    _linha_agr = (f"**Denominador:** {_den['fonte']}, {_den['ano']}, "
+                                  f"**{_den['desfasamento']} ano(s) de desfasamento** face à "
+                                  f"despesa, que é de {base_ancora['ano_base']}")
+            else:
+                _linha_agr = f"**N.º de agregados:** {agr_fonte}"
+            st.markdown(
+                _proveniencia + "\n\n"
+                + _linha_agr + "  \n"
+                + f"**Base de despesa:** {base_ancora['nome']} ({base_ancora['ano_base']}), "
+                f"a preços de {_mes_txt}  \n"
+                f"**Fonte:** {base_ancora['fonte']}\n\n"
+                f"*{base_ancora['porque']}*\n\n"
+                + (f"Na outra base, {outra_ancora['nome']}, o mesmo agregado médio daria "
+                   f"**{euro(outra_ancora['valor'])}** por mês."
+                   if outra_ancora is not None else
+                   "A outra base oficial não está disponível nesta sessão, pelo que não há "
+                   "intervalo a apresentar.")
+            )
 
 
 # --- decomposição base, usada por vários separadores ---
