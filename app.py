@@ -3365,10 +3365,14 @@ with aba1:
                        "marca o zero.")
             st.caption(base_de_calculo(dados, base_ancora,
                                        mes_indice=ancora.get("mes")))
-            # O desalinhamento entre classes é declarado no topo da página, a
-            # mais de mil linhas daqui. É nestas barras que ele produz efeito.
-            if _desal_nota:
-                st.caption(_desal_nota)
+            # O aviso de desalinhamento esteve aqui, e saiu a 01.09.2026. Estava
+            # a ser dito três vezes na mesma página: por inteiro no topo, com a
+            # lista das classes e os meses de cada uma, aqui, e outra vez nos
+            # cartões cinquenta linhas abaixo. Ficou o dos cartões, que é onde
+            # mais engana: ali cada classe mostra a sua taxa isolada, e uma
+            # classe de outro mês passa por comparável com as vizinhas. Nestas
+            # barras seria a terceira legenda seguida sob o mesmo gráfico
+            # (decisão da Inês).
 
         # ---- composição da despesa ----
         # A caixa que estava à direita do donut explicava os **cartões**, dizia-o
@@ -3395,8 +3399,12 @@ with aba1:
         grafico(grafico_composicao(df_decomp),
                 rodape=carimbo_do_grafico(dados, mes_indice=ancora.get("mes"),
                                           variacao=False))
-        st.caption(base_de_calculo(dados, base_ancora,
-                                   mes_indice=ancora.get("mes")))
+        # Sem a base de cálculo por baixo. Era a segunda de três declarações da
+        # mesma base em cinquenta linhas, e a única que não acrescentava nada:
+        # a primeira abre o bloco, sob os contributos, a terceira fecha-o, na
+        # proveniência inteira dos cartões, e entre elas nada mudou. O ano dos
+        # ponderadores, que era a outra metade desta linha, já está no subtítulo
+        # desta secção, três elementos acima (decisão da Inês, 01.09.2026).
 
         # ---- detalhe por grupo ----
         secao("Cada grupo em detalhe",

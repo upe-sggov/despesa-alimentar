@@ -2298,6 +2298,35 @@ def test_a_proveniencia_mostra_so_os_campos_que_o_separador_usa():
         "de indices usa varios")
 
 
+def test_a_base_e_o_desalinhamento_nao_se_repetem_no_mesmo_separador():
+    """
+    Em "Despesa e composicao" a base de calculo era declarada tres vezes em
+    cinquenta linhas, e o aviso de desalinhamento duas. O leitor lia os mesmos
+    ponderadores e o mesmo nivel de despesa ao percorrer meio separador.
+
+    Ficaram as que fecham alguma coisa: a base abre o bloco (sob os contributos)
+    e fecha-o (na proveniencia inteira dos cartoes, que nao tem figura onde
+    carimbar a fonte); o desalinhamento fica nos cartoes, que e onde mais
+    engana, porque ali cada classe mostra a sua taxa isolada.
+
+    O topo da pagina continua a declarar o desalinhamento por inteiro, com a
+    lista das classes e o mes de cada uma. Isso nao e repeticao: e a declaracao,
+    e as outras eram lembretes dela (decisao da Ines, 01.09.2026).
+    """
+    fonte = _fonte("app.py")
+
+    n_base = fonte.count("st.caption(base_de_calculo(dados, base_ancora")
+    assert n_base == 1, (
+        f"a base de calculo e declarada por {n_base} legendas proprias. Uma "
+        "delas basta: a outra ponta do bloco vai na `proveniencia` dos cartoes, "
+        "que ja a contem.")
+
+    n_desal = fonte.count("st.caption(_desal_nota)")
+    assert n_desal == 1, (
+        f"o aviso de desalinhamento aparece {n_desal} vezes no separador, alem "
+        "da declaracao completa no topo da pagina.")
+
+
 def test_a_aplicacao_nao_tem_barra_lateral():
     """
     A barra foi esvaziando: os parametros desceram para o topo de "Despesa e
