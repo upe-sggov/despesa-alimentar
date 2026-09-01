@@ -39,30 +39,155 @@ CLASSES_FONTE = ("INE, Inquérito às Despesas das Famílias 2022/2023, anexo, "
                  "Classificação do Consumo Individual por Objetivo "
                  "(COICOP, versão 2018)")
 
+# A `cor` e a **cor de apresentação** da classe, e e a unica que existe: ate
+# 31.08.2026 havia duas paletas, esta e uma segunda no `app.py`, que a
+# substituia so no desenho. A daqui nunca chegava ao ecra, e as duas divergiam
+# em sete das nove classes. Ficou a contida, que e a que estava a ser desenhada:
+# tons alinhados com a identidade, e nenhum deles o vermelho de alerta, que numa
+# paleta categorica sinalizaria um problema onde so ha uma categoria (decisao da
+# Ines, 31.08.2026).
+#
+# O campo `emoji` saiu na mesma passagem. Os emojis tinham sido retirados da
+# interface ha muito, mas o campo continuava a ser arrastado pelo `calculos.py`
+# para dentro dos DataFrames, a um passo de aparecer numa exportacao. Quem
+# identifica a classe agora e o `icone`, que e geometria e nao caractere.
 CLASSES = [
-    {"cod": "CP0111", "nome": "Cereais e derivados", "emoji": "🍞", "cor": "#C98B3A", "iva": 6,
+    {"cod": "CP0111", "nome": "Cereais e derivados", "cor": "#2B5683", "iva": 6,
      "oficial": "Cereais e produtos à base de cereais"},
-    {"cod": "CP0112", "nome": "Carne", "emoji": "🥩", "cor": "#C0392B", "iva": 6,
+    {"cod": "CP0112", "nome": "Carne", "cor": "#A8574B", "iva": 6,
      "oficial": "Animais vivos, carne e outras partes de animais terrestres abatidos"},
-    {"cod": "CP0113", "nome": "Peixe e produtos do mar", "emoji": "🐟", "cor": "#2980B9", "iva": 6,
+    {"cod": "CP0113", "nome": "Peixe e produtos do mar", "cor": "#4E86B8", "iva": 6,
      "oficial": "Peixe e outros produtos alimentares do mar"},
-    {"cod": "CP0114", "nome": "Leite, lácteos e ovos", "emoji": "🥛", "cor": "#8E9AAF", "iva": 6,
+    {"cod": "CP0114", "nome": "Leite, lácteos e ovos", "cor": "#8E9AAF", "iva": 6,
      "oficial": "Leite, outros produtos lácteos e ovos"},
-    {"cod": "CP0115", "nome": "Óleos e gorduras", "emoji": "🫒", "cor": "#B8A02E", "iva": 6,
+    {"cod": "CP0115", "nome": "Óleos e gorduras", "cor": "#BE9C54", "iva": 6,
      "oficial": "Óleos e gorduras"},
-    {"cod": "CP0116", "nome": "Fruta e frutos de casca rija", "emoji": "🍎", "cor": "#D35400", "iva": 6,
+    {"cod": "CP0116", "nome": "Fruta e frutos de casca rija", "cor": "#C97B3C", "iva": 6,
      "oficial": "Fruta e frutos de casca rija"},
-    {"cod": "CP0117", "nome": "Hortícolas, tubérculos e leguminosas", "emoji": "🥦", "cor": "#0E7433", "iva": 6,
+    {"cod": "CP0117", "nome": "Hortícolas, tubérculos e leguminosas", "cor": "#0E7433", "iva": 6,
      "oficial": "Produtos hortícolas, tubérculos, bananas-pão, bananas para "
                 "culinária e leguminosas"},
-    {"cod": "CP0118", "nome": "Açúcar, confeitaria e sobremesas", "emoji": "🍬", "cor": "#A0568F", "iva": 23,
+    {"cod": "CP0118", "nome": "Açúcar, confeitaria e sobremesas", "cor": "#7A5E8A", "iva": 23,
      "oficial": "Açúcar, confeitaria e sobremesas"},
-    {"cod": "CP0119", "nome": "Pré-preparados e outros", "emoji": "🧺", "cor": "#6B7280", "iva": 23,
+    {"cod": "CP0119", "nome": "Pré-preparados e outros", "cor": "#9AA5AE", "iva": 23,
      "oficial": "Alimentos pré-preparados e outros produtos alimentares n.e."},
 ]
 
 CODIGOS = [c["cod"] for c in CLASSES]
 POR_CODIGO = {c["cod"]: c for c in CLASSES}
+
+# --------------------------------------------------------------------------
+# Iconografia das categorias
+# --------------------------------------------------------------------------
+# Fonte unica dos simbolos. Nao ha biblioteca externa nem caracteres: cada icone
+# e o atributo `d` de um `<path>` SVG, desenhado numa grelha de 24x24, so com
+# tracado e sem preenchimento. O `app.py` monta o SVG a volta destes caminhos e
+# aplica-lhes a cor da classe; a geometria vive aqui para que grupos e produtos
+# tenham um sitio unico onde mudar.
+#
+# Regras do desenho, para quem acrescentar um simbolo: poucas linhas, formas
+# reconheciveis a 14 pixeis de altura, nenhum detalhe que so se veja em grande,
+# e a mesma espessura de traco em todos. Um ponto desenha-se com um segmento de
+# comprimento quase nulo (`h.01`), que a terminacao redonda transforma em disco.
+ICONES_CLASSE = {
+    # Espiga: haste e tres pares de graos.
+    "CP0111": "M12 21V6M12 11 8 8M12 11 16 8M12 15.5 8 12.5M12 15.5 16 12.5"
+              "M12 6.5 9 4.5M12 6.5 15 4.5",
+    # Peca de carne com o osso ao centro.
+    "CP0112": "M7.5 7.5h6.5a4.5 4.5 0 0 1 0 9H7.5a4.5 4.5 0 0 1 0-9z"
+              "M10 12h.01",
+    # Peixe: corpo em lente, cauda e olho.
+    "CP0113": "M3.5 12c3.2-4.6 9.3-4.6 12.5 0-3.2 4.6-9.3 4.6-12.5 0z"
+              "M16 12l4.5-3.2v6.4zM12.6 10.6h.01",
+    # Garrafa de leite.
+    "CP0114": "M10 3.8h4v2.6l2 3.2v9.9a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5V9.6z",
+    # Gota.
+    "CP0115": "M12 3.5s5.5 6 5.5 9.5a5.5 5.5 0 0 1-11 0C6.5 9.5 12 3.5 12 3.5z",
+    # Fruto redondo, com pe e folha.
+    "CP0116": "M12 20.5a6 6 0 1 1 0-12 6 6 0 0 1 0 12zM12 8.5V5.4"
+              "M12 6.4c1.6-2.1 4.3-1.8 4.3-1.8s.2 2.7-2.5 3.1",
+    # Folha com nervura.
+    "CP0117": "M5 19.5c-.8-8.5 5.5-14 14.5-15 1 9-4.5 15-14.5 15zM5 19.5 14.5 10",
+    # Rebucado embrulhado.
+    "CP0118": "M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM8 12 4 8.8v6.4zM16 12l4-3.2v6.4z",
+    # Tabuleiro de refeicao preparada.
+    "CP0119": "M4 10h16v9.5a.5.5 0 0 1-.5.5h-15a.5.5 0 0 1-.5-.5zM4 10l2.2-4h11.6L20 10",
+}
+
+# --------------------------------------------------------------------------
+# Setores do Observatório: cada um herda a cor do seu grupo COICOP
+# --------------------------------------------------------------------------
+# O Observatorio publica 39 produtos repartidos por 20 setores, e o setor e que
+# e a familia do produto: `carne-de-frango` traz quatro cortes, `trigo` traz tres
+# farinhas. O simbolo esta ao nivel do setor e nao do produto, porque distinguir
+# graficamente o Ovo M do Ovo L a 14 pixeis nao e sinalizacao, e ruido (decisao
+# da Ines, 31.08.2026).
+#
+# `grupo` e o codigo COICOP de onde vem a cor. E daqui que sai a leitura que o
+# separador precisa de tornar evidente: o icone diz o produto, a cor diz a
+# familia.
+SETORES_OBSERVATORIO = {
+    "alface": {"nome": "Alface", "grupo": "CP0117",
+               "icone": "M12 19.5a7 7 0 1 1 0-14 7 7 0 0 1 0 14z"
+                        "M8.2 8.4c1.6 3 1.6 6.6 0 9.6M15.8 8.4c-1.6 3-1.6 6.6 0 9.6"},
+    "arroz": {"nome": "Arroz", "grupo": "CP0111",
+              "icone": "M7.5 10.5 9.5 7M12.5 13.5 14.5 10M9.5 17 11.5 13.5"},
+    "azeite-3": {"nome": "Azeite", "grupo": "CP0115",
+                 "icone": "M10.5 3.8h3v2.4l2.2 2.9v10.4a.5.5 0 0 1-.5.5H8.8"
+                          "a.5.5 0 0 1-.5-.5V9.1z"},
+    "banana": {"nome": "Banana", "grupo": "CP0116",
+               "icone": "M6 7c0 6.6 5.1 11.2 11.7 11.2.5-1.5.5-3.1 0-4.2"
+                        "C12.1 14 8.6 11 8.1 7z"},
+    "batata": {"nome": "Batata", "grupo": "CP0117",
+               "icone": "M12 18.6c-3.9 0-6.6-2.9-6.6-6.6S8.6 5.4 12.5 5.4"
+                        "s6.6 2.9 6.6 6.6-3.2 6.6-7.1 6.6zM10.4 10.6h.01M13.9 13.4h.01"},
+    "carne-de-frango": {"nome": "Carne de frango", "grupo": "CP0112",
+                        "icone": "M16 4.5a4.5 4.5 0 0 1 0 9 4.5 4.5 0 0 1-3.6-1.8l-5 5"
+                                 "M7.4 16.7l-1.7 1.7M9.1 18.4l-1.7 1.7"},
+    "carne-de-porco": {"nome": "Carne de porco", "grupo": "CP0112",
+                       "icone": "M6.5 8h7.5a4 4 0 0 1 0 8H6.5a4 4 0 0 1 0-8z"
+                                "M10.5 12h.01"},
+    "cebola": {"nome": "Cebola", "grupo": "CP0117",
+               "icone": "M12 20c-3.6 0-6-2.4-6-5.5C6 10 9 7 12 4c3 3 6 6 6 10.5"
+                        "0 3.1-2.4 5.5-6 5.5zM9.6 13.6c0 3 .8 5 2.4 6.4"
+                        "M14.4 13.6c0 3-.8 5-2.4 6.4"},
+    "cenoura": {"nome": "Cenoura", "grupo": "CP0117",
+                "icone": "M11.8 20 6.8 10c2.2-1.4 5-1.4 7.2 0L11.8 20zM11.8 9.4V5.6"
+                         "M11.8 6.6 15 4.4M11.8 6.6 8.6 4.4"},
+    "couve": {"nome": "Couve", "grupo": "CP0117",
+              "icone": "M12 20v-5M8.5 15h7M9 15a2.5 2.5 0 1 1 .6-4.9 3 3 0 0 1 5.4-.6"
+                       "A2.5 2.5 0 1 1 15.6 15z"},
+    "curgete": {"nome": "Curgete", "grupo": "CP0117",
+                "icone": "M7 17.5c-1.5-1.5-1.5-4 1.5-7s5.5-3 7-1.5 1.5 4-1.5 7-5.5 3-7 1.5z"
+                         "M15.5 8.5 17 5.5"},
+    "laranja": {"nome": "Laranja", "grupo": "CP0116",
+                "icone": "M12 19.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13z"
+                         "M12 6.5v13M5.5 13h13"},
+    "laticinios-de-vaca": {"nome": "Lacticínios de vaca", "grupo": "CP0114",
+                           "icone": "M10 3.8h4v2.6l2 3.2v9.9a.5.5 0 0 1-.5.5h-7"
+                                    "a.5.5 0 0 1-.5-.5V9.6z"},
+    "maca": {"nome": "Maçã", "grupo": "CP0116",
+             "icone": "M12 20.5a6 6 0 1 1 0-12 6 6 0 0 1 0 12zM12 8.5V5.4"
+                      "M12 6.4c1.6-2.1 4.3-1.8 4.3-1.8s.2 2.7-2.5 3.1"},
+    "ovos-de-galinha": {"nome": "Ovos de galinha", "grupo": "CP0114",
+                        "icone": "M12 20c-3 0-5.5-2.2-5.5-5.2C6.5 10.5 9 4.5 12 4.5"
+                                 "s5.5 6 5.5 10.3c0 3-2.5 5.2-5.5 5.2z"},
+    "peixes": {"nome": "Peixes", "grupo": "CP0113",
+               "icone": "M3.5 12c3.2-4.6 9.3-4.6 12.5 0-3.2 4.6-9.3 4.6-12.5 0z"
+                        "M16 12l4.5-3.2v6.4zM12.6 10.6h.01"},
+    "pera": {"nome": "Pera", "grupo": "CP0116",
+             "icone": "M12 4.5c1.5 0 2 1.5 1.5 3 2 1.2 3 3.4 3 5.8 0 3.6-2 6.2-4.5 6.2"
+                      "S7.5 16.9 7.5 13.3c0-2.4 1-4.6 3-5.8-.5-1.5 0-3 1.5-3z"},
+    "pessego": {"nome": "Pêssego", "grupo": "CP0116",
+                "icone": "M12 19.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13z"
+                         "M12 6.5c-1.5 3-1.5 9.5 0 13"},
+    "tomate": {"nome": "Tomate", "grupo": "CP0117",
+               "icone": "M12 20a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM12 7V5"
+                        "M9 6l3 1.5L15 6"},
+    "trigo": {"nome": "Trigo", "grupo": "CP0111",
+              "icone": "M12 21V6M12 11 8 8M12 11 16 8M12 15.5 8 12.5M12 15.5 16 12.5"
+                       "M12 6.5 9 4.5M12 6.5 15 4.5"},
+}
 
 # --------------------------------------------------------------------------
 # Correspondência COICOP ↔ Código do IVA

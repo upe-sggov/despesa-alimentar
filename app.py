@@ -52,6 +52,7 @@ from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FO
                         ANO_BASE_VIES,
                         AZUL, CINZENTO, CLASSES, CLASSES_FONTE, CODIGOS,
                         COICOP_ALIMENTAR, DOURADO, ORGANISMO,
+                        ICONES_CLASSE, SETORES_OBSERVATORIO,
                         PAISES, PAISES_POR_DEFEITO, POR_CODIGO, RODAPE,
                         UNIDADE, VERDE, VERMELHO,
                         euro, mes_extenso, mes_homologo, mes_pt, milhoes,
@@ -95,28 +96,62 @@ GRELHA = "#EEF1F4"
 NEUTRO = "#B7C2CE"
 TIPO = "Lexend, 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', sans-serif"
 
-# Paleta categórica das nove classes COICOP. Substitui, **apenas na
-# apresentação**, as cores saturadas anteriores: são tons contidos, alinhados
-# com a identidade, e nenhum deles é o vermelho de alerta, que numa paleta
+# Paleta categórica das nove classes COICOP. Até 31.08.2026 estava escrita aqui,
+# a substituir na apresentação a paleta do `config`, e as duas divergiam em sete
+# das nove classes: o `config` dizia uma cor, o ecrã mostrava outra. Passou a
+# haver uma só, no `config`, e é esta função que a serve a toda a aplicação.
+# Os tons são contidos e nenhum deles é o vermelho de alerta, que numa paleta
 # categórica sinalizaria um problema onde só há uma categoria. A associação ao
 # tipo de produto mantém-se (peixe azul, hortícolas verde, óleos dourado) para
 # que a leitura do donut continue intuitiva.
-CORES_CLASSE = {
-    "CP0111": "#2B5683",   # Cereais e derivados
-    "CP0112": "#A8574B",   # Carne
-    "CP0113": "#4E86B8",   # Peixe e produtos do mar
-    "CP0114": "#8E9AAF",   # Leite, lácteos e ovos
-    "CP0115": "#BE9C54",   # Óleos e gorduras
-    "CP0116": "#C97B3C",   # Fruta e frutos de casca rija
-    "CP0117": "#0E7433",   # Hortícolas, tubérculos e leguminosas
-    "CP0118": "#7A5E8A",   # Açúcar, confeitaria e sobremesas
-    "CP0119": "#9AA5AE",   # Pré-preparados e outros
-}
-
-
 def cor_classe(codigo: str, recuo: str = NEUTRO) -> str:
     """Cor de apresentação de uma classe COICOP."""
-    return CORES_CLASSE.get(str(codigo), recuo)
+    classe = POR_CODIGO.get(str(codigo))
+    return classe["cor"] if classe else recuo
+
+
+def icone_classe(codigo: str, cor: str | None = None, tamanho: int = 14) -> str:
+    """
+    SVG de um grupo COICOP, já com a cor da classe.
+
+    Devolve cadeia vazia se o código não tiver símbolo, para que quem o insere
+    não tenha de saber quais têm: um grupo sem ícone perde a sinalização, não
+    parte o cartão.
+    """
+    return _svg(ICONES_CLASSE.get(str(codigo)), cor or cor_classe(codigo), tamanho)
+
+
+def icone_setor(setor: str, tamanho: int = 14) -> str:
+    """SVG de um setor do Observatório, com a cor herdada do seu grupo COICOP."""
+    s = SETORES_OBSERVATORIO.get(str(setor))
+    if not s:
+        return ""
+    return _svg(s["icone"], cor_classe(s["grupo"]), tamanho)
+
+
+def _svg(caminho: str | None, cor: str, tamanho: int) -> str:
+    """
+    Envolve um caminho do `config` num SVG em linha.
+
+    Traço e nunca preenchimento, terminações redondas, e `currentColor` não
+    serve aqui porque o SVG vai dentro de HTML solto onde a cor herdada é a do
+    texto: a cor entra explícita.
+    """
+    if not caminho:
+        return ""
+    return (f'<svg class="sg-icone" width="{tamanho}" height="{tamanho}" '
+            f'viewBox="0 0 24 24" fill="none" stroke="{cor}" stroke-width="1.6" '
+            f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            f'<path d="{caminho}"/></svg>')
+
+
+# Houve aqui uma `etiqueta_classe`, que punha o nome do grupo numa pastilha com
+# o fundo a 12% da cor, e a `tinta` que calculava esse fundo. Saíram a pedido da
+# Inês (31.08.2026): o único sítio onde a etiqueta era usada era a linha do
+# produto no Observatório, e ali o nome da classe COICOP dizia em texto longo o
+# que a cor do símbolo já diz. Sem utilizador, era código a envelhecer sozinho.
+# Se um dia o fundo ténue for preciso nas tabelas, volta com a forma que essa
+# necessidade lhe der.
 
 
 st.markdown(f"""
@@ -492,6 +527,19 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   .sg-hero__s {{ text-align: left; }}
 }}
 
+/* ---------- símbolos das categorias ----------------------------------- */
+/* Sinalização, não decoração: o símbolo identifica e a cor reforça, e nenhum
+   dos dois pode disputar atenção com o nome ou com o valor ao lado. Vai sempre
+   sem fundo, dentro da caixa que já existe (31.08.2026). */
+.sg-icone {{ flex: 0 0 auto; vertical-align: -.15em; }}
+.sg-cartao__topo .sg-icone {{ margin-right: .45rem; }}
+/* Linha de identificação de um produto do Observatório: símbolo do produto,
+   nome, e o grupo a que pertence numa etiqueta menor. */
+[data-testid="stMarkdownContainer"] p.sg-produto {{
+  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+  margin: .1rem 0 .55rem; }}
+.sg-produto__nome {{ font-size: 1rem; font-weight: 600; color: var(--sg-texto); }}
+
 /* ---------- cartões de indicador -------------------------------------- */
 .sg-cartao {{
   background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
@@ -512,12 +560,12 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 [data-testid="stColumn"]:has(.sg-cartao) [data-testid="stMarkdown"] {{ height: 100%; }}
 .sg-cartao__topo {{ display: flex; align-items: baseline;
   justify-content: space-between; gap: .8rem; }}
+/* Alinha ao centro e não à linha de base: o quadrado de 7 px assentava na
+   base do texto, mas um símbolo de 14 px assim fica descaído. */
 .sg-cartao__nome {{ font-size: .875rem; font-weight: 600; color: var(--sg-texto);
-  line-height: 1.35; display: flex; align-items: baseline; gap: .5rem; }}
-.sg-cartao__marca {{ width: 7px; height: 7px; flex: 0 0 7px; border-radius: 1px;
-  background: var(--sg-cor, var(--sg-borda-2)); }}
+  line-height: 1.35; display: flex; align-items: center; gap: .45rem; }}
 .sg-cartao__cod {{ font-size: .6875rem; letter-spacing: .06em; color: var(--sg-texto-3);
-  margin: .3rem 0 0; padding-left: calc(7px + .5rem); }}
+  margin: .3rem 0 0; padding-left: calc(14px + .45rem); }}
 /* Mesmo corpo do valor de um indicador secundário: os cartões de grupo e os
    `st.metric` são o mesmo degrau da escala, e tinham 24 px contra 22 px. */
 [data-testid="stMarkdownContainer"] p.sg-cartao__valor {{
@@ -1795,7 +1843,7 @@ def cartao_classe(linha: pd.Series) -> str:
     return f"""
     <div class="sg-cartao" style="--sg-cor:{cor_classe(cod)}">
       <div class="sg-cartao__topo">
-        <span class="sg-cartao__nome"><span class="sg-cartao__marca"></span>{linha['classe']}</span>
+        <span class="sg-cartao__nome">{icone_classe(cod)}{linha['classe']}</span>
       </div>
       <p class="sg-cartao__valor">{euro(linha['valor'])}</p>
       <p class="sg-cartao__desc">{quota}% da despesa alimentar mensal</p>
@@ -4458,6 +4506,20 @@ with aba6:
 
             _serie = observatorio.serie_produto(_obs, _escolhido)
             _linha = _var[_var["produto"] == _escolhido].iloc[0]
+
+            # O símbolo diz o produto, a cor diz a família. O nome do grupo
+            # chegou a acompanhar esta linha, e saiu: escrever "Hortícolas,
+            # tubérculos e leguminosas" ao lado de "Brócolo" é dizer em texto
+            # longo o que a cor já diz, e o nome da classe COICOP é mais comprido
+            # do que o do produto que devia identificar (decisão da Inês,
+            # 31.08.2026).
+            _sec = _obs.loc[_obs["produto"] == _escolhido, "setor"]
+            _sec = _sec.iloc[0] if not _sec.empty else None
+            if _sec in SETORES_OBSERVATORIO:
+                st.markdown(
+                    f'<p class="sg-produto">{icone_setor(_sec, tamanho=17)}'
+                    f'<span class="sg-produto__nome">{_html(_escolhido)}</span></p>',
+                    unsafe_allow_html=True)
 
             # A janela deste produto, escrita por extenso, porque **não é a
             # mesma para todos**. Seis dos 39 acabam antes dos restantes, por a

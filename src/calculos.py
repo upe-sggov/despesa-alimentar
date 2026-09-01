@@ -323,7 +323,6 @@ def decompor(valor_total: float,
             # cartões; a oficial tem de acompanhar a tabela e as exportações,
             # que saem da aplicação e circulam sozinhas.
             "classe_oficial": classe["oficial"],
-            "emoji": classe["emoji"],
             "cor": classe["cor"],
             "ponderador": peso,
             "quota": quota,
@@ -411,7 +410,6 @@ def simular_iva(df: pd.DataFrame,
         linhas.append({
             "codigo": cod,
             "classe": linha["classe"],
-            "emoji": linha["emoji"],
             "cor": linha["cor"],
             "valor": valor,
             "taxa_atual": t0,
@@ -791,7 +789,6 @@ def composicao_quintis() -> pd.DataFrame:
             linhas.append({
                 "codigo": cod,
                 "classe": classe["nome"],
-                "emoji": classe["emoji"],
                 "cor": classe["cor"],
                 "quintil": chave,
                 "quintil_nome": nome,
@@ -1024,7 +1021,6 @@ def composicao_iva(pesos_sub: dict[str, float]) -> pd.DataFrame:
         linhas.append({
             "codigo": cod,
             "classe": classe["nome"],
-            "emoji": classe["emoji"],
             "iva_defeito": classe["iva"],
             "peso": total,
             "peso_publicado": publicado,
@@ -1298,7 +1294,7 @@ def comparar_ponderadores(pesos_ihpc: dict[str, float],
     inf_idf, quota_idf = _agregar(pesos_idf)
 
     desvios = [
-        {"codigo": c["cod"], "classe": c["nome"], "emoji": c["emoji"],
+        {"codigo": c["cod"], "classe": c["nome"],
          "quota_ihpc": quota_ihpc.get(c["cod"]), "quota_idf": quota_idf.get(c["cod"]),
          "desvio": (quota_ihpc.get(c["cod"], 0.0) - quota_idf.get(c["cod"], 0.0))}
         for c in CLASSES if quota_ihpc and quota_idf

@@ -2043,21 +2043,36 @@ def test_os_ficheiros_de_dados_vao_para_o_repositorio():
     publicada, sem erro nenhum, so sem dados.
 
     A propriedade e serem **seguidos**, e nao o `.gitignore` ter uma linha
-    concreta. A primeira versao deste teste exigia `!dados/`, que so faz sentido
-    na copia publicada dentro do repositorio da UPE, onde o `.gitignore` da raiz
-    tem `Dados/`, escrito para as camadas do Medallion, e no Windows apanha
-    tambem esta pasta por a comparacao de nomes ser indiferente a maiusculas.
-    Aqui esse problema nao existe, e o teste falhava por uma razao que nao era a
-    sua (20.08.2026).
+    concreta. A primeira versao exigia `!dados/`, que so faz sentido nesta copia,
+    dentro do repositorio da UPE, onde o `.gitignore` da raiz tem `Dados/`,
+    escrito para as camadas do Medallion, e no Windows apanha tambem esta pasta
+    por a comparacao de nomes ser indiferente a maiusculas. Na copia autonoma
+    publicada no GitHub esse problema nao existe, e o teste falhava por uma razao
+    que nao era a sua. Escrito assim, serve as duas copias sem alteracao
+    (versao vinda do GitHub, adotada aqui a 31.08.2026).
+
+    Verifica **todos** os ficheiros presentes, e nao dois pelo nome. Um ficheiro
+    ja seguido continua a se-lo mesmo que o `.gitignore` deixe de o recuperar:
+    quem fica de fora e o ficheiro **novo**, e e esse o caso que precisa de
+    alarme.
     """
     import subprocess
     from pathlib import Path
 
     raiz = Path(__file__).resolve().parent.parent
-    if not (raiz / ".git").exists():
+
+    # Nao se pergunta se ha um `.git` **nesta pasta**: na copia autonoma ha, mas
+    # aqui o repositorio e a raiz da UPE, varios niveis acima, e a verificacao
+    # saltava o teste justamente na copia onde a regra `!dados/` faz falta
+    # (31.08.2026). Pergunta-se ao git se a pasta esta sob controlo de versoes,
+    # que e a condicao de que o teste depende.
+    dentro = subprocess.run(
+        ["git", "-C", str(raiz), "rev-parse", "--is-inside-work-tree"],
+        capture_output=True, text=True)
+    if dentro.stdout.strip() != "true":
         import pytest
 
-        pytest.skip("copia publicada, sem repositorio proprio")
+        pytest.skip("pasta fora de um repositorio git")
 
     seguidos = subprocess.run(
         ["git", "-C", str(raiz), "ls-files", "dados"],
@@ -2066,6 +2081,14 @@ def test_os_ficheiros_de_dados_vao_para_o_repositorio():
     assert seguidos, "a pasta dados/ nao tem ficheiros seguidos pelo git"
     for necessario in ("dados/observatorio.csv", "dados/observatorio_meta.json"):
         assert necessario in seguidos, necessario
+
+    em_disco = {f"dados/{f.name}" for f in (raiz / "dados").iterdir() if f.is_file()}
+    de_fora = sorted(em_disco - set(seguidos))
+    assert not de_fora, (
+        f"ficheiros em dados/ que o git não segue: {', '.join(de_fora)}. "
+        "Não chegam ao Streamlit, e o separador que depende deles fica vazio "
+        "sem dar erro. Confirme com `git check-ignore -v` qual é a regra que "
+        "os apanha.")
 
 
 # --------------------- alinhamento dos cartoes de indicador, 20.08.2026
@@ -2117,6 +2140,78 @@ def test_a_folha_de_estilo_tem_as_chavetas_equilibradas():
         profundidade += linha.count("{") - linha.count("}")
         assert profundidade >= 0, linha
     assert profundidade == 0
+
+
+# --------------------- iconografia das categorias, 31.08.2026
+def test_ha_uma_so_paleta_das_classes():
+    """
+    Havia duas: a do `config` e uma segunda escrita no `app.py`, que a
+    substituia no desenho. Divergiam em sete das nove classes, e por isso a cor
+    que o codigo declarava nao era a que o ecra mostrava. O `app.py` nao pode
+    voltar a inscrever cores de classe: le-as do `config`.
+    """
+    from src.config import CLASSES
+
+    vivo = _fonte_viva("app.py")
+    assert "CORES_CLASSE" not in vivo, (
+        "voltou a haver uma paleta das classes no app.py. A cor de cada classe "
+        "vive no config, e o app serve-a pela `cor_classe`.")
+    for c in CLASSES:
+        assert c["cor"] not in vivo, (
+            f"{c['cod']}: a cor {c['cor']} esta escrita a mao no app.py.")
+
+
+def test_cada_classe_tem_simbolo_e_nenhuma_tem_emoji():
+    """
+    O simbolo e geometria, nao caractere: um emoji traz o estilo do sistema
+    operativo, muda de desenho entre plataformas e le-se como interface de
+    consumo. O campo `emoji` saiu do config e do calculo a 31.08.2026.
+    """
+    from src.config import CLASSES, CODIGOS, ICONES_CLASSE
+
+    assert set(ICONES_CLASSE) == set(CODIGOS), "ha classes sem simbolo"
+    for cod, caminho in ICONES_CLASSE.items():
+        assert caminho.startswith("M"), f"{cod}: o caminho tem de comecar num M"
+        assert "<" not in caminho, f"{cod}: e o atributo d, nao o SVG inteiro"
+
+    for c in CLASSES:
+        assert "emoji" not in c, f"{c['cod']} voltou a ter emoji"
+    assert "emoji" not in _fonte("src/calculos.py"), (
+        "o calculo voltou a arrastar o emoji para dentro dos DataFrames, de "
+        "onde chega as exportacoes.")
+
+
+def test_cada_setor_do_observatorio_herda_a_cor_de_um_grupo():
+    """
+    A regra do separador da producao ao consumo: o icone identifica o produto, a
+    cor identifica a familia. Um setor apontado a um grupo que nao existe deixa
+    o produto sem cor, e a relacao produto -> grupo por declarar.
+
+    Verifica-se contra a recolha em vigor, e nao contra uma lista escrita a mao:
+    se o Observatorio publicar um setor novo, e aqui que se da por isso.
+    """
+    from pathlib import Path
+
+    import pandas as pd
+
+    from src.config import CODIGOS, SETORES_OBSERVATORIO
+
+    for slug, s in SETORES_OBSERVATORIO.items():
+        assert s["grupo"] in CODIGOS, f"{slug}: grupo {s['grupo']} nao existe"
+        assert s["icone"].startswith("M"), f"{slug}: caminho invalido"
+        assert s["nome"], slug
+
+    ficheiro = Path(__file__).resolve().parent.parent / "dados" / "observatorio.csv"
+    if not ficheiro.exists():
+        import pytest
+
+        pytest.skip("sem recolha do Observatorio neste ambiente")
+
+    recolhidos = set(pd.read_csv(ficheiro)["setor"].unique())
+    em_falta = sorted(recolhidos - set(SETORES_OBSERVATORIO))
+    assert not em_falta, (
+        f"setores na recolha sem simbolo nem grupo: {', '.join(em_falta)}. "
+        "Os produtos desses setores ficam sem identificacao visual.")
 
 
 # --------------------- agregados do indice: o total nao pode trazer tabaco
