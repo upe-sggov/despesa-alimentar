@@ -2462,6 +2462,10 @@ with aba1:
     with _c_comp:
         st.markdown('<p class="sg-grupo">Composição do agregado</p>',
                     unsafe_allow_html=True)
+        # A instrução vem antes dos contadores e não depois: quem não reconhece
+        # os botões como controlos precisa de a ler **antes** de olhar para o
+        # número, não a seguir (Inês, 01.09.2026).
+        st.caption("Use o **−** e o **+**, ou escreva o número.")
         # Um por linha, e não dois lado a lado. Repartidos em duas sub-colunas
         # de uma coluna que já é um quarto da página, o campo ficava tão estreito
         # que o Streamlit deixava de desenhar o “−” e o “+”: o contador passava a
@@ -2484,7 +2488,6 @@ with aba1:
                 help=("14 anos é o limiar definido pelas próprias escalas de equivalência "
                       "da OCDE e do Eurostat, não é a definição demográfica de criança. "
                       "Ver separador Metodologia."))
-        st.caption("Use o **−** e o **+**, ou escreva o número.")
 
 
     # A dimensão média do agregado entra em **todos** os valores em euros, pelo
@@ -5989,7 +5992,11 @@ with aba5:
         # cinco blocos documentais, que é o que permite procurar.
         bloco("01 · Conceitos e definições", topo=True)
 
-        with st.expander("Delimitação do conceito de cabaz", expanded=True):
+        # Abria aberto, e era o único dos 40 expansores da aplicação a fazê-lo.
+        # Fechado por decisão da Inês (01.09.2026): a regra do separador é que o
+        # leitor abre o que procura, e um bloco aberto à entrada é a parede de
+        # texto que essa regra existe para evitar.
+        with st.expander("Delimitação do conceito de cabaz"):
             st.markdown("""
     **Não existe um cabaz alimentar oficial em Portugal.** Existem pelo menos seis instrumentos,
     com naturezas e finalidades diferentes, que o debate público tende a fundir num só. A primeira

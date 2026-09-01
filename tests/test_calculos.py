@@ -2216,6 +2216,22 @@ def test_o_alarme_de_cobertura_continua_acima_das_abas():
     assert i_tabs < i_uso, "o alarme e escrito antes de a decomposicao existir"
 
 
+def test_nenhum_bloco_recolhivel_abre_aberto():
+    """
+    A regra da aplicacao, e sobretudo do separador de metodologia: o leitor abre
+    o que procura, e nao ha parede de texto a entrada. Um bloco que abra aberto
+    desfaz isso para toda a gente, e nao so para quem o queria ler.
+
+    Havia um, o primeiro da metodologia, que escapava a regra desde que foi
+    escrito. Fechado a 01.09.2026, por decisao da Ines.
+    """
+    vivo = _fonte_viva("app.py")
+    assert "expanded=True" not in vivo, (
+        "um bloco recolhível voltou a abrir aberto. Se for mesmo para ficar "
+        "assim, apague também este teste; caso contrário, deixe-o fechado e o "
+        "leitor abre o que procura.")
+
+
 def test_so_o_simulador_declara_a_base_herdada():
     """
     A regra: a ausencia de etiqueta e a informacao. Um separador sem etiqueta e
