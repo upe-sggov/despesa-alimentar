@@ -527,23 +527,6 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   .sg-hero__s {{ text-align: left; }}
 }}
 
-/* ---------- parâmetro herdado de outro separador ----------------------- */
-/* Uma linha de metadados e não um aviso: o simulador não escolhe a base, herda
-   a que está em “Despesa e composição”, e quem lê o resultado tem de saber
-   qual é sem sair daqui. Discreta de propósito, que o dado principal é o
-   resultado da simulação e não este rótulo (31.08.2026). */
-[data-testid="stMarkdownContainer"] p.sg-heranca {{
-  display: flex; align-items: baseline; gap: .55rem; flex-wrap: wrap;
-  margin: -.35rem 0 1.25rem; padding: .4rem .7rem;
-  border-left: 2px solid var(--sg-azul); background: var(--sg-superficie);
-  font-size: .75rem; letter-spacing: .04em; text-transform: uppercase;
-  color: var(--sg-texto-3);
-}}
-p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
-  text-transform: none; color: var(--sg-texto); font-weight: 600; }}
-.sg-heranca__onde {{ letter-spacing: 0; text-transform: none;
-  color: var(--sg-texto-3); }}
-
 /* ---------- símbolos das categorias ----------------------------------- */
 /* Sinalização, não decoração: o símbolo identifica e a cor reforça, e nenhum
    dos dois pode disputar atenção com o nome ou com o valor ao lado. Vai sempre
@@ -858,14 +841,6 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 }}
 [data-testid="stSidebar"] [data-testid="stNumberInput"],
 [data-testid="stSidebar"] [data-testid="stNumberInput"]
-    > :not([data-testid="stWidgetLabel"]) {{ max-width: none; }}
-/* Os dois contadores da composição do agregado vivem numa coluna estreita, e o
-   limite acima estreitava-os ao ponto de o Streamlit deixar de desenhar o “−” e
-   o “+”: o contador passava a parecer um valor fixo e nada dizia que se podia
-   alterar. Aqui o campo leva a largura da coluna, que já é o limite
-   (relatado pela Inês, 01.09.2026). */
-.st-key-comp-agregado [data-testid="stNumberInput"],
-.st-key-comp-agregado [data-testid="stNumberInput"]
     > :not([data-testid="stWidgetLabel"]) {{ max-width: none; }}
 /* Na barra lateral os botões são ações secundárias, não chamadas à ação. */
 [data-testid="stSidebar"] .stButton > button {{
@@ -2211,15 +2186,10 @@ ultimo_mes = dados["mes_variacoes"] or (
 # Barra lateral, parâmetros
 # ==========================================================================
 with st.sidebar:
-    # Dizia "Parâmetros de análise · Definem a base de despesa e o agregado a que
-    # todos os valores da aplicação se referem". Deixou de ser verdade a
-    # 31.08.2026: a base e o agregado passaram para o topo de "Despesa e
-    # composição", onde actuam, e o que resta aqui é o estado dos dados.
     st.markdown(
-        '<p class="sg-lateral__t">Estado dos dados</p>'
-        '<p class="sg-lateral__d">Período a que se referem e momento em que '
-        'foram obtidos. A base de cálculo e o agregado definem-se no separador '
-        '“Despesa e composição”.</p>',
+        '<p class="sg-lateral__t">Parâmetros de análise</p>'
+        '<p class="sg-lateral__d">Definem a base de despesa e o agregado a que '
+        'todos os valores da aplicação se referem.</p>',
         unsafe_allow_html=True)
 
     # --- número de agregados: sempre o valor oficial, no ano mais recente ---
@@ -2241,6 +2211,296 @@ with st.sidebar:
             "Consulte o registo de ligações no separador Metodologia."
         )
         st.stop()
+
+    # --- base de cálculo: as duas fontes oficiais não coincidem ---
+    # As opções são **as bases efetivamente calculáveis nesta sessão**, e não a
+    # lista fixa: se as Contas Nacionais não responderem, o IDF continua a
+    # funcionar sozinho, é uma constante publicada atualizada pelo índice
+    # (auditoria de 12.08.2026, L2).
+    _bases_disp = [k for k in BASES_ANCORA if k in ancora["bases"]]
+    st.markdown('<p class="sg-grupo sg-grupo--primeiro">Base de cálculo</p>',
+                unsafe_allow_html=True)
+    # Lugar reservado para o (i) do grupo, preenchido no fim: o que ele diz
+    # depende da base que for escolhida no seletor abaixo, e o Streamlit desenha
+    # por ordem de execução.
+    _slot_nota_base = st.empty()
+    if len(_bases_disp) == 1:
+        base_chave = _bases_disp[0]
+        st.info(
+            f"Só a base **{BASES_ANCORA[base_chave]['nome']}** está disponível nesta "
+            "sessão. A outra depende de uma ligação que não respondeu, ver o registo "
+            "de ligações no separador Metodologia. **Não há intervalo: o valor "
+            "apresentado é um ponto de uma só base.**"
+        )
+    else:
+        base_chave = st.radio(
+            "Base de cálculo",
+            options=_bases_disp,
+            index=(_bases_disp.index(BASE_POR_DEFEITO)
+                   if BASE_POR_DEFEITO in _bases_disp else 0),
+            format_func=lambda k: BASES_ANCORA[k]["nome"],
+            label_visibility="collapsed",
+            help=("As duas fontes oficiais medem grandezas diferentes e divergem por um fator "
+                  "próximo de 2. Nenhuma das duas mede isoladamente a grandeza pretendida, "
+                  "pelo que a aplicação apresenta o intervalo. Ver separador Metodologia."),
+        )
+    base_ancora = ancora["bases"][base_chave]
+    outra_chave = next((k for k in ancora["bases"] if k != base_chave), None)
+    outra_ancora = ancora["bases"][outra_chave] if outra_chave else None
+
+    media_agregado = float(base_ancora["valor"])
+    valor_medio_agregado = media_agregado
+    dim_media = dados.get("dimensao_media")
+
+    # A verificação de plausibilidade existe para dizer “não use estes números”,
+    # e só olhava para a base **ativa**. Com a âncora das Contas Nacionais
+    # absurda e o IDF escolhido, a aplicação não dava alarme nenhum, e mostrava
+    # à mesma o valor absurdo, no intervalo da barra lateral, no cartão de topo
+    # e na sensibilidade do simulador (auditoria de 12.08.2026, M1).
+    _suspeitas = [b["nome"] for b in ancora["bases"].values()
+                  if not b.get("plausivel", True)]
+    _outra_suspeita = (outra_ancora is not None
+                       and not outra_ancora.get("plausivel", True))
+
+    # As duas legendas (o intervalo entre bases e a idade da base) recolheram-se
+    # a um (i) junto ao título do grupo: são qualificações do seletor, e em texto
+    # corrido ocupavam metade do espaço visível da barra lateral
+    # (decisão da Inês, 13.08.2026).
+    #
+    # Um popover e não o (i) do `secao()`: aquele é dado pelo cabeçalho do
+    # Streamlit, que nesta largura sairia maior do que o rótulo do grupo.
+    #
+    # Os alarmes de implausibilidade **não** entram aqui: são para ver sem
+    # procurar, e ficam no corpo da barra.
+    _nota_base = []
+    if outra_ancora is not None:
+        _nota_base.append(
+            f"Intervalo entre as duas bases: **{euro(ancora['minimo'])} a "
+            f"{euro(ancora['maximo'])}** por mês, para o agregado médio. "
+            f"O ponto central não é determinável."
+            + (f" Um dos extremos vem de **{outra_ancora['nome']}**, que está fora do "
+               "intervalo plausível, ver o alarme na barra lateral."
+               if _outra_suspeita else ""))
+        # O que separa as duas bases não é a fonte, é a pergunta: uma mede a
+        # despesa dos agregados residentes, a outra o consumo no território. O
+        # rácio é **calculado**, não inscrito: move-se com o mês do índice,
+        # porque as duas bases são indexadas a partir de períodos de referência
+        # diferentes, e um número escrito à mão desatualizava-se em silêncio
+        # (é o modo de falha que o L16 fechou noutro sítio).
+        _racio_bases = (ancora["maximo"] / ancora["minimo"]
+                        if ancora["minimo"] else None)
+        if _racio_bases and _racio_bases > 1.05:
+            _racio_txt = numero(_racio_bases, 1)
+            if base_chave == "idf":
+                _nota_base.append(
+                    "A base ativa é a que mede a **despesa das famílias residentes**; a outra "
+                    f"mede o **consumo no território** e é cerca de {_racio_txt} vezes superior, "
+                    "por razões que a metainformação do INE explica. Ver “O que são as Contas "
+                    "Nacionais e o que medem”, no separador da metodologia.")
+            else:
+                _nota_base.append(
+                    "A base ativa é a que mede o **consumo no território**, cerca de "
+                    f"{_racio_txt} vezes a **despesa das famílias residentes** medida pela outra, "
+                    "por razões que a metainformação do INE explica. Ver “O que são as Contas "
+                    "Nacionais e o que medem”, no separador da metodologia.")
+    else:
+        _nota_base.append(
+            f"**{euro(media_agregado)}** por mês para o agregado médio, na única base "
+            f"disponível. Com as duas bases a aplicação apresentaria um intervalo.")
+
+    # A idade da base tem de estar acessível, não só no registo de ligações: a
+    # despesa é atualizada por preços, mas a estrutura de consumo é a do ano de
+    # referência (auditoria de 10.08.2026, B2).
+    _idade_base = date.today().year - int(base_ancora["ano_fim"])
+    if _idade_base >= 2:
+        _nota_base.append(
+            f"Base de **{base_ancora['ano_base']}**, {_idade_base} anos de atraso. "
+            "Os preços estão atualizados ao mês corrente; a **estrutura de consumo** "
+            f"é a de {base_ancora['ano_base']}.")
+
+    with _slot_nota_base.popover("Sobre esta base", icon=":material/info:"):
+        for _n in _nota_base:
+            st.markdown(_n)
+
+    if not base_ancora.get("plausivel", True):
+        st.error(
+            f"**A base ativa ({base_ancora['nome']}) está fora do intervalo plausível**, "
+            f"{euro(media_agregado)}/mês por agregado. Verifique o registo de ligações "
+            "no separador Metodologia. **Os valores apresentados não devem ser utilizados.**"
+        )
+    elif _outra_suspeita:
+        # A base ativa está sã, mas a outra não, e a outra aparece em três
+        # sítios: o extremo do intervalo aqui em cima, o “Na outra base seria…”
+        # do cartão de topo, e a sensibilidade à base no simulador de IVA.
+        st.error(
+            f"**A base {outra_ancora['nome']} está fora do intervalo plausível**, "
+            f"{euro(outra_ancora['valor'])}/mês por agregado. A base ativa "
+            f"(**{base_ancora['nome']}**, {euro(media_agregado)}/mês) não é afetada, mas "
+            "**ignore o intervalo, o valor “na outra base” e a sensibilidade à base no "
+            "simulador de IVA**, todos consomem esse número. Verifique o registo de "
+            "ligações no separador Metodologia."
+        )
+
+    st.markdown('<p class="sg-grupo">Composição do agregado</p>',
+                unsafe_allow_html=True)
+    ca, cb = st.columns(2)
+    adultos = ca.number_input(
+        "Com 14+ anos", min_value=1, max_value=10, value=2, step=1,
+        help=("Todas as pessoas com 14 ou mais anos, incluindo jovens dependentes. "
+              "A partir dessa idade, a escala de equivalência atribui a mesma "
+              "ponderação alimentar de um adulto, independentemente de a pessoa "
+              "auferir rendimento próprio."))
+    criancas = cb.number_input(
+        "Menos de 14 anos", min_value=0, max_value=10, value=0, step=1,
+        help=("14 anos é o limiar definido pelas próprias escalas de equivalência "
+              "da OCDE e do Eurostat, não é a definição demográfica de criança. "
+              "Ver separador Metodologia."))
+
+    # A dimensão média do agregado entra em **todos** os valores em euros, pelo
+    # lado do denominador de `despesa_do_agregado`. Se a série do EU-SILC não
+    # responder, entra uma constante, e isso tem de ser dito, como já se diz do
+    # número de agregados e das fontes sem API. Era o único recuo da aplicação
+    # que acontecia em silêncio (auditoria de 12.08.2026, L6).
+    dim_efetiva = dim_media if dim_media else DIMENSAO_RECUO
+    if not dim_media:
+        st.warning(
+            f"**A dimensão média do agregado não foi obtida nesta sessão.** Entra a "
+            f"constante de recuo, **{numero(DIMENSAO_RECUO, 1)} pessoas** "
+            f"({DIMENSAO_RECUO_FONTE}), que envelhece: a dimensão média está em queda "
+            "em toda a Europa. **Todos os valores em euros por agregado dependem deste "
+            "número.** Consulte o registo de ligações no separador Metodologia."
+        )
+    # A escala tinha ficado dentro do grupo da composição, sem cabeçalho
+    # próprio, apesar de ser um terceiro parâmetro independente dos outros dois.
+    st.markdown('<p class="sg-grupo">Escala de equivalência</p>',
+                unsafe_allow_html=True)
+    _escala_apurada = escala_mais_proxima()
+    escala_chave = st.selectbox(
+        "Escala de equivalência", options=list(ESCALAS.keys()),
+        index=list(ESCALAS.keys()).index(_escala_apurada) if _escala_apurada else 1,
+        format_func=lambda k: (ESCALAS[k]["nome"]
+                               + (", apurada" if k == _escala_apurada else "")),
+        help=("Como se ajusta a despesa ao número de pessoas. A assinalada como "
+              "“apurada” é a que, no teste contra o Inquérito às Despesas das Famílias "
+              "(IDF) de 2022/2023, fica mais perto da despesa alimentar observada. "
+              "Ver separador Metodologia."),
+    )
+    if _escala_apurada and escala_chave != _escala_apurada:
+        st.caption(
+            f"A escala escolhida não é a que melhor reproduz a despesa alimentar observada "
+            f"(**{ESCALAS[_escala_apurada]['nome'].split(' (')[0]}**). Ver o teste no "
+            f"separador Metodologia."
+        )
+
+    despesa_mensal = despesa_do_agregado(
+        media_agregado, dim_efetiva, adultos, criancas, escala_chave)
+    faixa = intervalo_agregado(media_agregado, dim_efetiva, adultos, criancas)
+
+    # O rótulo tem de refletir o que a escala mede: pessoas com 14 ou mais anos
+    # pesam como adultos, tenham ou não rendimento próprio.
+    if criancas:
+        composicao = (f"{adultos} com 14+ anos e {criancas} "
+                      + ("menores de 14" if criancas > 1 else "menor de 14"))
+    else:
+        composicao = f"{adultos} pessoa{'s' if adultos > 1 else ''} com 14+ anos"
+    pessoas = adultos + criancas
+    ue = unidades_equivalentes(adultos, criancas, escala_chave)
+    origem = (f"{base_ancora['nome']} · {composicao} · "
+              f"escala {ESCALAS[escala_chave]['nome']}")
+    vezes_ano = 12
+
+    # O grupo “Despesa estimada” repetia na barra lateral o indicador que abre o
+    # separador Despesa e composição, mesmo rótulo, mesmo valor, e agora também
+    # a mesma posição, logo abaixo. Saiu, e com ele o cabeçalho do grupo: o que
+    # resta é o comparador das escalas, que pertence ao seletor de escala logo
+    # acima e não existe em mais lado nenhum (decisão da Inês, 13.08.2026).
+    with st.expander("Comparar as três escalas"):
+        maior_que_media = pessoas > dim_efetiva
+        st.dataframe(
+            pd.DataFrame([
+                {"Escala": ESCALAS[k]["nome"].split(" (")[0],
+                 "Coeficientes": f"{ESCALAS[k]['primeiro']:.0f} / "
+                                 f"{ESCALAS[k]['adulto']:.1f} / "
+                                 f"{ESCALAS[k]['crianca']:.1f}".replace(".", ","),
+                 "Despesa (€)": round(faixa["por_escala"][k], 2)}
+                for k in ESCALAS
+            ]), width="stretch", hide_index=True)
+
+        st.markdown(f"""
+**Efeito dos coeficientes da escala sobre o valor apurado**
+
+O ponto de partida é sempre o **agregado médio português, {('%.2f' % dim_efetiva).replace('.', ',')} pessoas**.
+A escala não calcula a despesa a partir do zero: **ajusta** desse agregado médio para o agregado
+selecionado, e é aplicada aos **dois lados** do cálculo, ao agregado selecionado e ao agregado
+médio que serve de referência.
+
+Daí resulta o comportamento seguinte:
+
+| Agregado selecionado | Escala com economias de escala mais fortes |
+|---|---|
+| **Menor** que {('%.2f' % dim_efetiva).replace('.', ',')} pessoas | valor **mais alto** |
+| **Maior** que {('%.2f' % dim_efetiva).replace('.', ',')} pessoas | valor **mais baixo** |
+
+Coeficientes menores significam que **cada pessoa adicional acresce menos**. Isso comprime as
+diferenças entre agregados de dimensão diferente, aproximando todos da média. Um casal, sendo
+**menor** que a média, aproxima-se dela por cima; um casal com três filhos, sendo **maior**,
+aproxima-se dela por baixo.
+
+O ponto de viragem é a dimensão média. O agregado selecionado, com {pessoas}
+pessoa{'s' if pessoas > 1 else ''}, situa-se **{'acima' if maior_que_media else 'abaixo'}** dessa dimensão.
+        """)
+        st.caption(
+            "É por esta razão que a aplicação apresenta sempre um intervalo: nenhuma das três "
+            "escalas reproduz exatamente a despesa alimentar observada, e a escolha entre elas "
+            "altera o resultado em sentidos diferentes consoante a dimensão do agregado."
+        )
+
+    _agr_txt = numero(agregados)
+    _mes_txt = mes_pt(ancora["mes"]) if ancora["mes"] else "—"
+    _den = base_ancora.get("denominador")
+    # O denominador da âncora das Contas Nacionais, independentemente da base
+    # escolhida: a Metodologia explica-o sempre, e o `_den` acima é None quando
+    # a base ativa é a do IDF, que não passa por divisão nenhuma.
+    _den_contas = (ancora["bases"].get("contas") or {}).get("denominador") or {
+        "valor": agregados, "ano": dados.get("agregados_ano") or "—"}
+    with st.expander("De onde vem este valor"):
+        if base_chave == "contas":
+            _den_txt = numero(_den["valor"]) if _den else _agr_txt
+            _proveniencia = (
+                "Da **despesa alimentar de todas as famílias portuguesas** registada nas Contas "
+                f"Nacionais, dividida pelo número de agregados desse mesmo ano ({_den_txt} em "
+                f"{_den['ano'] if _den else '—'}), atualizada ao mês corrente pelo índice oficial "
+                "de preços e ajustada à composição indicada acima."
+            )
+        else:
+            _proveniencia = (
+                "Da **despesa alimentar declarada pelos agregados** no Inquérito às Despesas das "
+                "Famílias do INE, atualizada ao mês corrente pelo índice oficial de preços e "
+                "ajustada à composição indicada acima. Não passa por divisão de nenhum agregado "
+                "macroeconómico: é medição direta."
+            )
+        if base_chave == "contas" and _den:
+            _linha_agr = (f"**Denominador:** {_den['fonte']}, {_den['ano']}, "
+                          "o mesmo ano da despesa")
+            if _den["desfasamento"]:
+                _linha_agr = (f"**Denominador:** {_den['fonte']}, {_den['ano']}, "
+                              f"**{_den['desfasamento']} ano(s) de desfasamento** face à "
+                              f"despesa, que é de {base_ancora['ano_base']}")
+        else:
+            _linha_agr = f"**N.º de agregados:** {agr_fonte}"
+        st.markdown(
+            _proveniencia + "\n\n"
+            + _linha_agr + "  \n"
+            + f"**Base de despesa:** {base_ancora['nome']} ({base_ancora['ano_base']}), "
+            f"a preços de {_mes_txt}  \n"
+            f"**Fonte:** {base_ancora['fonte']}\n\n"
+            f"*{base_ancora['porque']}*\n\n"
+            + (f"Na outra base, {outra_ancora['nome']}, o mesmo agregado médio daria "
+               f"**{euro(outra_ancora['valor'])}** por mês."
+               if outra_ancora is not None else
+               "A outra base oficial não está disponível nesta sessão, pelo que não há "
+               "intervalo a apresentar.")
+        )
 
     st.markdown('<p class="sg-grupo">Dados</p>', unsafe_allow_html=True)
     # Mesma informação da legenda que aqui estava, na mesma linguagem de
@@ -2335,13 +2595,36 @@ if _desal_p or _desal_v:
         "ao mesmo momento."
     )
 
-# --- espaço reservado para o alarme de cobertura da decomposição -------
-# A decomposição depende dos controlos, que passaram para o topo do
-# separador “Despesa e composição”, e por isso só pode ser calculada depois
-# de eles existirem. As duas mensagens que dela dependem continuam a
-# aparecer aqui, acima das abas: o contentor guarda-lhes o lugar e é
-# preenchido mais abaixo (31.08.2026).
-_slot_cobertura = st.container()
+# --- decomposição base, usada por vários separadores ---
+df_decomp = decompor(despesa_mensal, dados["pesos"], dados["variacoes_classe"])
+resumo = resumo_decomposicao(df_decomp, despesa_mensal)
+
+# Cobertura da decomposição. Faltando um ponderador, as restantes classes
+# absorvem 100% da despesa e cada quota sai inflacionada, sem aviso nenhum
+# (auditoria de 11.08.2026, E10). Declara-se, como já se fazia no Törnqvist.
+_sem_peso = df_decomp.attrs.get("classes_sem_ponderador") or []
+_sem_var = df_decomp.attrs.get("classes_sem_variacao") or []
+
+
+def _nomes_classes(codigos):
+    return ", ".join(POR_CODIGO[c]["nome"] for c in codigos if c in POR_CODIGO)
+
+
+if _sem_peso:
+    st.error(
+        f"**{len(_sem_peso)} das nove classes não têm ponderador nesta sessão**, "
+        f"{_nomes_classes(_sem_peso)}. A despesa foi repartida apenas pelas "
+        f"restantes {9 - len(_sem_peso)}, pelo que **todas as quotas e todos os "
+        "valores em euros estão sobrestimados**. Consulte o registo de ligações "
+        "no separador Metodologia."
+    )
+elif _sem_var:
+    st.warning(
+        f"**{len(_sem_var)} das nove classes não têm variação homóloga nesta "
+        f"sessão**, {_nomes_classes(_sem_var)}. As quotas e os valores em euros "
+        "não são afetados; o **agravamento dos últimos 12 meses** é o das classes "
+        "com dados, e fica por isso subestimado."
+    )
 
 from contextlib import contextmanager
 
@@ -2372,409 +2655,6 @@ abaD, aba1, aba2, aba6, aba3, aba4, aba5 = st.tabs([
     "Evolução do cabaz", "Despesa e composição", "Histórico", "Da produção ao consumo",
     "Simulador de IVA", "Comparação UE-27", "Metodologia e fontes",
 ])
-
-# ==========================================================================
-# Parâmetros de análise, no topo de “Despesa e composição”
-# ==========================================================================
-# Deixaram de ser globais: a base de cálculo e a composição do agregado são
-# definidas no separador onde actuam. Ficam escritos aqui, antes de todos os
-# separadores que os consomem, porque no Streamlit a ordem do ficheiro é a
-# ordem de execução, e não a ordem visual das abas. O `with aba1:` volta a
-# abrir mais abaixo para o resto do separador (decisão da Inês, 31.08.2026).
-with aba1:
-    # O bloco não tinha cabeçalho: os controlos abriam o separador sem nada os
-    # nomear. Não se chamam “cenário” de propósito, que nesta aplicação cenário
-    # é o do simulador de IVA, e o mesmo termo para duas coisas diferentes é o
-    # que a consistência terminológica proíbe. São parâmetros, e é o nome que a
-    # barra lateral já lhes dava (pedido da Inês, 01.09.2026).
-    secao("Parâmetros de análise",
-          "Definem a base de despesa e o agregado a que se referem todos os "
-          "valores deste separador. O simulador de IVA herda daqui a base de "
-          "cálculo; os restantes separadores não respondem a estes parâmetros.",
-          grupo="01 · Parâmetros", topo=True)
-
-    # --- base de cálculo: as duas fontes oficiais não coincidem ---
-    # As opções são **as bases efetivamente calculáveis nesta sessão**, e não a
-    # lista fixa: se as Contas Nacionais não responderem, o IDF continua a
-    # funcionar sozinho, é uma constante publicada atualizada pelo índice
-    # (auditoria de 12.08.2026, L2).
-    _bases_disp = [k for k in BASES_ANCORA if k in ancora["bases"]]
-
-    # Os tres grupos na mesma linha. Sao tres parametros independentes e do
-    # mesmo nivel, e empilhados empurravam o primeiro indicador do separador
-    # para fora do ecra (pedido da Inês, 01.09.2026). A escala leva mais
-    # largura por o nome da opcao trazer os coeficientes atras.
-    #
-    # As larguras não são iguais, e não há coluna vazia. Chegou a haver uma, para
-    # encostar os controlos à esquerda, mas deixava metade da folha por usar. Cada
-    # coluna leva antes a largura do que tem dentro: a base tem duas opções curtas,
-    # a composição dois contadores lado a lado, e a escala leva metade porque
-    # carrega os dois expansores e o nome da opção traz os coeficientes atrás
-    # (01.09.2026).
-    _c_base, _c_comp, _c_esc = st.columns([0.95, 1.15, 2.1], gap="medium")
-
-    with _c_base:
-        st.markdown('<p class="sg-grupo sg-grupo--primeiro">Base de cálculo</p>',
-                    unsafe_allow_html=True)
-        # Lugar reservado para o (i) do grupo, preenchido no fim: o que ele diz
-        # depende da base que for escolhida no seletor abaixo, e o Streamlit desenha
-        # por ordem de execução.
-        _slot_nota_base = st.empty()
-        if len(_bases_disp) == 1:
-            base_chave = _bases_disp[0]
-            st.info(
-                f"Só a base **{BASES_ANCORA[base_chave]['nome']}** está disponível nesta "
-                "sessão. A outra depende de uma ligação que não respondeu, ver o registo "
-                "de ligações no separador Metodologia. **Não há intervalo: o valor "
-                "apresentado é um ponto de uma só base.**"
-            )
-        else:
-            base_chave = st.radio(
-                "Base de cálculo",
-                options=_bases_disp,
-                index=(_bases_disp.index(BASE_POR_DEFEITO)
-                       if BASE_POR_DEFEITO in _bases_disp else 0),
-                format_func=lambda k: BASES_ANCORA[k]["nome"],
-                label_visibility="collapsed",
-                help=("As duas fontes oficiais medem grandezas diferentes e divergem por um fator "
-                      "próximo de 2. Nenhuma das duas mede isoladamente a grandeza pretendida, "
-                      "pelo que a aplicação apresenta o intervalo. Ver separador Metodologia."),
-            )
-        base_ancora = ancora["bases"][base_chave]
-        outra_chave = next((k for k in ancora["bases"] if k != base_chave), None)
-        outra_ancora = ancora["bases"][outra_chave] if outra_chave else None
-
-        media_agregado = float(base_ancora["valor"])
-        valor_medio_agregado = media_agregado
-        dim_media = dados.get("dimensao_media")
-
-        # A verificação de plausibilidade existe para dizer “não use estes números”,
-        # e só olhava para a base **ativa**. Com a âncora das Contas Nacionais
-        # absurda e o IDF escolhido, a aplicação não dava alarme nenhum, e mostrava
-        # à mesma o valor absurdo, no intervalo acima, no cartão de topo
-        # e na sensibilidade do simulador (auditoria de 12.08.2026, M1).
-        _suspeitas = [b["nome"] for b in ancora["bases"].values()
-                      if not b.get("plausivel", True)]
-        _outra_suspeita = (outra_ancora is not None
-                           and not outra_ancora.get("plausivel", True))
-
-
-    with _c_comp:
-        st.markdown('<p class="sg-grupo">Composição do agregado</p>',
-                    unsafe_allow_html=True)
-        # A instrução vem antes dos contadores e não depois: quem não reconhece
-        # os botões como controlos precisa de a ler **antes** de olhar para o
-        # número, não a seguir (Inês, 01.09.2026).
-        st.caption("Use o **−** e o **+**, ou escreva o número.")
-        # Um por linha, e não dois lado a lado. Repartidos em duas sub-colunas
-        # de uma coluna que já é um quarto da página, o campo ficava tão estreito
-        # que o Streamlit deixava de desenhar o “−” e o “+”: o contador passava a
-        # parecer um valor fixo, e nada dizia que se podia alterar (relatado pela
-        # Inês, 01.09.2026). Empilhados, cada um leva a largura da coluna, os
-        # botões voltam, e o rótulo deixa de partir em duas linhas.
-        # A `key` do contentor sai no HTML como a classe `st-key-comp-agregado`, e
-        # é por ela que o CSS levanta a estes dois campos o limite de largura que
-        # vale para os contadores do resto da aplicação. Sem isso o campo ficava
-        # abaixo da largura a que o Streamlit desenha os botões.
-        with st.container(key="comp-agregado"):
-            adultos = st.number_input(
-                "Com 14+ anos", min_value=1, max_value=10, value=2, step=1,
-                help=("Todas as pessoas com 14 ou mais anos, incluindo jovens dependentes. "
-                      "A partir dessa idade, a escala de equivalência atribui a mesma "
-                      "ponderação alimentar de um adulto, independentemente de a pessoa "
-                      "auferir rendimento próprio."))
-            criancas = st.number_input(
-                "Menos de 14 anos", min_value=0, max_value=10, value=0, step=1,
-                help=("14 anos é o limiar definido pelas próprias escalas de equivalência "
-                      "da OCDE e do Eurostat, não é a definição demográfica de criança. "
-                      "Ver separador Metodologia."))
-
-
-    # A dimensão média do agregado entra em **todos** os valores em euros, pelo
-    # lado do denominador de `despesa_do_agregado`. Se a série do EU-SILC não
-    # responder, entra uma constante, e isso tem de ser dito, como já se diz do
-    # número de agregados e das fontes sem API. Era o único recuo da aplicação
-    # que acontecia em silêncio (auditoria de 12.08.2026, L6).
-    dim_efetiva = dim_media if dim_media else DIMENSAO_RECUO
-
-    with _c_esc:
-        # A escala tinha ficado dentro do grupo da composição, sem cabeçalho
-        # próprio, apesar de ser um terceiro parâmetro independente dos outros dois.
-        st.markdown('<p class="sg-grupo">Escala de equivalência</p>',
-                    unsafe_allow_html=True)
-        _escala_apurada = escala_mais_proxima()
-        escala_chave = st.selectbox(
-            "Escala de equivalência", options=list(ESCALAS.keys()),
-            index=list(ESCALAS.keys()).index(_escala_apurada) if _escala_apurada else 1,
-            format_func=lambda k: (ESCALAS[k]["nome"]
-                                   + (", apurada" if k == _escala_apurada else "")),
-            help=("Como se ajusta a despesa ao número de pessoas. A assinalada como "
-                  "“apurada” é a que, no teste contra o Inquérito às Despesas das Famílias "
-                  "(IDF) de 2022/2023, fica mais perto da despesa alimentar observada. "
-                  "Ver separador Metodologia."),
-        )
-        if _escala_apurada and escala_chave != _escala_apurada:
-            st.caption(
-                f"A escala escolhida não é a que melhor reproduz a despesa alimentar observada "
-                f"(**{ESCALAS[_escala_apurada]['nome'].split(' (')[0]}**). Ver o teste no "
-                f"separador Metodologia."
-            )
-
-        # Lugar dos dois expansores, preenchidos mais abaixo: o comparador das
-        # escalas precisa da `faixa`, que só existe depois de os três parâmetros
-        # estarem lidos.
-        #
-        # Os dois ficam aqui, e não um em cada coluna, por decisão da Inês
-        # (01.09.2026). O da proveniência qualifica a base e não a escala, mas
-        # dois expansores lado a lado em colunas de larguras diferentes davam
-        # duas caixas desalinhadas a meia altura do bloco; juntos, são um par.
-        _slot_escalas = st.container()
-        _slot_proveniencia = st.container()
-
-
-    # As duas legendas (o intervalo entre bases e a idade da base) recolheram-se
-    # a um (i) junto ao título do grupo: são qualificações do seletor, e em texto
-    # corrido ocupavam metade do espaço visível da barra lateral
-    # (decisão da Inês, 13.08.2026).
-    #
-    # Um popover e não o (i) do `secao()`: aquele é dado pelo cabeçalho do
-    # Streamlit, que nesta largura sairia maior do que o rótulo do grupo.
-    #
-    # Os alarmes de implausibilidade **não** entram aqui: são para ver sem
-    # procurar, e ficam no corpo da barra.
-    _nota_base = []
-    if outra_ancora is not None:
-        _nota_base.append(
-            f"Intervalo entre as duas bases: **{euro(ancora['minimo'])} a "
-            f"{euro(ancora['maximo'])}** por mês, para o agregado médio. "
-            f"O ponto central não é determinável."
-            + (f" Um dos extremos vem de **{outra_ancora['nome']}**, que está fora do "
-               "intervalo plausível, ver o alarme abaixo."
-               if _outra_suspeita else ""))
-        # O que separa as duas bases não é a fonte, é a pergunta: uma mede a
-        # despesa dos agregados residentes, a outra o consumo no território. O
-        # rácio é **calculado**, não inscrito: move-se com o mês do índice,
-        # porque as duas bases são indexadas a partir de períodos de referência
-        # diferentes, e um número escrito à mão desatualizava-se em silêncio
-        # (é o modo de falha que o L16 fechou noutro sítio).
-        _racio_bases = (ancora["maximo"] / ancora["minimo"]
-                        if ancora["minimo"] else None)
-        if _racio_bases and _racio_bases > 1.05:
-            _racio_txt = numero(_racio_bases, 1)
-            if base_chave == "idf":
-                _nota_base.append(
-                    "A base ativa é a que mede a **despesa das famílias residentes**; a outra "
-                    f"mede o **consumo no território** e é cerca de {_racio_txt} vezes superior, "
-                    "por razões que a metainformação do INE explica. Ver “O que são as Contas "
-                    "Nacionais e o que medem”, no separador da metodologia.")
-            else:
-                _nota_base.append(
-                    "A base ativa é a que mede o **consumo no território**, cerca de "
-                    f"{_racio_txt} vezes a **despesa das famílias residentes** medida pela outra, "
-                    "por razões que a metainformação do INE explica. Ver “O que são as Contas "
-                    "Nacionais e o que medem”, no separador da metodologia.")
-    else:
-        _nota_base.append(
-            f"**{euro(media_agregado)}** por mês para o agregado médio, na única base "
-            f"disponível. Com as duas bases a aplicação apresentaria um intervalo.")
-
-    # A idade da base tem de estar acessível, não só no registo de ligações: a
-    # despesa é atualizada por preços, mas a estrutura de consumo é a do ano de
-    # referência (auditoria de 10.08.2026, B2).
-    _idade_base = date.today().year - int(base_ancora["ano_fim"])
-    if _idade_base >= 2:
-        _nota_base.append(
-            f"Base de **{base_ancora['ano_base']}**, {_idade_base} anos de atraso. "
-            "Os preços estão atualizados ao mês corrente; a **estrutura de consumo** "
-            f"é a de {base_ancora['ano_base']}.")
-
-    with _slot_nota_base.popover("Sobre esta base", icon=":material/info:"):
-        for _n in _nota_base:
-            st.markdown(_n)
-
-
-    # Fora das colunas, a largura toda: um alarme espremido num terço da
-    # largura deixa de se ler como alarme, e estes dizem “não use estes
-    # números”.
-    if not base_ancora.get("plausivel", True):
-        st.error(
-            f"**A base ativa ({base_ancora['nome']}) está fora do intervalo plausível**, "
-            f"{euro(media_agregado)}/mês por agregado. Verifique o registo de ligações "
-            "no separador Metodologia. **Os valores apresentados não devem ser utilizados.**"
-        )
-    elif _outra_suspeita:
-        # A base ativa está sã, mas a outra não, e a outra aparece em três
-        # sítios: o extremo do intervalo aqui em cima, o “Na outra base seria…”
-        # do cartão de topo, e a sensibilidade à base no simulador de IVA.
-        st.error(
-            f"**A base {outra_ancora['nome']} está fora do intervalo plausível**, "
-            f"{euro(outra_ancora['valor'])}/mês por agregado. A base ativa "
-            f"(**{base_ancora['nome']}**, {euro(media_agregado)}/mês) não é afetada, mas "
-            "**ignore o intervalo, o valor “na outra base” e a sensibilidade à base no "
-            "simulador de IVA**, todos consomem esse número. Verifique o registo de "
-            "ligações no separador Metodologia."
-        )
-
-    if not dim_media:
-        st.warning(
-            f"**A dimensão média do agregado não foi obtida nesta sessão.** Entra a "
-            f"constante de recuo, **{numero(DIMENSAO_RECUO, 1)} pessoas** "
-            f"({DIMENSAO_RECUO_FONTE}), que envelhece: a dimensão média está em queda "
-            "em toda a Europa. **Todos os valores em euros por agregado dependem deste "
-            "número.** Consulte o registo de ligações no separador Metodologia."
-        )
-    despesa_mensal = despesa_do_agregado(
-        media_agregado, dim_efetiva, adultos, criancas, escala_chave)
-    faixa = intervalo_agregado(media_agregado, dim_efetiva, adultos, criancas)
-
-    # O rótulo tem de refletir o que a escala mede: pessoas com 14 ou mais anos
-    # pesam como adultos, tenham ou não rendimento próprio.
-    if criancas:
-        composicao = (f"{adultos} com 14+ anos e {criancas} "
-                      + ("menores de 14" if criancas > 1 else "menor de 14"))
-    else:
-        composicao = f"{adultos} pessoa{'s' if adultos > 1 else ''} com 14+ anos"
-    pessoas = adultos + criancas
-    ue = unidades_equivalentes(adultos, criancas, escala_chave)
-    origem = (f"{base_ancora['nome']} · {composicao} · "
-              f"escala {ESCALAS[escala_chave]['nome']}")
-    vezes_ano = 12
-
-    # Cada expansor vai para dentro da coluna do que explica, e não à
-    # largura da página: ocupavam a folha toda para qualificar um
-    # controlo que ocupa um terço dela (pedido da Inês, 01.09.2026).
-    with _slot_escalas:
-        # O grupo “Despesa estimada” repetia na barra lateral o indicador que abre o
-        # separador Despesa e composição, mesmo rótulo, mesmo valor, e agora também
-        # a mesma posição, logo abaixo. Saiu, e com ele o cabeçalho do grupo: o que
-        # resta é o comparador das escalas, que pertence ao seletor de escala logo
-        # acima e não existe em mais lado nenhum (decisão da Inês, 13.08.2026).
-        with st.expander("Comparar as três escalas"):
-            maior_que_media = pessoas > dim_efetiva
-            st.dataframe(
-                pd.DataFrame([
-                    {"Escala": ESCALAS[k]["nome"].split(" (")[0],
-                     "Coeficientes": f"{ESCALAS[k]['primeiro']:.0f} / "
-                                     f"{ESCALAS[k]['adulto']:.1f} / "
-                                     f"{ESCALAS[k]['crianca']:.1f}".replace(".", ","),
-                     "Despesa (€)": round(faixa["por_escala"][k], 2)}
-                    for k in ESCALAS
-                ]), width="stretch", hide_index=True)
-
-            st.markdown(f"""
-    **Efeito dos coeficientes da escala sobre o valor apurado**
-
-    O ponto de partida é sempre o **agregado médio português, {('%.2f' % dim_efetiva).replace('.', ',')} pessoas**.
-    A escala não calcula a despesa a partir do zero: **ajusta** desse agregado médio para o agregado
-    selecionado, e é aplicada aos **dois lados** do cálculo, ao agregado selecionado e ao agregado
-    médio que serve de referência.
-
-    Daí resulta o comportamento seguinte:
-
-    | Agregado selecionado | Escala com economias de escala mais fortes |
-    |---|---|
-    | **Menor** que {('%.2f' % dim_efetiva).replace('.', ',')} pessoas | valor **mais alto** |
-    | **Maior** que {('%.2f' % dim_efetiva).replace('.', ',')} pessoas | valor **mais baixo** |
-
-    Coeficientes menores significam que **cada pessoa adicional acresce menos**. Isso comprime as
-    diferenças entre agregados de dimensão diferente, aproximando todos da média. Um casal, sendo
-    **menor** que a média, aproxima-se dela por cima; um casal com três filhos, sendo **maior**,
-    aproxima-se dela por baixo.
-
-    O ponto de viragem é a dimensão média. O agregado selecionado, com {pessoas}
-    pessoa{'s' if pessoas > 1 else ''}, situa-se **{'acima' if maior_que_media else 'abaixo'}** dessa dimensão.
-            """)
-            st.caption(
-                "É por esta razão que a aplicação apresenta sempre um intervalo: nenhuma das três "
-                "escalas reproduz exatamente a despesa alimentar observada, e a escolha entre elas "
-                "altera o resultado em sentidos diferentes consoante a dimensão do agregado."
-            )
-
-
-    with _slot_proveniencia:
-        _agr_txt = numero(agregados)
-        _mes_txt = mes_pt(ancora["mes"]) if ancora["mes"] else "—"
-        _den = base_ancora.get("denominador")
-        # O denominador da âncora das Contas Nacionais, independentemente da base
-        # escolhida: a Metodologia explica-o sempre, e o `_den` acima é None quando
-        # a base ativa é a do IDF, que não passa por divisão nenhuma.
-        _den_contas = (ancora["bases"].get("contas") or {}).get("denominador") or {
-            "valor": agregados, "ano": dados.get("agregados_ano") or "—"}
-        with st.expander("De onde vem este valor"):
-            if base_chave == "contas":
-                _den_txt = numero(_den["valor"]) if _den else _agr_txt
-                _proveniencia = (
-                    "Da **despesa alimentar de todas as famílias portuguesas** registada nas Contas "
-                    f"Nacionais, dividida pelo número de agregados desse mesmo ano ({_den_txt} em "
-                    f"{_den['ano'] if _den else '—'}), atualizada ao mês corrente pelo índice oficial "
-                    "de preços e ajustada à composição indicada acima."
-                )
-            else:
-                _proveniencia = (
-                    "Da **despesa alimentar declarada pelos agregados** no Inquérito às Despesas das "
-                    "Famílias do INE, atualizada ao mês corrente pelo índice oficial de preços e "
-                    "ajustada à composição indicada acima. Não passa por divisão de nenhum agregado "
-                    "macroeconómico: é medição direta."
-                )
-            if base_chave == "contas" and _den:
-                _linha_agr = (f"**Denominador:** {_den['fonte']}, {_den['ano']}, "
-                              "o mesmo ano da despesa")
-                if _den["desfasamento"]:
-                    _linha_agr = (f"**Denominador:** {_den['fonte']}, {_den['ano']}, "
-                                  f"**{_den['desfasamento']} ano(s) de desfasamento** face à "
-                                  f"despesa, que é de {base_ancora['ano_base']}")
-            else:
-                _linha_agr = f"**N.º de agregados:** {agr_fonte}"
-            st.markdown(
-                _proveniencia + "\n\n"
-                + _linha_agr + "  \n"
-                + f"**Base de despesa:** {base_ancora['nome']} ({base_ancora['ano_base']}), "
-                f"a preços de {_mes_txt}  \n"
-                f"**Fonte:** {base_ancora['fonte']}\n\n"
-                f"*{base_ancora['porque']}*\n\n"
-                + (f"Na outra base, {outra_ancora['nome']}, o mesmo agregado médio daria "
-                   f"**{euro(outra_ancora['valor'])}** por mês."
-                   if outra_ancora is not None else
-                   "A outra base oficial não está disponível nesta sessão, pelo que não há "
-                   "intervalo a apresentar.")
-            )
-
-
-# --- decomposição base, usada por vários separadores ---
-df_decomp = decompor(despesa_mensal, dados["pesos"], dados["variacoes_classe"])
-resumo = resumo_decomposicao(df_decomp, despesa_mensal)
-
-# Cobertura da decomposição. Faltando um ponderador, as restantes classes
-# absorvem 100% da despesa e cada quota sai inflacionada, sem aviso nenhum
-# (auditoria de 11.08.2026, E10). Declara-se, como já se fazia no Törnqvist.
-_sem_peso = df_decomp.attrs.get("classes_sem_ponderador") or []
-_sem_var = df_decomp.attrs.get("classes_sem_variacao") or []
-
-
-def _nomes_classes(codigos):
-    return ", ".join(POR_CODIGO[c]["nome"] for c in codigos if c in POR_CODIGO)
-
-
-# Escritas no contentor reservado lá em cima, e não aqui: o alarme pertence ao
-# topo da página, acima das abas, porque afeta os valores de todos os
-# separadores. O que desceu foi a execução, não o sítio onde aparece.
-with _slot_cobertura:
-    if _sem_peso:
-        st.error(
-            f"**{len(_sem_peso)} das nove classes não têm ponderador nesta sessão**, "
-            f"{_nomes_classes(_sem_peso)}. A despesa foi repartida apenas pelas "
-            f"restantes {9 - len(_sem_peso)}, pelo que **todas as quotas e todos os "
-            "valores em euros estão sobrestimados**. Consulte o registo de ligações "
-            "no separador Metodologia."
-        )
-    elif _sem_var:
-        st.warning(
-            f"**{len(_sem_var)} das nove classes não têm variação homóloga nesta "
-            f"sessão**, {_nomes_classes(_sem_var)}. As quotas e os valores em euros "
-            "não são afetados; o **agravamento dos últimos 12 meses** é o das classes "
-            "com dados, e fica por isso subestimado."
-        )
-
 
 # ==========================================================================
 # ABA D, Evolução do cabaz
@@ -2933,7 +2813,7 @@ with aba1:
         titulo_pagina(
             "Despesa alimentar das famílias",
             "Repartição, evolução e esforço da despesa alimentar do agregado "
-            "escolhido. A base de cálculo e a composição definem-se no bloco acima.")
+            "escolhido. Os parâmetros do agregado e da base estão na barra lateral.")
 
         # ---- grandezas da variação, apuradas antes de se desenhar o que quer
         # que seja: o indicador de capa e o indicador secundário do agravamento
@@ -2972,7 +2852,7 @@ with aba1:
         secao("Referência nacional",
               "O agregado médio português, antes de qualquer ajustamento. É deste "
               "valor que parte o cálculo dos indicadores ajustados, mais abaixo.",
-              grupo="02 · Referência nacional")
+              grupo="01 · Referência nacional", topo=True)
         dim_txt = ('%.1f' % dim_efetiva).replace('.', ',')
         r1, r2, r3 = st.columns([1, 1, 2])
         r1.metric(f"Agregado médio nacional ({dim_txt} pessoas)",
@@ -3021,7 +2901,7 @@ with aba1:
           <strong>não é determinável</strong>: o inquérito subestima e as Contas Nacionais
           sobrestimam, e não existe exercício de conciliação que permita arbitrar.
           Os valores desta página usam a base <strong>{base_ancora['nome']}</strong>,
-          escolhida no bloco acima. Ver separador Metodologia.""")
+          escolhida na barra lateral. Ver separador Metodologia.""")
         else:
             nota("Uma só base, não há intervalo nesta sessão", f"""
           A aplicação apresenta normalmente a despesa como um <strong>intervalo</strong> entre as
@@ -3031,10 +2911,10 @@ with aba1:
           nada. Ver o registo de ligações no separador Metodologia.""", alerta=True)
 
         secao(f"Ajustado ao agregado selecionado ({composicao})",
-              "Os mesmos dados aplicados à composição escolhida no bloco acima. "
+              "Os mesmos dados aplicados à composição escolhida na barra lateral. "
               "A despesa mensal é a que abre o separador; estes indicadores "
               "qualificam-na. A escala de equivalência está no separador Metodologia.",
-              grupo="03 · O agregado selecionado")
+              grupo="02 · O agregado selecionado")
         # Quatro indicadores, e não cinco: a despesa mensal saiu daqui para o
         # indicador de capa, no topo da página, onde ocupa o lugar que o seu
         # peso na aplicação justifica. O rótulo e o *tooltip* que tinha (a
@@ -3351,7 +3231,7 @@ with aba1:
         secao("Contributo de cada grupo para a variação homóloga",
               f"Euros de variação <strong>{_janela}</strong> atribuíveis a cada "
               "grupo, positivos à direita, negativos à esquerda.",
-              ajuda=_ajuda_adit, grupo="04 · Onde está a variação")
+              ajuda=_ajuda_adit, grupo="03 · Onde está a variação")
         com_dados = df_decomp.dropna(subset=["contributo"]).sort_values("contributo")
         if com_dados.empty:
             st.info("Sem variações disponíveis para o período.")
@@ -3397,7 +3277,7 @@ with aba1:
               + (f" Repartição segundo os ponderadores oficiais de "
                  f"<strong>{dados['ano_pesos']}</strong>."
                  if dados.get("ano_pesos") else ""),
-              grupo="05 · Composição da despesa")
+              grupo="04 · Composição da despesa")
         # Este gráfico não mostra variação nenhuma, logo a janela homóloga não é
         # o seu período de referência. O que o data são duas outras coisas: o
         # ano dos ponderadores, que decide a repartição, e o mês a que o nível
@@ -3469,7 +3349,7 @@ with aba1:
               "subiram os preços e quantos euros por mês isso custa. A última coluna "
               "exprime esse custo em fração do orçamento, é a que compara o "
               "<strong>esforço</strong> entre quintis.",
-              ajuda=_ajuda_engel, grupo="06 · Distribuição por rendimento")
+              ajuda=_ajuda_engel, grupo="05 · Distribuição por rendimento")
 
         df_quintis = cabaz_quintis(dados["variacoes_classe"])
         df_comp_q = composicao_quintis()
@@ -3595,7 +3475,7 @@ with aba1:
 
         st.caption(
             "**Níveis do IDF tal como medidos**, não são reescalados para a base de cálculo "
-            "escolhida em “Despesa e composição”. Reescalá-los exigiria assumir que o sub-reporte do "
+            "escolhida na barra lateral. Reescalá-los exigiria assumir que o sub-reporte do "
             "inquérito é uniforme entre quintis, e nada o sustenta. Os quintis são de "
             "rendimento equivalente (escala OCDE modificada), definidos pelo INE."
         )
@@ -3620,7 +3500,7 @@ with aba1:
               "Consoante o limiar adotado, os resultados para Portugal variam de forma "
               "substancial, com dados oficiais em qualquer dos casos. Os três limiares "
               "são por isso apresentados em conjunto.",
-              grupo="07 · Acessibilidade alimentar")
+              grupo="06 · Acessibilidade alimentar")
 
         _priv = dados.get("privacao", pd.DataFrame())
         _priv_pt = pd.DataFrame()
@@ -3850,7 +3730,7 @@ with aba1:
 
     **4 ·** Reparte-se pelos nove grupos com os ponderadores oficiais do índice.
 
-    Descreve a base **{base_ancora['nome']}**, escolhida em “Despesa e composição”. As fórmulas
+    Descreve a base **{base_ancora['nome']}**, escolhida na barra lateral. As fórmulas
     completas das duas bases estão no separador **Metodologia**.
             """)
             st.warning(
@@ -3889,7 +3769,7 @@ with aba1:
             st.dataframe(pd.DataFrame(linhas_c), width="stretch", hide_index=True)
             st.caption(
                 f"Agregado médio nacional: {('%.2f' % dm).replace('.', ',')} pessoas. "
-                f"A coluna **{_rot_esc}** usa a escala escolhida em “Despesa e composição”; o "
+                f"A coluna **{_rot_esc}** usa a escala escolhida na barra lateral; o "
                 "intervalo resulta das três escalas de equivalência."
                 + (f" Nesta escala a coluna coincide com um dos limites em "
                    f"{_coincide} das {len(comps)} composições, a **{_rot_esc}** é uma "
@@ -4733,19 +4613,6 @@ with aba3:
             "As taxas do cenário e a fração que chega ao consumidor são parâmetros de "
             "quem simula, não são dados oficiais.")
 
-        # A base de cálculo é herdada, não escolhida aqui: é a mesma que está em
-        # “Despesa e composição”, e o simulador é o único separador onde ela
-        # altera o resultado sem ser evidente de onde vem. Por isso é declarada,
-        # e só aqui: nos restantes separadores a ausência de etiqueta é a
-        # informação, quer dizer que aquele separador não responde a este
-        # parâmetro (31.08.2026).
-        st.markdown(
-            f'<p class="sg-heranca">Base de cálculo'
-            f'<strong>{_html(base_ancora["nome"])}</strong>'
-            f'<span class="sg-heranca__onde">definida em “Despesa e composição”, '
-            f'no topo do separador</span></p>',
-            unsafe_allow_html=True)
-
         CENARIOS = {
             "manual": ("Definir manualmente", None),
             "zero": ("“Cabaz zero”, isenção total (precedente de 2023-2024)", 0.0),
@@ -5265,7 +5132,7 @@ with aba3:
         st.caption(
             f"Extrapolação para {numero(agregados)} agregados, a partir do **agregado "
             f"médio** ({euro(media_agregado)}/mês). **Não mudam com a composição "
-            "escolhida em “Despesa e composição”**, só com a base de despesa e com o cenário."
+            "escolhida na barra lateral**, só com a base de despesa e com o cenário."
         )
 
         with st.expander("Definição dos dois indicadores agregados"):
@@ -5327,7 +5194,7 @@ with aba3:
             _abertura = (
                 "Esta ferramenta mede o <strong>impacto nas famílias</strong>. Nesta sessão "
                 "está a fazê-lo sobre a base das <strong>Contas Nacionais</strong>, escolhida "
-                "em “Despesa e composição”. O <strong>custo orçamental</strong> é outra pergunta: o IVA "
+                "na barra lateral. O <strong>custo orçamental</strong> é outra pergunta: o IVA "
                 "é cobrado sobre transações reais, e uma estimativa de receita cessante exige a "
                 "base tributável, não a despesa alimentar doméstica repartida por agregado.")
         else:
@@ -5750,7 +5617,7 @@ with aba4:
                           "| **Esforço alimentar** | O que o agregado gasta em **alimentação** | "
                           "O que o agregado **recebe** |\n\n"
                           "Por isso **este indicador não responde à composição do agregado** "
-                          "escolhida em “Despesa e composição”: é um rácio macroeconómico nacional, e "
+                          "escolhida na barra lateral: é um rácio macroeconómico nacional, e "
                           "não existe versão “por agregado” nas Contas Nacionais.\n\n"
                           "Usam-se as **Contas Nacionais**, e só elas, por serem a única base "
                           "construída da mesma maneira em todos os países da UE. O nível é "
@@ -5992,11 +5859,7 @@ with aba5:
         # cinco blocos documentais, que é o que permite procurar.
         bloco("01 · Conceitos e definições", topo=True)
 
-        # Abria aberto, e era o único dos 40 expansores da aplicação a fazê-lo.
-        # Fechado por decisão da Inês (01.09.2026): a regra do separador é que o
-        # leitor abre o que procura, e um bloco aberto à entrada é a parede de
-        # texto que essa regra existe para evitar.
-        with st.expander("Delimitação do conceito de cabaz"):
+        with st.expander("Delimitação do conceito de cabaz", expanded=True):
             st.markdown("""
     **Não existe um cabaz alimentar oficial em Portugal.** Existem pelo menos seis instrumentos,
     com naturezas e finalidades diferentes, que o debate público tende a fundir num só. A primeira
@@ -6999,7 +6862,7 @@ rendimento monetário líquido dos residentes.
 Leia as **diferenças entre composições** e a **direção** como informativas; o **nível** como
 majorante.
 
-*Escolhendo a base **IDF** em “Despesa e composição”, esta incompatibilidade reduz-se substancialmente,
+*Escolhendo a base **IDF** na barra lateral, esta incompatibilidade reduz-se substancialmente,
 o IDF e o EU-SILC são ambos inquéritos a agregados residentes.*
                 """)
             else:
@@ -7037,7 +6900,7 @@ nesta página, a partir dos quadros Q.2.11 do IDF 2022/2023.
 contraintuitivo.** Ver o gráfico logo abaixo deste bloco.
 
 **5 · Numerador e denominador usam escalas diferentes.** A despesa alimentar é ajustada pela
-escala que escolheu em “Despesa e composição” (**{ESCALAS[escala_chave]["nome"].split(" (")[0]}**); o
+escala que escolheu na barra lateral (**{ESCALAS[escala_chave]["nome"].split(" (")[0]}**); o
 rendimento do EU-SILC tem de usar a **OCDE modificada**, que é a que esse inquérito aplica.
 A consequência é mensurável:
             """)
@@ -7085,7 +6948,7 @@ economias de escala genuinamente mais fracas do que o consumo total; mas a **mag
 depende da escala escolhida.
 
 **Utilização recomendada:** a **direção** do resultado é robusta; o **valor exato** é condicional
-à escala adotada. A sensibilidade pode ser testada alterando a escala em “Despesa e composição”.
+à escala adotada. A sensibilidade pode ser testada alterando a escala na barra lateral.
             """)
 
         bloco("04 · Dados, atualização e rastreabilidade")
@@ -7210,7 +7073,7 @@ depende da escala escolhida.
     domésticos privados (@CENSOS_FONTE@, [INE](https://www.ine.pt)).
 
     **Recuo da dimensão média do agregado:** se o `ilc_lvph01` não responder, entra a constante
-    **@DIM_RECUO@ pessoas** (@DIM_FONTE@), e a aplicação passa a dizê-lo. É o número que
+    **@DIM_RECUO@ pessoas** (@DIM_FONTE@), e a barra lateral passa a dizê-lo. É o número que
     divide a despesa média nacional, pelo que **todos os valores em euros dependem dele**.
 
     As duas fontes do n.º de agregados não medem o mesmo universo: o Inquérito ao Emprego é uma
