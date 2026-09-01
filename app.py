@@ -70,7 +70,8 @@ st.set_page_config(
     # não estiver disponível, o Streamlit fica com o seu ícone por omissão.
     page_icon=(f"data:image/png;base64,{LOGO}" if LOGO else None),
     layout="wide",
-    initial_sidebar_state="expanded",
+    # Sem `initial_sidebar_state`: a aplicação deixou de ter barra lateral a
+    # 01.09.2026, e o Streamlit não a desenha se nada lhe for escrito.
 )
 
 # ==========================================================================
@@ -180,7 +181,7 @@ st.markdown(f"""
 
 /* ---------- tipografia e superfícies ---------------------------------- */
 html, body, .stApp,
-[data-testid="stAppViewContainer"], [data-testid="stSidebar"],
+[data-testid="stAppViewContainer"],
 [data-testid="stMarkdownContainer"],
 [data-testid="stMarkdownContainer"] :is(p, li, h1, h2, h3, h4, h5, h6,
                                          strong, em, a, td, th, blockquote),
@@ -744,7 +745,6 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
     > [data-testid="stMetric"]) [data-testid="stVerticalBlock"],
 [data-testid="stColumn"] [data-testid="stElementContainer"]:only-child:has(
     > [data-testid="stMetric"]) {{ height: 100%; }}
-[data-testid="stSidebar"] [data-testid="stMetric"] {{ min-height: 0; height: auto; }}
 /* Rótulos a duas linhas, sem reticências. O `st.metric` desenha o rótulo com
    `<Markdown … truncate>`, e essa opção injeta, no contentor **e** no seu <p>:
      overflow: hidden; white-space: nowrap; text-overflow: ellipsis
@@ -771,10 +771,6 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
   color: var(--sg-texto); line-height: 1.2;
 }}
 [data-testid="stMetricDelta"] {{ font-size: .8125rem; font-weight: 600; padding-top: .3rem; }}
-[data-testid="stSidebar"] [data-testid="stMetric"] {{
-  border: 0; border-top: 1px solid var(--sg-borda); border-radius: 0;
-  padding: .95rem 0 .2rem;
-}}
 
 /* ---------- mensagens: hierarquia sem dominar a página ----------------- */
 [data-testid="stAlertContainer"] {{
@@ -813,15 +809,6 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 }}
 [data-testid="stExpander"] summary:hover {{ color: var(--sg-verde); }}
 [data-testid="stExpanderDetails"] {{ padding: 0 1.2rem 1.2rem; }}
-/* Na barra lateral são **ações contextuais**, não painéis: sem caixa, sem
-   fundo, alinhados com os controlos e em corpo de rótulo. */
-[data-testid="stSidebar"] [data-testid="stExpander"] {{
-  border: 0; background: transparent;
-}}
-[data-testid="stSidebar"] [data-testid="stExpander"] summary {{
-  padding: .4rem 0; font-size: .78rem; font-weight: 500; color: var(--sg-texto-2);
-}}
-[data-testid="stSidebar"] [data-testid="stExpanderDetails"] {{ padding: 0 0 .6rem; }}
 
 /* ---------- botões e controlos ----------------------------------------- */
 .stButton > button, .stDownloadButton > button {{
@@ -844,7 +831,7 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
    é `stNumberInputContainer` e o seletor deixou de usar BaseWeb. As opções de
    tema valem para todos os tipos de campo e não dependem da estrutura interna
    do Streamlit, que muda entre versões (01.09.2026). */
-/* Contadores estreitos, fora da barra lateral. Um `number_input` ocupa a coluna
+/* Contadores estreitos. Um `number_input` ocupa a coluna
    toda, e numa coluna larga isso punha o “−” e o “+” a quatrocentos píxeis do
    número que alteram: o controlo deixava de se ler como um contador
    (relatado pela Inês, 20.08.2026).
@@ -862,9 +849,6 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 [data-testid="stNumberInput"] > :not([data-testid="stWidgetLabel"]) {{
   max-width: 9rem;
 }}
-[data-testid="stSidebar"] [data-testid="stNumberInput"],
-[data-testid="stSidebar"] [data-testid="stNumberInput"]
-    > :not([data-testid="stWidgetLabel"]) {{ max-width: none; }}
 /* Os dois contadores da composição do agregado vivem numa coluna estreita. Com
    o limite geral acima, o campo ficava tão estreito que o Streamlit deixava de
    desenhar o “−” e o “+”, e o contador passava a parecer um valor fixo. Sem
@@ -875,48 +859,28 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 .st-key-comp-agregado [data-testid="stNumberInput"],
 .st-key-comp-agregado [data-testid="stNumberInput"]
     > :not([data-testid="stWidgetLabel"]) {{ max-width: 11.5rem; }}
-/* Na barra lateral os botões são ações secundárias, não chamadas à ação. */
-[data-testid="stSidebar"] .stButton > button {{
-  border-color: var(--sg-borda-1); color: var(--sg-texto-2);
-  font-size: .78rem; padding: .45rem .9rem;
-}}
 
 /* ---------- quadros de dados ------------------------------------------- */
 [data-testid="stDataFrame"] {{
   border: 1px solid var(--sg-borda-1); border-radius: var(--sg-raio);
 }}
 
-/* ---------- barra lateral ---------------------------------------------- */
-/* A largura da barra lateral **não é imposta**. O Streamlit desenha-a com
-   `re-resizable`, que escreve a largura em `style` no próprio elemento e a
-   guarda em `localStorage` sob a chave `sidebarWidth`. Forçá-la por CSS exige
-   `!important`, e um `!important` de folha de autor ganha também ao estilo que
-   o arrasto escreve: a pega deixava de ter efeito. Não existe, nesta versão,
-   opção de configuração para a largura inicial (confirmado em
-   `st.set_page_config` e nas opções de tema).
-   Com os separadores a quebrar de linha, a largura da barra deixou de ser
-   necessária ao layout, pelo que se prefere a funcionalidade nativa: quem
-   quiser 17rem arrasta uma vez e o Streamlit passa a lembrar-se. */
-[data-testid="stSidebar"] {{
-  background: var(--sg-superficie); border-right: 1px solid var(--sg-borda);
+/* ---------- estado da recolha ------------------------------------------ */
+/* Substituiu a barra lateral a 01.09.2026. Metadado editorial, no mesmo corpo
+   e na mesma cor dos restantes: o que o distingue é estar ao lado do botão que
+   o renova, e não uma caixa nem um destaque. Alinhado com a base do botão pelo
+   `vertical_alignment` da coluna, não por margem à mão. */
+[data-testid="stMarkdownContainer"] p.sg-recolha {{
+  font-size: .75rem; color: var(--sg-texto-3); margin: 0; line-height: 1.5;
 }}
-[data-testid="stSidebarUserContent"] {{ padding: 1.05rem 1.15rem 2.5rem; }}
-/* A barra lateral deixou de ter corpo próprio para os rótulos de controlo:
-   segue o degrau global de 12 px, para não haver dois tamanhos quase iguais
-   a fazer o mesmo trabalho. */
+[data-testid="stMarkdownContainer"] p.sg-recolha strong {{
+  font-weight: 600; color: var(--sg-texto-2); font-variant-numeric: tabular-nums;
+}}
+
 /* Tracking mais curto em tudo o que é versalete. O espaçamento largo dava a
    estes rótulos uma presença que não corresponde ao seu lugar na hierarquia:
    são etiquetas, não títulos. O corpo de letra não desce; só o tracking. */
-[data-testid="stMarkdownContainer"] p.sg-lateral__t {{
-  font-size: .75rem; font-weight: 600; letter-spacing: .10em;
-  text-transform: uppercase; color: var(--sg-verde); margin: 0;
-}}
-[data-testid="stMarkdownContainer"] p.sg-lateral__d {{
-  font-size: .75rem; color: var(--sg-texto-3); margin: .35rem 0 0;
-  line-height: 1.55; }}
-/* Rótulo de grupo. As margens encolheram: a barra lateral tinha mais espaço
-   vertical do que controlos, e obrigava a deslocar a página para chegar ao
-   botão de recarregamento. */
+/* Rótulo de grupo dos parâmetros, no topo de “Despesa e composição”. */
 [data-testid="stMarkdownContainer"] p.sg-grupo {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .08em;
   text-transform: uppercase; color: var(--sg-texto-3);
@@ -926,22 +890,6 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 /* A regra acima declara `margin` completa em (0,2,1); a variante tem de subir
    ao mesmo nível para lhe alterar o topo. */
 [data-testid="stMarkdownContainer"] p.sg-grupo--primeiro {{ margin-top: 1.15rem; }}
-/* Metadado da barra lateral: rótulo pequeno, valor um degrau acima. É a mesma
-   linguagem da barra de estado do corpo da página. */
-.sg-lateral__meta {{ margin: 0 0 .6rem; }}
-[data-testid="stMarkdownContainer"] p.sg-lateral__meta-r {{
-  font-size: .625rem; font-weight: 500; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--sg-texto-3); margin: 0; line-height: 1.4;
-}}
-[data-testid="stMarkdownContainer"] p.sg-lateral__meta-v {{
-  font-size: .8125rem; font-weight: 600; color: var(--sg-texto); margin: .1rem 0 0;
-  line-height: 1.35; font-variant-numeric: tabular-nums;
-}}
-[data-testid="stMarkdownContainer"] p.sg-lateral__rodape {{
-  font-size: .6875rem; letter-spacing: .06em; color: var(--sg-texto-3);
-  margin: 1.75rem 0 0; padding-top: .9rem;
-  border-top: 1px solid var(--sg-borda); line-height: 1.5;
-}}
 
 /* ---------- rodapé ------------------------------------------------------ */
 .sg-rodape {{ margin-top: 3.25rem; padding: 1.75rem 0 2.5rem;
@@ -2216,65 +2164,59 @@ ultimo_mes = dados["mes_variacoes"] or (
 )
 
 # ==========================================================================
-# Barra lateral, parâmetros
+# Estado da recolha
 # ==========================================================================
-with st.sidebar:
-    # Dizia "Parâmetros de análise · Definem a base de despesa e o agregado a que
-    # todos os valores da aplicação se referem". Deixou de ser verdade a
-    # 31.08.2026: a base e o agregado passaram para o topo de "Despesa e
-    # composição", onde actuam, e o que resta aqui é o estado dos dados.
-    st.markdown(
-        '<p class="sg-lateral__t">Estado dos dados</p>'
-        '<p class="sg-lateral__d">Período a que se referem e momento em que '
-        'foram obtidos. A base de cálculo e o agregado definem-se no separador '
-        '“Despesa e composição”.</p>',
-        unsafe_allow_html=True)
+# Isto era uma barra lateral. Foi esvaziando: os parâmetros desceram para o
+# topo de “Despesa e composição” a 31.08.2026, o período de referência passou
+# para as faixas de proveniência dos três separadores que o índice governa a
+# 01.09.2026, e a assinatura da unidade duplicava o cabeçalho, que já mostra as
+# duas linhas. O que sobrava era um botão, uma hora e uma descrição de
+# metadados que já não estavam lá. Uma gaveta lateral permanente para isso não
+# se justifica, e a página ganha a largura que ela ocupava.
+#
+# **O que fica é o momento da recolha, e fica junto do botão.** É o único
+# metadado desta aplicação que é propriedade da *sessão* e não de uma fonte:
+# vale nos sete separadores, incluindo os da DECO e do GPP, porque é quando
+# esta sessão foi buscar os dados em direto. E é o que justifica o botão
+# existir: mostra-se a idade e oferece-se a ação, lado a lado. O período de
+# referência é do índice, e por isso está nas faixas e não aqui.
+#
+# O bloco de erro fatal também sai da gaveta: com as duas bases em falta a
+# aplicação pára, e a mensagem que o diz estava a ser desenhada na barra
+# lateral (decisão da Inês, 01.09.2026).
 
-    # --- número de agregados: sempre o valor oficial, no ano mais recente ---
-    # Este é o valor usado para **extrapolar para o país** (simulador de IVA):
-    # aí interessa quantos agregados existem hoje. O denominador da âncora das
-    # Contas Nacionais é outro (o do ano da despesa), calculado em
-    # `agregados_do_ano` (auditoria de 10.08.2026, B2).
-    if dados.get("agregados_valor"):
-        agregados = int(dados["agregados_valor"])
-        agr_fonte = f"{dados['agregados_fonte']}, {dados['agregados_ano']}"
-    else:
-        agregados = AGREGADOS_CENSOS
-        agr_fonte = AGREGADOS_FONTE
+# --- número de agregados: sempre o valor oficial, no ano mais recente ---
+# Este é o valor usado para **extrapolar para o país** (simulador de IVA):
+# aí interessa quantos agregados existem hoje. O denominador da âncora das
+# Contas Nacionais é outro (o do ano da despesa), calculado em
+# `agregados_do_ano` (auditoria de 10.08.2026, B2).
+if dados.get("agregados_valor"):
+    agregados = int(dados["agregados_valor"])
+    agr_fonte = f"{dados['agregados_fonte']}, {dados['agregados_ano']}"
+else:
+    agregados = AGREGADOS_CENSOS
+    agr_fonte = AGREGADOS_FONTE
 
-    ancora = ancora_oficial(dados, agregados)
-    if ancora is None:
-        st.error(
-            "Não foi possível calcular a despesa em nenhuma das duas bases oficiais. "
-            "Consulte o registo de ligações no separador Metodologia."
-        )
-        st.stop()
+ancora = ancora_oficial(dados, agregados)
+if ancora is None:
+    st.error(
+        "Não foi possível calcular a despesa em nenhuma das duas bases oficiais. "
+        "Consulte o registo de ligações no separador Metodologia."
+    )
+    st.stop()
 
-    st.markdown('<p class="sg-grupo">Dados</p>', unsafe_allow_html=True)
-    # Mesma informação da legenda que aqui estava, na mesma linguagem de
-    # metadados da barra de estado do corpo da página: rótulo pequeno em
-    # versalete, valor um degrau acima.
-    st.markdown(
-        f'<div class="sg-lateral__meta">'
-        # “Última atualização” a apontar para o mês do dado era a confusão que
-        # o README diz querer evitar, entre a data da consulta e a data do dado.
-        # O “Obtidos às”, logo abaixo, é que é a data da consulta, e só faz
-        # sentido por contraste com um rótulo que diga a outra coisa.
-        f'<p class="sg-lateral__meta-r">Período de referência</p>'
-        f'<p class="sg-lateral__meta-v">{_html(mes_pt(ultimo_mes))}</p></div>'
-        f'<div class="sg-lateral__meta">'
-        f'<p class="sg-lateral__meta-r">Obtidos às</p>'
-        f'<p class="sg-lateral__meta-v">'
-        f'{dados["momento"].strftime("%H:%M de %d/%m/%Y")}</p></div>',
-        unsafe_allow_html=True)
-    if st.button("Recarregar do Eurostat", width="stretch"):
+# A hora à esquerda e o botão à direita, na mesma linha. O botão não vai a toda
+# a largura: é uma ação secundária e rara, não a chamada à ação da página.
+_c_recolha, _c_botao = st.columns([3, 1], gap="small",
+                                  vertical_alignment="center")
+_c_recolha.markdown(
+    f'<p class="sg-recolha">Dados em direto obtidos às '
+    f'<strong>{dados["momento"].strftime("%H:%M de %d/%m/%Y")}</strong></p>',
+    unsafe_allow_html=True)
+with _c_botao:
+    if st.button("Recarregar do Eurostat"):
         st.cache_data.clear()
         st.rerun()
-
-    # Assinatura da unidade, não um grupo de controlos: deixou de usar o rótulo
-    # de grupo, que a anunciava como se houvesse algo por baixo.
-    st.markdown(f'<p class="sg-lateral__rodape">{ORGANISMO}<br>{UNIDADE}</p>',
-                unsafe_allow_html=True)
 
 # --- vigilância de frescura: uma série que responde não é uma série que avança ---
 # Calculada aqui, e não dentro de `carregar_dados`, para não ficar congelada na
@@ -2327,16 +2269,22 @@ if not _paradas.empty:
 # ficam sem esta faixa e mantêm a proveniência que já traziam, junto do bloco
 # a que respeita (pedido da Inês, 01.09.2026).
 #
-# Fica por resolver, para uma fase posterior e por decisão da Inês: o bloco
-# “Estado dos dados” da barra lateral e o botão “Recarregar do Eurostat” têm o
-# mesmo problema, mostram período e recolha do índice em todos os separadores,
-# incluindo os que não o usam. Não se mexeu aqui por serem navegação.
+# O mesmo problema existia na barra lateral, que mostrava período e recolha em
+# todos os separadores. Resolveu-se logo a seguir, e por inteiro: a barra
+# desapareceu, o período ficou nestas faixas e a recolha ficou uma só vez, no
+# topo da página, ao lado do botão que a renova.
 FONTE_INDICE = "Fonte: Eurostat / INE, índice harmonizado de preços"
 
 
 def faixa_fonte(mes: bool = True, ponderadores: bool = True,
                 ancora: bool = True) -> None:
-    """Proveniência do índice, no topo do separador que dele depende."""
+    """
+    Proveniência do índice, no topo do separador que dele depende.
+
+    Sem o momento da recolha, que esteve aqui: é propriedade da sessão e não do
+    índice, vale igualmente nos separadores que não o usam, e por isso ficou uma
+    só vez, junto do botão que o renova (01.09.2026).
+    """
     itens = []
     if mes:
         itens.append(("Último mês disponível", mes_pt(ultimo_mes)))
@@ -2344,7 +2292,6 @@ def faixa_fonte(mes: bool = True, ponderadores: bool = True,
         itens.append(("Ponderadores", str(dados["ano_pesos"] or "—")))
     if ancora and dados.get("despesa_ano"):
         itens.append(("Âncora de despesa", str(dados["despesa_ano"])))
-    itens.append(("Obtidos às", dados["momento"].strftime("%H:%M de %d/%m/%Y")))
     barra_estado(FONTE_INDICE, itens)
 
 # --- classes cujo período não é o que a mensagem acima anuncia ---
@@ -2401,7 +2348,7 @@ def painel(nome: str):
             f"**Não foi possível apresentar “{nome}”.**\n\n"
             f"`{type(exc).__name__}: {exc}`\n\n"
             "Os restantes separadores continuam a funcionar. Passos a tentar, por esta ordem:\n"
-            "1. **Recarregar do Eurostat** na barra lateral, limpa a cache de dados;\n"
+            "1. **Recarregar do Eurostat**, no topo da página, limpa a cache de dados;\n"
             "2. **Recarregar a página** com Ctrl+F5, limpa o estado da sessão;\n"
             "3. Consultar o **registo de ligações** no separador Metodologia, para ver "
             "se algum conjunto de dados falhou."
@@ -7203,7 +7150,7 @@ depende da escala escolhida.
 
     **Cache de seis horas.** Os dados ficam guardados em memória durante seis horas, para não repetir
     pedidos desnecessários, as séries mudam no máximo uma vez por mês. O botão **Recarregar do
-    Eurostat**, na barra lateral, limpa a cache e força um pedido novo.
+    Eurostat**, no topo da página, limpa a cache e força um pedido novo.
 
     **O período de cada valor está sempre visível.** Cada indicador mostra o seu período de
     referência (“Salário mínimo (2026S1)”, “Contas Nacionais 2024”) para que nunca se confunda a

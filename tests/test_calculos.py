@@ -2108,7 +2108,10 @@ def test_os_cartoes_de_indicador_esticam_so_quando_estao_sozinhos():
     fonte = _fonte("app.py")
 
     i = fonte.index('[data-testid="stMetric"] {{')
-    fim = fonte.index('[data-testid="stSidebar"] [data-testid="stMetric"]', i)
+    # A marca de fim era a regra dos indicadores da barra lateral, que
+    # desapareceu com ela a 01.09.2026. Passa a ser o comentario que abre o
+    # bloco seguinte, que e conteudo desta folha e nao um vestigio de outro.
+    fim = fonte.index("/* Rótulos a duas linhas", i)
     regra = fonte[i:fim]
 
     assert "height: 100%" in regra
@@ -2293,6 +2296,56 @@ def test_a_proveniencia_mostra_so_os_campos_que_o_separador_usa():
         "a faixa do “Histórico” voltou a anunciar uma âncora de despesa que "
         "esse separador nao usa, ou um ano de ponderadores quando a comparação "
         "de indices usa varios")
+
+
+def test_a_aplicacao_nao_tem_barra_lateral():
+    """
+    A barra foi esvaziando: os parametros desceram para o topo de "Despesa e
+    composicao" a 31.08.2026, o periodo de referencia passou para as faixas de
+    proveniencia a 01.09.2026, e a assinatura da unidade duplicava o cabecalho.
+    Sobrava um botao. Uma gaveta lateral permanente para um botao nao se
+    justifica, e a pagina ganha a largura que ela ocupava.
+
+    O que este teste guarda nao e a estetica: e que ninguem volte a esconder ali
+    um controlo ou um metadado, que e como ela se encheu da primeira vez.
+    """
+    # Sem os comentarios: os deste projeto citam de proposito o que deixou de
+    # existir, e um deles nomeia as duas coisas que a asercao proibe.
+    vivo = _fonte_viva("app.py")
+    assert "st.sidebar" not in vivo, (
+        "voltou a escrever-se na barra lateral. Se for mesmo para ficar assim, "
+        "apague tambem este teste; caso contrario, o lugar de um controlo e "
+        "junto do que ele altera.")
+    assert "initial_sidebar_state" not in vivo, (
+        "a aplicacao nao tem barra lateral para abrir ou fechar")
+
+    # E o codigo que la vivia tem de ter sobrevivido: a ancora e o numero de
+    # agregados eram calculados dentro do bloco, e deles depende quase tudo.
+    i_ancora, i_tabs = _ordem_no_app("ancora = ancora_oficial(", "= st.tabs([")
+    assert i_ancora < i_tabs, (
+        "a ancora oficial deixou de ser calculada antes dos separadores")
+
+
+def test_o_momento_da_recolha_aparece_uma_so_vez():
+    """
+    E o unico metadado desta aplicacao que e propriedade da **sessao** e nao de
+    uma fonte: vale nos sete separadores, incluindo os da DECO e do GPP, porque
+    e quando esta sessao foi buscar os dados em direto. Por isso fica uma so
+    vez, no topo, ao lado do botao que o renova, e nao dentro das faixas de
+    proveniencia do indice, que sao tres.
+    """
+    fonte = _fonte("app.py")
+    quantas = fonte.count('dados["momento"].strftime(')
+    assert quantas == 1, (
+        f"o momento da recolha e escrito em {quantas} sitios. Se estiver nas "
+        "faixas de proveniencia, volta a aparecer tres vezes, e o periodo de "
+        "referencia do indice passa a partilhar linha com um dado da sessao.")
+
+    i_botao = fonte.index('st.button("Recarregar do Eurostat"')
+    i_recolha = fonte.index('class="sg-recolha"')
+    assert abs(fonte[:i_botao].count("\n") - fonte[:i_recolha].count("\n")) < 12, (
+        "a hora da recolha afastou-se do botao que a renova. E ela que "
+        "justifica o botao existir: mostra-se a idade e oferece-se a accao.")
 
 
 def test_a_amplitude_do_simulador_fica_a_vista_e_a_demonstracao_recolhida():
