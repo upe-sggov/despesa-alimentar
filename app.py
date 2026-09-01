@@ -859,14 +859,16 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 [data-testid="stSidebar"] [data-testid="stNumberInput"],
 [data-testid="stSidebar"] [data-testid="stNumberInput"]
     > :not([data-testid="stWidgetLabel"]) {{ max-width: none; }}
-/* Os dois contadores da composição do agregado vivem numa coluna estreita, e o
-   limite acima estreitava-os ao ponto de o Streamlit deixar de desenhar o “−” e
-   o “+”: o contador passava a parecer um valor fixo e nada dizia que se podia
-   alterar. Aqui o campo leva a largura da coluna, que já é o limite
-   (relatado pela Inês, 01.09.2026). */
+/* Os dois contadores da composição do agregado vivem numa coluna estreita. Com
+   o limite geral acima, o campo ficava tão estreito que o Streamlit deixava de
+   desenhar o “−” e o “+”, e o contador passava a parecer um valor fixo. Sem
+   limite nenhum, os botões iam para a margem direita da coluna, longe do número
+   que alteram, que é o defeito que o limite geral existe para evitar.
+   Fica um limite próprio, entre os dois: chega para os botões existirem e
+   mantém-nos encostados ao número (relatado pela Inês, 01.09.2026). */
 .st-key-comp-agregado [data-testid="stNumberInput"],
 .st-key-comp-agregado [data-testid="stNumberInput"]
-    > :not([data-testid="stWidgetLabel"]) {{ max-width: none; }}
+    > :not([data-testid="stWidgetLabel"]) {{ max-width: 11.5rem; }}
 /* Na barra lateral os botões são ações secundárias, não chamadas à ação. */
 [data-testid="stSidebar"] .stButton > button {{
   border-color: var(--sg-borda-1); color: var(--sg-texto-2);
