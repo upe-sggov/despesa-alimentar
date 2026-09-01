@@ -2936,10 +2936,11 @@ with abaD:
     with painel("Evolução do cabaz"):
         titulo_pagina(
             "Evolução do cabaz essencial (DECO PROteste)",
-            "Preço de uma cesta de 63 bens alimentares essenciais, de composição fixa, "
-            "seguida pela DECO PROteste desde janeiro de 2022. Não é o indicador que esta "
-            "aplicação calcula, é uma referência externa e privada, que complementa a "
-            "leitura da despesa alimentar apresentada nos restantes separadores.")
+            "Preço de uma cesta fixa de 63 bens alimentares essenciais, monitorizada pela "
+            "DECO PROteste desde janeiro de 2022. Trata-se de um indicador externo e "
+            "privado, não calculado por esta aplicação, que serve como referência "
+            "complementar à leitura da despesa alimentar apresentada nos restantes "
+            "separadores.")
 
         _serie_deco, _top10_deco, _meta_deco = deco.carregar()
 
@@ -2976,7 +2977,11 @@ with abaD:
                 sec_cor=(None if _sv.get("delta_pct") is None
                          else (VERMELHO if _sv["delta_pct"] > 0 else VERDE)))
 
-            nota("Não é o indicador desta aplicação", f"""
+            # A data de extração saiu daqui a 01.09.2026: o momento da recolha
+            # está no topo da página, e o período a que os preços se referem
+            # está no indicador de capa, logo acima. Aqui era uma terceira data
+            # a competir com as outras duas (pedido da Inês).
+            nota("Cabaz DECO PROteste", f"""
                 A DECO PROteste soma o <strong>preço absoluto</strong> de uma lista fixa de
                 63 produtos, sem ponderação pelo consumo real das famílias e sem cobrir o
                 comércio tradicional. A <strong>despesa alimentar</strong>, que é o que os
@@ -2985,7 +2990,7 @@ with abaD:
                 “Distinção entre despesa alimentar e cabaz”, no separador
                 Metodologia. Fonte: <a href="{_meta_deco.get('endereco', '#')}"
                 target="_blank" rel="noopener noreferrer">{_meta_deco.get('fonte',
-                'DECO PROteste')}</a>, extraído em {_meta_deco.get('extraido_em', '—')}.""")
+                'DECO PROteste')}</a>.""")
 
             secao("Evolução desde 2022",
                   f"Preço semanal do cabaz, de {_di['data'].strftime('%d/%m/%Y')} a "
@@ -3043,6 +3048,20 @@ with abaD:
                 }
                 _disponiveis = [c for c in _rotulos_top10
                                 if c in set(_top10_deco["tabela"])]
+
+                # As barras têm de começar sempre no mesmo sítio. O Plotly
+                # alarga sozinho a margem esquerda até caber o nome mais longo
+                # do eixo, e como cada janela tem produtos diferentes, o zero
+                # saltava ao mudar de subseparador: comparar as três exigia
+                # reencontrar o eixo de cada vez.
+                #
+                # A margem passa a ser calculada uma vez, sobre o nome mais
+                # longo das **três** janelas, e fixada com `automargin=False`.
+                # Fica igual em todas, e nenhum nome é cortado porque a conta
+                # parte do pior caso (relatado pela Inês, 01.09.2026).
+                _nome_maior = max((len(str(p)) for p in _top10_deco["produto"]),
+                                  default=10)
+                _margem_esq = min(320, 16 + int(_nome_maior * 6.6))
                 _subabas = st.tabs([_rotulos_top10[c] for c in _disponiveis])
                 for _chave, _sub in zip(_disponiveis, _subabas):
                     with _sub:
@@ -3060,8 +3079,9 @@ with abaD:
                                           "<extra></extra>"))
                         figT.update_layout(
                             height=max(320, 36 * len(_t)),
-                            margin=dict(t=12, b=10, l=10, r=10),
+                            margin=dict(t=12, b=10, l=_margem_esq, r=10),
                             xaxis_title="Aumento (%)")
+                        figT.update_yaxes(automargin=False)
                         grafico(figT)
 
                 st.download_button(
@@ -3198,10 +3218,15 @@ with aba1:
           um <strong>ponto de uma só base</strong> e não devem ser lidos como o valor central de
           nada. Ver o registo de ligações no separador Metodologia.""", alerta=True)
 
+        # A redacção anterior encadeava três ideias num parágrafo, com um ponto e
+        # vírgula pelo meio e um “qualificam-na” que obrigava a voltar atrás para
+        # descobrir o que era “na”. Três frases, uma ideia em cada (pedido da
+        # Inês, 01.09.2026).
         secao(f"Ajustado ao agregado selecionado ({composicao})",
-              "Os mesmos dados aplicados à composição escolhida no bloco acima. "
-              "A despesa mensal é a que abre o separador; estes indicadores "
-              "qualificam-na. A escala de equivalência está no separador Metodologia.",
+              "A despesa que abre o separador, ajustada à composição escolhida "
+              "acima. Os indicadores seguintes mostram como ela se reparte e "
+              "quanto pesa. O cálculo da escala de equivalência está no separador "
+              "Metodologia.",
               grupo="03 · O agregado selecionado")
         # Quatro indicadores, e não cinco: a despesa mensal saiu daqui para o
         # indicador de capa, no topo da página, onde ocupa o lugar que o seu
@@ -3470,7 +3495,18 @@ with aba1:
             )
 
             with st.expander("De onde vem cada referência"):
-                st.dataframe(tab_r, width="stretch", hide_index=True)
+                # A coluna “Detalhe” é um parágrafo, e com o quadro esticado à
+                # largura do contentor ela encolhia até caber, cortando o texto
+                # sem barra de deslocamento para o ver. Passa a ter largura
+                # própria: o quadro fica mais largo do que o espaço disponível,
+                # e o Streamlit desenha o deslocamento lateral (relatado pela
+                # Inês, 01.09.2026).
+                st.dataframe(
+                    tab_r, width="stretch", hide_index=True,
+                    column_config={
+                        "Referência": st.column_config.TextColumn(width="medium"),
+                        "Detalhe": st.column_config.TextColumn(width="large"),
+                    })
 
         # ---- onde está concentrado o aumento ----
         # “Contributo” e não “o que está a pesar mais”: é a palavra que os cartões
@@ -3901,11 +3937,15 @@ with aba1:
             # grupo de rendimento”, e “repartido” é justamente o que não é. Cada
             # linha tem o **seu** denominador, e é por isso que as três não se
             # somam e que a nacional não é um ponto médio (Inês, 13.08.2026).
+            # A definição do limiar saiu daqui a 01.09.2026: já estava no (i) do
+            # indicador, dois ecrãs acima, e outra vez na nota dos três
+            # indicadores, e o leitor lia a mesma frase três vezes. Fica só o
+            # que **não** está em mais lado nenhum, que é como se lê este
+            # gráfico em concreto: cada linha tem o seu próprio denominador, e é
+            # por isso que as três não se somam (pedido da Inês).
             componente("Privação severa e quem a sofre",
-                       "Percentagem que <strong>não consegue pagar uma refeição com carne, "
-                       "frango ou peixe</strong> (ou equivalente vegetariano) de dois em "
-                       "dois dias. <strong>Cada linha mede a percentagem dentro do seu "
-                       "próprio grupo</strong>, e não a proporção da população: por isso as "
+                       "<strong>Cada linha mede a percentagem dentro do seu próprio "
+                       "grupo</strong>, e não a proporção da população: por isso as "
                        "três não se somam.")
             if _priv_pt.empty:
                 st.info("Série indisponível nesta sessão. Ver o registo de ligações "
@@ -4240,10 +4280,35 @@ with aba2:
         # ---------- o que está por trás da inflação alimentar ----------
         agr_esp = dados.get("agregados_especiais")
         if agr_esp is not None and not agr_esp.empty:
+            pt_esp = agr_esp[agr_esp["geo"] == "PT"]
+            meses_esp = sorted(pt_esp["time"].unique())
+            # O cursor é definido pelo índice por classe, que sai por volta do
+            # dia 17. A estimativa rápida dos **agregados** sai no último dia
+            # útil do mês de referência, pelo que esta série pode ter um mês a
+            # mais, que ficava fora do intervalo e desaparecia sem uma palavra
+            # (auditoria de 12.08.2026, L15).
+            #
+            # Calculado antes da secção, e não depois: o aviso passou a viver no
+            # (i) do título, e no Streamlit a ordem do ficheiro é a ordem de
+            # execução. Era um `st.info` azul entre outros dois, quando o que
+            # diz interessa a quem reparar na discrepância e mais a ninguém
+            # (pedido da Inês, 01.09.2026).
+            _alem = [m for m in meses_esp if fim_sel is not None and m > fim_sel]
+            _ajuda_alem = (
+                f"A série destes agregados vai até **{mes_pt(_alem[-1])}**, um mês "
+                f"mais além do que o índice por classe ({mes_pt(fim_sel)}), que é o "
+                "que comanda o cursor. A estimativa rápida do índice, só com os "
+                "agregados, sai no último dia útil do mês de referência; o índice "
+                "completo, com as nove classes, só por volta do dia 17 do mês "
+                "seguinte. Essa observação existe, e não é mostrada para o gráfico "
+                "ficar alinhado com o cursor."
+            ) if _alem else None
+
+            # Sem subtítulo: dizia exactamente o que a nota abaixo diz na
+            # primeira linha, e o leitor lia a mesma frase duas vezes antes de
+            # chegar ao gráfico (relatado pela Inês, 01.09.2026).
             secao("Composição da variação: frescos e transformados",
-                  "A alimentação não constitui um agregado homogéneo: os produtos não "
-                  "transformados e os transformados respondem a determinantes distintos.",
-                  grupo="02 · Frescos e transformados")
+                  ajuda=_ajuda_alem, grupo="02 · Frescos e transformados")
             st.info("""
     A alimentação não constitui um agregado homogéneo. **Os produtos não transformados e os
     transformados respondem a determinantes distintos:**
@@ -4258,14 +4323,6 @@ with aba2:
     para caracterizar a natureza da variação observada.
             """)
 
-            pt_esp = agr_esp[agr_esp["geo"] == "PT"]
-            meses_esp = sorted(pt_esp["time"].unique())
-            # O cursor é definido pelo índice por classe, que sai por volta do
-            # dia 17. A estimativa rápida dos **agregados** sai no último dia
-            # útil do mês de referência, pelo que esta série pode ter um mês a
-            # mais, que ficava fora do intervalo e desaparecia sem uma palavra
-            # (auditoria de 12.08.2026, L15).
-            _alem = [m for m in meses_esp if fim_sel is not None and m > fim_sel]
             if inicio_sel is not None:
                 meses_esp = [m for m in meses_esp if inicio_sel <= m <= fim_sel]
                 # Se a série não cobrir todo o intervalo escolhido, isso tem de
@@ -4281,15 +4338,6 @@ with aba2:
                 elif not meses_esp:
                     st.warning(
                         "Não há observações destes agregados no intervalo escolhido."
-                    )
-                if _alem:
-                    st.info(
-                        f"**Estes agregados já têm {mes_pt(_alem[-1])}**, um mês à frente do "
-                        f"índice por classe ({mes_pt(fim_sel)}), que é o que define o cursor. "
-                        "A estimativa rápida do índice (só agregados) sai no último dia útil "
-                        "do mês de referência; o índice completo, com as nove classes, só por "
-                        "volta do dia 17 do mês seguinte. A observação existe e não é "
-                        "apresentada, porque o gráfico está alinhado com o cursor."
                     )
 
             so_alim = st.toggle(
@@ -4542,12 +4590,16 @@ with aba6:
     with painel("Da produção ao consumo"):
         titulo_pagina(
             "Da produção ao consumo",
-            "Todos os outros indicadores desta ferramenta medem o que o consumidor paga "
-            "ou quanto as famílias gastam. Nenhum identifica se a variação teve origem na "
-            "exploração agrícola, na transformação ou na distribuição. O Observatório de "
-            "Preços Agroalimentar do Gabinete de Planeamento, Políticas e Administração "
-            "Geral (GPP) é a única fonte pública que segue o mesmo produto nas duas pontas "
-            "da cadeia.")
+            # Abria por três frases sobre o que a ferramenta **não** faz, e só na
+            # terceira dizia ao que vinha. Passa a abrir pelo que este separador
+            # acrescenta (pedido da Inês, 01.09.2026).
+            "Este separador segue o mesmo produto nas duas pontas da cadeia: o preço "
+            "à saída da exploração agrícola e o preço ao consumidor. Mostra assim "
+            "onde os preços se moveram, uma leitura que os restantes separadores não "
+            "alcançam por medirem apenas o que o consumidor paga. A fonte é o "
+            "Observatório de Preços Agroalimentar do Gabinete de Planeamento, "
+            "Políticas e Administração Geral (GPP), a única pública que acompanha as "
+            "duas fases do mesmo produto.")
 
         _obs, _obs_meta = observatorio.carregar()
         if _obs.empty:
