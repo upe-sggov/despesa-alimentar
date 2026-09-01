@@ -2513,8 +2513,7 @@ with aba1:
     titulo_pagina(
         "Despesa alimentar das famílias",
         "Repartição, evolução e esforço da despesa alimentar do agregado "
-        "escolhido. A base de cálculo e a composição definem-se no bloco "
-        "seguinte.")
+        "escolhido. A base de cálculo e a composição definem-se abaixo.")
 
     # O bloco não tinha cabeçalho: os controlos abriam o separador sem nada os
     # nomear. Não se chamam “cenário” de propósito, que nesta aplicação cenário
