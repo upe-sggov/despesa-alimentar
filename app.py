@@ -440,6 +440,14 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 }}
 .sg-bloco--topo {{ margin-top: var(--sg-e4); }}
 .sg-bloco--so {{ margin-bottom: 0; }}
+/* Sem filete: o bloco abre o separador e não tem nada por cima de que se
+   separar. É o caso dos parâmetros de “Despesa e composição”, que são o
+   primeiro elemento a seguir às abas: ali a linha ficava a flutuar em espaço
+   vazio. Não se resolveu no `--topo` porque esse não quer dizer “primeiro da
+   página”, quer dizer “menos margem em cima”, e é usado também no bloco 02 da
+   comparação europeia, onde o filete separa mesmo dois blocos (pedido da Inês,
+   01.09.2026). */
+.sg-bloco--nu {{ border-top: 0; padding-top: 0; }}
 [data-testid="stMarkdownContainer"] p.sg-bloco__r {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .12em;
   text-transform: uppercase; color: var(--sg-verde); margin: 0; line-height: 1.4;
@@ -1161,16 +1169,23 @@ def bloco_metodologia(titulo: str, chaves: str = ""):
 
 
 def indice_metodologia(consulta: str) -> None:
-    """Desenha o índice, filtrado pela consulta. Vazia, mostra-o inteiro."""
-    termos = [t for t in _sem_acentos(consulta).split() if t]
-    if termos:
-        achados = [e for e in _INDICE_METODOLOGIA
-                   if all(t in _sem_acentos(f"{e['bloco']} {e['titulo']} "
-                                            f"{e['chaves']}") for t in termos)]
-    else:
-        achados = _INDICE_METODOLOGIA
+    """
+    Desenha os resultados da procura. **Sem consulta, não desenha nada.**
 
-    if termos and not achados:
+    Chegou a mostrar o índice inteiro por defeito, e eram 28 ligações em duas
+    colunas à entrada do separador: uma parede, que é exatamente o que a regra
+    deste separador proíbe, e a mesma razão por que os blocos abrem fechados. A
+    caixa de procura basta-se, e o texto que a acompanha diz o que procurar
+    (decisão da Inês, 01.09.2026).
+    """
+    termos = [t for t in _sem_acentos(consulta).split() if t]
+    if not termos:
+        return
+    achados = [e for e in _INDICE_METODOLOGIA
+               if all(t in _sem_acentos(f"{e['bloco']} {e['titulo']} "
+                                        f"{e['chaves']}") for t in termos)]
+
+    if not achados:
         st.caption(
             "Nada com esse termo nos títulos. O índice procura em títulos e "
             "palavras associadas, não no corpo do texto: para procurar dentro "
@@ -1186,13 +1201,13 @@ def indice_metodologia(consulta: str) -> None:
                       f'{_html(e["titulo"])}</a>')
     st.markdown(f'<nav class="sg-indice">{"".join(linhas)}</nav>',
                 unsafe_allow_html=True)
-    if termos:
-        st.caption(f"{numero(len(achados))} de "
-                   f"{numero(len(_INDICE_METODOLOGIA))} blocos.")
+    st.caption(f"{numero(len(achados))} de "
+               f"{numero(len(_INDICE_METODOLOGIA))} blocos.")
 
 
 def secao(titulo: str, descricao: str | None = None, topo: bool = False,
-          ajuda: str | None = None, grupo: str | None = None) -> None:
+          ajuda: str | None = None, grupo: str | None = None,
+          filete: bool = True) -> None:
     """
     Cabeçalho de secção. `ajuda` aceita markdown e aparece num **(i)** ao lado do
     título, é onde vai a nota que interessa a quem a procura e estorva quem não
@@ -1203,23 +1218,28 @@ def secao(titulo: str, descricao: str | None = None, topo: bool = False,
     `grupo` promove a secção a **início de bloco analítico**: acrescenta-lhe o
     filete e o rótulo numerado por cima do título. É o degrau que separa os
     grandes blocos de uma página das secções dentro de cada um.
+
+    `filete=False` tira essa linha, para o bloco que abre um separador e não tem
+    nada por cima de que se separar. Não se resolveu pelo `topo` porque esse não
+    quer dizer “primeiro da página”, quer dizer “menos margem em cima”, e é
+    usado também onde o filete separa mesmo dois blocos.
     """
     desc = f'<p class="sg-secao__d">{descricao}</p>' if descricao else ""
     olho = _olho(grupo) if grupo else ""
+    extra = (" sg-bloco--topo" if topo else "") + ("" if filete else " sg-bloco--nu")
     if ajuda:
         if grupo:
             # O título vem do Streamlit no elemento seguinte; o CSS encosta-o
             # ao rótulo do bloco pelo seletor de irmão adjacente.
-            classe = "sg-bloco sg-bloco--so" + (" sg-bloco--topo" if topo else "")
-            st.markdown(f'<div class="{classe}">{olho}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="sg-bloco sg-bloco--so{extra}">{olho}</div>',
+                        unsafe_allow_html=True)
         st.subheader(titulo, anchor=False, help=ajuda)
         if desc:
             st.markdown(f'<div class="sg-secao sg-secao--dep">{desc}</div>',
                         unsafe_allow_html=True)
         return
     if grupo:
-        classe = "sg-bloco" + (" sg-bloco--topo" if topo else "")
-        st.markdown(f'<div class="{classe}">{olho}'
+        st.markdown(f'<div class="sg-bloco{extra}">{olho}'
                     f'<h2 class="sg-secao__t">{_html(titulo)}</h2>{desc}</div>',
                     unsafe_allow_html=True)
         return
@@ -2504,7 +2524,7 @@ with aba1:
           "Definem a base de despesa e o agregado a que se referem todos os "
           "valores deste separador. O simulador de IVA herda daqui a base de "
           "cálculo; os restantes separadores não respondem a estes parâmetros.",
-          grupo="01 · Parâmetros", topo=True)
+          grupo="01 · Parâmetros", topo=True, filete=False)
 
     # --- base de cálculo: as duas fontes oficiais não coincidem ---
     # As opções são **as bases efetivamente calculáveis nesta sessão**, e não a

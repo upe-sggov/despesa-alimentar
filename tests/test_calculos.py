@@ -2768,8 +2768,12 @@ def test_o_indice_da_metodologia_e_navegavel():
     """
     Um indice cujas ligacoes nao levam a lado nenhum e pior do que nenhum. Corre
     a aplicacao e confirma o que so se ve a correr: que cada entrada tem ancora,
-    que as ancoras sao unicas, e que o lugar do indice fica **acima** dos blocos
-    que ele indexa, apesar de ser preenchido depois de todos correrem.
+    que as ancoras sao unicas, e que os resultados saem **acima** dos blocos que
+    indexam, apesar de serem escritos depois de todos correrem.
+
+    Duas corridas, porque ha duas coisas a guardar: sem consulta nao se desenha
+    lista nenhuma, que era uma parede de 28 ligacoes a entrada do separador; com
+    consulta, a lista sai e leva a algum lado.
     """
     import re
     from pathlib import Path
@@ -2778,9 +2782,20 @@ def test_o_indice_da_metodologia_e_navegavel():
     from streamlit.testing.v1 import AppTest
 
     raiz = Path(__file__).resolve().parent.parent
-    app = AppTest.from_file(str(raiz / "app.py"), default_timeout=300).run()
-    if app.exception:
+
+    vazio = AppTest.from_file(str(raiz / "app.py"), default_timeout=300).run()
+    if vazio.exception:
         pytest.skip("a aplicacao nao carregou (sem rede?)")
+    assert not [m for m in vazio.markdown if 'class="sg-indice"' in str(m.value)], (
+        "o indice voltou a desenhar-se inteiro sem ninguem o pedir. Sao 28 "
+        "ligacoes a entrada do separador, que e a parede que a regra deste "
+        "separador proibe.")
+
+    app = AppTest.from_file(str(raiz / "app.py"), default_timeout=300)
+    # Um termo que existe em todos os blocos, pela via do rotulo da seccao: e o
+    # ponto no separador de cada rotulo numerado ("01 · Conceitos…").
+    app.session_state["busca_metodologia"] = "·"
+    app = app.run()
 
     indices = [str(m.value) for m in app.markdown
                if 'class="sg-indice"' in str(m.value)]
@@ -2791,22 +2806,22 @@ def test_o_indice_da_metodologia_e_navegavel():
                (re.search(r'id="(met-[^"]+)"', str(x.value)) for x in app.markdown)
                if m]
 
-    assert entradas, "o indice saiu vazio"
+    assert entradas, "a procura nao devolveu entrada nenhuma"
     assert len(set(ancoras)) == len(ancoras), (
         "ha ancoras repetidas: dois titulos diferentes deram o mesmo endereco, "
         "e uma das ligacoes leva ao bloco errado")
     assert not set(entradas) - set(ancoras), (
         f"entradas sem ancora: {set(entradas) - set(ancoras)}")
     assert len(entradas) == len(ancoras), (
-        f"{len(ancoras)} blocos com ancora e {len(entradas)} no indice")
+        f"{len(ancoras)} blocos com ancora e {len(entradas)} encontrados")
 
-    # O indice tem de sair **antes** do primeiro bloco que indexa. E o que o
+    # Os resultados saem **antes** do primeiro bloco que indexam. E o que o
     # contentor reservado garante, e o que se perde se alguem o remover.
     ordem = [i for i, m in enumerate(app.markdown)
              if 'class="sg-indice"' in str(m.value)
              or 'class="sg-ancora"' in str(m.value)]
     assert 'class="sg-indice"' in str(app.markdown[ordem[0]].value), (
-        "o indice esta desenhado depois dos blocos que indexa")
+        "os resultados estao desenhados depois dos blocos que indexam")
 
 
 def test_nenhum_asterisco_de_markdown_chega_ao_ecra():
