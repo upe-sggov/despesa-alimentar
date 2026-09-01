@@ -2142,6 +2142,107 @@ def test_a_folha_de_estilo_tem_as_chavetas_equilibradas():
     assert profundidade == 0
 
 
+# --------------------- os parametros deixaram de ser globais, 31.08.2026
+def _ordem_no_app(*marcas):
+    """Posicao de cada marca no `app.py`, pela ordem em que aparecem no ficheiro."""
+    fonte = _fonte("app.py")
+    saida = []
+    for m in marcas:
+        i = fonte.find(m)
+        assert i >= 0, f"marca nao encontrada no app.py: {m!r}"
+        saida.append(i)
+    return saida
+
+
+def test_os_controlos_nao_estao_duplicados():
+    """
+    A base e a composicao passaram da barra lateral para o topo de "Despesa e
+    composicao". O que nao pode acontecer e ficarem nos dois sitios: dois
+    widgets com o mesmo proposito dao dois valores independentes, e metade da
+    aplicacao passa a responder a um e metade ao outro.
+    """
+    fonte = _fonte("app.py")
+
+    # A criacao do widget, e nao o rotulo: "Base de cálculo" tambem e o nome de
+    # uma coluna no cabecalho dos CSV exportados, que nao e controlo nenhum.
+    for criacao in ("base_chave = st.radio(", "adultos = ca.number_input(",
+                    "criancas = cb.number_input(", "escala_chave = st.selectbox("):
+        assert fonte.count(criacao) == 1, (
+            f"`{criacao}` aparece {fonte.count(criacao)} vezes. Um controlo "
+            "duplicado deixa metade da aplicação a responder ao outro.")
+
+
+def test_os_controlos_correm_antes_de_quem_os_consome():
+    """
+    No Streamlit a ordem do ficheiro **e** a ordem de execucao, e nao a ordem
+    visual das abas. Os controlos vivem dentro de `with aba1:`, que e o topo de
+    "Despesa e composicao", mas tem de estar escritos antes da decomposicao e de
+    todos os separadores que a consomem. Trocar estes blocos de sitio da um
+    NameError que nenhum teste estatico apanha.
+    """
+    i_tabs, i_ctrl, i_decomp, i_abad = _ordem_no_app(
+        "= st.tabs([",
+        "    # --- base de cálculo: as duas fontes oficiais",
+        "df_decomp = decompor(",
+        "with abaD:")
+
+    assert i_tabs < i_ctrl, "os controlos estao escritos antes de as abas existirem"
+    assert i_ctrl < i_decomp, (
+        "a decomposicao esta escrita antes dos controlos de que depende")
+    assert i_decomp < i_abad, (
+        "o primeiro separador corre antes de a decomposicao existir")
+
+
+def test_o_alarme_de_cobertura_continua_acima_das_abas():
+    """
+    A decomposicao desceu no ficheiro, mas as duas mensagens que dela dependem
+    valem para a aplicacao inteira e tem de continuar a aparecer no topo da
+    pagina. O contentor guarda-lhes o lugar antes das abas e e preenchido
+    depois: sem ele, o alarme aparecia dentro do ultimo separador.
+    """
+    i_slot, i_tabs, i_uso = _ordem_no_app(
+        "_slot_cobertura = st.container()", "= st.tabs([", "with _slot_cobertura:")
+
+    assert i_slot < i_tabs, "o lugar do alarme tem de ser reservado antes das abas"
+    assert i_tabs < i_uso, "o alarme e escrito antes de a decomposicao existir"
+
+
+def test_so_o_simulador_declara_a_base_herdada():
+    """
+    A regra: a ausencia de etiqueta e a informacao. Um separador sem etiqueta e
+    um separador imune a estes parametros, e por isso nao pode dizer "nao
+    aplicavel" nem equivalente. O simulador e a excecao porque a base altera-lhe
+    o resultado sem ser evidente de onde vem.
+    """
+    fonte = _fonte("app.py")
+    assert fonte.count('class="sg-heranca"') == 1, (
+        "a etiqueta da base herdada so pertence ao simulador")
+
+    vivo = _fonte_viva("app.py")
+    for proibido in ("Não aplicável", "N/A", "Sem filtro", "Não se aplica"):
+        assert proibido not in vivo, (
+            f"“{proibido}” substitui a ausencia de etiqueta por uma mensagem. "
+            "A ausencia e que e a informacao.")
+
+
+def test_a_extrapolacao_nacional_usa_o_agregado_medio():
+    """
+    Regra obrigatoria da especificacao: a extrapolacao para o pais nao pode
+    passar a seguir a composicao escolhida. Multiplicar uma despesa ajustada a
+    "2 adultos" pelos milhoes de agregados dava um total nacional de um pais que
+    nao existe.
+    """
+    fonte = _fonte("app.py")
+    i = fonte.index("_sim_nac = simular_iva(")
+    trecho = fonte[i:i + 400]
+
+    assert "media_agregado" in trecho, (
+        "a extrapolacao nacional deixou de partir do agregado medio")
+    assert "despesa_mensal" not in trecho, (
+        "a extrapolacao nacional passou a usar a despesa do agregado "
+        "selecionado, e deixa de ser nacional")
+
+
 # --------------------- iconografia das categorias, 31.08.2026
 def test_ha_uma_so_paleta_das_classes():
     """
