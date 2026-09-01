@@ -1,4 +1,4 @@
-# Despesa alimentar — ferramenta de análise
+﻿# Despesa alimentar — ferramenta de análise
 
 Aplicação de apoio à decisão sobre a despesa alimentar das famílias em Portugal, desenvolvida
 pela **Unidade de Pesquisa e Estatísticas (UPE)** da Direção de Serviços de
@@ -118,7 +118,7 @@ despesa-alimentar/
 ├── docs/
 │   └── 2026-08-07_levantamento_lacunas.md   # apuramento e decisões
 └── tests/
-    └── test_calculos.py    # 168 testes dos cálculos analíticos
+    └── test_calculos.py    # 169 testes dos cálculos analíticos
 ```
 
 A separação entre **acesso a dados** (`eurostat.py`, `observatorio.py`),
@@ -1065,7 +1065,7 @@ ECOICOP versão 2. Se os códigos `CP011x` deixarem de responder, basta atualiza
 campo `cod` em `CLASSES`; o resto da aplicação não precisa de alterações.
 
 **Antes de qualquer alteração aos cálculos**, correr `python -m pytest tests/ -v`.
-Os 168 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
+Os 169 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
 casos-limite conhecidos.
 
 ---

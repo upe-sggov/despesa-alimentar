@@ -2295,6 +2295,36 @@ def test_a_proveniencia_mostra_so_os_campos_que_o_separador_usa():
         "de indices usa varios")
 
 
+def test_a_amplitude_do_simulador_fica_a_vista_e_a_demonstracao_recolhida():
+    """
+    As quatro notas de sensibilidade estao recolhidas desde 13.08.2026, e bem: a
+    demonstracao de cada uma sao paragrafos, e nao pertencem ao meio da leitura.
+    Mas recolhe-las inteiras escondia tambem **o facto**, que e material para
+    interpretar o numero de capa: a diferenca entre as duas bases oficiais anda
+    perto de um fator de 2.
+
+    A regra, decidida a 01.09.2026: a grandeza fica visivel, a demonstracao fica
+    recolhida. Este teste guarda a ordem, que e a substancia; nao guarda
+    redacao nenhuma.
+    """
+    i_calc, i_sintese, i_bloco = _ordem_no_app(
+        "_res_outra = resumo_iva(",
+        "    _amp = []",
+        'with st.expander("Amplitude de variação')
+
+    assert i_calc < i_sintese, (
+        "a sintese visivel usa valores que ainda nao foram calculados")
+    assert i_sintese < i_bloco, (
+        "a sintese da amplitude voltou para dentro do bloco recolhivel. Quem "
+        "nao o abrisse lia o resultado como se fosse unico.")
+
+    # A conta da outra ancora e uma so. Ficou a correr duas vezes quando subiu
+    # de sitio, e a duplicacao passaria despercebida: da o mesmo valor.
+    fonte = _fonte("app.py")
+    assert fonte.count("_res_outra = resumo_iva(") == 1, (
+        "a simulacao sobre a outra ancora esta a correr mais do que uma vez")
+
+
 def test_nenhum_bloco_recolhivel_abre_aberto():
     """
     A regra da aplicacao, e sobretudo do separador de metodologia: o leitor abre

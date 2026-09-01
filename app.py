@@ -5199,11 +5199,51 @@ with aba3:
             st.info("Defina um cenário diferente das taxas atuais para ver a repartição.")
 
 
-        # As quatro notas de sensibilidade estavam soltas: três seguidas por
-        # baixo dos indicadores e a quarta muito mais abaixo. São todas a mesma
-        # coisa, o quanto o resultado se move quando se puxa cada pressuposto,
-        # e ocupavam quatro parágrafos de texto corrido no meio da leitura.
-        # Passam a um bloco recolhível único (decisão da Inês, 13.08.2026).
+        # --- sensibilidade à base de cálculo ---
+        # Calculada aqui, e não dentro do bloco recolhível onde vivia, porque a
+        # síntese visível logo abaixo precisa destes valores. É a mesma conta,
+        # no mesmo sítio da leitura; o que mudou foi quem a consome.
+        if outra_ancora is not None:
+            _despesa_outra = despesa_do_agregado(
+                float(outra_ancora["valor"]), dim_efetiva, adultos, criancas, escala_chave)
+            _decomp_outra = decompor(_despesa_outra, dados["pesos"], dados["variacoes_classe"])
+            _sim_outra = simular_iva(_decomp_outra, taxas_atuais, taxas_cenario, repercussao)
+            _res_outra = resumo_iva(_sim_outra, _despesa_outra, vezes_ano, agregados)
+            # O agregado nacional da outra âncora segue a mesma regra do da âncora
+            # ativa: parte do agregado médio, não da composição escolhida.
+            _media_outra = float(outra_ancora["valor"])
+            _res_outra_nac = resumo_iva(
+                simular_iva(decompor(_media_outra, dados["pesos"], dados["variacoes_classe"]),
+                            taxas_atuais, taxas_cenario, repercussao),
+                _media_outra, vezes_ano, agregados)
+
+        # --- a amplitude, à vista ---
+        # As quatro notas de sensibilidade estão recolhidas desde 13.08.2026, e
+        # bem: são quatro parágrafos, e a demonstração de cada uma não pertence
+        # ao meio da leitura. Mas recolhê-las inteiras escondia também **o
+        # facto**, que é material para interpretar o número de capa: a diferença
+        # entre as duas bases oficiais anda perto de um fator de 2, e quem não
+        # abrisse o bloco lia o resultado como se fosse único.
+        #
+        # Fica visível a grandeza, e recolhida a demonstração. Duas frases, em
+        # corpo de legenda: os dois pressupostos de maior amplitude, com os
+        # valores que já estão calculados, e nada mais (pedido da Inês,
+        # 01.09.2026).
+        _amp = []
+        if outra_ancora is not None:
+            _amp.append(
+                f"com a outra base oficial (**{outra_ancora['nome']}**) seria "
+                f"**{euro(_res_outra['poupanca_mes'])}**")
+        if abs(_band_rho[1][0] - _band_rho[0][0]) > 0.005:
+            _amp.append(
+                f"entre os extremos publicados da repercussão, de "
+                f"**{euro(_band_rho[0][0])}** a **{euro(_band_rho[1][0])}**")
+        if _amp:
+            st.caption(
+                f"**Amplitude.** A poupança mensal acima é de "
+                f"**{euro(abs(res['poupanca_mes']))}**: " + "; ".join(_amp)
+                + ". O detalhe destes e dos restantes pressupostos, a seguir.")
+
         with st.expander("Amplitude de variação destes valores"):
             if abs(_band_rho[1][0] - _band_rho[0][0]) > 0.005:
                 st.caption(
@@ -5263,20 +5303,10 @@ with aba3:
                     "pequeno-almoço estão entre 13% e 23%, e nunca a 6%."
                 )
 
-            # --- sensibilidade à base de cálculo ---
+            # A conta subiu para antes do bloco, que é onde a síntese visível a
+            # consome. A nota fica: aqui é que estão a explicação e o valor
+            # agregado anual, que a síntese não leva.
             if outra_ancora is not None:
-                _despesa_outra = despesa_do_agregado(
-                    float(outra_ancora["valor"]), dim_efetiva, adultos, criancas, escala_chave)
-                _decomp_outra = decompor(_despesa_outra, dados["pesos"], dados["variacoes_classe"])
-                _sim_outra = simular_iva(_decomp_outra, taxas_atuais, taxas_cenario, repercussao)
-                _res_outra = resumo_iva(_sim_outra, _despesa_outra, vezes_ano, agregados)
-                # O agregado nacional da outra âncora segue a mesma regra do da âncora
-                # ativa: parte do agregado médio, não da composição escolhida.
-                _media_outra = float(outra_ancora["valor"])
-                _res_outra_nac = resumo_iva(
-                    simular_iva(decompor(_media_outra, dados["pesos"], dados["variacoes_classe"]),
-                                taxas_atuais, taxas_cenario, repercussao),
-                    _media_outra, vezes_ano, agregados)
                 st.caption(
                     f"**Sensibilidade à base de cálculo.** Estes valores usam a base "
                     f"**{base_ancora['nome']}**. Com **{outra_ancora['nome']}**, a poupança mensal "
