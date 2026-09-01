@@ -2165,11 +2165,20 @@ def test_os_controlos_nao_estao_duplicados():
 
     # A criacao do widget, e nao o rotulo: "Base de cálculo" tambem e o nome de
     # uma coluna no cabecalho dos CSV exportados, que nao e controlo nenhum.
-    for criacao in ("base_chave = st.radio(", "adultos = ca.number_input(",
-                    "criancas = cb.number_input(", "escala_chave = st.selectbox("):
-        assert fonte.count(criacao) == 1, (
-            f"`{criacao}` aparece {fonte.count(criacao)} vezes. Um controlo "
-            "duplicado deixa metade da aplicação a responder ao outro.")
+    #
+    # O contentor que cria o widget nao entra na asercao. Chegou a entrar, com
+    # `adultos = ca.number_input(`, e partiu-se quando os dois contadores
+    # deixaram de estar lado a lado: prendia a **arrumacao**, quando o que se
+    # quer fiscalizar e a existencia de um so controlo (01.09.2026).
+    import re
+
+    for nome, metodo in (("base_chave", "radio"), ("adultos", "number_input"),
+                         ("criancas", "number_input"),
+                         ("escala_chave", "selectbox")):
+        n = len(re.findall(rf"^\s*{nome} = \w+\.{metodo}\(", fonte, re.M))
+        assert n == 1, (
+            f"`{nome}` é definido por {n} `{metodo}`. Um controlo duplicado "
+            "deixa metade da aplicação a responder ao outro.")
 
 
 def test_os_controlos_correm_antes_de_quem_os_consome():
