@@ -2374,6 +2374,17 @@ abaD, aba1, aba2, aba6, aba3, aba4, aba5 = st.tabs([
 # ordem de execução, e não a ordem visual das abas. O `with aba1:` volta a
 # abrir mais abaixo para o resto do separador (decisão da Inês, 31.08.2026).
 with aba1:
+    # O bloco não tinha cabeçalho: os controlos abriam o separador sem nada os
+    # nomear. Não se chamam “cenário” de propósito, que nesta aplicação cenário
+    # é o do simulador de IVA, e o mesmo termo para duas coisas diferentes é o
+    # que a consistência terminológica proíbe. São parâmetros, e é o nome que a
+    # barra lateral já lhes dava (pedido da Inês, 01.09.2026).
+    secao("Parâmetros de análise",
+          "Definem a base de despesa e o agregado a que se referem todos os "
+          "valores deste separador. O simulador de IVA herda daqui a base de "
+          "cálculo; os restantes separadores não respondem a estes parâmetros.",
+          grupo="01 · Parâmetros", topo=True)
+
     # --- base de cálculo: as duas fontes oficiais não coincidem ---
     # As opções são **as bases efetivamente calculáveis nesta sessão**, e não a
     # lista fixa: se as Contas Nacionais não responderem, o IDF continua a
@@ -2939,7 +2950,7 @@ with aba1:
         secao("Referência nacional",
               "O agregado médio português, antes de qualquer ajustamento. É deste "
               "valor que parte o cálculo dos indicadores ajustados, mais abaixo.",
-              grupo="01 · Referência nacional", topo=True)
+              grupo="02 · Referência nacional")
         dim_txt = ('%.1f' % dim_efetiva).replace('.', ',')
         r1, r2, r3 = st.columns([1, 1, 2])
         r1.metric(f"Agregado médio nacional ({dim_txt} pessoas)",
@@ -3001,7 +3012,7 @@ with aba1:
               "Os mesmos dados aplicados à composição escolhida no bloco acima. "
               "A despesa mensal é a que abre o separador; estes indicadores "
               "qualificam-na. A escala de equivalência está no separador Metodologia.",
-              grupo="02 · O agregado selecionado")
+              grupo="03 · O agregado selecionado")
         # Quatro indicadores, e não cinco: a despesa mensal saiu daqui para o
         # indicador de capa, no topo da página, onde ocupa o lugar que o seu
         # peso na aplicação justifica. O rótulo e o *tooltip* que tinha (a
@@ -3318,7 +3329,7 @@ with aba1:
         secao("Contributo de cada grupo para a variação homóloga",
               f"Euros de variação <strong>{_janela}</strong> atribuíveis a cada "
               "grupo, positivos à direita, negativos à esquerda.",
-              ajuda=_ajuda_adit, grupo="03 · Onde está a variação")
+              ajuda=_ajuda_adit, grupo="04 · Onde está a variação")
         com_dados = df_decomp.dropna(subset=["contributo"]).sort_values("contributo")
         if com_dados.empty:
             st.info("Sem variações disponíveis para o período.")
@@ -3364,7 +3375,7 @@ with aba1:
               + (f" Repartição segundo os ponderadores oficiais de "
                  f"<strong>{dados['ano_pesos']}</strong>."
                  if dados.get("ano_pesos") else ""),
-              grupo="04 · Composição da despesa")
+              grupo="05 · Composição da despesa")
         # Este gráfico não mostra variação nenhuma, logo a janela homóloga não é
         # o seu período de referência. O que o data são duas outras coisas: o
         # ano dos ponderadores, que decide a repartição, e o mês a que o nível
@@ -3436,7 +3447,7 @@ with aba1:
               "subiram os preços e quantos euros por mês isso custa. A última coluna "
               "exprime esse custo em fração do orçamento, é a que compara o "
               "<strong>esforço</strong> entre quintis.",
-              ajuda=_ajuda_engel, grupo="05 · Distribuição por rendimento")
+              ajuda=_ajuda_engel, grupo="06 · Distribuição por rendimento")
 
         df_quintis = cabaz_quintis(dados["variacoes_classe"])
         df_comp_q = composicao_quintis()
@@ -3587,7 +3598,7 @@ with aba1:
               "Consoante o limiar adotado, os resultados para Portugal variam de forma "
               "substancial, com dados oficiais em qualquer dos casos. Os três limiares "
               "são por isso apresentados em conjunto.",
-              grupo="06 · Acessibilidade alimentar")
+              grupo="07 · Acessibilidade alimentar")
 
         _priv = dados.get("privacao", pd.DataFrame())
         _priv_pt = pd.DataFrame()
