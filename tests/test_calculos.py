@@ -1705,7 +1705,23 @@ def test_a_ancora_das_contas_nao_atribui_a_divergencia_aos_turistas():
     from src.config import BASES_ANCORA, CONCEITO_CONTAS_NACIONAIS
 
     porque = BASES_ANCORA["contas"]["porque"]
-    assert "não é sobretudo por causa dos não residentes" in porque
+
+    # Seguia a frase exacta "não é sobretudo por causa dos não residentes", e
+    # bastava reescreve-la para o teste deixar de guardar o que quer que fosse.
+    # Passa a seguir duas coisas que nao se movem com a redaccao: a **remissao**
+    # para o facto medido, que e um identificador, e a ausencia da explicacao
+    # errada, que e uma asercao negativa (01.09.2026).
+    assert "CONCEITO_CONTAS_NACIONAIS" in porque, (
+        "a explicacao das Contas Nacionais deixou de remeter para o facto "
+        "medido. Sem essa remissao volta a ser afirmacao sem base, que e o que "
+        "este teste existe para impedir.")
+    for errado in ("por incluírem não residentes", "por causa dos turistas",
+                   "devido aos não residentes", "por serem os turistas",
+                   "por incluir turistas"):
+        assert errado not in porque, (
+            f"a explicacao errada voltou: “{errado}”. Nos alimentos consumidos "
+            "em casa esse efeito e pequeno, e esta medido.")
+
     assert "QERU" in porque and "subavaliados" in porque
     assert "Pequeno" in CONCEITO_CONTAS_NACIONAIS["efeito_nos_alimentos"]
 
@@ -1907,13 +1923,33 @@ def test_o_observatorio_nao_opoe_o_acumulado_a_uma_variacao_anual():
     O resto da aplicacao diz sempre "variacao homologa", e e esse o termo que
     tem de opor-se ao acumulado (pergunta da Ines, 20.08.2026).
     """
+    import re
+
     fonte = _fonte("app.py")
 
     assert "não uma variação anual" not in fonte
     assert "**Não é uma variação anual.**" not in fonte
-    # E o termo certo tem de estar la, nos dois sitios que opunham os conceitos.
     assert fonte.count("**variação homóloga**") >= 1
-    assert "**Não é a variação homóloga.**" in fonte
+
+    # Seguia a frase exacta, com negrito e ponto final: "**Não é a variação
+    # homóloga.**". Passa a seguir a substancia, e circunscrita ao separador
+    # onde a doutrina se aplica. Fora dele a palavra "acumulado" designa outra
+    # coisa, o vies de substituicao do Tornqvist, que nada tem que opor a
+    # homologa: uma regra geral seria falsa (01.09.2026).
+    i = fonte.index("with aba6:")
+    obs = fonte[i:fonte.index("with aba3:", i)]
+
+    # **Todas**, e nao "pelo menos uma". Sao duas as passagens que apresentam a
+    # acumulada, e com o quantificador fraco quebrar uma delas nao acusava:
+    # apanhado a quebra-la de proposito (01.09.2026).
+    sozinhas = [" ".join(obs[max(0, m.start() - 80):m.start() + 80].split())
+                for m in re.finditer("acumulad", obs)
+                if "homólog" not in obs[max(0, m.start() - 600):m.start() + 600]]
+    assert not sozinhas, (
+        "no Observatorio ha variacao acumulada apresentada sem a homologa ao "
+        "pe. Sao duas contas diferentes, e sem a segunda nomeada o leitor le a "
+        "primeira como se fosse a que os outros separadores mostram:\n"
+        + "\n".join(f"  · …{s}…" for s in sozinhas))
 
 
 # --------------------- o README nao pode envelhecer em silencio, 20.08.2026
@@ -2032,7 +2068,17 @@ def test_o_readme_nao_diz_que_a_pasta_de_dados_fica_de_fora():
             f"o README volta a dizer que a pasta `dados/` é “{forma}”. É o "
             "contrário do que o `.gitignore` faz, com o `!dados/` explícito, e "
             "deixa os separadores do Observatório e da DECO vazios na nuvem.")
-    assert "tem de ser enviada para o repositório" in readme
+    # Seguia a frase exacta "tem de ser enviada para o repositório". Passa a
+    # exigir a **afirmacao**, e nao uma das suas formulacoes: alguma linha do
+    # README tem de dizer, sobre `dados/`, que e versionada. Hoje quem o diz e a
+    # arvore de ficheiros, "dados/ # versionado, e tem de ser"; se amanha for
+    # outra frase, o teste continua a guardar a mesma coisa (01.09.2026).
+    diz = [l for l in readme.splitlines()
+           if "dados/" in l and "versionad" in l.lower()]
+    assert diz, (
+        "o README deixou de dizer, em lado nenhum, que a pasta `dados/` e "
+        "versionada. As negativas acima impedem que ele diga o contrario; esta "
+        "garante que ele chega a dizer alguma coisa.")
 
 
 def test_os_ficheiros_de_dados_vao_para_o_repositorio():
@@ -3661,11 +3707,35 @@ def test_a_taxa_oficial_e_do_mesmo_mes_das_variacoes_por_classe():
 def test_a_divergencia_entre_as_duas_agregacoes_esta_declarada():
     """
     A aditividade continua a valer, mas a taxa que ela implica nao e a oficial.
-    Tem de estar escrito onde os contributos aparecem, e nao so no tooltip.
+    A nota que o declara tem de mostrar as **duas** taxas, e nao so a que lhe
+    convem, e tem de mostrar a conta que explica a diferenca.
+
+    Seguia duas frases exactas, "Os nove contributos somam exatamente" e "de ha
+    um ano"/"periodo corrente". Passa a seguir o que a nota **calcula**, que sao
+    identificadores e nao redaccao: as duas taxas e a reconstituicao com os
+    valores correntes. Uma nota que perca qualquer delas deixa de declarar a
+    divergencia, escreva-se ela como se escrever (01.09.2026).
     """
     vivo = _fonte_viva("app.py")
-    assert "Os nove contributos somam exatamente" in vivo
-    assert "de há um ano" in vivo and "período corrente" in vivo
+    i = vivo.index("_ajuda_adit = (")
+    nota = vivo[i:vivo.index(")\n", vivo.index("no indicador de topo", i))]
+
+    # Qualificados, e nao os nomes soltos: `variacao_oficial` tambem casa dentro
+    # de `mes_variacao_oficial`, que esta na mesma nota e e outra coisa. Com o
+    # nome solto, apagar a taxa oficial e deixar la o mes passava sem acusar
+    # (apanhado a quebrar o teste de proposito, 01.09.2026).
+    assert "resumo['contributo_total']" in nota, (
+        "a nota deixou de dizer quanto somam os contributos, que e a "
+        "propriedade que a decomposicao garante")
+    assert "resumo['variacao_implicita']" in nota, (
+        "a nota deixou de mostrar a taxa que a decomposicao implica")
+    assert "dados['variacao_oficial']" in nota, (
+        "a nota deixou de mostrar a taxa oficial ao lado da implicita, e sem as "
+        "duas nao ha divergencia declarada nenhuma")
+    assert "r.quota * r.variacao" in nota, (
+        "a nota deixou de reconstituir a taxa com os valores correntes. E essa "
+        "conta que mostra que as duas agregacoes sao da mesma coisa, em vez de "
+        "o afirmar")
 
 
 def test_a_reconstituida_pondera_pelos_valores_de_ha_um_ano():
