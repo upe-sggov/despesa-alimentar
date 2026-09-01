@@ -491,9 +491,11 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   font-size: .6875rem; font-weight: 600; letter-spacing: .10em;
   text-transform: uppercase; color: var(--sg-texto-3); margin: 0; line-height: 1.4;
 }}
-/* Valor de partida, quando o cartão mostra uma transição (simulador de IVA). */
+/* Valor de partida, quando o cartão mostra uma transição (simulador de IVA).
+   Fica **por baixo** do número de capa desde 01.09.2026, e a margem inverteu-se
+   com ele: por cima empurrava o número da página para a segunda linha. */
 [data-testid="stMarkdownContainer"] p.sg-hero__antes {{
-  font-size: .8125rem; color: var(--sg-texto-3); margin: .55rem 0 0;
+  font-size: .8125rem; color: var(--sg-texto-3); margin: .3rem 0 0;
   line-height: 1.4; font-variant-numeric: tabular-nums;
 }}
 /* Ancorado no contentor de markdown, em (0,2,1). O Streamlit define o corpo de
@@ -1242,7 +1244,7 @@ def componente(titulo: str, descricao: str | None = None) -> None:
 
 def indicador_principal(rotulo: str, valor: str, contexto: str | None = None,
                         sec_valor: str | None = None, sec_rotulo: str | None = None,
-                        sec_cor: str | None = None, antes: str | None = None) -> None:
+                        sec_cor: str | None = None, partida: str | None = None) -> None:
     """
     O número de capa de uma página, e só um por página.
 
@@ -1253,13 +1255,18 @@ def indicador_principal(rotulo: str, valor: str, contexto: str | None = None,
     escala) que antes vivia num *tooltip*. `sec_valor` é a grandeza que qualifica
     o número principal, tipicamente a variação homóloga.
 
-    `antes` mostra o valor de partida por cima do valor de capa, em corpo de
-    metadado. Serve o simulador de IVA, onde o que interessa não é só a despesa
-    nova mas a passagem da atual para ela; a diferença entre as duas vai no
-    `sec_valor`. É texto, e não uma seta: o mesmo critério que rege o resto da
+    `partida` mostra o valor de onde se veio, **por baixo** do valor de capa e em
+    corpo de metadado. Serve o simulador de IVA, onde o que interessa não é só a
+    despesa nova mas a passagem da atual para ela; a diferença entre as duas vai
+    no `sec_valor`. É texto, e não uma seta: o mesmo critério que rege o resto da
     aplicação.
+
+    Chamava-se `antes` e saía por cima, o que empurrava o número da página para
+    a segunda linha e punha o valor antigo onde o olho procura o novo. Passa
+    para baixo, que é onde se lê como referência e não como resposta (pedido da
+    Inês, 01.09.2026).
     """
-    ant = f'<p class="sg-hero__antes">{antes}</p>' if antes else ""
+    part = f'<p class="sg-hero__antes">{partida}</p>' if partida else ""
     ctx = f'<p class="sg-hero__c">{contexto}</p>' if contexto else ""
     lado = ""
     if sec_valor is not None:
@@ -1270,8 +1277,9 @@ def indicador_principal(rotulo: str, valor: str, contexto: str | None = None,
     st.markdown(
         f'<section class="sg-hero"><div class="sg-hero__topo">'
         f'<div class="sg-hero__p">'
-        f'<p class="sg-hero__r">{_html(rotulo)}</p>{ant}'
-        f'<p class="sg-hero__v">{_html(valor)}</p></div>{lado}</div>{ctx}</section>',
+        f'<p class="sg-hero__r">{_html(rotulo)}</p>'
+        f'<p class="sg-hero__v">{_html(valor)}</p>{part}</div>{lado}</div>'
+        f'{ctx}</section>',
         unsafe_allow_html=True)
 
 
@@ -2679,15 +2687,18 @@ with aba1:
     #
     # Os alarmes de implausibilidade **não** entram aqui: são para ver sem
     # procurar, e ficam no corpo da barra.
+    # O intervalo entre as bases e o “ponto central não é determinável” saíram
+    # daqui a 01.09.2026: estavam também, palavra por palavra, no quadro
+    # “O valor exato não é determinável”, que é visível sem clicar e acrescenta
+    # a razão de o não ser. Uma ressalva de segurança fica à vista, não atrás de
+    # um clique, e o (i) fica com o que é dele: qualificar a **escolha**, não
+    # repetir o resultado (decisão da Inês).
     _nota_base = []
     if outra_ancora is not None:
-        _nota_base.append(
-            f"Intervalo entre as duas bases: **{euro(ancora['minimo'])} a "
-            f"{euro(ancora['maximo'])}** por mês, para o agregado médio. "
-            f"O ponto central não é determinável."
-            + (f" Um dos extremos vem de **{outra_ancora['nome']}**, que está fora do "
-               "intervalo plausível, ver o alarme abaixo."
-               if _outra_suspeita else ""))
+        if _outra_suspeita:
+            _nota_base.append(
+                f"Um dos extremos do intervalo vem de **{outra_ancora['nome']}**, "
+                "que está fora do intervalo plausível, ver o alarme abaixo.")
         # O que separa as duas bases não é a fonte, é a pergunta: uma mede a
         # despesa dos agregados residentes, a outra o consumo no território. O
         # rácio é **calculado**, não inscrito: move-se com o mês do índice,
@@ -4062,41 +4073,17 @@ with aba1:
             )
 
         # ------- blocos recolhíveis lado a lado, para reduzir o deslocamento -------
-        bloco("07 · Método, comparações e detalhe")
-        e1, e2, e3 = st.columns(3)
-
-        with e1.expander("Como é calculado"):
-            # O passo 1 **depende da base escolhida**, e as duas não se parecem:
-            # a das Contas Nacionais divide um agregado macroeconómico, a do IDF
-            # não divide nada. Este bloco descrevia sempre a primeira, incluindo
-            # quando a base ativa era o IDF, que é a base por defeito
-            # (auditoria de 12.08.2026, L7).
-            if base_chave == "contas":
-                _passo1 = (
-                    "**1 ·** Das **Contas Nacionais** vem a despesa anual de todas as famílias "
-                    "em produtos alimentares. Divide-se pelo número de agregados **desse mesmo "
-                    "ano** e por doze.")
-            else:
-                _passo1 = (
-                    "**1 ·** Do **Inquérito às Despesas das Famílias 2022/2023** vem a despesa "
-                    "alimentar anual **por agregado**, medida diretamente. Divide-se apenas por "
-                    "doze: não passa por divisão de nenhum agregado macroeconómico.")
-            st.markdown(f"""
-    {_passo1}
-
-    **2 ·** O valor é trazido ao mês corrente pelo índice oficial de preços.
-
-    **3 ·** Ajusta-se à composição do agregado pela escala de equivalência.
-
-    **4 ·** Reparte-se pelos nove grupos com os ponderadores oficiais do índice.
-
-    Descreve a base **{base_ancora['nome']}**, escolhida em “Despesa e composição”. As fórmulas
-    completas das duas bases estão no separador **Metodologia**.
-            """)
-            st.warning(
-                "**Não é um cabaz de compras.** Não há quilos nem litros: há euros e variações "
-                "de preço. E os preços são médias nacionais do INE, não de uma insígnia concreta."
-            )
+        # Eram três. Saiu o “Como é calculado”, que resumia em prosa os mesmos
+        # quatro passos que a metodologia dá por extenso, com as fórmulas e as
+        # duas bases lado a lado, em “Os quatro passos desta ferramenta”. Era
+        # metodologia fora do separador da metodologia, e nada acrescentava ao
+        # que lá está.
+        #
+        # Ficam os dois que **não** são metodologia: são valores calculados
+        # nesta sessão, para o agregado e a escala escolhidos, e não têm
+        # equivalente na metodologia (decisão da Inês, 01.09.2026).
+        bloco("07 · Comparações e detalhe")
+        e2, e3 = st.columns(2)
 
         with e2.expander("Comparar composições"):
             comps = [(1, 0, "1 adulto"), (2, 0, "Casal"), (1, 1, "Monoparental + 1"),
@@ -4264,8 +4251,14 @@ with aba2:
             janela = var_pt[(var_pt["time"] >= inicio_sel) &
                             (var_pt["time"] <= fim_sel)]["valor"]
             c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Variação mais recente", percentagem(var_pt["valor"].iloc[-1]),
-                      help=f"Mês de referência: {mes_pt(var_pt['time'].iloc[-1])}")
+            # O rótulo dizia só "Variação mais recente", e ao lado de três
+            # cartões que dizem "do intervalo" isso levava a supor que também
+            # seguia o cursor. Não segue: é sempre o último mês da série, e o
+            # rótulo passa a dizê-lo (pedido da Inês, 01.09.2026).
+            c1.metric("Variação homóloga, último mês da série",
+                      percentagem(var_pt["valor"].iloc[-1]),
+                      help=(f"Mês de referência: {mes_pt(var_pt['time'].iloc[-1])}. "
+                            "Ao contrário dos três seguintes, não acompanha o cursor."))
             if len(janela):
                 c2.metric("Média do intervalo", percentagem(janela.mean()))
                 c3.metric("Máximo do intervalo", percentagem(janela.max()))
@@ -4823,7 +4816,10 @@ with aba6:
                 _n_pad = int(_contagem[nome])
                 exemplos = _var[_var["padrao"] == nome]["produto"].head(4).tolist()
                 st.markdown(
-                    f"- **{nome}** ({_n_pad} produto{'s' if _n_pad > 1 else ''}), "
+                    # Dois pontos e não vírgula: o que vem a seguir é a
+                    # definição do padrão, e a vírgula lia-se como se a frase
+                    # continuasse a contagem (pedido da Inês, 01.09.2026).
+                    f"- **{nome}** ({_n_pad} produto{'s' if _n_pad > 1 else ''}): "
                     f"{explicacao} *Ex.: {', '.join(exemplos)}.*"
                 )
 
@@ -5367,7 +5363,7 @@ with aba3:
         indicador_principal(
             "Nova despesa alimentar mensal",
             euro(res["novo_valor"]),
-            antes=f"Despesa atual <strong>{euro(despesa_mensal)}</strong> por mês",
+            partida=f"Despesa atual <strong>{euro(despesa_mensal)}</strong> por mês",
             contexto=(f"Cenário <strong>{CENARIOS[cenario][0]}</strong> · "
                       f"repercussão de <strong>{ao_consumidor}%</strong> · "
                       f"agregado com <strong>{composicao}</strong>"),
@@ -6207,7 +6203,8 @@ with aba4:
                 pass
             else:
                 secao(f"Posição em {mes_pt(ultimo)}",
-                      "Do mais lento para o mais rápido, com a distância à média "
+                      "Ordenado pela inflação alimentar, da mais baixa para a mais "
+                      "alta, com a distância à média "
                       "da UE-27 entre parênteses.",
                       grupo="02 · Posição relativa")
                 ordenado = ranking.sort_values("valor", ascending=True)
@@ -7783,6 +7780,9 @@ mede. “Cabaz” aparece só quando se fala de cabazes **de terceiros** ou do �
 Esta aplicação **não tem cabaz nenhum**: não conhece quantidades, não observa preços de
 produtos, não tem lista de artigos. Tem despesa em euros e variações de preço oficiais.
 A designação cabaz não corresponde, por isso, ao que a ferramenta mede.
+
+E os preços que estão por trás dessas variações são **médias nacionais do INE**, não os de
+uma insígnia concreta: não há aqui o preço de nenhum supermercado em particular.
 
             """)
         with bloco_metodologia("De onde vem a classificação COICOP",
