@@ -2386,12 +2386,13 @@ with aba1:
     # para fora do ecra (pedido da Inês, 01.09.2026). A escala leva mais
     # largura por o nome da opcao trazer os coeficientes atras.
     #
-    # A quarta coluna fica vazia de proposito. Sem ela as tres esticavam-se pela
-    # pagina toda e os controlos afastavam-se uns dos outros, cada um sozinho no
-    # seu terco; o vazio a direita junta-os a esquerda e da aos expansores uma
-    # largura que corresponde ao que eles explicam (01.09.2026).
-    _c_base, _c_comp, _c_esc, _c_vazia = st.columns(
-        [0.85, 1, 1.5, 0.75], gap="medium")
+    # As larguras não são iguais, e não há coluna vazia. Chegou a haver uma, para
+    # encostar os controlos à esquerda, mas deixava metade da folha por usar. Cada
+    # coluna leva antes a largura do que tem dentro: a base tem duas opções curtas,
+    # a composição dois contadores lado a lado, e a escala leva metade porque
+    # carrega os dois expansores e o nome da opção traz os coeficientes atrás
+    # (01.09.2026).
+    _c_base, _c_comp, _c_esc = st.columns([0.95, 1.15, 2.1], gap="medium")
 
     with _c_base:
         st.markdown('<p class="sg-grupo sg-grupo--primeiro">Base de cálculo</p>',
@@ -2420,11 +2421,6 @@ with aba1:
                       "próximo de 2. Nenhuma das duas mede isoladamente a grandeza pretendida, "
                       "pelo que a aplicação apresenta o intervalo. Ver separador Metodologia."),
             )
-        # Lugar do expansor da proveniência, preenchido mais abaixo. Fica nesta
-        # coluna porque é a base que ele explica, de onde vem o valor, com que
-        # denominador e em que ano: não tem nada que ver com a escala.
-        _slot_proveniencia = st.container()
-
         base_ancora = ancora["bases"][base_chave]
         outra_chave = next((k for k in ancora["bases"] if k != base_chave), None)
         outra_ancora = ancora["bases"][outra_chave] if outra_chave else None
@@ -2491,9 +2487,16 @@ with aba1:
                 f"separador Metodologia."
             )
 
-        # Lugar do comparador das escalas, preenchido mais abaixo: precisa da
-        # `faixa`, que só existe depois de os três parâmetros estarem lidos.
+        # Lugar dos dois expansores, preenchidos mais abaixo: o comparador das
+        # escalas precisa da `faixa`, que só existe depois de os três parâmetros
+        # estarem lidos.
+        #
+        # Os dois ficam aqui, e não um em cada coluna, por decisão da Inês
+        # (01.09.2026). O da proveniência qualifica a base e não a escala, mas
+        # dois expansores lado a lado em colunas de larguras diferentes davam
+        # duas caixas desalinhadas a meia altura do bloco; juntos, são um par.
         _slot_escalas = st.container()
+        _slot_proveniencia = st.container()
 
 
     # As duas legendas (o intervalo entre bases e a idade da base) recolheram-se
