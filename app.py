@@ -2380,49 +2380,106 @@ with aba1:
     # funcionar sozinho, é uma constante publicada atualizada pelo índice
     # (auditoria de 12.08.2026, L2).
     _bases_disp = [k for k in BASES_ANCORA if k in ancora["bases"]]
-    st.markdown('<p class="sg-grupo sg-grupo--primeiro">Base de cálculo</p>',
-                unsafe_allow_html=True)
-    # Lugar reservado para o (i) do grupo, preenchido no fim: o que ele diz
-    # depende da base que for escolhida no seletor abaixo, e o Streamlit desenha
-    # por ordem de execução.
-    _slot_nota_base = st.empty()
-    if len(_bases_disp) == 1:
-        base_chave = _bases_disp[0]
-        st.info(
-            f"Só a base **{BASES_ANCORA[base_chave]['nome']}** está disponível nesta "
-            "sessão. A outra depende de uma ligação que não respondeu, ver o registo "
-            "de ligações no separador Metodologia. **Não há intervalo: o valor "
-            "apresentado é um ponto de uma só base.**"
-        )
-    else:
-        base_chave = st.radio(
-            "Base de cálculo",
-            options=_bases_disp,
-            index=(_bases_disp.index(BASE_POR_DEFEITO)
-                   if BASE_POR_DEFEITO in _bases_disp else 0),
-            format_func=lambda k: BASES_ANCORA[k]["nome"],
-            label_visibility="collapsed",
-            help=("As duas fontes oficiais medem grandezas diferentes e divergem por um fator "
-                  "próximo de 2. Nenhuma das duas mede isoladamente a grandeza pretendida, "
-                  "pelo que a aplicação apresenta o intervalo. Ver separador Metodologia."),
-        )
-    base_ancora = ancora["bases"][base_chave]
-    outra_chave = next((k for k in ancora["bases"] if k != base_chave), None)
-    outra_ancora = ancora["bases"][outra_chave] if outra_chave else None
 
-    media_agregado = float(base_ancora["valor"])
-    valor_medio_agregado = media_agregado
-    dim_media = dados.get("dimensao_media")
+    # Os tres grupos na mesma linha. Sao tres parametros independentes e do
+    # mesmo nivel, e empilhados empurravam o primeiro indicador do separador
+    # para fora do ecra (pedido da Inês, 01.09.2026). A escala leva mais
+    # largura por o nome da opcao trazer os coeficientes atras.
+    _c_base, _c_comp, _c_esc = st.columns([1, 1, 1.25], gap="large")
 
-    # A verificação de plausibilidade existe para dizer “não use estes números”,
-    # e só olhava para a base **ativa**. Com a âncora das Contas Nacionais
-    # absurda e o IDF escolhido, a aplicação não dava alarme nenhum, e mostrava
-    # à mesma o valor absurdo, no intervalo acima, no cartão de topo
-    # e na sensibilidade do simulador (auditoria de 12.08.2026, M1).
-    _suspeitas = [b["nome"] for b in ancora["bases"].values()
-                  if not b.get("plausivel", True)]
-    _outra_suspeita = (outra_ancora is not None
-                       and not outra_ancora.get("plausivel", True))
+    with _c_base:
+        st.markdown('<p class="sg-grupo sg-grupo--primeiro">Base de cálculo</p>',
+                    unsafe_allow_html=True)
+        # Lugar reservado para o (i) do grupo, preenchido no fim: o que ele diz
+        # depende da base que for escolhida no seletor abaixo, e o Streamlit desenha
+        # por ordem de execução.
+        _slot_nota_base = st.empty()
+        if len(_bases_disp) == 1:
+            base_chave = _bases_disp[0]
+            st.info(
+                f"Só a base **{BASES_ANCORA[base_chave]['nome']}** está disponível nesta "
+                "sessão. A outra depende de uma ligação que não respondeu, ver o registo "
+                "de ligações no separador Metodologia. **Não há intervalo: o valor "
+                "apresentado é um ponto de uma só base.**"
+            )
+        else:
+            base_chave = st.radio(
+                "Base de cálculo",
+                options=_bases_disp,
+                index=(_bases_disp.index(BASE_POR_DEFEITO)
+                       if BASE_POR_DEFEITO in _bases_disp else 0),
+                format_func=lambda k: BASES_ANCORA[k]["nome"],
+                label_visibility="collapsed",
+                help=("As duas fontes oficiais medem grandezas diferentes e divergem por um fator "
+                      "próximo de 2. Nenhuma das duas mede isoladamente a grandeza pretendida, "
+                      "pelo que a aplicação apresenta o intervalo. Ver separador Metodologia."),
+            )
+        base_ancora = ancora["bases"][base_chave]
+        outra_chave = next((k for k in ancora["bases"] if k != base_chave), None)
+        outra_ancora = ancora["bases"][outra_chave] if outra_chave else None
+
+        media_agregado = float(base_ancora["valor"])
+        valor_medio_agregado = media_agregado
+        dim_media = dados.get("dimensao_media")
+
+        # A verificação de plausibilidade existe para dizer “não use estes números”,
+        # e só olhava para a base **ativa**. Com a âncora das Contas Nacionais
+        # absurda e o IDF escolhido, a aplicação não dava alarme nenhum, e mostrava
+        # à mesma o valor absurdo, no intervalo acima, no cartão de topo
+        # e na sensibilidade do simulador (auditoria de 12.08.2026, M1).
+        _suspeitas = [b["nome"] for b in ancora["bases"].values()
+                      if not b.get("plausivel", True)]
+        _outra_suspeita = (outra_ancora is not None
+                           and not outra_ancora.get("plausivel", True))
+
+
+    with _c_comp:
+        st.markdown('<p class="sg-grupo">Composição do agregado</p>',
+                    unsafe_allow_html=True)
+        ca, cb = st.columns(2)
+        adultos = ca.number_input(
+            "Com 14+ anos", min_value=1, max_value=10, value=2, step=1,
+            help=("Todas as pessoas com 14 ou mais anos, incluindo jovens dependentes. "
+                  "A partir dessa idade, a escala de equivalência atribui a mesma "
+                  "ponderação alimentar de um adulto, independentemente de a pessoa "
+                  "auferir rendimento próprio."))
+        criancas = cb.number_input(
+            "Menos de 14 anos", min_value=0, max_value=10, value=0, step=1,
+            help=("14 anos é o limiar definido pelas próprias escalas de equivalência "
+                  "da OCDE e do Eurostat, não é a definição demográfica de criança. "
+                  "Ver separador Metodologia."))
+
+
+    # A dimensão média do agregado entra em **todos** os valores em euros, pelo
+    # lado do denominador de `despesa_do_agregado`. Se a série do EU-SILC não
+    # responder, entra uma constante, e isso tem de ser dito, como já se diz do
+    # número de agregados e das fontes sem API. Era o único recuo da aplicação
+    # que acontecia em silêncio (auditoria de 12.08.2026, L6).
+    dim_efetiva = dim_media if dim_media else DIMENSAO_RECUO
+
+    with _c_esc:
+        # A escala tinha ficado dentro do grupo da composição, sem cabeçalho
+        # próprio, apesar de ser um terceiro parâmetro independente dos outros dois.
+        st.markdown('<p class="sg-grupo">Escala de equivalência</p>',
+                    unsafe_allow_html=True)
+        _escala_apurada = escala_mais_proxima()
+        escala_chave = st.selectbox(
+            "Escala de equivalência", options=list(ESCALAS.keys()),
+            index=list(ESCALAS.keys()).index(_escala_apurada) if _escala_apurada else 1,
+            format_func=lambda k: (ESCALAS[k]["nome"]
+                                   + (", apurada" if k == _escala_apurada else "")),
+            help=("Como se ajusta a despesa ao número de pessoas. A assinalada como "
+                  "“apurada” é a que, no teste contra o Inquérito às Despesas das Famílias "
+                  "(IDF) de 2022/2023, fica mais perto da despesa alimentar observada. "
+                  "Ver separador Metodologia."),
+        )
+        if _escala_apurada and escala_chave != _escala_apurada:
+            st.caption(
+                f"A escala escolhida não é a que melhor reproduz a despesa alimentar observada "
+                f"(**{ESCALAS[_escala_apurada]['nome'].split(' (')[0]}**). Ver o teste no "
+                f"separador Metodologia."
+            )
+
 
     # As duas legendas (o intervalo entre bases e a idade da base) recolheram-se
     # a um (i) junto ao título do grupo: são qualificações do seletor, e em texto
@@ -2484,6 +2541,10 @@ with aba1:
         for _n in _nota_base:
             st.markdown(_n)
 
+
+    # Fora das colunas, a largura toda: um alarme espremido num terço da
+    # largura deixa de se ler como alarme, e estes dizem “não use estes
+    # números”.
     if not base_ancora.get("plausivel", True):
         st.error(
             f"**A base ativa ({base_ancora['nome']}) está fora do intervalo plausível**, "
@@ -2503,27 +2564,6 @@ with aba1:
             "ligações no separador Metodologia."
         )
 
-    st.markdown('<p class="sg-grupo">Composição do agregado</p>',
-                unsafe_allow_html=True)
-    ca, cb = st.columns(2)
-    adultos = ca.number_input(
-        "Com 14+ anos", min_value=1, max_value=10, value=2, step=1,
-        help=("Todas as pessoas com 14 ou mais anos, incluindo jovens dependentes. "
-              "A partir dessa idade, a escala de equivalência atribui a mesma "
-              "ponderação alimentar de um adulto, independentemente de a pessoa "
-              "auferir rendimento próprio."))
-    criancas = cb.number_input(
-        "Menos de 14 anos", min_value=0, max_value=10, value=0, step=1,
-        help=("14 anos é o limiar definido pelas próprias escalas de equivalência "
-              "da OCDE e do Eurostat, não é a definição demográfica de criança. "
-              "Ver separador Metodologia."))
-
-    # A dimensão média do agregado entra em **todos** os valores em euros, pelo
-    # lado do denominador de `despesa_do_agregado`. Se a série do EU-SILC não
-    # responder, entra uma constante, e isso tem de ser dito, como já se diz do
-    # número de agregados e das fontes sem API. Era o único recuo da aplicação
-    # que acontecia em silêncio (auditoria de 12.08.2026, L6).
-    dim_efetiva = dim_media if dim_media else DIMENSAO_RECUO
     if not dim_media:
         st.warning(
             f"**A dimensão média do agregado não foi obtida nesta sessão.** Entra a "
@@ -2532,28 +2572,6 @@ with aba1:
             "em toda a Europa. **Todos os valores em euros por agregado dependem deste "
             "número.** Consulte o registo de ligações no separador Metodologia."
         )
-    # A escala tinha ficado dentro do grupo da composição, sem cabeçalho
-    # próprio, apesar de ser um terceiro parâmetro independente dos outros dois.
-    st.markdown('<p class="sg-grupo">Escala de equivalência</p>',
-                unsafe_allow_html=True)
-    _escala_apurada = escala_mais_proxima()
-    escala_chave = st.selectbox(
-        "Escala de equivalência", options=list(ESCALAS.keys()),
-        index=list(ESCALAS.keys()).index(_escala_apurada) if _escala_apurada else 1,
-        format_func=lambda k: (ESCALAS[k]["nome"]
-                               + (", apurada" if k == _escala_apurada else "")),
-        help=("Como se ajusta a despesa ao número de pessoas. A assinalada como "
-              "“apurada” é a que, no teste contra o Inquérito às Despesas das Famílias "
-              "(IDF) de 2022/2023, fica mais perto da despesa alimentar observada. "
-              "Ver separador Metodologia."),
-    )
-    if _escala_apurada and escala_chave != _escala_apurada:
-        st.caption(
-            f"A escala escolhida não é a que melhor reproduz a despesa alimentar observada "
-            f"(**{ESCALAS[_escala_apurada]['nome'].split(' (')[0]}**). Ver o teste no "
-            f"separador Metodologia."
-        )
-
     despesa_mensal = despesa_do_agregado(
         media_agregado, dim_efetiva, adultos, criancas, escala_chave)
     faixa = intervalo_agregado(media_agregado, dim_efetiva, adultos, criancas)
