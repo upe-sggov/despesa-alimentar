@@ -93,9 +93,15 @@ ICONES_CLASSE = {
     # Espiga: haste e tres pares de graos.
     "CP0111": "M12 21V6M12 11 8 8M12 11 16 8M12 15.5 8 12.5M12 15.5 16 12.5"
               "M12 6.5 9 4.5M12 6.5 15 4.5",
-    # Peca de carne com o osso ao centro.
-    "CP0112": "M7.5 7.5h6.5a4.5 4.5 0 0 1 0 9H7.5a4.5 4.5 0 0 1 0-9z"
-              "M10 12h.01",
+    # Costeleta: massa de carne arredondada com o osso destacado a esquerda.
+    # Era um rectangulo de cantos redondos com um ponto ao meio, que se lia como
+    # uma capsula de medicamento e nao como carne (relatado pela Ines,
+    # 01.09.2026). Agora tem contorno irregular, que e o que distingue uma peca
+    # de carne de qualquer forma geometrica, e o osso e um circulo aberto.
+    "CP0112": "M9.2 5.6c4-1.2 8 .9 9 4.6s-1.5 7.4-5.5 8.4c-2.4.6-4.3-.1-5.3-1.5"
+              "-.5-.7-1.4-.9-2.1-.5s-1.6.1-2-.7.1-1.7.9-2c.9-.3 1.4-1.1 1.3-2"
+              "-.3-2.9 1.2-5.5 3.7-6.3z"
+              "M8.6 11.4a1.9 1.9 0 1 0 2.4 2.9 1.9 1.9 0 0 0-2.4-2.9z",
     # Peixe: corpo em lente, cauda e olho.
     "CP0113": "M3.5 12c3.2-4.6 9.3-4.6 12.5 0-3.2 4.6-9.3 4.6-12.5 0z"
               "M16 12l4.5-3.2v6.4zM12.6 10.6h.01",
@@ -130,8 +136,15 @@ SETORES_OBSERVATORIO = {
     "alface": {"nome": "Alface", "grupo": "CP0117",
                "icone": "M12 19.5a7 7 0 1 1 0-14 7 7 0 0 1 0 14z"
                         "M8.2 8.4c1.6 3 1.6 6.6 0 9.6M15.8 8.4c-1.6 3-1.6 6.6 0 9.6"},
+    # Cinco graos, fechados e inclinados. Eram tres riscos diagonais soltos, que
+    # nao se liam como grao nenhum: um grao tem contorno, um risco nao
+    # (relatado pela Ines, 01.09.2026).
     "arroz": {"nome": "Arroz", "grupo": "CP0111",
-              "icone": "M7.5 10.5 9.5 7M12.5 13.5 14.5 10M9.5 17 11.5 13.5"},
+              "icone": "M8.4 5.6c.9.5 1 2 .2 3.4s-2.2 2-3.1 1.5-1-2-.2-3.4 2.2-2 3.1-1.5z"
+                       "M16 5.6c.9.5 1 2 .2 3.4s-2.2 2-3.1 1.5-1-2-.2-3.4 2.2-2 3.1-1.5z"
+                       "M12.2 11.8c.9.5 1 2 .2 3.4s-2.2 2-3.1 1.5-1-2-.2-3.4 2.2-2 3.1-1.5z"
+                       "M19.4 11.8c.9.5 1 2 .2 3.4s-2.2 2-3.1 1.5-1-2-.2-3.4 2.2-2 3.1-1.5z"
+                       "M6.4 15.6c.9.5 1 2 .2 3.4s-2.2 2-3.1 1.5-1-2-.2-3.4 2.2-2 3.1-1.5z"},
     "azeite-3": {"nome": "Azeite", "grupo": "CP0115",
                  "icone": "M10.5 3.8h3v2.4l2.2 2.9v10.4a.5.5 0 0 1-.5.5H8.8"
                           "a.5.5 0 0 1-.5-.5V9.1z"},
@@ -144,9 +157,13 @@ SETORES_OBSERVATORIO = {
     "carne-de-frango": {"nome": "Carne de frango", "grupo": "CP0112",
                         "icone": "M16 4.5a4.5 4.5 0 0 1 0 9 4.5 4.5 0 0 1-3.6-1.8l-5 5"
                                  "M7.4 16.7l-1.7 1.7M9.1 18.4l-1.7 1.7"},
+    # Fatias de entremeada: duas tiras onduladas paralelas. Tinha a mesma
+    # capsula da classe "Carne", e dois simbolos iguais para coisas diferentes
+    # nao sinalizam nada (01.09.2026).
     "carne-de-porco": {"nome": "Carne de porco", "grupo": "CP0112",
-                       "icone": "M6.5 8h7.5a4 4 0 0 1 0 8H6.5a4 4 0 0 1 0-8z"
-                                "M10.5 12h.01"},
+                       "icone": "M3.8 9.2c2-2 3.6 2 5.6 0s3.6 2 5.6 0 3.6 2 5.6 0"
+                                "M3.8 13.2c2-2 3.6 2 5.6 0s3.6 2 5.6 0 3.6 2 5.6 0"
+                                "M3.8 17.2c2-2 3.6 2 5.6 0s3.6 2 5.6 0 3.6 2 5.6 0"},
     "cebola": {"nome": "Cebola", "grupo": "CP0117",
                "icone": "M12 20c-3.6 0-6-2.4-6-5.5C6 10 9 7 12 4c3 3 6 6 6 10.5"
                         "0 3.1-2.4 5.5-6 5.5zM9.6 13.6c0 3 .8 5 2.4 6.4"
@@ -160,9 +177,14 @@ SETORES_OBSERVATORIO = {
     "curgete": {"nome": "Curgete", "grupo": "CP0117",
                 "icone": "M7 17.5c-1.5-1.5-1.5-4 1.5-7s5.5-3 7-1.5 1.5 4-1.5 7-5.5 3-7 1.5z"
                          "M15.5 8.5 17 5.5"},
+    # Citrino ao corte: gomos a partir do centro, e nao duas linhas a
+    # atravessar. Com as linhas inteiras lia-se como uma mira, nao como uma
+    # laranja (relatado pela Ines, 01.09.2026). O pe por cima remata a leitura.
     "laranja": {"nome": "Laranja", "grupo": "CP0116",
-                "icone": "M12 19.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13z"
-                         "M12 6.5v13M5.5 13h13"},
+                "icone": "M12 20a6.6 6.6 0 1 1 0-13.2 6.6 6.6 0 0 1 0 13.2z"
+                         "M12 13.4 12 8M12 13.4 16.7 10.8M12 13.4 16.7 16"
+                         "M12 13.4 12 18.8M12 13.4 7.3 16M12 13.4 7.3 10.8"
+                         "M12 6.8V5.2M12 5.8c1.2-1.4 3-1.1 3-1.1s.1 1.8-1.7 2.1"},
     "laticinios-de-vaca": {"nome": "Lacticínios de vaca", "grupo": "CP0114",
                            "icone": "M10 3.8h4v2.6l2 3.2v9.9a.5.5 0 0 1-.5.5h-7"
                                     "a.5.5 0 0 1-.5-.5V9.6z"},

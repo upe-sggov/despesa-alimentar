@@ -114,7 +114,7 @@ def cor_classe(codigo: str, recuo: str = NEUTRO) -> str:
     return classe["cor"] if classe else recuo
 
 
-def icone_classe(codigo: str, cor: str | None = None, tamanho: int = 14) -> str:
+def icone_classe(codigo: str, cor: str | None = None, tamanho: int = 17) -> str:
     """
     SVG de um grupo COICOP, já com a cor da classe.
 
@@ -125,7 +125,7 @@ def icone_classe(codigo: str, cor: str | None = None, tamanho: int = 14) -> str:
     return _svg(ICONES_CLASSE.get(str(codigo)), cor or cor_classe(codigo), tamanho)
 
 
-def icone_setor(setor: str, tamanho: int = 14) -> str:
+def icone_setor(setor: str, tamanho: int = 17) -> str:
     """SVG de um setor do Observatório, com a cor herdada do seu grupo COICOP."""
     s = SETORES_OBSERVATORIO.get(str(setor))
     if not s:
@@ -2523,6 +2523,16 @@ with aba1:
         "Repartição, evolução e esforço da despesa alimentar do agregado "
         "escolhido. A base de cálculo e a composição definem-se abaixo.")
 
+    # Lugar da faixa de proveniência, aqui e não onde ela era escrita. Estava a
+    # seguir aos três controlos, encalhada no fim do bloco dos parâmetros e a
+    # meio caminho entre eles e o número de capa, sem pertencer a nenhum dos
+    # dois. Passa para debaixo do título, que é onde ela está no Histórico e no
+    # Simulador: a proveniência abre a página.
+    #
+    # Continua a ser preenchida depois dos controlos, porque os campos que
+    # mostra dependem da base escolhida (pedido da Inês, 01.09.2026).
+    _slot_faixa = st.container()
+
     # O bloco não tinha cabeçalho: os controlos abriam o separador sem nada os
     # nomear. Não se chamam “cenário” de propósito, que nesta aplicação cenário
     # é o do simulador de IVA, e o mesmo termo para duas coisas diferentes é o
@@ -3114,11 +3124,13 @@ with abaD:
 # ==========================================================================
 with aba1:
     with painel("Despesa e composição"):
-        # O título da página está escrito lá em cima, antes dos parâmetros, que
-        # é onde tem de aparecer. Aqui continua o resto do separador.
+        # O título da página e o lugar da faixa estão escritos lá em cima, antes
+        # dos parâmetros, que é onde ambos têm de aparecer. Aqui continua o
+        # resto do separador.
         #
         # Sem o mês: o indicador de capa, logo a seguir, di-lo em corpo grande.
-        faixa_fonte(mes=False)
+        with _slot_faixa:
+            faixa_fonte(mes=False)
 
         # ---- grandezas da variação, apuradas antes de se desenhar o que quer
         # que seja: o indicador de capa e o indicador secundário do agravamento
@@ -4890,7 +4902,7 @@ with aba6:
             _sec = _sec.iloc[0] if not _sec.empty else None
             if _sec in SETORES_OBSERVATORIO:
                 st.markdown(
-                    f'<p class="sg-produto">{icone_setor(_sec, tamanho=17)}'
+                    f'<p class="sg-produto">{icone_setor(_sec, tamanho=20)}'
                     f'<span class="sg-produto__nome">{_html(_escolhido)}</span></p>',
                     unsafe_allow_html=True)
 
@@ -5359,11 +5371,22 @@ with aba3:
         # cenário, e a diferenca entre as duas. As tres grandezas ficam no mesmo
         # cartao, em tres registos: o valor de partida em corpo de metadado, o
         # valor novo como numero de capa, a diferenca a direita.
+        #
+        # **Aos euros, sem casas decimais.** Os cêntimos prometiam uma precisão
+        # que o método não tem: trocar a base de cálculo move este número
+        # dezenas de euros, e os cêntimos são a primeira coisa que alguém copia
+        # para uma nota. As quatro notas de sensibilidade dizem-no por palavras;
+        # o número passa a dizê-lo pela forma (decisão da Inês, 01.09.2026).
+        #
+        # Só aqui e no valor de partida, que são os dois números de capa. Os
+        # cartões abaixo medem diferenças pequenas, e ali o cêntimo é o que
+        # distingue um efeito de nenhum efeito.
         _efeito = res["efetivo"]
         indicador_principal(
             "Nova despesa alimentar mensal",
-            euro(res["novo_valor"]),
-            partida=f"Despesa atual <strong>{euro(despesa_mensal)}</strong> por mês",
+            euro(res["novo_valor"], casas=0),
+            partida=(f"Despesa atual <strong>{euro(despesa_mensal, casas=0)}</strong> "
+                     "por mês"),
             contexto=(f"Cenário <strong>{CENARIOS[cenario][0]}</strong> · "
                       f"repercussão de <strong>{ao_consumidor}%</strong> · "
                       f"agregado com <strong>{composicao}</strong>"),
@@ -5504,8 +5527,8 @@ with aba3:
                     f"reduzida ou toda à normal, a poupança mensal fica entre "
                     f"**{euro(_res_band[0])}** e **{euro(_res_band[1])}**. Os valores acima usam, "
                     "para essa parcela, a taxa predefinida do grupo **confinada ao intervalo em que "
-                    "a lei situa cada subclasse**, que nem sempre vai de 6% a 23%: os cereais de "
-                    "pequeno-almoço estão entre 13% e 23%, e nunca a 6%."
+                    "a lei situa cada subclasse**, que nem sempre vai de 6% a 23%. O exemplo dos "
+                    "cereais de pequeno-almoço está no (i) do quadro das taxas legais."
                 )
 
             # A conta subiu para antes do bloco, que é onde a síntese visível a
@@ -6526,21 +6549,12 @@ with aba5:
             st.markdown("**2 · Atualização ao mês corrente**")
             st.latex(r"\text{valor atual} = \text{valor da base} \times "
                      r"\frac{I(m)}{\bar{I}(R)}")
-            # O efeito de indexar pela janela em vez do ano civil de 2023 estava
-            # inscrito à mão como “21,05 €/mês, 8,3%”. É um valor que se move
-            # a cada mês novo do índice, e estava escrito no presente
-            # (auditoria de 12.08.2026, L16). Passa a ser calculado aqui.
-            _idf_2023, _, _ = _atualizar_por_indice(
-                IDF_ALIMENTAR_ANUAL / 12, int(IDF_JANELA_RECOLHA[1][:4]), dados["indice_pt"])
-            _idf_janela = float(ancora["bases"]["idf"]["valor"])
-            _ganho_janela = _idf_janela - _idf_2023
-            _frase_janela = ""
-            if abs(_ganho_janela) > 0.005 and _idf_2023:
-                _frase_janela = (
-                    f" Indexar a partir do ano civil de {IDF_JANELA_RECOLHA[1][:4]} "
-                    f"subestimaria hoje o valor atual em "
-                    f"**{euro(_ganho_janela)}/mês**, "
-                    f"{percentagem(_ganho_janela / _idf_2023 * 100, sinal=False)}.")
+            # O efeito de indexar pelo ano civil em vez da janela de recolha
+            # estava escrito aqui **e** no bloco “Duas bases de ponderação”, com
+            # o mesmo número. Fica só lá, que é o bloco dedicado à janela; aqui
+            # a legenda define a fórmula, e o número entrava como parêntesis
+            # (varredura de duplicações, 01.09.2026). Com ele saíram as três
+            # variáveis que só o calculavam.
             st.caption(
                 "I(m) = índice do mês · Ī(R) = média do índice no **período de referência** da "
                 "base. Nas Contas Nacionais esse período é o ano civil da despesa. No IDF **não "
@@ -6548,7 +6562,6 @@ with aba5:
                 "2022 a fevereiro de 2023, e o INE não corrige os valores para uma data comum "
                 f"({IDF_JANELA_FONTE}). A média é por isso calculada sobre a janela "
                 f"**{mes_pt(IDF_JANELA_RECOLHA[0])} a {mes_pt(IDF_JANELA_RECOLHA[1])}**."
-                + _frase_janela
             )
 
             st.markdown("**3 · Ajustamento à composição do agregado**")
@@ -6598,8 +6611,7 @@ with aba5:
                                    chaves="taxa efetiva subclasse ponderador carga fiscal"):
                 st.markdown("""
     **O que é.** A taxa média efetiva de um grupo é **a taxa única que suporta o mesmo imposto que
-    o conjunto dos produtos desse grupo**. Não corresponde a nenhuma taxa legal aplicada: é uma
-    medida da carga fiscal média do grupo, tal como ele é hoje consumido.
+    o conjunto dos produtos desse grupo**. Não corresponde a nenhuma taxa legal aplicada.
 
     **Como se obtém.** Primeiro apura-se a fração do preço que é imposto, ponderando as subclasses:
                 """)
@@ -6759,12 +6771,15 @@ with aba5:
                         st.success(
                             "**O princípio que sustenta este quadro**, na formulação da ficha "
                             f"24929: “{PRINCIPIO_LISTA_TAXATIVA}”\n\n"
+                            # A citação sobre os preparados estava aqui **e** na
+                            # lista da ficha 24929, três linhas acima, no mesmo
+                            # ecrã. Fica só na lista, que é a transcrição da
+                            # decisão; aqui basta remeter para ela (varredura de
+                            # duplicações, 01.09.2026).
                             "É a justificação do método usado aqui, percorrer as Listas e atribuir "
-                            "a taxa normal a tudo o que não esteja lá de forma inequívoca. E "
-                            "explica por que os **preparados** caem quase sempre fora: “as "
-                            "categorias 1.3 e 1.6 não incluem qualquer tipo de preparados; quando "
-                            "assim é, por exemplo a verba 1.1 da Lista I, estes são especificamente "
-                            "referidos”."
+                            "a taxa normal a tudo o que não esteja lá de forma inequívoca. É "
+                            "também o que explica por que os **preparados** caem quase sempre "
+                            "fora, como a ficha 24929 estabelece acima."
                         )
                         st.caption(
                             "**Uma tensão que se regista e não se resolve.** A ficha 28176 "
@@ -6860,6 +6875,15 @@ with aba5:
     esta desagregação. O nível é discutível; a **comparação entre países** é o que aquele quadro
     serve, e essa é válida porque todos os países entram pela mesma via.
             """)
+
+        # O efeito de indexar pelo ano civil em vez da janela de recolha é
+        # calculado aqui, que é o bloco que fala da janela e o único que agora o
+        # usa. Estava no bloco dos quatro passos, onde a frase que o mostrava
+        # duplicava esta (varredura de duplicações, 01.09.2026).
+        _idf_2023, _, _ = _atualizar_por_indice(
+            IDF_ALIMENTAR_ANUAL / 12, int(IDF_JANELA_RECOLHA[1][:4]),
+            dados["indice_pt"])
+        _ganho_janela = float(ancora["bases"]["idf"]["valor"]) - _idf_2023
 
         with bloco_metodologia("Duas bases de ponderação e respetiva aplicação",
                                chaves="IHPC IDF turistas quotas desvio estrutura"):
@@ -6978,7 +7002,7 @@ with aba5:
     Coeficientes menores significam que cada pessoa a mais custa menos, o que **comprime as
     diferenças** entre agregados de dimensão diferente. Um agregado menor do que a média
     aproxima-se dela por cima (o valor sobe); um agregado maior aproxima-se dela por baixo
-    (o valor desce). O ponto de viragem é exatamente a dimensão média.
+    (o valor desce).
 
     Não é um artefacto do cálculo: é o que qualquer normalização por escala de equivalência
     produz. É também a razão pela qual a aplicação apresenta sempre um intervalo, e não um valor
