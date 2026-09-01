@@ -859,6 +859,14 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 [data-testid="stSidebar"] [data-testid="stNumberInput"],
 [data-testid="stSidebar"] [data-testid="stNumberInput"]
     > :not([data-testid="stWidgetLabel"]) {{ max-width: none; }}
+/* Os dois contadores da composição do agregado vivem numa coluna estreita, e o
+   limite acima estreitava-os ao ponto de o Streamlit deixar de desenhar o “−” e
+   o “+”: o contador passava a parecer um valor fixo e nada dizia que se podia
+   alterar. Aqui o campo leva a largura da coluna, que já é o limite
+   (relatado pela Inês, 01.09.2026). */
+.st-key-comp-agregado [data-testid="stNumberInput"],
+.st-key-comp-agregado [data-testid="stNumberInput"]
+    > :not([data-testid="stWidgetLabel"]) {{ max-width: none; }}
 /* Na barra lateral os botões são ações secundárias, não chamadas à ação. */
 [data-testid="stSidebar"] .stButton > button {{
   border-color: var(--sg-borda-1); color: var(--sg-texto-2);
@@ -2454,18 +2462,29 @@ with aba1:
     with _c_comp:
         st.markdown('<p class="sg-grupo">Composição do agregado</p>',
                     unsafe_allow_html=True)
-        ca, cb = st.columns(2)
-        adultos = ca.number_input(
-            "Com 14+ anos", min_value=1, max_value=10, value=2, step=1,
-            help=("Todas as pessoas com 14 ou mais anos, incluindo jovens dependentes. "
-                  "A partir dessa idade, a escala de equivalência atribui a mesma "
-                  "ponderação alimentar de um adulto, independentemente de a pessoa "
-                  "auferir rendimento próprio."))
-        criancas = cb.number_input(
-            "Menos de 14 anos", min_value=0, max_value=10, value=0, step=1,
-            help=("14 anos é o limiar definido pelas próprias escalas de equivalência "
-                  "da OCDE e do Eurostat, não é a definição demográfica de criança. "
-                  "Ver separador Metodologia."))
+        # Um por linha, e não dois lado a lado. Repartidos em duas sub-colunas
+        # de uma coluna que já é um quarto da página, o campo ficava tão estreito
+        # que o Streamlit deixava de desenhar o “−” e o “+”: o contador passava a
+        # parecer um valor fixo, e nada dizia que se podia alterar (relatado pela
+        # Inês, 01.09.2026). Empilhados, cada um leva a largura da coluna, os
+        # botões voltam, e o rótulo deixa de partir em duas linhas.
+        # A `key` do contentor sai no HTML como a classe `st-key-comp-agregado`, e
+        # é por ela que o CSS levanta a estes dois campos o limite de largura que
+        # vale para os contadores do resto da aplicação. Sem isso o campo ficava
+        # abaixo da largura a que o Streamlit desenha os botões.
+        with st.container(key="comp-agregado"):
+            adultos = st.number_input(
+                "Com 14+ anos", min_value=1, max_value=10, value=2, step=1,
+                help=("Todas as pessoas com 14 ou mais anos, incluindo jovens dependentes. "
+                      "A partir dessa idade, a escala de equivalência atribui a mesma "
+                      "ponderação alimentar de um adulto, independentemente de a pessoa "
+                      "auferir rendimento próprio."))
+            criancas = st.number_input(
+                "Menos de 14 anos", min_value=0, max_value=10, value=0, step=1,
+                help=("14 anos é o limiar definido pelas próprias escalas de equivalência "
+                      "da OCDE e do Eurostat, não é a definição demográfica de criança. "
+                      "Ver separador Metodologia."))
+        st.caption("Use o **−** e o **+**, ou escreva o número.")
 
 
     # A dimensão média do agregado entra em **todos** os valores em euros, pelo
