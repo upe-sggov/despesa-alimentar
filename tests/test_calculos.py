@@ -2092,32 +2092,40 @@ def test_os_ficheiros_de_dados_vao_para_o_repositorio():
 
 
 # --------------------- alinhamento dos cartoes de indicador, 20.08.2026
-def test_os_cartoes_de_indicador_esticam_so_quando_estao_sozinhos():
+def test_os_cartoes_de_indicador_alinham_em_cima_e_em_baixo():
     """
     Os cartoes de uma fila tinham alturas diferentes: o `min-height` alinhava-os
-    quando a diferenca vinha do rotulo, mas nao quando vinha do conteudo, e um
-    cartao com variacao percentual ficava mais alto do que um sem ela.
+    quando a diferenca vinha do rotulo, mas nao quando vinha do conteudo.
 
-    A correcao estica a cadeia de contentores, como nos cartoes de grupo. O que
-    a travou da primeira vez foi o receio de partir as colunas que tem um
-    indicador **e** uma legenda por baixo. A guarda e o `:only-child`: sem ela, a
-    regra volta a apanhar essas colunas e o indicador come a coluna toda.
+    A primeira correcao esticava a cadeia so quando o indicador era filho unico
+    da coluna (`:only-child`), por receio de que, havendo legenda por baixo,
+    esticar tudo fizesse o indicador comer a coluna inteira. Isso resolvia a
+    fila em que **nenhuma** coluna tem legenda, e so essa: em "Referencia
+    nacional" o terceiro cartao parava onde a legenda comecava, e a fila
+    desalinhava na base (relatado pela Ines, 01.09.2026).
 
-    Este teste existe para que ninguem a remova por a achar supérflua.
+    Passa a esticar o **contentor do indicador**, com `flex`, dentro do bloco
+    vertical que o Streamlit ja desenha como caixa flexivel em coluna. O cartao
+    absorve o espaco livre, a legenda fica na sua altura natural, e nada alem do
+    cartao cresce, que era o receio original.
+
+    Este teste existe para que a mecanica nao seja desfeita por distraccao.
     """
     fonte = _fonte("app.py")
 
     i = fonte.index('[data-testid="stMetric"] {{')
-    # A marca de fim era a regra dos indicadores da barra lateral, que
-    # desapareceu com ela a 01.09.2026. Passa a ser o comentario que abre o
-    # bloco seguinte, que e conteudo desta folha e nao um vestigio de outro.
     fim = fonte.index("/* Rótulos a duas linhas", i)
     regra = fonte[i:fim]
 
     assert "height: 100%" in regra
     assert "align-items: stretch" in regra
-    # A guarda, nas tres pernas do seletor que estica a cadeia.
-    assert regra.count(":only-child") == 3, regra
+    assert "flex: 1 1 auto" in regra, (
+        "o contentor do indicador deixou de crescer, e a fila volta a "
+        "desalinhar na coluna que tem legenda por baixo")
+    # A guarda antiga nao pode voltar: era ela que excluia exactamente a coluna
+    # que este teste existe para corrigir.
+    assert ":only-child" not in regra, (
+        "`:only-child` exclui a coluna com legenda, que e o caso a corrigir")
 
 
 def test_a_folha_de_estilo_tem_as_chavetas_equilibradas():

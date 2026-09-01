@@ -724,13 +724,20 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
    `height: 100%` no cartão só funciona se o que está por cima também esticar,
    como nos cartões de grupo. O que travou esta correção da primeira vez foi o
    receio de partir as colunas que têm um indicador **e** uma legenda por baixo,
-   onde esticar o indicador o faria comer a coluna toda.
+   onde esticar tudo faria o indicador comer a coluna inteira.
 
-   A guarda resolve-o: a cadeia só estica quando o indicador é **filho único**
-   da sua coluna. Havendo legenda por baixo, há dois contentores, `:only-child`
-   não pega, e essas colunas ficam exatamente como estavam. O `height: 100%` do
-   cartão é inofensivo aí, porque uma altura em percentagem contra um pai de
-   altura automática resolve para automático. */
+   A primeira guarda foi `:only-child`: a cadeia só esticava quando o indicador
+   era filho único da coluna. Resolvia a fila em que **nenhuma** coluna tem
+   legenda, e só essa. Bastando uma tê-la, o cartão dessa coluna parava onde a
+   legenda começava e a fila desalinhava na base, que é o defeito que a regra
+   existe para corrigir (relatado pela Inês, 01.09.2026).
+
+   O que estica passa a ser o **contentor do indicador**, e não tudo o que está
+   na coluna. O bloco vertical do Streamlit já é uma caixa flexível em coluna:
+   com `flex` no contentor do cartão, ele absorve o espaço livre e a legenda
+   fica na sua altura natural, por baixo. Os cartões alinham em cima e em baixo,
+   a legenda não é esticada, e o receio inicial deixa de se aplicar porque nada
+   além do cartão cresce. */
 [data-testid="stMetric"] {{
   background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
   border-radius: var(--sg-raio); padding: 1.3rem 1.4rem 1.35rem;
@@ -739,12 +746,11 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 [data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) {{
   align-items: stretch;
 }}
-[data-testid="stColumn"]:has([data-testid="stElementContainer"]:only-child
-    > [data-testid="stMetric"]) > div,
-[data-testid="stColumn"]:has([data-testid="stElementContainer"]:only-child
-    > [data-testid="stMetric"]) [data-testid="stVerticalBlock"],
-[data-testid="stColumn"] [data-testid="stElementContainer"]:only-child:has(
-    > [data-testid="stMetric"]) {{ height: 100%; }}
+[data-testid="stColumn"]:has([data-testid="stMetric"]) > div,
+[data-testid="stColumn"]:has([data-testid="stMetric"])
+    [data-testid="stVerticalBlock"] {{ height: 100%; }}
+[data-testid="stColumn"] [data-testid="stElementContainer"]:has(
+    > [data-testid="stMetric"]) {{ flex: 1 1 auto; }}
 /* Rótulos a duas linhas, sem reticências. O `st.metric` desenha o rótulo com
    `<Markdown … truncate>`, e essa opção injeta, no contentor **e** no seu <p>:
      overflow: hidden; white-space: nowrap; text-overflow: ellipsis
