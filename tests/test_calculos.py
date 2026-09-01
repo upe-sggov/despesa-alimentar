@@ -2735,6 +2735,80 @@ def test_a_app_mostra_a_nota_de_desalinhamento_junto_dos_graficos():
     assert fonte.index("if _desal_nota:") > i
 
 
+def test_a_metodologia_indexa_todos_os_seus_blocos():
+    """
+    O indice e construido **enquanto o separador se desenha**, e nao a partir de
+    uma lista escrita a mao: uma lista a mao diverge do conteudo a primeira
+    alteracao e ninguem da por isso.
+
+    Este teste guarda a outra metade: que ninguem volte a abrir um bloco da
+    metodologia com `st.expander`, que o deixaria de fora do indice sem erro
+    nenhum. E a unica forma de o bloco existir e nao ser encontravel.
+    """
+    import re
+
+    fonte = _fonte("app.py")
+    i = fonte.index("with aba5:")
+    trecho = fonte[i:]
+
+    soltos = re.findall(r"^\s*with st\.expander\(.*", trecho, re.M)
+    assert not soltos, (
+        "blocos da metodologia abertos com `st.expander`, e por isso fora do "
+        "indice:\n" + "\n".join(f"  {s.strip()}" for s in soltos)
+        + "\n\nUse `bloco_metodologia`, que os inscreve e lhes da ancora.")
+
+    # E fora da metodologia continua a ser `st.expander`: o indice e daquele
+    # separador, nao da aplicacao. A **definicao** fica acima, e tem de ficar;
+    # o que nao pode subir e o uso.
+    assert "with bloco_metodologia(" not in fonte[:i], (
+        "`bloco_metodologia` usado fora do separador da metodologia")
+
+
+def test_o_indice_da_metodologia_e_navegavel():
+    """
+    Um indice cujas ligacoes nao levam a lado nenhum e pior do que nenhum. Corre
+    a aplicacao e confirma o que so se ve a correr: que cada entrada tem ancora,
+    que as ancoras sao unicas, e que o lugar do indice fica **acima** dos blocos
+    que ele indexa, apesar de ser preenchido depois de todos correrem.
+    """
+    import re
+    from pathlib import Path
+
+    import pytest
+    from streamlit.testing.v1 import AppTest
+
+    raiz = Path(__file__).resolve().parent.parent
+    app = AppTest.from_file(str(raiz / "app.py"), default_timeout=300).run()
+    if app.exception:
+        pytest.skip("a aplicacao nao carregou (sem rede?)")
+
+    indices = [str(m.value) for m in app.markdown
+               if 'class="sg-indice"' in str(m.value)]
+    assert len(indices) == 1, f"{len(indices)} indices desenhados, esperava um"
+
+    entradas = re.findall(r'href="#(met-[^"]+)"', indices[0])
+    ancoras = [m.group(1) for m in
+               (re.search(r'id="(met-[^"]+)"', str(x.value)) for x in app.markdown)
+               if m]
+
+    assert entradas, "o indice saiu vazio"
+    assert len(set(ancoras)) == len(ancoras), (
+        "ha ancoras repetidas: dois titulos diferentes deram o mesmo endereco, "
+        "e uma das ligacoes leva ao bloco errado")
+    assert not set(entradas) - set(ancoras), (
+        f"entradas sem ancora: {set(entradas) - set(ancoras)}")
+    assert len(entradas) == len(ancoras), (
+        f"{len(ancoras)} blocos com ancora e {len(entradas)} no indice")
+
+    # O indice tem de sair **antes** do primeiro bloco que indexa. E o que o
+    # contentor reservado garante, e o que se perde se alguem o remover.
+    ordem = [i for i, m in enumerate(app.markdown)
+             if 'class="sg-indice"' in str(m.value)
+             or 'class="sg-ancora"' in str(m.value)]
+    assert 'class="sg-indice"' in str(app.markdown[ordem[0]].value), (
+        "o indice esta desenhado depois dos blocos que indexa")
+
+
 def test_nenhum_asterisco_de_markdown_chega_ao_ecra():
     """
     O negrito de markdown so funciona onde markdown e interpretado. Em dois

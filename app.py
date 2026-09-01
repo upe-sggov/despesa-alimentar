@@ -7,6 +7,9 @@ Executar localmente:   streamlit run app.py
 
 from __future__ import annotations
 
+import re
+import unicodedata
+from contextlib import contextmanager
 from datetime import date, datetime
 
 import pandas as pd
@@ -978,6 +981,32 @@ footer:not(.sg-rodape) {{ visibility: hidden; }}
    por baixo da barra do Streamlit. */
 .sg-cabecalho {{ scroll-margin-top: 1rem; }}
 
+/* ---------- índice pesquisável da metodologia --------------------------- */
+/* Duas colunas de ligações, agrupadas pelo bloco documental a que pertencem.
+   Não é uma lista com marcas: são trinta entradas, e as marcas dariam-lhe o
+   peso de conteúdo quando o que ela é vale como moldura de navegação. */
+.sg-indice {{
+  column-count: 2; column-gap: 2.5rem; margin: .35rem 0 .5rem;
+}}
+@media (max-width: 720px) {{ .sg-indice {{ column-count: 1; }} }}
+[data-testid="stMarkdownContainer"] p.sg-indice__b {{
+  font-size: .625rem; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--sg-texto-3);
+  margin: .9rem 0 .3rem; break-after: avoid;
+}}
+.sg-indice__b:first-child {{ margin-top: 0; }}
+[data-testid="stMarkdownContainer"] a.sg-indice__l {{
+  display: block; font-size: .8125rem; color: var(--sg-texto-2);
+  text-decoration: none; padding: .16rem 0; line-height: 1.4;
+  break-inside: avoid;
+}}
+[data-testid="stMarkdownContainer"] a.sg-indice__l:hover {{
+  color: var(--sg-verde); text-decoration: underline;
+}}
+/* Âncora sem corpo, imediatamente antes de cada bloco recolhível. A margem de
+   deslocamento impede que o título fique colado ao topo da janela no salto. */
+.sg-ancora {{ display: block; height: 0; scroll-margin-top: 5rem; }}
+
 /* ---------- profundidade: borda, nunca sombra -------------------------- */
 [data-testid="stDataFrame"], [data-testid="stExpander"], [data-testid="stMetric"],
 [data-testid="stAlertContainer"], [data-testid="stPopoverBody"],
@@ -1068,10 +1097,98 @@ def bloco(rotulo: str, topo: bool = False) -> None:
     Abre um grande bloco analítico sem lhe dar título próprio. Serve os casos em
     que o que se segue são blocos recolhíveis ou controlos, e um título seria
     inventar um cabeçalho para conteúdo que já se nomeia a si mesmo.
+
+    Também marca o bloco corrente para o índice da metodologia: os expansores
+    que se seguirem ficam-lhe associados, até ao `bloco` seguinte.
     """
+    global _BLOCO_CORRENTE
+    _BLOCO_CORRENTE = rotulo
     classe = "sg-bloco sg-bloco--so" + (" sg-bloco--topo" if topo else "")
     st.markdown(f'<div class="{classe}">{_olho(rotulo)}</div>',
                 unsafe_allow_html=True)
+
+
+# ==========================================================================
+# Índice pesquisável da metodologia
+# ==========================================================================
+# A metodologia tem trinta blocos recolhíveis por cinco secções, e quem procura
+# um assunto concreto não tem por onde começar senão abri-los à vez. O Ctrl+F do
+# navegador também não serve: o texto está dentro de blocos fechados, e o
+# navegador não procura no que não está desenhado.
+#
+# **O que isto é e o que não é.** É um índice: procura em títulos e em palavras
+# associadas a cada bloco, não no corpo do texto. Procurar “escalas” encontra;
+# procurar uma palavra que só aparece a meio de um parágrafo não encontra. Uma
+# pesquisa no texto obrigava a passar o conteúdo dos trinta blocos para uma
+# estrutura de dados antes de o desenhar, que é reescrever metade do separador
+# (opção A, escolhida pela Inês a 01.09.2026).
+#
+# O índice é construído **enquanto o separador se desenha**, e não a partir de
+# uma lista escrita à mão: uma lista à mão diverge do conteúdo à primeira
+# alteração, e ninguém dá por isso. Como no Streamlit a ordem do ficheiro é a
+# ordem de execução, o índice só existe depois de todos os expansores correrem,
+# e por isso o lugar dele no topo é guardado por um contentor reservado e
+# preenchido no fim, como o alarme de cobertura.
+_INDICE_METODOLOGIA: list[dict] = []
+_BLOCO_CORRENTE = ""
+
+
+def _sem_acentos(texto: str) -> str:
+    """Para comparar “Törnqvist” com “tornqvist” e “IVA” com “iva”."""
+    return "".join(c for c in unicodedata.normalize("NFKD", str(texto).lower())
+                   if not unicodedata.combining(c))
+
+
+@contextmanager
+def bloco_metodologia(titulo: str, chaves: str = ""):
+    """
+    Um bloco recolhível da metodologia, inscrito no índice e com âncora própria.
+
+    `chaves` são termos que o leitor procuraria e que não estão no título. Não
+    aparecem no ecrã: existem só para a procura acertar em quem escreve
+    “turistas” à espera das Contas Nacionais.
+    """
+    ref = "met-" + re.sub(r"[^a-z0-9]+", "-", _sem_acentos(titulo)).strip("-")[:60]
+    _INDICE_METODOLOGIA.append({
+        "bloco": _BLOCO_CORRENTE, "titulo": titulo, "chaves": chaves, "ref": ref,
+    })
+    # Âncora vazia, imediatamente antes do expansor. O `scroll-margin-top` no
+    # CSS impede que o título fique colado ao topo da janela depois do salto.
+    st.markdown(f'<span class="sg-ancora" id="{ref}"></span>',
+                unsafe_allow_html=True)
+    with st.expander(titulo):
+        yield
+
+
+def indice_metodologia(consulta: str) -> None:
+    """Desenha o índice, filtrado pela consulta. Vazia, mostra-o inteiro."""
+    termos = [t for t in _sem_acentos(consulta).split() if t]
+    if termos:
+        achados = [e for e in _INDICE_METODOLOGIA
+                   if all(t in _sem_acentos(f"{e['bloco']} {e['titulo']} "
+                                            f"{e['chaves']}") for t in termos)]
+    else:
+        achados = _INDICE_METODOLOGIA
+
+    if termos and not achados:
+        st.caption(
+            "Nada com esse termo nos títulos. O índice procura em títulos e "
+            "palavras associadas, não no corpo do texto: para procurar dentro "
+            "de um bloco, abra-o e use o **Ctrl+F** do navegador.")
+        return
+
+    linhas, ultimo = [], None
+    for e in achados:
+        if e["bloco"] != ultimo:
+            ultimo = e["bloco"]
+            linhas.append(f'<p class="sg-indice__b">{_html(e["bloco"])}</p>')
+        linhas.append(f'<a class="sg-indice__l" href="#{e["ref"]}">'
+                      f'{_html(e["titulo"])}</a>')
+    st.markdown(f'<nav class="sg-indice">{"".join(linhas)}</nav>',
+                unsafe_allow_html=True)
+    if termos:
+        st.caption(f"{numero(len(achados))} de "
+                   f"{numero(len(_INDICE_METODOLOGIA))} blocos.")
 
 
 def secao(titulo: str, descricao: str | None = None, topo: bool = False,
@@ -2341,9 +2458,6 @@ if _desal_p or _desal_v:
 # aparecer aqui, acima das abas: o contentor guarda-lhes o lugar e é
 # preenchido mais abaixo (31.08.2026).
 _slot_cobertura = st.container()
-
-from contextlib import contextmanager
-
 
 @contextmanager
 def painel(nome: str):
@@ -6091,6 +6205,11 @@ with aba5:
             "metodológica em anexo à ferramenta desenvolve estes pontos com as "
             "referências legais.")
 
+        # Lugar do índice pesquisável. Fica reservado aqui e é preenchido no fim
+        # do separador: o índice constrói-se enquanto os blocos se desenham, e
+        # no Streamlit a ordem do ficheiro é a ordem de execução (01.09.2026).
+        _slot_indice = st.container()
+
         # Vinte e sete blocos recolhíveis em fila davam uma página sem relevo:
         # era preciso abrir cada um para saber do que tratava. Ficam todos onde
         # estão, na mesma ordem (há dependências entre eles), mas agrupados em
@@ -6101,7 +6220,8 @@ with aba5:
         # Fechado por decisão da Inês (01.09.2026): a regra do separador é que o
         # leitor abre o que procura, e um bloco aberto à entrada é a parede de
         # texto que essa regra existe para evitar.
-        with st.expander("Delimitação do conceito de cabaz"):
+        with bloco_metodologia("Delimitação do conceito de cabaz",
+                               chaves="DECO cabaz essencial composição fixa seis instrumentos"):
             st.markdown("""
     **Não existe um cabaz alimentar oficial em Portugal.** Existem pelo menos seis instrumentos,
     com naturezas e finalidades diferentes, que o debate público tende a fundir num só. A primeira
@@ -6140,7 +6260,8 @@ with aba5:
     própria, uma perda de bem-estar, e é precisamente o que um cabaz de composição fixa não capta.
             """)
 
-        with st.expander("O IHPC e a sua distinção face ao IPC"):
+        with bloco_metodologia("O IHPC e a sua distinção face ao IPC",
+                               chaves="IPC harmonizado residentes território nacional"):
             st.markdown("""
     O **IHPC, Índice Harmonizado de Preços no Consumidor** é o índice de inflação construído
     segundo metodologia comum a todos os Estados-Membros, precisamente para que os valores sejam
@@ -6164,7 +6285,8 @@ with aba5:
                 "com os restantes Estados-Membros com garantia de que se mede a mesma coisa."
             )
 
-        with st.expander("Como se calcula o IHPC"):
+        with bloco_metodologia("Como se calcula o IHPC",
+                               chaves="ponderadores agregação elementar"):
             st.markdown("""
     O IHPC é um **índice de Laspeyres encadeado anualmente**. O cálculo tem dois níveis.
 
@@ -6193,7 +6315,8 @@ with aba5:
     """)
             st.latex(r"\pi(m) = \left[ \frac{I(m,y)}{I(m,y-1)} - 1 \right] \times 100")
 
-        with st.expander("O que são as Contas Nacionais e o que medem"):
+        with bloco_metodologia("O que são as Contas Nacionais e o que medem",
+                               chaves="turistas não residentes território autoconsumo exaustividade QERU"):
             st.markdown("""
     As **Contas Nacionais** são o sistema de contabilidade macroeconómica do país. São elaboradas
     pelo INE segundo o **Sistema Europeu de Contas (SEC 2010)**, norma comum a todos os
@@ -6321,7 +6444,8 @@ with aba5:
 
         bloco("02 · Método de cálculo e apuramento do IVA")
 
-        with st.expander("Os quatro passos desta ferramenta"):
+        with bloco_metodologia("Os quatro passos desta ferramenta",
+                               chaves="âncora decomposição contributo passos"):
             st.markdown("**1 · Âncora: quanto gasta o agregado médio em alimentação**")
             st.latex(r"\text{Contas Nacionais:}\quad \frac{D(y)}{H \times 12}"
                      r"\qquad\qquad \text{IDF:}\quad \frac{A(y)}{12}")
@@ -6403,7 +6527,8 @@ with aba5:
         # (decisão da Inês, 13.08.2026). Os nomes vêm do separador do IVA,
         # que corre antes deste; se lá tiver falhado, este bloco não entra.
         if _tem_apuramento and not _comp_iva.empty:
-            with st.expander("Cálculo da taxa média efetiva e sua suficiência"):
+            with bloco_metodologia("Cálculo da taxa média efetiva e sua suficiência",
+                                   chaves="taxa efetiva subclasse ponderador carga fiscal"):
                 st.markdown("""
     **O que é.** A taxa média efetiva de um grupo é **a taxa única que suporta o mesmo imposto que
     o conjunto dos produtos desse grupo**. Não corresponde a nenhuma taxa legal aplicada: é uma
@@ -6447,7 +6572,8 @@ with aba5:
     uma estimativa de receita cessante exige a base tributável real.
                 """)
 
-            with st.expander("O que o Código do IVA diz sobre cada grupo e o que fica de fora"):
+            with bloco_metodologia("O que o Código do IVA diz sobre cada grupo e o que fica de fora",
+                                   chaves="Lista I Lista II taxa reduzida intermédia normal"):
                 st.markdown(
                     "O Código do IVA classifica **por produto**, nas Listas I (6%) e II (13%); a "
                     "aplicação classifica **por grupo COICOP**, porque não existe despesa aberta ao "
@@ -6477,7 +6603,8 @@ with aba5:
                            "classes da COICOP 2018.")
 
             if not _comp_iva.empty:
-                with st.expander("O apuramento, subclasse a subclasse"):
+                with bloco_metodologia("O apuramento, subclasse a subclasse",
+                                       chaves="inequívoca predominante indeterminada COICOP verba"):
                     st.markdown(
                         "Cada linha é uma subclasse da COICOP 2018, com o ponderador que o Eurostat "
                         "lhe atribui e a verba do Código do IVA que a sustenta. **É aqui que se vê "
@@ -6534,8 +6661,10 @@ with aba5:
                         "tem verba alguma para eles e a Lista II (1.12) cobre apenas os “flocos "
                         "prensados simples de cereais e leguminosas sem adições de açúcar”."
                     )
-                    with st.expander("O que a Autoridade Tributária já decidiu "
-                                     "(informações vinculativas)"):
+                    with bloco_metodologia(
+                            "O que a Autoridade Tributária já decidiu "
+                            "(informações vinculativas)",
+                            chaves="AT fichas vinculativas pão preparados despacho"):
                         st.markdown(
                             "As informações vinculativas da AT (artigo 68.º do Código de "
                             "Procedimento e de Processo Tributário, CPPT) são a via para "
@@ -6604,7 +6733,8 @@ with aba5:
         # das três colunas, só a primeira sustenta o argumento; as outras duas são
         # contexto do IPC, que é matéria de metodologia (decisão da Inês,
         # 13.08.2026). O simulador ficou com as barras da coluna que usa.
-        with st.expander("Inflação por quintil no “IVA zero” de 2023 (a tabela completa)"):
+        with bloco_metodologia("Inflação por quintil no “IVA zero” de 2023 (a tabela completa)",
+                               chaves="quintis repercussão Banco de Portugal"):
             st.markdown(
                 "Taxa de variação **em cadeia** em maio de 2023, em pontos percentuais. A "
                 "primeira coluna são as rubricas alimentares abrangidas pela isenção, é a "
@@ -6638,7 +6768,8 @@ with aba5:
         # Estava no separador UE-27, antes do primeiro número da vista do esforço.
         # É a definição de um indicador e a explicação de uma divergência entre
         # bases: matéria de metodologia (decisão da Inês, 13.08.2026).
-        with st.expander("O coeficiente de Engel e os seus dois valores"):
+        with bloco_metodologia("O coeficiente de Engel e os seus dois valores",
+                               chaves="Engel orçamento despesa total"):
             _eng_m = intervalo_engel((dados.get("engel") or {}).get("PT"))
             st.markdown(f"""
     É a **fração do consumo total das famílias que vai para alimentação**. Chama-se assim por
@@ -6663,7 +6794,8 @@ with aba5:
     serve, e essa é válida porque todos os países entram pela mesma via.
             """)
 
-        with st.expander("Duas bases de ponderação e respetiva aplicação"):
+        with bloco_metodologia("Duas bases de ponderação e respetiva aplicação",
+                               chaves="IHPC IDF turistas quotas desvio estrutura"):
             st.markdown("""
     A aplicação usa **duas** estruturas de ponderação, e não é indiferente qual se aplica a quê.
     A regra é simples:
@@ -6750,7 +6882,8 @@ with aba5:
     fontes publica.
             """)
 
-        with st.expander("Escalas de equivalência"):
+        with bloco_metodologia("Escalas de equivalência",
+                               chaves="OCDE modificada per capita raiz quadrada adultos equivalentes"):
             st.markdown(
                 "Duas pessoas não gastam o dobro de uma: há partilha de compras, aquisição em "
                 "maiores quantidades e menor desperdício. As escalas traduzem essa partilha em "
@@ -6910,7 +7043,8 @@ with aba5:
 
 
         # ---- gráfico do cruzamento das escalas ----
-        with st.expander("Divergência e cruzamento das três escalas"):
+        with bloco_metodologia("Divergência e cruzamento das três escalas",
+                               chaves="cruzamento dimensão média divergência"):
             st.markdown(f"""
 Cada escala responde de forma diferente à mesma questão: **qual o acréscimo de despesa por cada
 pessoa adicional?**
@@ -6971,7 +7105,8 @@ que não há nada a descontar nem a acrescentar.
 
 
 
-        with st.expander("Rendimento e salários: distinção entre bruto e líquido"):
+        with bloco_metodologia("Rendimento e salários: distinção entre bruto e líquido",
+                               chaves="EU-SILC salário médio salário mínimo RMMG bruto líquido"):
             # O exemplo “920 € legal, 1 073 € difundido” estava inscrito à mão e
             # envelhece de seis em seis meses, quando o Eurostat publica o
             # semestre seguinte. Sai da série (auditoria de 12.08.2026, L16).
@@ -7061,7 +7196,8 @@ que não há nada a descontar nem a acrescentar.
         # Vinte linhas sobre **uma** das três referências, mais dez de nota de
         # fonte. O conteúdo é bom e fica; deixa é de ser a primeira coisa que
         # se lê a seguir ao gráfico (Inês, 13.08.2026).
-        with st.expander("Posição do salário mínimo na distribuição salarial"):
+        with bloco_metodologia("Posição do salário mínimo na distribuição salarial",
+                               chaves="Banco de Portugal distribuição salarial mediana"):
             st.markdown(
                 "Não é o agregado típico, é o **limiar inferior** da distribuição. Mas "
                 "está longe de ser um caso extremo: em 2025 a RMMG equivalia a **91% do "
@@ -7084,7 +7220,8 @@ que não há nada a descontar nem a acrescentar.
                 "2024, ainda assim o **mais elevado da área do euro**."
             )
 
-        with st.expander("Pressupostos subjacentes a estes valores"):
+        with bloco_metodologia("Pressupostos subjacentes a estes valores",
+                               chaves="majorante limites superiores esforço"):
             if base_chave == "contas":
                 if _racio_cn_silc is not None:
                     _frase_racio = (
@@ -7202,7 +7339,8 @@ depende da escala escolhida.
 
         bloco("04 · Dados, atualização e rastreabilidade")
 
-        with st.expander("Como a aplicação se mantém atualizada"):
+        with bloco_metodologia("Como a aplicação se mantém atualizada",
+                               chaves="cache recarregar publicação calendário"):
             st.markdown("""
     **Os dados seguem três regimes distintos**, e a diferença entre eles determina o que está
     atualizado sozinho e o que exige que alguém intervenha.
@@ -7274,7 +7412,8 @@ depende da escala escolhida.
     uma série que avança**, e a verificação tem de cobrir também as fontes com API.
             """)
 
-        with st.expander("Origem dos dados (conjuntos utilizados e ligações)"):
+        with bloco_metodologia("Origem dos dados (conjuntos utilizados e ligações)",
+                               chaves="Eurostat conjuntos prc_hicp nama ligações"):
             # O confronto entre o EU-LFS e os Censos no ano em que ambos existem
             # estava inscrito à mão. Sai da série guardada nesta sessão.
             _lfs_comum = (dados.get("agregados_serie") or {}).get(str(AGREGADOS_ANO))
@@ -7370,7 +7509,8 @@ depende da escala escolhida.
                 "no consumo total. Por isso o cálculo normaliza pela soma dos nove, e não pelos 1 000 ‰."
             )
 
-        with st.expander("Ver os dados em bruto (endereços exatos desta sessão)"):
+        with bloco_metodologia("Ver os dados em bruto (endereços exatos desta sessão)",
+                               chaves="endereços URL API pedidos"):
             st.markdown("""
 Cada número da aplicação vem de um pedido concreto ao Eurostat. Os endereços abaixo são os que
 foram efetivamente usados **nesta sessão**, abrem no navegador e descarregam o ficheiro em
@@ -7441,7 +7581,8 @@ em Excel ou noutra ferramenta.
                     "Statistics devolve JSON-stat."
                 )
 
-        with st.expander("Como se obtém cada coluna da tabela detalhada"):
+        with bloco_metodologia("Como se obtém cada coluna da tabela detalhada",
+                               chaves="quota contributo exemplo numérico"):
             st.markdown("""
 A tabela do primeiro separador tem cinco colunas calculadas. Cada uma vem de um sítio concreto.
 
@@ -7486,7 +7627,8 @@ repartição de um valor total por essas proporções. É por isso que a tabela 
 **reconstituição**, e não uma medição.
             """)
 
-        with st.expander("Estado de atualização das séries"):
+        with bloco_metodologia("Estado de atualização das séries",
+                               chaves="vigilância frescura prazo desfasamento"):
             st.markdown("""
     **Uma série que responde não é uma série que avança.** Um conjunto arquivado devolve HTTP 200
     e dados bem formados, apenas parou. Sem esta verificação, um conjunto nessas condições passa
@@ -7532,7 +7674,8 @@ repartição de um valor total por essas proporções. É por isso que a tabela 
                     "período, que é a leitura mais favorável à fonte."
                 )
 
-        with st.expander("Registo das ligações desta sessão"):
+        with bloco_metodologia("Registo das ligações desta sessão",
+                               chaves="SDMX Statistics API pedidos"):
             st.dataframe(pd.DataFrame(dados["registo"],
                                       columns=["Dados pedidos", "Via de acesso usada",
                                                "N.º de observações"]),
@@ -7554,7 +7697,8 @@ repartição de um valor total por essas proporções. É por isso que a tabela 
 
         bloco("05 · Nomenclatura, âmbito e limitações")
 
-        with st.expander("Distinção entre despesa alimentar e cabaz"):
+        with bloco_metodologia("Distinção entre despesa alimentar e cabaz",
+                               chaves="DECO nomenclatura designação"):
             st.markdown("""
 Os dois termos designam objetos diferentes, e a aplicação usa apenas o primeiro para o que
 mede. “Cabaz” aparece só quando se fala de cabazes **de terceiros** ou do “cabaz zero” de 2023.
@@ -7571,7 +7715,8 @@ produtos, não tem lista de artigos. Tem despesa em euros e variações de preç
 A designação cabaz não corresponde, por isso, ao que a ferramenta mede.
 
             """)
-        with st.expander("De onde vem a classificação COICOP"):
+        with bloco_metodologia("De onde vem a classificação COICOP",
+                               chaves="ECOICOP classes designações revisão 2018"):
             st.markdown("""
     A **COICOP** (*Classification of Individual Consumption According to Purpose*) é uma
     classificação das **Nações Unidas** (Divisão de Estatística), não do Eurostat. Serve para
@@ -7621,7 +7766,8 @@ A designação cabaz não corresponde, por isso, ao que a ferramenta mede.
     Com a migração, as duas fontes passaram a estar **na mesma classificação**.
             """)
 
-        with st.expander("O limiar dos 14 anos nas escalas de equivalência"):
+        with bloco_metodologia("O limiar dos 14 anos nas escalas de equivalência",
+                               chaves="14 anos crianças adultos OCDE limiar"):
             st.markdown("""
     O limiar dos 14 anos **não é uma escolha desta aplicação nem a definição demográfica de
     criança**. É o limiar inscrito nas próprias escalas de equivalência:
@@ -7645,7 +7791,8 @@ A designação cabaz não corresponde, por isso, ao que a ferramenta mede.
     o mesmo número, e confundi-los subestima a pressão sobre as famílias com adolescentes.
             """)
 
-        with st.expander("Limitações a declarar em qualquer uso"):
+        with bloco_metodologia("Limitações a declarar em qualquer uso",
+                               chaves="limitações ressalvas privação severa SOFI amostragem"):
             st.markdown("""
     1. **A decomposição não é observação.** É uma imputação de um valor total por ponderadores
        oficiais; não substitui a recolha de preços produto a produto.
@@ -7751,7 +7898,8 @@ A designação cabaz não corresponde, por isso, ao que a ferramenta mede.
     edição anual.
             """)
 
-        with st.expander("Base legal e documentação"):
+        with bloco_metodologia("Base legal e documentação",
+                               chaves="regulamento legislação EUR-Lex metadados"):
             st.markdown("""
     **Quadro legal do índice**
 
@@ -7776,6 +7924,18 @@ A designação cabaz não corresponde, por isso, ao que a ferramenta mede.
 
     - [INE](https://www.ine.pt), Índice de Preços no Consumidor, Censos 2021, Inquérito às Despesas das Famílias
             """)
+
+        # ---- o índice, escrito no lugar guardado lá em cima ----
+        # A caixa de procura é criada aqui, e não no topo, porque é aqui que o
+        # índice já existe. O Streamlit devolve o valor escrito na mesma
+        # execução, pelo que a lista abaixo dela responde de imediato.
+        with _slot_indice:
+            _q = st.text_input(
+                "Procurar na metodologia",
+                key="busca_metodologia",
+                placeholder="Procurar por assunto: escalas, IVA, turistas…",
+                label_visibility="collapsed")
+            indice_metodologia(_q)
 
 # ==========================================================================
 # Rodapé institucional
