@@ -10,6 +10,19 @@ secondaryBackgroundColor = "#F5F7F9"
 textColor = "#171715"              # Cinzento SGGov
 font = "sans-serif"
 
+# Contorno dos campos editáveis. Sem isto, um número dentro de uma caixa
+# cinzenta pálida sobre fundo branco não se distinguia de um valor apresentado:
+# a aplicação anunciava os botões como interativos e os campos não.
+#
+# Feito pelo tema e não por CSS. A primeira tentativa foi uma folha de estilos a
+# apontar para `div[data-baseweb="input"]`, que nesta versão não existe: o campo
+# numérico é `stNumberInputContainer` e o seletor deixou de usar BaseWeb, pelo
+# que não tinha alvo estável nenhum. Estas duas opções são suportadas, valem
+# para todos os tipos de campo, e o realce de foco passa a vir da `primaryColor`,
+# que já é o verde institucional (01.09.2026).
+showWidgetBorder = true
+borderColor = "#CBD5E1"            # o mesmo filete dos botões
+
 [server]
 headless = true
 

@@ -838,32 +838,12 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 [data-testid="stWidgetLabel"] p {{
   font-size: .75rem; font-weight: 500; color: var(--sg-texto-2);
 }}
-/* Contorno dos campos editáveis. Não havia nenhum: um número dentro de uma
-   caixa cinzenta pálida sobre fundo branco não se distinguia de um valor
-   apresentado, e a aplicação anunciava os botões como interativos mas não os
-   campos. A legenda “Use o − e o +” era o penso disso.
-
-   Deliberadamente discreto: um filete na cor de borda que o tema já usa, o
-   mesmo dos botões, e não uma caixa marcada. No foco entra o verde
-   institucional com um halo de 3 px a 12% em vez do contorno de 2 px dos
-   botões, que aqui seria berrante por os campos serem muitos e pequenos. O
-   halo não é decoração: sem ele, percorrer a aplicação com o tabulador não
-   mostrava onde se estava (Inês, 01.09.2026). */
-[data-testid="stNumberInput"] div[data-baseweb="input"],
-[data-testid="stTextInput"] div[data-baseweb="input"],
-[data-testid="stTextArea"] div[data-baseweb="textarea"],
-[data-testid="stSelectbox"] div[data-baseweb="select"] > div:first-child {{
-  border: 1px solid var(--sg-borda-2);
-  border-radius: var(--sg-raio);
-  transition: border-color .12s ease, box-shadow .12s ease;
-}}
-[data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within,
-[data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
-[data-testid="stTextArea"] div[data-baseweb="textarea"]:focus-within,
-[data-testid="stSelectbox"] div[data-baseweb="select"] > div:first-child:focus-within {{
-  border-color: var(--sg-verde);
-  box-shadow: 0 0 0 3px {VERDE}1F;
-}}
+/* O contorno dos campos editáveis **não** está aqui: está no `.streamlit/
+   config.toml`, em `showWidgetBorder` e `borderColor`. Esteve aqui, a apontar
+   para `div[data-baseweb="input"]`, e não pegava: nesta versão o campo numérico
+   é `stNumberInputContainer` e o seletor deixou de usar BaseWeb. As opções de
+   tema valem para todos os tipos de campo e não dependem da estrutura interna
+   do Streamlit, que muda entre versões (01.09.2026). */
 /* Contadores estreitos, fora da barra lateral. Um `number_input` ocupa a coluna
    toda, e numa coluna larga isso punha o “−” e o “+” a quatrocentos píxeis do
    número que alteram: o controlo deixava de se ler como um contador
