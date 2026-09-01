@@ -2301,19 +2301,51 @@ if not _paradas.empty:
         "conjuntos arquivados indica habitualmente o intervalo de anos coberto."
     )
 
-# --- barra de estado dos dados ---
-# Linha de estado editorial, e não uma faixa verde de sucesso: o carregamento
-# correr bem é o caso normal, não uma notícia. O conteúdo é exatamente o da
-# legenda que aqui estava; o que muda é a apresentação, que passou de uma frase
-# corrida a metadados de publicação estatística, com rótulo e valor separados.
-_estado = [
-    ("Último mês disponível", mes_pt(ultimo_mes)),
-    ("Ponderadores", str(dados["ano_pesos"] or "—")),
-]
-if dados.get("despesa_ano"):
-    _estado.append(("Âncora de despesa", str(dados["despesa_ano"])))
-_estado.append(("Obtidos às", dados["momento"].strftime("%H:%M de %d/%m/%Y")))
-barra_estado("Dados oficiais carregados", _estado)
+# --- proveniência do índice, junto de quem o usa --------------------------
+# Era uma faixa única escrita **acima do `st.tabs`**, e por isso aparecia nos
+# sete separadores. Anunciava metadados do índice harmonizado, que governam
+# três deles e não governam os outros quatro: quem abria o cabaz da DECO lia
+# “Dados oficiais carregados · Último mês disponível: …” por cima de um título
+# sobre uma série semanal de outra entidade, que já declara a sua própria
+# fonte logo abaixo. Sobreanunciava a proveniência e ainda a duplicava.
+#
+# Passa a ser escrita **dentro** de cada um dos três separadores que o índice
+# governa, e com os campos que interessam a esse separador e mais nenhum:
+#
+#   Despesa e composição   sem o mês, que o indicador de capa anuncia em corpo
+#                          grande a seguir; repeti-lo duas linhas depois era a
+#                          redundância que esta alteração veio eliminar
+#   Histórico              só o mês e a recolha: não usa a âncora de despesa
+#                          (não dá valores em euros) nem um ano de
+#                          ponderadores (a secção de Törnqvist usa vários, e
+#                          nomear um só seria falso)
+#   Simulador de IVA       tudo: parte da despesa em euros da base herdada
+#
+# O rótulo deixou de dizer “Dados oficiais carregados”, que é um relatório de
+# carregamento e não proveniência: o carregamento correr bem é o caso normal.
+# Os separadores da DECO, do GPP, da comparação europeia e da metodologia
+# ficam sem esta faixa e mantêm a proveniência que já traziam, junto do bloco
+# a que respeita (pedido da Inês, 01.09.2026).
+#
+# Fica por resolver, para uma fase posterior e por decisão da Inês: o bloco
+# “Estado dos dados” da barra lateral e o botão “Recarregar do Eurostat” têm o
+# mesmo problema, mostram período e recolha do índice em todos os separadores,
+# incluindo os que não o usam. Não se mexeu aqui por serem navegação.
+FONTE_INDICE = "Fonte: Eurostat / INE, índice harmonizado de preços"
+
+
+def faixa_fonte(mes: bool = True, ponderadores: bool = True,
+                ancora: bool = True) -> None:
+    """Proveniência do índice, no topo do separador que dele depende."""
+    itens = []
+    if mes:
+        itens.append(("Último mês disponível", mes_pt(ultimo_mes)))
+    if ponderadores:
+        itens.append(("Ponderadores", str(dados["ano_pesos"] or "—")))
+    if ancora and dados.get("despesa_ano"):
+        itens.append(("Âncora de despesa", str(dados["despesa_ano"])))
+    itens.append(("Obtidos às", dados["momento"].strftime("%H:%M de %d/%m/%Y")))
+    barra_estado(FONTE_INDICE, itens)
 
 # --- classes cujo período não é o que a mensagem acima anuncia ---
 # Cada classe entra com a sua última observação, e o rótulo é o máximo de todas.
@@ -2943,6 +2975,9 @@ with aba1:
             "Repartição, evolução e esforço da despesa alimentar do agregado "
             "escolhido. A base de cálculo e a composição definem-se no bloco acima.")
 
+        # Sem o mês: o indicador de capa, logo a seguir, di-lo em corpo grande.
+        faixa_fonte(mes=False)
+
         # ---- grandezas da variação, apuradas antes de se desenhar o que quer
         # que seja: o indicador de capa e o indicador secundário do agravamento
         # consomem exatamente as mesmas, e o de capa vem primeiro na página.
@@ -3133,8 +3168,8 @@ with aba1:
               "O coeficiente de Engel, em cima, e o peso no orçamento por quintil, "
               "mais abaixo, repartem o que as famílias <em>gastam</em>. Esta mede "
               "quanto do que <em>recebem</em> é absorvido pela alimentação, e é a única "
-              "<strong>das três</strong> que responde à composição escolhida na barra "
-              "lateral.",
+              "<strong>das três</strong> que responde à composição escolhida no topo "
+              "deste separador.",
               ajuda=("Estes valores são **limites superiores**, a despesa e o rendimento "
                      "vêm de fontes com bases estatísticas diferentes, e combiná-las "
                      "sobrestima o esforço. Leia as **diferenças entre composições** e a "
@@ -3947,6 +3982,11 @@ with aba2:
             "Índice de preços dos produtos alimentares em Portugal e variação "
             "homóloga, mês a mês, com a decomposição entre frescos e transformados.")
 
+        # Este separador não dá valores em euros, logo não tem âncora de
+        # despesa; e a comparação de índices usa os ponderadores de vários
+        # anos, pelo que nomear um só seria falso.
+        faixa_fonte(ponderadores=False, ancora=False)
+
         base = dados.get("base_indice") or "—"
         # Doze linhas de definição antes do primeiro gráfico da página. O texto
         # é bom e fica inteiro, mas passa a bloco recolhível: quem já sabe o que
@@ -4740,6 +4780,8 @@ with aba3:
             "Cenário hipotético de alteração das taxas de IVA sobre a despesa alimentar. "
             "As taxas do cenário e a fração que chega ao consumidor são parâmetros de "
             "quem simula, não são dados oficiais.")
+
+        faixa_fonte()
 
         # A base de cálculo é herdada, não escolhida aqui: é a mesma que está em
         # “Despesa e composição”, e o simulador é o único separador onde ela

@@ -2216,6 +2216,85 @@ def test_o_alarme_de_cobertura_continua_acima_das_abas():
     assert i_tabs < i_uso, "o alarme e escrito antes de a decomposicao existir"
 
 
+def test_a_proveniencia_do_indice_nao_e_global():
+    """
+    A faixa dos metadados do indice era escrita **acima do `st.tabs`**, e por
+    isso aparecia nos sete separadores, incluindo os da DECO e do GPP, que nao
+    usam o indice e ja declaram a sua propria fonte. Ficou dentro de cada
+    separador que o indice governa.
+
+    O rotulo tambem mudou: "Dados oficiais carregados" e um relatorio de
+    carregamento, nao e proveniencia, e o carregamento correr bem e o caso
+    normal, nao uma noticia.
+    """
+    vivo = _fonte_viva("app.py")
+    assert "Dados oficiais carregados" not in vivo, (
+        "o rótulo da faixa voltou a anunciar o carregamento em vez da fonte")
+
+    # A **definicao** fica acima das abas, e tem de ficar: no Streamlit a ordem
+    # do ficheiro e a ordem de execucao. O que nao pode subir e a **chamada**,
+    # que e o que desenha a faixa no ecra.
+    import re
+    (i_tabs,) = _ordem_no_app("= st.tabs([")
+    for m in re.finditer(r"^\s*faixa_fonte\(", _fonte("app.py"), re.M):
+        assert m.start() > i_tabs, (
+            "ha uma chamada a faixa_fonte() acima do st.tabs, e dai ela volta "
+            "a aparecer nos sete separadores")
+
+
+def test_a_proveniencia_do_indice_so_aparece_onde_o_indice_governa():
+    """
+    Tres separadores dependem do indice harmonizado: "Despesa e composicao",
+    "Historico" e "Simulador de IVA". Os outros quatro tem fonte propria, a
+    DECO e o GPP dos ficheiros recolhidos, a comparacao europeia das Paridades
+    e das Contas Nacionais, e a metodologia e a documentacao.
+
+    Este teste nao fiscaliza redacao nenhuma: verifica **em que separador cai
+    cada chamada**, que e a substancia da decisao de 01.09.2026.
+    """
+    import re
+    fonte = _fonte("app.py")
+
+    # Os separadores pela ordem em que aparecem no ficheiro, que nao e a ordem
+    # visual: `aba1` abre duas vezes, a primeira so para os parametros.
+    blocos = [(m.start(), m.group(1))
+              for m in re.finditer(r"^with (aba\w+):", fonte, re.M)]
+    assert blocos, "nao ha separadores no app.py"
+
+    def separador(pos):
+        return next(nome for inicio, nome in reversed(blocos) if inicio < pos)
+
+    onde = [separador(m.start())
+            for m in re.finditer(r"^\s*faixa_fonte\(", fonte, re.M)]
+
+    assert sorted(onde) == ["aba1", "aba2", "aba3"], (
+        f"a proveniencia do indice esta em {sorted(onde)}. Tem de estar nos "
+        "tres separadores que o indice governa, e so nesses: nos restantes "
+        "anuncia um periodo e uns ponderadores que nao dizem respeito ao que "
+        "esta no ecra.")
+
+
+def test_a_proveniencia_mostra_so_os_campos_que_o_separador_usa():
+    """
+    "Mostrar apenas os metadados relevantes naquele contexto", da especificacao
+    da Ines. O Historico nao da valores em euros, logo nao tem ancora de
+    despesa, e a comparacao de indices usa os ponderadores de varios anos, pelo
+    que nomear um so seria falso. "Despesa e composicao" nao repete o mes, que
+    o indicador de capa anuncia em corpo grande a seguir.
+    """
+    import re
+    fonte = _fonte("app.py")
+    chamadas = re.findall(r"^\s*faixa_fonte\(([^)]*)\)", fonte, re.M)
+
+    assert "mes=False" in "".join(chamadas), (
+        "a faixa de “Despesa e composição” voltou a repetir o mês que o "
+        "indicador de capa ja anuncia duas linhas abaixo")
+    assert "ponderadores=False, ancora=False" in "".join(chamadas), (
+        "a faixa do “Histórico” voltou a anunciar uma âncora de despesa que "
+        "esse separador nao usa, ou um ano de ponderadores quando a comparação "
+        "de indices usa varios")
+
+
 def test_nenhum_bloco_recolhivel_abre_aberto():
     """
     A regra da aplicacao, e sobretudo do separador de metodologia: o leitor abre
