@@ -1934,9 +1934,14 @@ def base_de_calculo(dados: dict, base: dict | None = None,
     if dados.get("ano_pesos"):
         partes.append(f"Ponderadores de {dados['ano_pesos']}.")
     if base:
+        # O período de referência vai sempre, quando existe. Havia aqui uma
+        # guarda que o omitia se já constasse do nome, e existia por causa de um
+        # nome que trazia a data atrás, “IDF 2022/2023”. Os nomes deixaram de a
+        # trazer a 01.09.2026, por serem rótulos: a guarda passou a nunca
+        # disparar, e uma condição que nunca dispara é pior do que nenhuma,
+        # porque parece proteger alguma coisa.
         ano = str(base.get("ano_base") or "")
-        nivel = base["nome"] if (not ano or ano in base["nome"]) \
-            else f"{base['nome']} ({ano})"
+        nivel = f"{base['nome']} ({ano})" if ano else base["nome"]
         mes_nivel = mes_indice or dados.get("mes_variacoes")
         if mes_nivel:
             nivel += f", indexado a {mes_extenso(mes_nivel)}"
@@ -2394,11 +2399,15 @@ with aba1:
     #
     # As larguras não são iguais, e não há coluna vazia. Chegou a haver uma, para
     # encostar os controlos à esquerda, mas deixava metade da folha por usar. Cada
-    # coluna leva antes a largura do que tem dentro: a base tem duas opções curtas,
-    # a composição dois contadores lado a lado, e a escala leva metade porque
-    # carrega os dois expansores e o nome da opção traz os coeficientes atrás
-    # (01.09.2026).
-    _c_base, _c_comp, _c_esc = st.columns([0.95, 1.15, 2.1], gap="medium")
+    # coluna leva antes a largura do que tem dentro: a base tem duas opções, a
+    # composição dois contadores lado a lado, e a escala leva quase metade
+    # porque carrega os dois expansores e o nome da opção traz os coeficientes
+    # atrás (01.09.2026).
+    #
+    # A coluna da base subiu de 0,95 para 1,45: as opções deixaram de ser
+    # “IDF 2022/2023” e passaram a ser a designação por extenso, que na largura
+    # anterior quebrava em três linhas por opção.
+    _c_base, _c_comp, _c_esc = st.columns([1.45, 1.15, 1.9], gap="medium")
 
     with _c_base:
         st.markdown('<p class="sg-grupo sg-grupo--primeiro">Base de cálculo</p>',
@@ -2565,15 +2574,31 @@ with aba1:
             f"**{euro(media_agregado)}** por mês para o agregado médio, na única base "
             f"disponível. Com as duas bases a aplicação apresentaria um intervalo.")
 
+    # --- período de referência de cada base ---
+    # Estava no rótulo do seletor, que dizia “IDF 2022/2023”. Saiu de lá por ser
+    # data e não etiqueta, e vem para aqui, incondicionalmente: antes só se via
+    # quando a base tinha dois anos ou mais de atraso, e o período de referência
+    # é informação que vale sempre, não é um alarme. É também aqui que a sigla é
+    # apresentada pela primeira vez, o que licencia o seu uso no resto da
+    # aplicação (pedido da Inês, 01.09.2026).
+    # Pela ordem de `BASES_ANCORA`, que é a ordem do seletor, e não pela ordem
+    # em que as bases foram calculadas, que é a inversa.
+    _periodos = " · ".join(
+        f"**{ancora['bases'][k]['nome']}**"
+        + (" (IDF)" if k == "idf" else "")
+        + f", {ancora['bases'][k]['ano_base']}"
+        for k in BASES_ANCORA if k in ancora["bases"])
+    _nota_base.append(f"Períodos de referência: {_periodos}.")
+
     # A idade da base tem de estar acessível, não só no registo de ligações: a
     # despesa é atualizada por preços, mas a estrutura de consumo é a do ano de
     # referência (auditoria de 10.08.2026, B2).
     _idade_base = date.today().year - int(base_ancora["ano_fim"])
     if _idade_base >= 2:
         _nota_base.append(
-            f"Base de **{base_ancora['ano_base']}**, {_idade_base} anos de atraso. "
-            "Os preços estão atualizados ao mês corrente; a **estrutura de consumo** "
-            f"é a de {base_ancora['ano_base']}.")
+            f"A base ativa tem **{_idade_base} anos de atraso**. Os preços estão "
+            "atualizados ao mês corrente; a **estrutura de consumo** é a de "
+            f"{base_ancora['ano_base']}.")
 
     with _slot_nota_base.popover("Sobre esta base", icon=":material/info:"):
         for _n in _nota_base:
@@ -2984,7 +3009,8 @@ with aba1:
             r3.metric("Peso da alimentação na despesa total",
                       f"{percentagem(_eng['minimo'], sinal=False)} a {percentagem(_eng['maximo'], sinal=False)}",
                       help=("Coeficiente de Engel nas duas bases oficiais: "
-                            f"{percentagem(_eng['idf'], sinal=False)} no IDF 2022/2023 (agregados residentes) "
+                            f"{percentagem(_eng['idf'], sinal=False)} no Inquérito às Despesas "
+                            "das Famílias de 2022/2023 (agregados residentes) "
                             f"e {percentagem(_eng['contas'], sinal=False)} nas Contas Nacionais de "
                             f"{_eng['ano_contas']} (conceito macroeconómico). Divergem "
                             "porque a despesa alimentar por agregado difere entre bases "
@@ -2993,7 +3019,10 @@ with aba1:
                             "consta da tabela por quintil, mais abaixo. Comparação "
                             "europeia no separador UE-27, que usa as Contas Nacionais "
                             "por serem a única base comparável entre países."))
-            r3.caption("IDF 2022/2023 · Contas Nacionais, ver Metodologia")
+            # Linha de proveniência, e por isso com as datas: aqui a data é
+            # informação, não etiqueta.
+            r3.caption(f"Inquérito às Despesas das Famílias 2022/2023 · Contas "
+                       f"Nacionais {_eng['ano_contas']}, ver Metodologia")
         else:
             r3.markdown(
             f"<p class='sg-comp__d' style='padding-top:14px'>"

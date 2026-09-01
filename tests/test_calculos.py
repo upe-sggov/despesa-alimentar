@@ -2705,6 +2705,50 @@ def test_a_app_mostra_a_nota_de_desalinhamento_junto_dos_graficos():
     assert fonte.index("if _desal_nota:") > i
 
 
+def test_os_rotulos_das_bases_nao_trazem_sigla_nem_data():
+    """
+    Regra do Livro de Estilo, aplicada a 01.09.2026: o rotulo de uma base e a
+    designacao por extenso, sem sigla e sem ano. O seletor punha lado a lado
+    "IDF 2022/2023" e "Contas Nacionais", uma sigla com data e uma designacao
+    por extenso sem data, para duas coisas do mesmo nivel.
+
+    A data nao se perdeu: esta no (i) do seletor e em cada linha de
+    proveniencia, onde e informacao e nao etiqueta. O que este teste guarda e
+    que ela nao volta ao rotulo, que e o sitio onde nao pertence.
+    """
+    import re
+    from src.config import BASES_ANCORA
+
+    for chave, base in BASES_ANCORA.items():
+        nome = base["nome"]
+        assert not re.search(r"\d", nome), (
+            f"o rotulo da base “{chave}” voltou a trazer uma data: {nome!r}. A "
+            "data vai no (i) do seletor e nas linhas de proveniencia.")
+        assert not re.search(r"\b[A-Z]{2,}\b", nome), (
+            f"o rotulo da base “{chave}” voltou a trazer uma sigla: {nome!r}.")
+
+    assert BASES_ANCORA["idf"]["nome"] == "Inquérito às Despesas das Famílias"
+    assert BASES_ANCORA["contas"]["nome"] == "Contas Nacionais"
+
+
+def test_a_sigla_do_inquerito_e_apresentada_antes_de_ser_usada():
+    """
+    O Livro de Estilo permite a sigla a partir da segunda ocorrencia, mas exige
+    que a primeira a apresente. Com o rotulo por extenso, a apresentacao deixou
+    de estar no seletor e passou para o (i) que lhe fica ao lado, que e o
+    primeiro sitio onde a base e descrita.
+
+    Sem isto, o separador da metodologia usa "IDF" dezenas de vezes sem que
+    coisa nenhuma na aplicacao diga o que a sigla quer dizer.
+    """
+    fonte = _fonte("app.py")
+    i_apresenta = fonte.index('" (IDF)" if k == "idf" else ""')
+    i_nota = fonte.index("_slot_nota_base.popover(")
+    assert i_apresenta < i_nota, (
+        "a apresentacao da sigla tem de ser escrita antes de o (i) ser "
+        "desenhado, senao nao entra nele")
+
+
 def test_a_proveniencia_declara_as_tres_datas():
     """
     O periodo de referencia estava a tres ecras dos numeros que o usam. A linha
@@ -2712,17 +2756,21 @@ def test_a_proveniencia_declara_as_tres_datas():
     a janela homologa, o ano dos ponderadores e o mes a que o nivel esta
     indexado.
     """
-    base = {"nome": "IDF 2022/2023", "ano_base": "2022/2023"}
+    from src.config import BASES_ANCORA
+
+    base = {**BASES_ANCORA["idf"], "ano_base": "2022/2023"}
     linha = _proveniencia(_dados_de_teste(), base, mes_indice="2026-06")
 
     assert "junho de 2026" in linha
     assert "junho de 2025" in linha          # o outro extremo da janela
     assert "Ponderadores de 2026" in linha
-    assert "IDF 2022/2023" in linha
-    # O nome do IDF ja traz o periodo; repetido dava "IDF 2022/2023 (2022/2023)".
-    assert "(2022/2023)" not in linha
-    # O das Contas Nacionais nao traz, e ai o ano tem de aparecer.
-    cn = _proveniencia(_dados_de_teste(), {"nome": "Contas Nacionais", "ano_base": 2024},
+    # O periodo de referencia da base e a quarta data, e vem sempre. Os nomes
+    # das bases deixaram de o trazer a 01.09.2026, por serem rotulos, e e aqui
+    # que ele passou a ter de aparecer.
+    assert "Inquérito às Despesas das Famílias (2022/2023)" in linha, linha
+
+    cn = _proveniencia(_dados_de_teste(),
+                       {**BASES_ANCORA["contas"], "ano_base": 2024},
                        mes_indice="2026-06")
     assert "Contas Nacionais (2024)" in cn
 

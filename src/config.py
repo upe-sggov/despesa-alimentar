@@ -209,7 +209,8 @@ SETORES_OBSERVATORIO = {
 # repetida aqui, repeti-la abria a porta a que as duas divergissem em silêncio.
 IVA_MAPA_FONTE = ("Código do IVA, Lista I (taxa reduzida) e Lista II "
                   "(taxa intermédia); classes da COICOP versão 2018 conforme o "
-                  "anexo do IDF 2022/2023 do INE")
+                  "anexo do Inquérito às Despesas das Famílias 2022/2023 "
+                  "do INE")
 
 # O levantamento foi **refeito a 11.08.2026 contra as subclasses da COICOP
 # versão 2018**, e não contra as da ECOICOP versão 1 sobre as quais tinha sido
@@ -1129,7 +1130,10 @@ DIMENSAO_RECUO_FONTE = "Eurostat, ilc_lvph01 (EU-SILC), 2025"
 # entre ambas e deixa o utilizador escolher a base de trabalho.
 # Ver docs/2026-08-07_levantamento_lacunas.md, §2.10.
 IDF_ALIMENTAR_ANUAL = 2872.0          # € por agregado e por ano, COICOP 01.1
-IDF_FONTE = "INE, IDF 2022/2023 (quadro Q.2.11.a)"
+# As citações da fonte dizem o nome da publicação por extenso. Vão para as
+# legendas de proveniência e para o cabeçalho dos CSV exportados, que saem desta
+# aplicação para documentos onde a sigla não foi apresentada (01.09.2026).
+IDF_FONTE = "INE, Inquérito às Despesas das Famílias 2022/2023 (quadro Q.2.11.a)"
 
 # Período de referência do IDF 2022/2023, confirmado no documento metodológico
 # do INE (Metainformação IDF, V.6.1.1): “O período de recolha decorrerá entre
@@ -1152,12 +1156,23 @@ IDF_FONTE = "INE, IDF 2022/2023 (quadro Q.2.11.a)"
 # Fevereiro de 2022 é o primeiro mês inteiro de recolha e janeiro de 2023 o
 # último: doze meses, que é exatamente a duração das 26 quinzenas.
 IDF_JANELA_RECOLHA = ("2022-02", "2023-01")
-IDF_JANELA_FONTE = ("INE, Metainformação do IDF 2022/2023, V.6.1.1 (período de "
-                    "recolha) e V.7.4 (sem ajustamento dos dados)")
+IDF_JANELA_FONTE = ("INE, Metainformação do Inquérito às Despesas das Famílias "
+                    "2022/2023, V.6.1.1 (período de recolha) e V.7.4 (sem "
+                    "ajustamento dos dados)")
 
+# `nome` é **rótulo**, e obedece à regra do Livro de Estilo: designação por
+# extenso, sem sigla e sem ano. Dizia "IDF 2022/2023" e a outra base dizia
+# "Contas Nacionais", pelo que o seletor punha lado a lado uma sigla com data e
+# uma designação por extenso sem data, para duas coisas do mesmo nível.
+#
+# O período de referência não se perdeu: passou para o (i) do seletor, que é
+# também onde a sigla é apresentada pela primeira vez, e continua nas linhas de
+# proveniência, onde a data é informação e não etiqueta. Ver `base_de_calculo`
+# em app.py, que a acrescenta sempre desde que o nome deixou de a trazer
+# (pedido da Inês, 01.09.2026).
 BASES_ANCORA = {
     "idf": {
-        "nome": "IDF 2022/2023",
+        "nome": "Inquérito às Despesas das Famílias",
         "fonte": IDF_FONTE,
         "porque": "Medição direta da despesa dos agregados residentes. Subestima: "
                   "é o próprio INE que declara, na metainformação das Contas "
@@ -1321,7 +1336,8 @@ IDF_CLASSES_QUINTIL = {
 # **total** (para a qual as escalas foram desenhadas) o desvio inverte-se.
 # Ou seja, o problema não é da escala em geral: é da alimentação em particular,
 # onde as economias de escala são mais fracas do que na habitação.
-ESCALAS_TESTE_FONTE = "INE, IDF 2022/2023, quadros Q.1.3, Q.2.6.a e Q.2.8"
+ESCALAS_TESTE_FONTE = ("INE, Inquérito às Despesas das Famílias 2022/2023, "
+                       "quadros Q.1.3, Q.2.6.a e Q.2.8")
 
 # Composição do grupo “2 ou mais adultos”: (n.º de adultos, fração do grupo)
 ESCALAS_TESTE_COMPOSICAO = [(2.0, 0.72), (3.288, 0.28)]
