@@ -4014,10 +4014,14 @@ def test_comparacao_de_tipos_declara_o_ambito():
 # =========================================================================
 def test_a_sintese_nao_segue_os_parametros_do_utilizador():
     """
-    A sintese fixa a base por defeito e o agregado medio nacional. Se alguem a
-    ligar a `base_chave` ou a `despesa_mensal`, que seguem os controlos de
-    "Despesa e composicao", dois leitores passam a citar numeros diferentes a
-    partir da mesma pagina, e o separador deixa de servir para o que existe.
+    Um resumo executivo que muda conforme o cursor que o leitor mexeu noutro
+    separador nao e citavel: dois leitores citariam numeros diferentes a partir
+    da mesma pagina.
+
+    A sintese chegou a resolver isto **fixando** a base por defeito. Com a nova
+    arquitetura resolve-o melhor, por nao usar de todo nenhum valor que dependa
+    dos controlos: nem a base, nem a composicao do agregado, nem widgets
+    proprios.
     """
     vivo = _fonte_viva("app.py")
     i = vivo.index("with _slot_sintese:")
@@ -4025,23 +4029,39 @@ def test_a_sintese_nao_segue_os_parametros_do_utilizador():
     # rodape e o primeiro elemento desenhado depois da sintese.
     bloco = vivo[i:vivo.index('<footer class="sg-rodape"', i)]
 
-    assert "BASE_POR_DEFEITO" in bloco, (
-        "a sintese deixou de fixar a base por defeito")
-    assert "base_chave" not in bloco, (
-        "a sintese passou a ler a base escolhida pelo utilizador noutro "
-        "separador: deixa de ser citavel")
-    assert "despesa_mensal" not in bloco, (
-        "a sintese passou a usar a despesa ajustada a composicao escolhida "
-        "pelo utilizador, em vez do agregado medio nacional")
+    for parametro in ("base_chave", "despesa_mensal", "composicao", "escala_sel"):
+        assert parametro not in bloco, (
+            f"a sintese passou a ler “{parametro}”, que segue os controlos de "
+            "“Despesa e composicao”: deixa de ser citavel")
+    for widget in ("st.selectbox", "st.slider", "st.radio", "st.multiselect",
+                   "st.number_input", "st.checkbox", "st.toggle"):
+        assert widget not in bloco, (
+            f"a sintese ganhou um controlo proprio (“{widget}”): a pagina tem de "
+            "dizer o mesmo a todos os leitores")
 
 
-def test_a_sintese_declara_que_fixa_a_base():
-    """Fixar e nao dizer que se fixou seria pior do que nao fixar."""
-    vivo = _fonte_viva("app.py")
-    i = vivo.index("with _slot_sintese:")
-    bloco = vivo[i:i + 4000]
-    assert "agregado médio" in bloco, (
-        "a sintese deixou de declarar que o valor e o do agregado medio nacional")
+def test_a_sintese_nao_escolhe_uma_base_de_calculo():
+    """
+    A sintese usa da ancora **apenas** os dois niveis oficiais que confronta na
+    seccao 03, e esses sao fixos: existem os dois independentemente do que o
+    leitor escolheu noutro separador.
+
+    O que nao pode voltar e **escolher** uma delas, por `ancora["bases"][...]`
+    ou por `base_chave`: seria apresentar um valor que muda com o cursor de
+    outra pagina, e dois leitores citariam numeros diferentes da mesma sintese
+    (arquitetura de 02.09.2026).
+    """
+    bloco = _sintese_viva()
+    for simbolo in ('ancora["bases"]', "base_chave", "despesa_mensal",
+                    "_despesa_sint", "BASE_POR_DEFEITO"):
+        assert simbolo not in bloco, (
+            f"a sintese voltou a escolher uma base de calculo, por “{simbolo}”")
+
+    # E o que usa da ancora sao os dois extremos, nunca um deles isolado.
+    if "ancora[" in bloco:
+        assert 'ancora["minimo"]' in bloco and 'ancora["maximo"]' in bloco, (
+            "a sintese passou a usar um dos niveis oficiais sem o outro: o "
+            "confronto existe justamente para nao eleger nenhum dos dois")
 
 
 def test_o_momentum_declara_porque_nao_ha_taxa_ajustada_de_sazonalidade():
@@ -4150,126 +4170,203 @@ def test_as_contagens_ate_dez_saem_por_extenso_e_acordam_em_genero():
     assert cardinal(None) == "—"
 
 
-def test_a_conclusao_do_iva_reparte_a_despesa_toda_e_nao_so_duas_parcelas():
+def test_a_reparticao_do_iva_mostra_as_quatro_parcelas_e_nao_duas():
     """
-    A sintese dizia "68,4% a 6%" e, logo a seguir, "so 24,4% a 23%". Somam
-    92,8%, e duas percentagens em sequencia leem-se como um par que fecha em
-    cem: o leitor atribuia a diferenca a arredondamento em vez de as duas
-    parcelas reais que faltavam, a taxa intermedia e os produtos de taxa nao
-    determinavel (auditoria da Ines, 02.09.2026).
+    Duas percentagens em sequencia leem-se como um par que fecha em cem. A
+    sintese dizia "68,4% a 6%" e "so 24,4% a 23%", que somam 92,8%, e o leitor
+    atribuia a diferenca a arredondamento em vez de as duas parcelas reais que
+    faltavam, a taxa intermedia e os produtos de taxa nao determinavel
+    (auditoria da Ines, 02.09.2026).
 
-    A regra: o resto e calculado por diferenca, para fechar sempre em 100%, e
-    a nota nomeia as parcelas que o compoem.
+    A conclusao saiu da sintese com a nova arquitetura, mas a doutrina vale
+    onde a reparticao agora vive, que e o separador do IVA: as quatro parcelas
+    sao apresentadas juntas, e sao as quatro que fecham em 100%.
     """
     vivo = _fonte_viva("app.py")
-    i = vivo.index("4 · A maior parte da despesa alimentar")
-    # Recua ate ao inicio do par, onde estao as parcelas calculadas, e fecha no
-    # titulo da conclusao seguinte. O delimitador tem de ser texto **vivo**:
-    # `_fonte_viva` retira os comentarios, e a primeira versao deste teste
-    # apontava para um deles.
-    par = vivo[vivo.rindex("if _iva_sint:", 0, i):
-               vivo.index("5 · O que decide o valor", i)]
+    i = vivo.index("Repartição da despesa alimentar pelas taxas legais de IVA")
+    bloco = vivo[i:i + 3000]
 
-    assert "_iva_resto = max(100.0 - _iva_6 - _iva_23, 0.0)" in par, (
-        "o resto deixou de ser calculado por diferenca e as parcelas podem "
-        "deixar de fechar em 100%")
-    for parcela in ("_iva_6", "_iva_23", "_iva_resto"):
-        assert par.count(parcela) >= 2, f"a parcela {parcela} deixou de ser usada"
-
-    # O resto vai nomeado, mas as suas duas componentes vao **sem numero**: a
-    # uma casa decimal davam 0,9% e 6,2%, que somam 7,1% e nao os 7,2%
-    # anunciados. Tres percentagens que fecham em 100 valem mais do que cinco
-    # em que duas nao fecham.
-    assert "taxa intermédia" in par, (
-        "a conclusao do IVA deixou de nomear a taxa intermedia, que e uma das "
-        "parcelas em que o resto se divide")
-    for sub in ("_iva_13", "_iva_ind", "taxa_13_pct"):
-        assert sub not in par, (
-            f"a conclusao do IVA voltou a mostrar a subparcela {sub}; a uma "
-            "casa decimal as duas subparcelas somam 7,1% e o resto anunciado e "
-            "7,2%, e o desencontro fica a vista")
+    for chave in ("taxa_6_pct", "taxa_13_pct", "taxa_23_pct", "indeterminado_pct"):
+        assert chave in bloco, (
+            f"a reparticao do IVA deixou de apresentar a parcela {chave}: com "
+            "menos de quatro, as percentagens deixam de fechar em 100%")
+    for rotulo in ("taxa reduzida (6%)", "taxa intermédia (13%)",
+                   "taxa normal (23%)", "Indeterminado"):
+        assert rotulo in bloco, f"a reparticao do IVA perdeu o rotulo “{rotulo}”"
 
 
-def test_a_sintese_tem_tres_blocos_e_nenhum_deles_fica_vazio():
+def _sintese_viva():
     """
-    Um `bloco()` seguido de um `secao(grupo=...)` emite **dois** cabecalhos, e o
-    primeiro fica sem nada por baixo. Foi o que aconteceu ao bloco que aqui
-    esteve, e o leitor via um titulo vazio seguido de outro com o conteudo todo.
+    O texto vivo do bloco da sintese, do `with` ate ao rodape, com os literais
+    adjacentes **juntos**.
 
-    A regra: dentro da sintese, cada `bloco()` tem de ter conteudo proprio, e
-    nenhuma `secao` imediatamente a seguir pode trazer `grupo=`.
+    Sem a juncao, uma frase partida entre duas linhas por causa da largura do
+    codigo deixa de ser encontrada, e a sonda falha por razoes de formatacao em
+    vez de por razoes de conteudo. Ja aconteceu duas vezes nesta bateria.
     """
     import re
 
     vivo = _fonte_viva("app.py")
     i = vivo.index("with _slot_sintese:")
     bloco = vivo[i:vivo.index('<footer class="sg-rodape"', i)]
+    return re.sub(r'"\s*\n\s*"', "", bloco)
 
+
+def test_a_sintese_segue_a_narrativa_de_cinco_seccoes():
+    """
+    A sintese e a pagina onde a aplicacao conclui, e a ordem das cinco seccoes
+    e a propria argumentacao: parte-se do ponto em que o debate publico esta,
+    diz-se o que os dados mostram, o que ainda nao se mede bem, o que a
+    ferramenta acrescenta, e como melhorar a medicao. Trocar a ordem, ou perder
+    uma seccao, quebra o fio (arquitetura da Ines, 02.09.2026).
+
+    Um `bloco()` seguido de um `secao(grupo=...)` emite **dois** cabecalhos e
+    deixa o primeiro vazio, que foi o defeito que ja aqui esteve.
+    """
+    import re
+
+    bloco = _sintese_viva()
     cabecalhos = re.findall(r'bloco\("(\d+ · [^"]+)"', bloco)
-    assert cabecalhos == ["01 · Onde estamos",
-                          "02 · O que os dados dizem",
-                          "03 · Como melhorar o indicador"], (
-        f"a estrutura da sintese mudou: {cabecalhos}")
+    assert cabecalhos == [
+        "01 · O ponto de partida",
+        "02 · O que os dados nos dizem",
+        "03 · O que ainda não conseguimos medir bem",
+        "04 · O que esta ferramenta acrescenta",
+        "05 · Como podemos melhorar a medição",
+    ], f"a narrativa da sintese mudou: {cabecalhos}"
 
-    # Nenhuma seccao da sintese emite o seu proprio cabecalho de bloco.
     assert 'grupo="' not in bloco, (
         "uma seccao da sintese voltou a trazer `grupo=`, o que desenha um "
         "segundo cabecalho de bloco e deixa o primeiro vazio")
 
 
-def test_cada_conclusao_da_sintese_tem_o_seu_numero_ao_lado():
+def test_cada_pergunta_da_sintese_termina_numa_conclusao():
     """
-    A estrutura da sintese e uma conclusao por linha: o cartao com o numero a
-    esquerda, a nota que o desenvolve a direita. Antes os numeros estavam todos
-    no bloco 01 e as notas todas no bloco 02, o que obrigava a subir e a descer
-    para ligar cada conclusao ao valor que a sustenta, e deixava dois numeros
-    sem nota nenhuma (pedido da Ines, 02.09.2026).
+    A hierarquia da pagina e fixa: pergunta, numero, conclusao, proveniencia.
+    Uma pergunta sem conclusao deixa o leitor com o numero e sem a leitura, que
+    e precisamente o que esta pagina existe para evitar.
+    """
+    import re
 
-    A regra: dentro da sintese nao ha `nota()` solta nem `st.metric`. Toda a
-    conclusao passa por `par_kpi_nota`, que garante o par.
+    bloco = _sintese_viva()
+    # Sem exigir o texto na mesma linha: duas das seis perguntas sao longas e
+    # quebram a seguir a virgula.
+    perguntas = re.findall(r'pergunta_editorial\(\s*"(\d+)",', bloco)
+    assert perguntas == ["01", "02", "03", "04", "05", "06"], (
+        f"as seis perguntas da sintese mudaram: {perguntas}")
+
+    # Cada pergunta tem de trazer a sua conclusao e a sua evidencia.
+    pedacos = re.split(r'pergunta_editorial\(\s*"\d+",', bloco)[1:]
+    for numero, pedaco in zip(perguntas, pedacos):
+        assert "conclusao=" in pedaco, (
+            f"a pergunta {numero} da sintese ficou sem conclusao")
+        assert re.search(r"\bev_\w+\(", pedaco), (
+            f"a pergunta {numero} da sintese ficou sem evidencia composta")
+
+
+def test_a_sintese_nao_desenha_graficos():
+    """
+    Os graficos ficam nos separadores analiticos. A sintese conclui, e um
+    grafico nela seria ou repeticao do separador que o desenvolve, ou o mais
+    fotografavel dos objetos da aplicacao sem a legenda que o desarma. Ja
+    aconteceu uma vez, com a serie da despesa em euros (decisao da Ines).
+    """
+    bloco = _sintese_viva()
+    for proibido in ("go.Figure", "grafico(", "st.plotly_chart", "st.line_chart",
+                     "st.bar_chart", "st.dataframe", "st.metric", ".metric("):
+        assert proibido not in bloco, (
+            f"voltou “{proibido}” a sintese: os graficos e os quadros vivem nos "
+            "separadores analiticos")
+
+
+def test_as_remissoes_da_sintese_apontam_para_separadores_que_existem():
+    """
+    O `explorar()` e um ponteiro, e nao uma hiperligacao: o Streamlit nao muda
+    de separador por codigo. Por isso o nome tem de coincidir **exatamente** com
+    o rotulo da aba, senao o leitor procura um separador que nao encontra.
     """
     import re
 
     vivo = _fonte_viva("app.py")
-    i = vivo.index("with _slot_sintese:")
-    bloco = vivo[i:vivo.index('<footer class="sg-rodape"', i)]
+    i = vivo.index("st.tabs([")
+    rotulos = set(re.findall(r'"([^"]+)"', vivo[i:vivo.index("])", i)]))
 
-    assert re.search(r"(?<!par_kpi_)nota\(", bloco) is None, (
-        "ha uma nota solta na sintese: toda a conclusao tem de vir emparelhada "
-        "com o seu numero, por `par_kpi_nota`")
-    assert "st.metric" not in bloco and ".metric(" not in bloco, (
-        "voltou uma metrica solta a sintese; o numero de uma conclusao vive no "
-        "cartao ao lado dela")
-    # Uma conclusao por linha, e todas as que a aplicacao consegue sustentar.
-    assert bloco.count("par_kpi_nota(") >= 6, (
-        "a sintese perdeu conclusoes: eram seis pares")
+    for destino in re.findall(r'explorar\("([^"]+)"\)', _sintese_viva()):
+        # A remissao pode qualificar o bloco dentro do separador, depois de
+        # virgula: o que tem de existir e o nome antes dela.
+        nome = destino.split(",")[0].strip()
+        assert nome in rotulos, (
+            f"a sintese remete para “{nome}”, que nao e o rotulo de nenhum "
+            f"separador. Rotulos existentes: {sorted(rotulos)}")
 
 
-def test_a_melhoria_do_indicador_diz_o_que_muda_e_nao_so_o_que_diverge():
+def test_a_sintese_respeita_as_regras_estatisticas_do_briefing():
     """
-    A seccao de melhoria e a terceira pergunta do mandato do Gabinete. Tem de se
-    ler como “medir assim seria melhor, e isto e o que muda”, e nunca como uma
-    lista de divergencias: uma divergencia descreve um problema, uma melhoria
-    diz o que fazer a seguir (pedido da Ines, 02.09.2026).
+    Seis regras que valem mais do que a redaccao: sao o que separa uma sintese
+    citavel de uma sintese que induz em erro. Cada uma ja foi quebrada uma vez
+    algures nesta aplicacao (briefing da Ines, 02.09.2026).
+    """
+    bloco = _sintese_viva()
+    baixo = bloco.lower()
 
-    O sinal verificavel disso e cada item trazer o **efeito no valor**, e os
-    verbos serem de accao sobre o metodo.
+    # 1. Uma inflacao positiva nao e uma descida de precos.
+    for proibido in ("os preços desceram", "os preços baixaram",
+                     "redução dos preços", "descida dos preços"):
+        assert proibido not in baixo, (
+            f"a sintese diz “{proibido}” a partir de uma taxa positiva")
+
+    # 2. O ranking e sobre os paises comparados, nunca sobre os 27.
+    assert "de 27" not in baixo, (
+        "a sintese apresenta uma posicao sobre 27 paises; a aplicacao compara "
+        "um subconjunto")
+    if "Posição" in bloco:
+        assert "países comparados" in bloco, (
+            "a posicao deixou de declarar que e sobre os paises comparados")
+
+    # 3. Engel e despesa sobre consumo, e nunca sobre rendimento.
+    assert "despesa sobre consumo" in bloco, (
+        "a sintese deixou de declarar que o peso da alimentacao e despesa "
+        "sobre consumo, e nao sobre rendimento")
+
+    # 4. Sem inferencia causal sobre rendimentos nem sobre precos.
+    for proibido in ("a causa não está nos preços", "problema de rendimentos",
+                     "problema de preços altos"):
+        assert proibido not in baixo, (
+            f"a sintese faz uma inferencia causal: “{proibido}”")
+
+    # 5. Sem margens inferidas da cadeia, e a ressalva presente.
+    assert "inferir margens ou responsabilidades" in bloco, (
+        "a conclusao da cadeia deixou de trazer a ressalva das margens")
+    for proibido in ("margem excessiva", "margens excessivas", "preços abusivos",
+                     "especulação"):
+        assert proibido not in baixo, f"linguagem nao permitida: “{proibido}”"
+
+    # 6. O indicador de dieta saudavel nao e fome, e nao se confunde com o
+    #    da privacao severa do EU-SILC.
+    assert "não é uma medida directa de fome" in bloco, (
+        "a conclusao da dieta saudavel deixou de declarar que nao mede fome")
+    assert "privação alimentar severa" not in bloco or "EU-SILC" in bloco, (
+        "a sintese cita a privacao severa sem a distinguir do indicador da FAO")
+
+
+def test_a_seccao_de_melhoria_e_prospectiva_e_nao_fala_de_processo():
+    """
+    A seccao 05 diz a direccao, e nao a tarefa: o detalhe do que cada caminho
+    custaria vive nos separadores analiticos. E continua a nao falar do estado
+    do trabalho de quem construiu a aplicacao (regra da Ines).
     """
     vivo = _fonte_viva("app.py")
-    i = vivo.index('bloco("03 · Como melhorar o indicador")')
+    i = vivo.index('bloco("05 · Como podemos melhorar a medição")')
     bloco = vivo[i:vivo.index('<footer class="sg-rodape"', i)]
 
-    assert bloco.count("Efeito no valor:") >= 3, (
-        "um item da melhoria deixou de declarar o efeito que teria no valor, "
-        "que e o que o distingue de um reparo")
-    for verbo in ("Fixar qual das duas fontes", "Usar os tipos de agregado",
-                  "Recompor o cabaz"):
-        assert verbo in bloco, f"a melhoria perdeu o item “{verbo}”"
+    for area in ("Maior granularidade", "Melhoria da composição", "Melhores fontes",
+                 "Novas dimensões", "Evolução metodológica",
+                 "Quantificação do impacto"):
+        assert area in bloco, f"a seccao de melhoria perdeu a area “{area}”"
 
-    # E continua a nao falar do processo: sao propriedades do indicador, e nao
-    # tarefas de quem construiu a aplicacao. As sondas sao frases inteiras: um
-    # fragmento curto como “fica para” apanha “significa para a decisao”, que
-    # foi o que este teste fez na primeira versao.
+    # As sondas sao frases inteiras: um fragmento curto como “fica para” apanha
+    # “significa para a decisao”, que foi o que este teste fez numa versao
+    # anterior.
     for proibido in ("ainda não", "por fazer", "próximo passo", "fica para depois",
                      "está em falta", "a aplicação não", "não foi possível"):
         assert proibido not in bloco.lower(), (

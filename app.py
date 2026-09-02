@@ -686,6 +686,298 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
   font-size: .72rem; color: var(--sg-texto-3); margin: .3rem 0 0; line-height: 1.5;
 }}
 
+/* ================== registo editorial da Síntese ====================== */
+/* A Síntese não é um painel: é a página onde a aplicação conclui. Uma peça
+   editorial construída sobre evidência estatística, e não uma coluna de KPI
+   com texto ao lado (segunda passagem, pedido da Inês, 02.09.2026).
+   Nenhum destes componentes desenha gráficos: os gráficos ficam nos
+   separadores analíticos. */
+
+/* ---------- abertura e frases de carga -------------------------------- */
+/* O único parágrafo da página que se lê como prosa, e por isso o único com
+   medida curta imposta. */
+[data-testid="stMarkdownContainer"] p.sg-abertura {{
+  font-size: 1.0625rem; line-height: 1.7; color: var(--sg-texto-2);
+  max-width: 44rem; margin: var(--sg-e2) 0 0; font-weight: 300;
+}}
+[data-testid="stMarkdownContainer"] p.sg-destaque {{
+  font-size: 1.5rem; line-height: 1.44; font-weight: 500;
+  color: var(--sg-texto); max-width: 48rem;
+  margin: var(--sg-e4) 0 var(--sg-e3); padding-left: 1.5rem;
+  border-left: 3px solid var(--sg-verde); letter-spacing: -.016em;
+}}
+
+/* ---------- a grelha de uma pergunta ---------------------------------- */
+/* Raia à esquerda com o número e a pergunta, corpo à direita com a evidência.
+   É o que resolve o desequilíbrio horizontal: a página tem 1288 px úteis e a
+   evidência estava travada em 40rem encostada à esquerda, deixando metade do
+   ecrã vazio. A raia é fixa em todas as seis, e é isso que as alinha entre si.
+   As larguras variam **dentro** do corpo: a evidência usa a largura toda, a
+   conclusão e a fonte mantêm medida de leitura. */
+.sg-q {{
+  display: grid; grid-template-columns: minmax(0, 15.5rem) minmax(0, 1fr);
+  gap: 0 4rem; padding: 3rem 0 3.25rem;
+  border-top: 1px solid var(--sg-grelha);
+}}
+.sg-q--primeira {{ border-top: 0; padding-top: 1.5rem; }}
+@media (max-width: 980px) {{
+  .sg-q {{ grid-template-columns: minmax(0, 1fr); gap: 1.35rem 0;
+    padding: 2.25rem 0 2.5rem; }}
+}}
+/* O número é o único elemento cromático da raia. É o acento da página, e
+   repete-se seis vezes: mais do que isto e deixaria de ser acento. */
+[data-testid="stMarkdownContainer"] p.sg-q__n {{
+  font-size: 2rem; font-weight: 700; line-height: 1; margin: 0 0 .75rem;
+  color: var(--sg-verde); letter-spacing: -.04em;
+  font-variant-numeric: tabular-nums;
+}}
+[data-testid="stMarkdownContainer"] h3.sg-q__t {{
+  font-size: 1.1875rem; font-weight: 600; line-height: 1.38;
+  color: var(--sg-texto); margin: 0; letter-spacing: -.015em;
+  padding: 0; border: 0;
+}}
+/* A conclusão é o nível 4 e tem de o parecer: sem caixa, que a faria ler como
+   aviso, e claramente acima da salvaguarda que se lhe segue. */
+[data-testid="stMarkdownContainer"] p.sg-q__conc {{
+  font-size: 1.0625rem; line-height: 1.58; font-weight: 500;
+  color: var(--sg-texto); max-width: 46rem; margin: 2.15rem 0 0;
+}}
+/* A salvaguarda metodológica **não** pode ter o peso da conclusão: a primeira
+   frase é o que os dados mostram, a segunda é o que não se pode inferir deles. */
+[data-testid="stMarkdownContainer"] p.sg-q__ress {{
+  font-size: .8125rem; line-height: 1.62; color: var(--sg-texto-3);
+  max-width: 44rem; margin: .75rem 0 0;
+}}
+[data-testid="stMarkdownContainer"] p.sg-q__f {{
+  font-size: .72rem; color: var(--sg-texto-3); margin: 1.6rem 0 0;
+  line-height: 1.6; max-width: 48rem;
+  padding-top: .95rem; border-top: 1px solid var(--sg-grelha);
+}}
+.sg-q__f b {{ color: var(--sg-texto-2); font-weight: 600; }}
+.sg-q__f span + span::before {{ content: " · "; color: var(--sg-borda-2); }}
+[data-testid="stMarkdownContainer"] p.sg-q__m {{
+  font-size: .72rem; color: var(--sg-texto-3); margin: .5rem 0 0;
+  line-height: 1.6; max-width: 48rem;
+}}
+[data-testid="stMarkdownContainer"] p.sg-q__ex {{
+  font-size: .78rem; font-weight: 600; color: var(--sg-verde);
+  margin: 1.2rem 0 0; letter-spacing: .01em;
+}}
+.sg-q__ex span {{ color: var(--sg-texto-2); }}
+
+/* ---------- evidência A: um valor e o seu contexto (01, 03) ----------- */
+/* Dois degraus de corpo entre o principal e o contexto, e um filete a
+   separá-los: é o que impede o segundo de se ler como um indicador de igual
+   peso. */
+.sg-ev {{ display: flex; flex-wrap: wrap; align-items: flex-start;
+  gap: 1.5rem 3.25rem; }}
+.sg-ev__c {{ flex: 0 1 auto; min-width: 9rem; }}
+/* As duas legendas alinham-se **pela mesma linha**, e é o número menor que
+   desce para o conseguir, mantendo a distância que tem à sua legenda. Com os
+   números alinhados pelo topo, as legendas ficavam a alturas diferentes e a
+   fila lia-se torta (pedido da Inês, 02.09.2026).
+   O `min-height` é a altura da caixa do número maior, 3,25rem × 0,96, e o
+   `align-items: flex-end` encosta o menor ao fundo dessa caixa. */
+[data-testid="stMarkdownContainer"] p.sg-ev__v {{
+  font-size: 3.25rem; font-weight: 700; letter-spacing: -.045em; line-height: .96;
+  color: var(--sg-texto); margin: 0; font-variant-numeric: tabular-nums;
+  min-height: 3.12rem; display: flex; align-items: flex-end;
+}}
+[data-testid="stMarkdownContainer"] p.sg-ev__r {{
+  font-size: .8125rem; color: var(--sg-texto-2); margin: .8rem 0 0;
+  line-height: 1.5; max-width: 20rem; font-weight: 500;
+}}
+.sg-ev__c--sec {{ padding-left: 3.25rem; border-left: 1px solid var(--sg-grelha); }}
+.sg-ev__c--sec p.sg-ev__v {{
+  font-size: 1.75rem; color: var(--sg-texto-2); letter-spacing: -.03em; }}
+.sg-ev__c--sec p.sg-ev__r {{
+  font-size: .78rem; color: var(--sg-texto-3); font-weight: 400; }}
+@media (max-width: 760px) {{
+  .sg-ev__c--sec {{ padding: 1.25rem 0 0; border-left: 0; width: 100%;
+    border-top: 1px solid var(--sg-grelha); }}
+  /* Empilhados, os dois números deixam de partilhar linha, e a caixa que os
+     alinhava passaria a ser só um vazio por cima do segundo. */
+  [data-testid="stMarkdownContainer"] .sg-ev__c--sec p.sg-ev__v {{
+    min-height: 0; }}
+}}
+
+/* ---------- evidência B: confronto entre dois valores (02, 05) -------- */
+/* O conector leva a relação entre os dois, e não um símbolo decorativo. O
+   filete proporcional sob cada valor é a relação em forma visual: três pixéis
+   de altura, que é o que o mantém do lado da composição editorial e não do
+   gráfico de barras. */
+.sg-conf {{ display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1.75rem 0; }}
+.sg-conf__l {{ flex: 1 1 11rem; min-width: 10rem; max-width: 20rem; }}
+[data-testid="stMarkdownContainer"] p.sg-conf__r {{
+  font-size: .6875rem; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--sg-texto-3); margin: 0 0 .7rem;
+}}
+[data-testid="stMarkdownContainer"] p.sg-conf__v {{
+  font-size: 2.75rem; font-weight: 700; letter-spacing: -.042em; line-height: .96;
+  color: var(--sg-texto); margin: 0; font-variant-numeric: tabular-nums;
+}}
+.sg-conf__b {{ height: 3px; background: var(--sg-grelha); margin-top: 1.05rem; }}
+.sg-conf__b i {{ display: block; height: 3px; background: var(--sg-verde); }}
+.sg-conf__l--b .sg-conf__b i {{ background: var(--sg-borda-2); }}
+.sg-conf__x {{ flex: 0 0 auto; padding: 0 2.75rem; align-self: flex-end;
+  text-align: center; padding-bottom: .35rem; }}
+/* 1,125rem e não 1rem: quando o conector leva um símbolo em vez de um número,
+   como o ↔ das duas fontes oficiais, a 16 px o glifo lia-se como uma mancha. */
+[data-testid="stMarkdownContainer"] p.sg-conf__xv {{
+  font-size: 1.125rem; font-weight: 700; color: var(--sg-verde); margin: 0;
+  font-variant-numeric: tabular-nums;
+}}
+[data-testid="stMarkdownContainer"] p.sg-conf__xr {{
+  font-size: .6875rem; color: var(--sg-texto-3); margin: .35rem 0 0;
+  letter-spacing: .02em;
+}}
+[data-testid="stMarkdownContainer"] p.sg-conf__leg {{
+  font-size: .8125rem; color: var(--sg-texto-2); margin: 1.3rem 0 0;
+  font-weight: 500; max-width: 42rem; line-height: 1.55;
+}}
+@media (max-width: 760px) {{
+  .sg-conf__x {{ width: 100%; padding: 0; text-align: left; }}
+}}
+
+/* ---------- evidência C: as duas fases da cadeia (04) ----------------- */
+/* Produção e consumo lidos como uma passagem, e não como dois indicadores sem
+   relação. A seta é um filete com uma ponta, desenhada em CSS: diz que as duas
+   fases são a mesma cadeia sem se tornar um fluxograma. É decorativa, e a
+   leitura fica garantida pelos rótulos das duas fases. */
+.sg-cad {{ display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.25rem 0; }}
+.sg-cad__f {{ flex: 0 1 auto; min-width: 9rem; }}
+[data-testid="stMarkdownContainer"] p.sg-cad__e {{
+  font-size: .6875rem; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--sg-verde); margin: 0 0 .7rem;
+}}
+[data-testid="stMarkdownContainer"] p.sg-cad__v {{
+  font-size: 2.75rem; font-weight: 700; letter-spacing: -.042em; line-height: .96;
+  color: var(--sg-texto); margin: 0; font-variant-numeric: tabular-nums;
+}}
+[data-testid="stMarkdownContainer"] p.sg-cad__p {{
+  font-size: .78rem; color: var(--sg-texto-3); margin: .7rem 0 0;
+}}
+/* A seta estica, mas não até à margem: sem limite, o valor do consumo ficava
+   colado ao bordo direito, mais à direita do que qualquer outra linha da
+   página. Com 24rem acaba à altura em que acaba a conclusão. */
+.sg-cad__seta {{ flex: 1 1 5rem; min-width: 4rem; max-width: 24rem;
+  position: relative; height: 1px; background: var(--sg-borda-2);
+  margin: 2.6rem 2.5rem 0; }}
+.sg-cad__seta::after {{
+  content: ""; position: absolute; right: -1px; top: -3.5px;
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  border-left: 7px solid var(--sg-borda-2);
+}}
+@media (max-width: 760px) {{
+  .sg-cad {{ display: block; }}
+  /* `min-width: 4rem` ganhava ao `width: 1px` e a seta saía como um
+     rectângulo cinzento de 64 px. Anular os dois é o que a devolve a filete. */
+  .sg-cad__seta {{ width: 1px; height: 2.25rem;
+    flex: none; min-width: 0; max-width: none;
+    margin: 1rem 0 1rem 1.5rem; }}
+  .sg-cad__seta::after {{ right: auto; left: -3.5px; top: auto; bottom: -1px;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-top: 7px solid var(--sg-borda-2); border-bottom: 0; }}
+}}
+
+/* ---------- evidência D: proporção, como segunda prova (04) ----------- */
+.sg-prop {{ margin: 2.4rem 0 0; max-width: 32rem;
+  padding-top: 1.5rem; border-top: 1px solid var(--sg-grelha); }}
+[data-testid="stMarkdownContainer"] p.sg-prop__v {{
+  font-size: 1.625rem; font-weight: 700; color: var(--sg-texto); margin: 0;
+  letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+}}
+.sg-prop__v span {{ color: var(--sg-texto-3); font-weight: 500; font-size: 1.125rem; }}
+.sg-prop__b {{ height: 3px; background: var(--sg-grelha); margin: .85rem 0 0; }}
+.sg-prop__b i {{ display: block; height: 3px; background: var(--sg-verde); }}
+[data-testid="stMarkdownContainer"] p.sg-prop__r {{
+  font-size: .78rem; color: var(--sg-texto-3); margin: .65rem 0 0; line-height: 1.55;
+}}
+
+/* ---------- evidência E: os eixos da medição (06) --------------------- */
+/* A sexta pergunta não tem KPI, e é de propósito: um número a encabeçá-la
+   seria o indicador único que a conclusão diz não existir. Fica uma composição
+   de palavras, que é a forma certa para uma conclusão sobre arquitetura. */
+.sg-eixos {{ display: flex; flex-wrap: wrap; align-items: stretch; gap: 1.75rem 0; }}
+.sg-eixos__i {{ flex: 1 1 12rem; min-width: 10rem; padding-right: 2.25rem; }}
+.sg-eixos__i + .sg-eixos__i {{
+  padding-left: 2.25rem; border-left: 1px solid var(--sg-grelha); }}
+[data-testid="stMarkdownContainer"] p.sg-eixos__t {{
+  font-size: 1.3125rem; font-weight: 700; letter-spacing: .02em;
+  text-transform: uppercase; color: var(--sg-texto); margin: 0; line-height: 1.2;
+}}
+[data-testid="stMarkdownContainer"] p.sg-eixos__d {{
+  font-size: .8125rem; color: var(--sg-texto-2); margin: .75rem 0 0; line-height: 1.58;
+}}
+[data-testid="stMarkdownContainer"] p.sg-eixos__comp {{
+  font-size: .8125rem; color: var(--sg-texto-3); margin: 1.6rem 0 0;
+  padding-top: 1.1rem; border-top: 1px solid var(--sg-grelha);
+  line-height: 1.58; max-width: 44rem;
+}}
+.sg-eixos__comp b {{
+  font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--sg-texto-2); font-size: .6875rem; margin-right: .5rem;
+}}
+/* A frase menor, que é a limitação transversal da secção. */
+[data-testid="stMarkdownContainer"] p.sg-q__menor {{
+  font-size: .8125rem; color: var(--sg-texto-3); margin: .8rem 0 0;
+  line-height: 1.6; max-width: 44rem;
+}}
+@media (max-width: 760px) {{
+  .sg-eixos__i {{ padding-right: 0; }}
+  .sg-eixos__i + .sg-eixos__i {{ padding-left: 0; border-left: 0;
+    padding-top: 1.5rem; border-top: 1px solid var(--sg-grelha); }}
+}}
+
+/* ---------- grelha de dimensões (secções 03, 04, 05) ------------------ */
+/* `auto-fit` resolve as larguras sem consulta de media e nunca transborda: o
+   mínimo da coluna é menor do que a largura útil do telemóvel. Em ecrã largo
+   ocupa a página toda, que é onde estas grelhas ganham. */
+.sg-dims {{
+  display: grid; gap: 1px; background: var(--sg-borda-1);
+  border: 1px solid var(--sg-borda-1); border-radius: var(--sg-raio);
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  margin: var(--sg-e3) 0 0; overflow: hidden;
+}}
+/* Seis cartões vão em **duas filas de três**, e não em quatro mais dois: uma
+   fila cheia seguida de uma fila pela metade lê-se como se faltasse alguma
+   coisa (pedido da Inês, 02.09.2026). */
+.sg-dims--tres {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+@media (max-width: 980px) {{
+  .sg-dims--tres {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+}}
+@media (max-width: 620px) {{
+  .sg-dims--tres {{ grid-template-columns: minmax(0, 1fr); }}
+}}
+.sg-dims__i {{ background: var(--sg-superficie); padding: 1.4rem 1.5rem 1.5rem; }}
+/* Duas linhas de altura mínima, para que os textos comecem todos à mesma
+   altura mesmo quando um dos rótulos quebra. É a mesma regra dos números: o
+   que acompanha alinha-se, e é o elemento mais curto que cede. */
+[data-testid="stMarkdownContainer"] p.sg-dims__t {{
+  font-size: .6875rem; font-weight: 700; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--sg-verde); margin: 0 0 .6rem;
+  line-height: 1.35; min-height: 2.7em;
+}}
+[data-testid="stMarkdownContainer"] p.sg-dims__d {{
+  font-size: .8125rem; color: var(--sg-texto-2); margin: 0; line-height: 1.62;
+}}
+.sg-dims__i--sec p.sg-dims__t {{ color: var(--sg-texto-3); }}
+
+/* ---------- exemplo das duas fontes oficiais (secção 03) -------------- */
+/* Um exemplo concreto de que a dificuldade não é só juntar indicadores: há
+   dimensões que dão resultados diferentes conforme a fonte. Nenhuma das duas
+   é apresentada como a verdadeira. */
+.sg-duplo {{ margin: var(--sg-e4) 0 0; padding-top: 1.75rem;
+  border-top: 1px solid var(--sg-grelha); }}
+/* A frase que fecha o exemplo é a moral das quatro lacunas todas, e não uma
+   nota de rodapé do confronto que a precede: vai centrada e sem medida
+   imposta, que é a forma de a ler como fecho de secção. */
+[data-testid="stMarkdownContainer"] p.sg-duplo__fecho {{
+  font-size: .875rem; color: var(--sg-texto-2); line-height: 1.62;
+  max-width: none; text-align: center; margin: 1.9rem 0 0;
+  padding-top: 1.4rem; border-top: 1px solid var(--sg-grelha);
+}}
+
 /* ---------- repartição consumidor / margem ---------------------------- */
 .sg-reparticao {{
   border: 1px solid var(--sg-borda-1); border-radius: var(--sg-raio);
@@ -1362,6 +1654,200 @@ def cartao_kpi(rotulo: str, valor: str, unidade: str | None = None,
     st.markdown(f'<div class="sg-kpi"><p class="sg-kpi__r">{_html(rotulo)}</p>'
                 f'<p class="sg-kpi__v">{_html(valor)}</p>{uni}{seg}</div>',
                 unsafe_allow_html=True)
+
+
+# --------------------------------------------------------------------------
+# Registo editorial da Síntese
+# --------------------------------------------------------------------------
+# A Síntese é uma peça editorial construída sobre evidência estatística, e não
+# uma coluna de cartões. Cada pergunta é uma unidade completa, composta de uma
+# só vez por `pergunta_editorial`, com a hierarquia sempre na mesma ordem:
+#
+#   número > pergunta > evidência > conclusão > salvaguarda > fonte > explorar
+#
+# A **evidência** é o que varia, e varia por uma razão: cada pergunta explica
+# uma relação diferente entre os seus números, e a composição tem de a mostrar.
+# Daí os cinco construtores abaixo, todos devolvendo HTML e nenhum deles um
+# gráfico (segunda passagem, pedido da Inês, 02.09.2026):
+#
+#   ev_hierarquia   um valor e o seu contexto, em dois degraus de corpo
+#   ev_confronto    dois valores frente a frente, com a relação no meio
+#   ev_cadeia       duas fases da mesma cadeia, ligadas por uma seta
+#   ev_proporcao    uma fração, com um filete que a representa
+#   ev_eixos        palavras, para a conclusão que não tem número
+
+
+def abertura(texto: str) -> None:
+    """O único parágrafo da Síntese que se lê como prosa corrida."""
+    st.markdown(f'<p class="sg-abertura">{texto}</p>', unsafe_allow_html=True)
+
+
+def destaque(frase: str) -> None:
+    """A frase que carrega a secção. Uma por secção, no máximo."""
+    st.markdown(f'<p class="sg-destaque">{frase}</p>', unsafe_allow_html=True)
+
+
+def ev_hierarquia(principal, contexto=None) -> str:
+    """
+    Um valor e o seu contexto. `principal` e `contexto` são pares
+    (valor, rótulo).
+
+    O contexto desce dois degraus de corpo e leva um filete a separá-lo: sem
+    isso lia-se como um segundo indicador de igual peso, que é precisamente o
+    que não é.
+    """
+    def celula(par, classe=""):
+        valor, rotulo = par
+        return (f'<div class="sg-ev__c{classe}">'
+                f'<p class="sg-ev__v">{_html(valor)}</p>'
+                f'<p class="sg-ev__r">{rotulo}</p></div>')
+
+    sec = celula(contexto, " sg-ev__c--sec") if contexto else ""
+    return f'<div class="sg-ev">{celula(principal)}{sec}</div>'
+
+
+def ev_confronto(esquerda, direita, meio=None, legenda=None) -> str:
+    """
+    Dois valores frente a frente. `esquerda` e `direita` são triplos
+    (rótulo, valor, fração), em que a fração vai de 0 a 1 e desenha o filete
+    proporcional sob o número.
+
+    O filete tem três pixéis de altura: é a relação entre os dois em forma
+    visual, e é o que o mantém do lado da composição editorial em vez do
+    gráfico de barras. `meio` é o par (valor, rótulo) que exprime a relação,
+    e ocupa o lugar de um símbolo decorativo.
+    """
+    def lado(t, secundario=False):
+        rotulo, valor, fracao = t
+        largura = max(0.0, min(1.0, float(fracao))) * 100
+        classe = "sg-conf__l sg-conf__l--b" if secundario else "sg-conf__l"
+        return (f'<div class="{classe}">'
+                f'<p class="sg-conf__r">{_html(rotulo)}</p>'
+                f'<p class="sg-conf__v">{_html(valor)}</p>'
+                f'<div class="sg-conf__b"><i style="width:{largura:.1f}%"></i></div>'
+                "</div>")
+
+    centro = ""
+    if meio:
+        centro = (f'<div class="sg-conf__x"><p class="sg-conf__xv">{_html(meio[0])}</p>'
+                  f'<p class="sg-conf__xr">{_html(meio[1])}</p></div>')
+    leg = f'<p class="sg-conf__leg">{legenda}</p>' if legenda else ""
+    return (f'<div class="sg-conf">{lado(esquerda)}{centro}'
+            f'{lado(direita, True)}</div>{leg}')
+
+
+def ev_cadeia(origem, destino, detalhe=None) -> str:
+    """
+    As duas fases da mesma cadeia, ligadas por uma seta. `origem` e `destino`
+    são triplos (fase, valor, nota).
+
+    A seta é um filete com uma ponta, desenhada em CSS e marcada como
+    decorativa: diz que as duas fases são a mesma cadeia sem se tornar um
+    fluxograma. A leitura fica garantida pelos rótulos das fases, que é o que
+    um leitor de ecrã anuncia.
+    """
+    def fase(t):
+        etapa, valor, nota = t
+        n = f'<p class="sg-cad__p">{_html(nota)}</p>' if nota else ""
+        return (f'<div class="sg-cad__f"><p class="sg-cad__e">{_html(etapa)}</p>'
+                f'<p class="sg-cad__v">{_html(valor)}</p>{n}</div>')
+
+    det = f'<p class="sg-conf__leg">{detalhe}</p>' if detalhe else ""
+    return (f'<div class="sg-cad">{fase(origem)}'
+            '<div class="sg-cad__seta" aria-hidden="true"></div>'
+            f'{fase(destino)}</div>{det}')
+
+
+def ev_proporcao(parte: str, total: str, rotulo: str, fracao: float) -> str:
+    """Uma fração, com o filete que a representa. Segunda prova, não KPI."""
+    largura = max(0.0, min(1.0, float(fracao))) * 100
+    return (f'<div class="sg-prop"><p class="sg-prop__v">{_html(parte)} '
+            f'<span>/ {_html(total)}</span></p>'
+            f'<div class="sg-prop__b"><i style="width:{largura:.1f}%"></i></div>'
+            f'<p class="sg-prop__r">{rotulo}</p></div>')
+
+
+def ev_eixos(itens, complementar=None) -> str:
+    """
+    Palavras em vez de números. `itens` são pares (eixo, descrição), e
+    `complementar` é o par do eixo subordinado.
+
+    Serve a pergunta cuja conclusão é sobre a **arquitetura** do que se mede:
+    um número a encabeçá-la seria o indicador único que a conclusão diz não
+    existir.
+    """
+    celulas = "".join(
+        f'<div class="sg-eixos__i"><p class="sg-eixos__t">{_html(t)}</p>'
+        f'<p class="sg-eixos__d">{d}</p></div>' for t, d in itens)
+    comp = ""
+    if complementar:
+        comp = (f'<p class="sg-eixos__comp"><b>{_html(complementar[0])}</b>'
+                f'{complementar[1]}</p>')
+    return f'<div class="sg-eixos">{celulas}</div>{comp}'
+
+
+def pergunta_editorial(numero: str, titulo: str, evidencia: str,
+                       conclusao: str, ressalva: str | None = None,
+                       menor: str | None = None, fonte=None,
+                       metodo: str | None = None, explorar_em: str | None = None,
+                       primeira: bool = False) -> None:
+    """
+    Uma pergunta da Síntese, composta de uma só vez.
+
+    A grelha é de duas colunas: raia à esquerda com o número e a pergunta,
+    corpo à direita com a evidência. É o que resolve o desequilíbrio
+    horizontal, porque a evidência passa a dispor da largura toda em vez de
+    ficar travada em 40rem encostada à esquerda de uma página de 1288 px. A
+    raia tem largura fixa nas seis, e é isso que as alinha entre si.
+
+    `ressalva` é a salvaguarda metodológica, e sai **abaixo e menor** do que a
+    conclusão: a primeira frase diz o que os dados mostram, a segunda o que não
+    se pode inferir deles, e apresentá-las com o mesmo peso confundia as duas.
+
+    `explorar_em` é um ponteiro e não uma hiperligação: o Streamlit não permite
+    mudar de separador por código. O nome tem de coincidir com o rótulo da aba.
+    """
+    res = f'<p class="sg-q__ress">{ressalva}</p>' if ressalva else ""
+    men = f'<p class="sg-q__menor">{menor}</p>' if menor else ""
+    fon = ""
+    if fonte:
+        partes = "".join(f"<span><b>{_html(r)}:</b> {_html(v)}</span>"
+                         for r, v in fonte if v)
+        fon = f'<p class="sg-q__f">{partes}</p>'
+    met = f'<p class="sg-q__m">{metodo}</p>' if metodo else ""
+    exp = ""
+    if explorar_em:
+        exp = ('<p class="sg-q__ex">Explorar em '
+               f'<span>{_html(explorar_em)}</span> →</p>')
+    classe = "sg-q sg-q--primeira" if primeira else "sg-q"
+    st.markdown(
+        f'<section class="{classe}">'
+        f'<div class="sg-q__raia"><p class="sg-q__n">{_html(numero)}</p>'
+        f'<h3 class="sg-q__t">{_html(titulo)}</h3></div>'
+        f'<div class="sg-q__c">{evidencia}'
+        f'<p class="sg-q__conc">{conclusao}</p>{res}{men}{fon}{met}{exp}</div>'
+        "</section>",
+        unsafe_allow_html=True)
+
+
+def dimensoes(itens, colunas: int | None = None) -> None:
+    """
+    Grelha de dimensões. `itens` são triplos (título, descrição, secundário).
+
+    Por omissão, `auto-fit` resolve as larguras sem consulta de media e nunca
+    transborda: o mínimo da coluna é menor do que a largura útil do telemóvel.
+
+    `colunas=3` fixa três por fila, para as grelhas de seis: em `auto-fit` os
+    seis cartões saíam quatro em cima e dois em baixo, e uma fila cheia seguida
+    de outra pela metade lê-se como se faltasse alguma coisa. Continua a
+    colapsar para duas e para uma em ecrã estreito.
+    """
+    classe = "sg-dims sg-dims--tres" if colunas == 3 else "sg-dims"
+    celulas = "".join(
+        f'<div class="sg-dims__i{" sg-dims__i--sec" if sec else ""}">'
+        f'<p class="sg-dims__t">{_html(t)}</p>'
+        f'<p class="sg-dims__d">{d}</p></div>' for t, d, sec in itens)
+    st.markdown(f'<div class="{classe}">{celulas}</div>', unsafe_allow_html=True)
 
 
 def par_kpi_nota(kpi: dict, titulo: str, corpo: str) -> None:
@@ -2593,8 +3079,8 @@ abaS, abaD, aba1, aba2, aba6, aba3, aba4, abaM, aba5 = st.tabs([
 with abaS:
     titulo_pagina(
         "Síntese",
-        "O que os dados dizem, o que o indicador não capta e o que o "
-        "melhoraria. Os restantes separadores desenvolvem cada ponto.")
+        "Uma leitura integrada da despesa alimentar das famílias, das suas "
+        "limitações de medição e das possibilidades de melhoria.")
     _slot_sintese = st.container()
 
 # --- momentum: calculado uma vez, consumido em dois separadores -----------
@@ -8790,467 +9276,401 @@ def _da_sessao(nome: str, defeito=None):
 
 with _slot_sintese:
     with painel("Síntese"):
-        # A síntese **não responde aos parâmetros** de “Despesa e composição”.
-        # Fixa a base por defeito e o agregado médio nacional, e declara-o. Um
-        # resumo executivo que muda conforme o leitor mexeu num cursor noutro
-        # separador não é citável: dois leitores citariam números diferentes a
-        # partir da mesma página.
-        _chave_sint = (BASE_POR_DEFEITO if BASE_POR_DEFEITO in ancora["bases"]
-                       else next(iter(ancora["bases"])))
-        _base_sint = ancora["bases"][_chave_sint]
-        _despesa_sint = float(_base_sint["valor"])
+        # A Síntese é a página onde a aplicação **conclui**. Não repete os
+        # separadores analíticos e não desenha gráficos: o gráfico é a forma de
+        # quem quer explorar, e esta página é para quem quer decidir. A
+        # narrativa é fixa e vai do ponto de partida à melhoria da medição
+        # (arquitetura definida pela Inês, 02.09.2026).
+        #
+        # Cada pergunta é uma unidade editorial completa, numa grelha de duas
+        # colunas: raia à esquerda com o número e a pergunta, corpo à direita
+        # com a evidência, a conclusão e a proveniência. As seis partilham a
+        # grelha e alinham entre si; o que varia é a **composição da
+        # evidência**, porque cada uma explica uma relação diferente entre os
+        # seus números e a página tem de a mostrar.
+        #
+        # A página **não responde aos parâmetros** de “Despesa e composição”, e
+        # não usa a âncora para nenhum valor de capa: os únicos valores que dela
+        # vêm são os dois níveis oficiais confrontados na secção 03, que são
+        # fixos e não dependem da base escolhida pelo leitor.
         _quintis_sint = _da_sessao("df_quintis", pd.DataFrame())
-        _iva_sint = _da_sessao("_res_iva", {})
+        _sofi_sint = _da_sessao("_sofi_pt")
+        _sofi_es_sint = _da_sessao("_sofi_es")
+        _ano_sofi_sint = _da_sessao("_ano_sofi")
 
-        # ---------------------------------------------------------------
-        bloco("01 · Onde estamos", topo=True)
-        # ---------------------------------------------------------------
-        indicador_principal(
-            "Despesa alimentar mensal do agregado médio",
-            euro(_despesa_sint, casas=0),
-            contexto=(f"Base <strong>{_base_sint['nome']}</strong> · agregado médio "
-                      f"nacional de {numero(dim_efetiva, 1)} pessoas · a preços de "
-                      f"<strong>{mes_pt(ultimo_mes)}</strong>"),
-            sec_valor=(percentagem(dados["variacao_oficial"])
-                       if dados.get("variacao_oficial") is not None else None),
-            sec_rotulo="variação homóloga oficial",
-            sec_cor=(None if dados.get("variacao_oficial") is None
-                     else (VERDE if dados["variacao_oficial"] < 0 else VERMELHO)))
+        # ===============================================================
+        bloco("01 · O ponto de partida", topo=True)
+        # ===============================================================
+        abertura(
+            "O debate público tende a procurar uma medida simples da evolução do "
+            "custo da alimentação. Os dados disponíveis permitem, contudo, observar "
+            "dimensões diferentes, preços, despesa e esforço das famílias, que não "
+            "devem ser confundidas.")
+        destaque(
+            "A questão não é apenas saber quanto aumentaram os preços, mas "
+            "compreender o que essa evolução representa para as famílias.")
 
-        # O bloco 01 é só o número de capa. Tudo o resto que aqui esteve, seis
-        # métricas em duas filas e a série da despesa em euros, saiu:
-        #
-        # As métricas eram, quatro em seis, o número de capa de uma nota do
-        # bloco seguinte, e as outras duas não tinham nota nenhuma. Passam a
-        # entrar cada uma no cartão da conclusão que sustentam, à esquerda do
-        # texto que as explica (pedido da Inês, 02.09.2026).
-        #
-        # A série saiu por não ser despesa observada: era o nível de uma das
-        # âncoras projetado para trás pelo índice de preços, ou seja, quanto
-        # custaria hoje o consumo alimentar de cada mês passado. A ressalva
-        # vivia num (i), e um gráfico com eixo em euros por mês, na página
-        # chamada Síntese, é o objeto mais fotografável da aplicação: a legenda
-        # que o desarma não ia na fotografia. A forma da curva é a do índice,
-        # que o Histórico já mostra pelo que é.
+        # ===============================================================
+        bloco("02 · O que os dados nos dizem")
+        # ===============================================================
+
+        # ---- 01 · preços -----------------------------------------------
+        # Composição: um valor e o seu contexto. A relação a mostrar é entre
+        # ritmo recente e variação acumulada, e resolve-se por hierarquia
+        # tipográfica: são a mesma grandeza medida em janelas diferentes.
+        _var_of = dados.get("variacao_oficial")
+        _mes_of = dados.get("mes_variacao_oficial")
+        if _var_of is not None:
+            _subida_sint = _da_sessao("_subida_fixo")
+            _ctx_precos = None
+            if _subida_sint is not None:
+                _ctx_precos = (percentagem(float(_subida_sint)),
+                               "Variação acumulada desde dezembro de "
+                               f"{ANO_BASE_VIES}")
+            pergunta_editorial(
+                "01", "Os preços dos alimentos estão a subir?",
+                ev_hierarquia(
+                    (percentagem(_var_of),
+                     "Variação homóloga dos preços dos alimentos"),
+                    _ctx_precos),
+                conclusao=("Os preços dos alimentos continuam a subir, embora a um "
+                           "ritmo inferior ao observado nos períodos de maior "
+                           "inflação."),
+                fonte=[("Período", mes_extenso(_mes_of) if _mes_of else None),
+                       ("Fonte", "Eurostat, IHPC, agregado alimentar CP011"),
+                       ("Unidade", "%")],
+                metodo=("A taxa homóloga mede a variação face ao mesmo mês do ano "
+                        "anterior; a variação acumulada mostra a alteração do nível "
+                        "de preços desde uma data de referência. A variação acumulada "
+                        "é calculada por esta aplicação, com ponderadores fixos no "
+                        "ano-base, a partir do índice oficial por classe."),
+                explorar_em="Histórico", primeira=True)
+
+        # ---- 02 · famílias ---------------------------------------------
+        # Composição: confronto. A relação a mostrar é entre dois grupos, e o
+        # filete proporcional sob cada valor torna-a imediata sem virar
+        # gráfico de barras.
         if not _quintis_sint.empty:
             _sq1 = _quintis_sint[_quintis_sint["quintil"] == "q1"].iloc[0]
             _sq5 = _quintis_sint[_quintis_sint["quintil"] == "q5"].iloc[0]
-        _custo_sint = _da_sessao("_custo_q1")
-        _sofi_sint = _da_sessao("_sofi_pt")
-        _sofi_es_sint = _da_sessao("_sofi_es")
+            _p1, _p5 = float(_sq1.peso_orcamento), float(_sq5.peso_orcamento)
+            _maior = max(_p1, _p5) or 1.0
+            _meio_q = None
+            if (_sq1.agravamento_orcamento is not None
+                    and _sq5.agravamento_orcamento is not None):
+                _meio_q = (pontos(_p1 - _p5, casas=1), "de diferença")
+            pergunta_editorial(
+                "02", "O aumento dos preços afecta todas as famílias da mesma forma?",
+                ev_confronto(
+                    ("1.º quintil", percentagem(_p1, sinal=False), _p1 / _maior),
+                    ("5.º quintil", percentagem(_p5, sinal=False), _p5 / _maior),
+                    meio=_meio_q,
+                    legenda=(
+                        "<strong>Peso da alimentação no orçamento.</strong> Nos "
+                        "últimos 12 meses, o agravamento representou "
+                        f"<strong>{numero(_sq1.agravamento_orcamento, 2)}%</strong> "
+                        "do orçamento do 1.º quintil e "
+                        f"<strong>{numero(_sq5.agravamento_orcamento, 2)}%</strong> "
+                        "do 5.º."
+                        if _sq1.agravamento_orcamento is not None
+                        else "<strong>Peso da alimentação no orçamento.</strong>")),
+                conclusao=("O impacto da evolução dos preços não é igual entre "
+                           "famílias: a alimentação representa uma parcela maior do "
+                           "orçamento dos agregados de menor rendimento."),
+                fonte=[("Período", "IDF 2022/2023"),
+                       ("Fonte", "INE, Inquérito às Despesas das Famílias"),
+                       ("Unidade", "% do orçamento")],
+                metodo=("Os pesos de despesa utilizados são de 2022/2023, enquanto a "
+                        "evolução dos preços corresponde ao período mais recente "
+                        "disponível."),
+                explorar_em="Despesa e composição")
 
-        # ---------------------------------------------------------------
-        bloco("02 · O que os dados dizem")
-        # ---------------------------------------------------------------
-        # Uma conclusão por nota, cada uma com o número que a sustenta e a
-        # remissão para o separador que a desenvolve. Não são resumos dos
-        # separadores: são afirmações que nenhum separador faz sozinho, porque
-        # cada uma cruza dois deles.
+        # ---- 03 · dieta saudável ---------------------------------------
+        # Composição: um valor e o seu contexto, mas aqui as duas grandezas são
+        # de naturezas diferentes, capacidade e custo. O filete que as separa
+        # existe para o dizer, e nenhuma frase liga uma à outra por causa.
+        if _sofi_sint is not None:
+            _custo_pt_sint = SOFI_CUSTO["Portugal"].get(_ano_sofi_sint)
+            _custo_es_sint = SOFI_CUSTO["Espanha"].get(_ano_sofi_sint)
+            _ctx_dieta = None
+            if _custo_pt_sint:
+                _rot = "Custo da dieta saudável em Portugal"
+                if _custo_es_sint:
+                    _rot += (f", contra {numero(_custo_es_sint, 2)} em Espanha")
+                _ctx_dieta = (f"{numero(_custo_pt_sint, 2)} PPP$", _rot)
+            pergunta_editorial(
+                "03",
+                "Uma alimentação saudável está igualmente ao alcance das famílias?",
+                ev_hierarquia(
+                    (percentagem(_sofi_sint, sinal=False),
+                     "População que não consegue suportar o custo de uma dieta "
+                     "saudável"),
+                    _ctx_dieta),
+                conclusao=("O acesso a uma alimentação saudável depende da relação "
+                           "entre o custo dessa dieta e a capacidade económica das "
+                           "famílias."),
+                ressalva=("Este indicador mede a capacidade económica para suportar o "
+                          "custo de uma dieta saudável; não é uma medida directa de "
+                          "fome ou privação alimentar."),
+                fonte=[("Período", str(_ano_sofi_sint) if _ano_sofi_sint else None),
+                       ("Fonte", f"FAO, SOFI {SOFI_EDICAO}"),
+                       ("Unidade", "% da população; PPP$ por pessoa e por dia")],
+                metodo=("Os valores do SOFI são publicados em PDF e inscritos "
+                        "manualmente nesta aplicação."),
+                explorar_em="Despesa e composição, bloco da acessibilidade alimentar")
+
+        # ---- 04 · cadeia -----------------------------------------------
+        # Composição: as duas fases ligadas por uma seta. Apresentados como dois
+        # indicadores independentes, os dois números não diziam que eram o mesmo
+        # produto em dois pontos da mesma cadeia, que é a conclusão inteira.
         #
-        # **Regra de redação deste bloco.** É o que vai ser lido por quem decide,
-        # e por quem não tem de saber o que é uma janela homóloga. Nenhuma frase
-        # pode exigir vocabulário técnico para se perceber: sempre que aparece um
-        # termo do ofício (variação homóloga, repercussão, quintil), a frase
-        # seguinte diz o que ele significa. Termos como “identidade”,
-        # “exposição orçamental” ou “janela de comparação” não entram, porque
-        # descrevem o método a quem só precisa do resultado
-        # (pedido da Inês, 02.09.2026).
-        if not _efeito_base.empty:
-            _u_eb = _efeito_base.iloc[-1]
-            _dominou_base = abs(float(_u_eb["contributo_base"])) > abs(
-                float(_u_eb["contributo_novo"]))
-            _desceu_eb = float(_u_eb["delta_homologa"]) < 0
-            _mes_agora = mes_extenso(_u_eb["time"])
-            _mes_saiu = mes_homologo(_u_eb["time"])
-            _homologa_antes = float(_u_eb["homologa"]) - float(_u_eb["delta_homologa"])
-            # “pontos percentuais” por extenso, e não a abreviatura. A abreviatura
-            # termina em ponto, e a meio de uma frase produzia “0,75 p.p..”; e
-            # neste bloco, que é o que vai ao Gabinete, a forma por extenso
-            # dispensa o leitor de saber o que a sigla quer dizer.
-            def _pp(valor):
-                return pontos(abs(float(valor)), casas=2, sinal=False,
-                              sufixo=" pontos percentuais")
+        # O caso vem do mesmo apuramento que o separador “Da produção ao
+        # consumo” usa, e pela mesma regra (`_div.iloc[0]`), para que os dois
+        # sítios não possam nomear produtos diferentes como maior divergência.
+        _var_obs = _da_sessao("_var", pd.DataFrame())
+        if not _var_obs.empty:
+            _div_sint = _var_obs[_var_obs["padrao"] == "Divergência"]
+            if not _div_sint.empty:
+                _dv = _div_sint.iloc[0]
+                _prod = str(_dv["produto"])
+                _transm = int((_var_obs["padrao"] ==
+                               "Choque na origem, transmitido").sum())
+                _com_duas = int(_var_obs["tem_producao"].sum())
+                _seguidos = int(_var_obs["produto"].nunique())
+                _janela = (f"{mes_extenso(_dv['inicio'].strftime('%Y-%m'))} a "
+                           f"{mes_extenso(_dv['fim'].strftime('%Y-%m'))}")
+                pergunta_editorial(
+                    "04", "Como evoluem os preços ao longo da cadeia?",
+                    ev_cadeia(
+                        ("Produção", percentagem(float(_dv["producao_var"]), casas=2),
+                         _prod),
+                        ("Consumo", percentagem(float(_dv["consumo_var"]), casas=2),
+                         _prod),
+                        detalhe=("Variação acumulada na janela comum às duas fases, "
+                                 f"de {_janela}."))
+                    + ev_proporcao(
+                        numero(_transm), numero(_com_duas),
+                        "produtos em que o choque na origem foi transmitido ao "
+                        "consumidor",
+                        _transm / _com_duas if _com_duas else 0),
+                    conclusao=("Os preços não evoluem de forma uniforme ao longo da "
+                               "cadeia de produção e consumo."),
+                    ressalva=("Estas diferenças não permitem, por si só, inferir "
+                              "margens ou responsabilidades. A diferença entre as duas "
+                              "fases incorpora transporte, transformação, embalagem, "
+                              "distribuição e IVA, e as duas fases podem referir-se a "
+                              "formas diferentes do mesmo produto."),
+                    fonte=[("Período", _janela),
+                           ("Fonte", "GPP, Observatório de Preços Agroalimentar"),
+                           ("Unidade", "variação acumulada, %")],
+                    metodo=(f"Apenas {numero(_com_duas)} dos {numero(_seguidos)} "
+                            "produtos seguidos têm as duas fases, e a janela medida "
+                            "não é a mesma para todos, pelo que as variações não são "
+                            "comparáveis entre produtos. São variações acumuladas, e "
+                            "não homólogas."),
+                    explorar_em="Da produção ao consumo")
 
-            _pp_delta = _pp(_u_eb["delta_homologa"])
-            _pp_novo = _pp(_u_eb["contributo_novo"])
-            _pp_base = _pp(_u_eb["contributo_base"])
-            _conclusao_eb = (
-                f"Neste caso, a {'descida' if _desceu_eb else 'subida'} da inflação "
-                f"alimentar deveu-se sobretudo ao <strong>mês que saiu da "
-                f"comparação</strong>, e não ao que os preços fizeram em {_mes_agora}."
-                if _dominou_base else
-                f"Neste caso, a {'descida' if _desceu_eb else 'subida'} da inflação "
-                f"alimentar deveu-se sobretudo ao que os preços fizeram em "
-                f"<strong>{_mes_agora}</strong>, e não ao mês que saiu da comparação.")
-            # O título segue o sinal do mês. A afirmação vale nos dois sentidos,
-            # mas anunciar uma descida por cima de um mês em que a inflação subiu
-            # obrigaria o leitor a reconciliar as duas coisas antes de perceber
-            # qualquer uma delas.
-            _titulo_eb = ("1 · A inflação alimentar pode descer sem que nenhum preço desça"
-                          if _desceu_eb else
-                          "1 · A inflação alimentar pode subir sem que nenhum preço suba")
-            # O arrastamento entra aqui, no cartão desta conclusão, por ser o
-            # outro número sobre o andamento da inflação. Estava numa métrica
-            # solta, sem texto que o explicasse.
-            _kpi_eb = dict(
-                rotulo="Inflação alimentar homóloga",
-                valor=percentagem(float(_u_eb["homologa"]), sinal=False),
-                unidade=(f"em {_mes_agora}. No mês anterior era "
-                         f"<strong>{percentagem(_homologa_antes, sinal=False)}</strong>, "
-                         f"ou seja, {'baixou' if _desceu_eb else 'subiu'} "
-                         f"{_pp(_u_eb['delta_homologa'])}."))
-            if _arrasto:
-                _kpi_eb["seg_valor"] = percentagem(_arrasto["arrastamento"], sinal=False)
-                # “já está fechada … se o índice não voltasse a mexer” dizia as
-                # duas coisas ao mesmo tempo e nenhuma delas bem. O que o
-                # arrastamento é: os meses conhecidos já determinam esta parte
-                # da média do ano, e o resto depende do que falta acontecer.
-                _kpi_eb["seg_rotulo"] = (
-                    f"seria a inflação alimentar média de {_arrasto['ano']} se os "
-                    f"preços não voltassem a mexer até dezembro. "
-                    f"{cardinal(_arrasto['meses_conhecidos']).capitalize()} dos doze "
-                    f"meses já são conhecidos")
-            par_kpi_nota(_kpi_eb, _titulo_eb, f"""
-          Em {_mes_agora} os preços dos alimentos estavam
-          <strong>{percentagem(float(_u_eb['homologa']), sinal=False)}</strong> acima do que
-          estavam um ano antes. No mês anterior essa diferença era de
-          <strong>{percentagem(_homologa_antes, sinal=False)}</strong>, ou seja,
-          {'baixou' if _desceu_eb else 'aumentou'}
-          <strong>{_pp_delta}</strong>.
-          <br><br>
-          Essa {'descida' if _desceu_eb else 'subida'} não quer dizer que os preços tenham
-          {'baixado' if _desceu_eb else 'subido'}. A inflação de cada mês compara os preços desse
-          mês com os do mesmo mês do ano anterior. Ao passar do mês anterior para {_mes_agora},
-          <strong>entra</strong> um mês novo na comparação e <strong>sai</strong> o mês
-          equivalente do ano passado. São esses dois meses, e só esses, que fazem a inflação mexer:
-          <ul>
-            <li><strong>Entrou {_mes_agora}</strong>, em que os preços variaram
-                {percentagem(float(_u_eb['mensal']), casas=2)} face ao mês anterior. Isso
-                {'aumentou' if float(_u_eb['contributo_novo']) > 0 else 'reduziu'} a inflação em
-                <strong>{_pp_novo}</strong>.</li>
-            <li><strong>Saiu {_mes_saiu}</strong>, em que os preços tinham variado
-                {percentagem(float(_u_eb['mensal_ha_um_ano']), casas=2)}. Ao deixar de contar,
-                {'aumentou' if float(_u_eb['contributo_base']) > 0 else 'reduziu'} a inflação em
-                <strong>{_pp_base}</strong>.</li>
-          </ul>
-          As duas parcelas somam exatamente os <strong>{_pp_delta}</strong> de variação. Não é uma
-          estimativa: é a única repartição possível.
-          <br><br>
-          <strong>Conclusões:</strong> {_conclusao_eb} Uma descida da
-          inflação alimentar não é, por si, prova de que os alimentos ficaram mais baratos. Ver
-          <em>Histórico</em>, bloco 02.""")
+        # ---- 05 · Europa -----------------------------------------------
+        # Composição: confronto, como na pergunta 02. O nível de preços não
+        # entra no confronto: é uma grandeza de outra natureza, e posto ao lado
+        # competiria com a comparação que é a conclusão.
+        _engel_sint = dados.get("engel") or {}
+        _pt_e = _engel_sint.get("PT")
+        _ue_e = _engel_sint.get("EU27_2020")
+        if _pt_e and _ue_e:
+            _q_pt, _q_ue = float(_pt_e["quota"]), float(_ue_e["quota"])
+            _maior_e = max(_q_pt, _q_ue) or 1.0
+            _anos_e = sorted({int(d["ano"]) for d in _engel_sint.values()
+                              if d.get("ano")})
 
-        if not _quintis_sint.empty:
-            _amp_taxas = _quintis_sint[_quintis_sint["quintil"] != "total"]["inflacao"].dropna()
-            _racio_q = _sq1.peso_orcamento / _sq5.peso_orcamento
-            _txt_amp = ""
-            if not _amp_taxas.empty:
-                _txt_amp = (
-                    f"Os preços dos alimentos subiram praticamente o mesmo para todos: entre o "
-                    f"grupo onde subiram mais e aquele onde subiram menos há apenas "
-                    f"<strong>{numero(float(_amp_taxas.max() - _amp_taxas.min()), 2)} pontos "
-                    f"percentuais</strong> de diferença.<br><br>")
-            # O custo de compensação entra no cartão desta conclusão: é a
-            # conversão orçamental do efeito distributivo que a nota descreve.
-            _kpi_q = dict(
-                rotulo="Peso da alimentação no orçamento do 1.º quintil",
-                valor=percentagem(_sq1.peso_orcamento, sinal=False),
-                unidade=(f"do que gastam as 20% de famílias com menos rendimento. É "
-                         f"<strong>{numero(_racio_q, 2)} vezes</strong> a fatia que a "
-                         f"alimentação ocupa nas 20% com mais rendimento."))
-            if _custo_sint:
-                _kpi_q["seg_valor"] = milhoes(_custo_sint["total_milhoes"])
-                _kpi_q["seg_rotulo"] = (
-                    "por ano é quanto custaria compensar integralmente, por "
-                    "transferência direta, o agravamento dos últimos 12 meses neste "
-                    "quintil. Ordem de grandeza, não estimativa orçamental")
-            par_kpi_nota(_kpi_q,
-                         "2 · Os preços sobem quase por igual, mas não pesam por igual", f"""
-          {_txt_amp}O que muda de família para família é <strong>quanto do orçamento vai para a
-          alimentação</strong>. Nas 20% de menor rendimento, a comida absorve
-          <strong>{percentagem(_sq1.peso_orcamento, sinal=False)}</strong> de tudo o que gastam;
-          nas 20% de maior rendimento, absorve
-          <strong>{percentagem(_sq5.peso_orcamento, sinal=False)}</strong>. É uma fatia
-          <strong>{numero(_racio_q, 2)} vezes maior</strong> nas famílias com menos rendimento.
-          <br><br>
-          <strong>Conclusões:</strong> Uma subida de preços encarece a
-          alimentação na mesma proporção para toda a gente. Mas essa alimentação ocupa uma fatia
-          {numero(_racio_q, 1)} vezes maior do orçamento das famílias com menos rendimento, e esse
-          orçamento é, ele próprio, menos de metade do das famílias com mais rendimento. O impacto
-          desigual vem daqui, e não de uma inflação diferente para ricos e pobres. Ver
-          <em>Despesa e composição</em>, bloco 06.""")
+            # O nível de preços vai na legenda do confronto, como contexto
+            # declarado, e não como terceiro número da mesma fila.
+            _leg_e = ("<strong>Peso da alimentação no consumo das famílias.</strong>")
+            _pli_sint = dados.get("pli")
+            if _pli_sint is not None and not _pli_sint.empty:
+                # Filtrar **pelo ano** antes de tomar Portugal. Sem isso,
+                # `iloc[0]` apanha a primeira linha da série inteira, que é a
+                # observação mais antiga: a página dizia 102,9 quando o
+                # separador dizia 101,4.
+                _ano_pli_s = _pli_sint["time"].max()
+                _pt_pli_s = _pli_sint.loc[(_pli_sint["geo"] == "PT")
+                                          & (_pli_sint["time"] == _ano_pli_s), "valor"]
+                if not _pt_pli_s.empty:
+                    _leg_e += (" Como contexto, o nível de preços dos alimentos em "
+                               "Portugal está em "
+                               f"<strong>{numero(float(_pt_pli_s.iloc[0]), 1)}</strong>"
+                               f", com a média da UE-27 fixada em 100 ({_ano_pli_s}).")
 
-        if _sofi_sint is not None and _sofi_es_sint is not None:
-            _custo_pt_s = SOFI_CUSTO["Portugal"].get(_da_sessao("_ano_sofi"))
-            _custo_es_s = SOFI_CUSTO["Espanha"].get(_da_sessao("_ano_sofi"))
-            _txt_custo = ""
-            if _custo_pt_s and _custo_es_s:
-                _txt_custo = (
-                    f"Comer de forma saudável custa praticamente o mesmo em Portugal e em Espanha: "
-                    f"<strong>{numero(_custo_pt_s, 2)}</strong> contra "
-                    f"<strong>{numero(_custo_es_s, 2)} dólares</strong> por pessoa e por dia, "
-                    f"ajustados ao poder de compra de cada país. É o preço da alimentação mais "
-                    f"barata que cumpre as necessidades nutricionais.<br><br>")
-            # O rácio é calculado. Esteve aqui “o dobro”, escrito à mão, quando
-            # os números davam 1,55: é o defeito que estas notas existem para
-            # não ter, e que as auditorias já apanharam quatro vezes noutros
-            # sítios (C2, E9, K8, L16).
-            _racio_sofi = (_sofi_sint / _sofi_es_sint) if _sofi_es_sint else None
-            _txt_racio = (f", ou seja, <strong>{numero(_racio_sofi, 2)} vezes mais</strong>"
-                          if _racio_sofi and _racio_sofi > 1.05 else "")
-            _kpi_sofi = dict(
-                rotulo="Sem capacidade para uma dieta saudável",
-                valor=percentagem(_sofi_sint, sinal=False),
-                unidade=(f"da população portuguesa. Em Espanha, "
-                         f"<strong>{percentagem(_sofi_es_sint, sinal=False)}</strong>."))
-            if _custo_pt_s and _custo_es_s:
-                _kpi_sofi["seg_valor"] = f"{numero(_custo_pt_s, 2)} contra {numero(_custo_es_s, 2)}"
-                _kpi_sofi["seg_rotulo"] = (
-                    "dólares por pessoa e por dia é o custo dessa dieta em Portugal e "
-                    "em Espanha, ajustado ao poder de compra de cada país")
-            par_kpi_nota(_kpi_sofi,
-                         "3 · Com o mesmo preço, muito mais população em Portugal não "
-                         "consegue comer bem", f"""
-          {_txt_custo}Apesar desse preço praticamente igual,
-          <strong>{percentagem(_sofi_sint, sinal=False)}</strong> da população portuguesa não
-          consegue pagá-la, contra <strong>{percentagem(_sofi_es_sint, sinal=False)}</strong> da
-          espanhola{_txt_racio}.
-          <br><br>
-          <strong>Conclusões:</strong> Se o preço é o mesmo e o resultado
-          é diferente, a causa não está nos preços: está no rendimento das famílias e na forma como
-          está distribuído. Uma medida que faça descer preços não corrige, por si, a incapacidade
-          de os pagar. Ver <em>Despesa e composição</em>, bloco 07.""")
+            _pos_txt = None
+            _linhas_e = [(g, d) for g, d in _engel_sint.items()
+                         if g in PAISES and g != "EU27_2020"]
+            if _linhas_e:
+                _postos = [g for g, _ in sorted(_linhas_e,
+                                                key=lambda x: float(x[1]["quota"]))]
+                if "PT" in _postos:
+                    _pos_txt = (f"{numero(_postos.index('PT') + 1)}.º de "
+                                f"{numero(len(_postos))} países comparados")
+            # Os anos vão em `str()` e não em `numero()`: o formatador põe
+            # separador de milhares, e a linha dizia “2 024”.
+            _periodo_e = (f"{min(_anos_e)}" if len(_anos_e) == 1 else
+                          f"{min(_anos_e)}, com países cuja informação mais "
+                          f"recente é de {max(_anos_e)}")
+            pergunta_editorial(
+                "05", "Como se posiciona Portugal face à UE-27?",
+                ev_confronto(
+                    ("Portugal", f"{numero(_q_pt, 1)}%", _q_pt / _maior_e),
+                    ("UE-27", f"{numero(_q_ue, 1)}%", _q_ue / _maior_e),
+                    meio=(pontos(_q_pt - _q_ue, casas=1), "de diferença"),
+                    legenda=_leg_e),
+                conclusao=("Portugal combina um nível de preços alimentares próximo "
+                           "da média europeia com um peso da alimentação no consumo "
+                           "superior ao observado na UE-27."),
+                fonte=[("Período", _periodo_e),
+                       ("Fonte", "Eurostat, Contas Nacionais; Eurostat-OCDE, PPP"),
+                       ("Posição", _pos_txt)],
+                metodo=("O indicador de peso da alimentação é despesa sobre consumo, "
+                        "e não despesa sobre rendimento. A posição refere-se apenas "
+                        "aos países comparados nesta aplicação, e não aos 27 "
+                        "Estados-Membros."),
+                explorar_em="Comparação UE-27")
 
-        if _iva_sint:
-            # As quatro parcelas, e não duas. “68,4% a 6%” seguido de “só 24,4%
-            # a 23%” somava 92,8% e lia-se como um par que fecha em cem: o
-            # leitor atribuía a diferença a erro de arredondamento em vez de a
-            # duas parcelas reais, a taxa intermédia e os produtos cuja taxa a
-            # lei não fixa de forma única. O resto é calculado por diferença,
-            # para que as parcelas fechem sempre em 100% (auditoria da Inês,
-            # 02.09.2026).
-            #
-            # O resto vai por inteiro e as suas duas componentes vão nomeadas,
-            # mas sem número: a uma casa decimal davam 0,9% e 6,2%, que somam
-            # 7,1% e não os 7,2% anunciados. Um desencontro de arredondamento à
-            # vista custa mais do que o detalhe vale, e a repartição fina das
-            # taxas está no separador do IVA, com as quatro parcelas.
-            _iva_6 = float(_iva_sint["taxa_6_pct"])
-            _iva_23 = float(_iva_sint["taxa_23_pct"])
-            _iva_resto = max(100.0 - _iva_6 - _iva_23, 0.0)
-            par_kpi_nota(
-                dict(rotulo="Despesa alimentar já à taxa reduzida",
-                     valor=percentagem(_iva_6, sinal=False),
-                     unidade=("já paga a taxa de 6%, a mais baixa que existe. À taxa "
-                              "normal de 23% paga "
-                              f"<strong>{percentagem(_iva_23, sinal=False)}</strong>, e os "
-                              f"restantes <strong>{percentagem(_iva_resto, sinal=False)}"
-                              "</strong> repartem-se pela taxa intermédia e por produtos "
-                              "cuja taxa a lei não fixa de forma única."),
-                     seg_valor="46",
-                     seg_rotulo=("alimentos foram isentos pela medida de 2023, dos quais "
-                                 "a maioria já estava na taxa mínima")),
-                "4 · A maior parte da despesa alimentar já está na taxa mínima de IVA", f"""
-          <strong>{percentagem(_iva_6, sinal=False)}</strong> da despesa alimentar já paga a taxa
-          reduzida de 6%, a mais baixa que existe, e
-          <strong>{percentagem(_iva_23, sinal=False)}</strong> paga a taxa normal de 23%. Os
-          restantes <strong>{percentagem(_iva_resto, sinal=False)}</strong> dividem-se entre a taxa
-          intermédia de 13%, que abrange os óleos vegetais que não são azeite, e um conjunto de
-          produtos cuja taxa a lei não fixa de forma única, como o marisco, o mel e o sal.
-          <br><br>
-          Sobre a parte que já está nos 6% não há descida possível que não seja levar o imposto a
-          zero. Foi essa a limitação com que a medida de 2023 se deparou: isentou 46 alimentos, dos
-          quais a maioria já estava na taxa mínima.
-          <br><br>
-          <strong>Conclusões:</strong> Qualquer alteração de IVA que não
-          seja a isenção total atua sobre uma parte pequena da despesa alimentar. E quanto do
-          benefício chega às famílias depende sobretudo de <em>quanto da descida do imposto o
-          vendedor passa para o preço</em>, e não do valor da taxa que se escolher. Ver
-          <em>Simulador de IVA</em>.""")
+        # ---- 06 · o que se consegue medir ------------------------------
+        # Composição de palavras, e não de números: é a conclusão conceptual da
+        # secção, e um KPI a encabeçá-la seria precisamente o indicador único
+        # que ela diz não existir.
+        pergunta_editorial(
+            "06", "O que conseguimos realmente medir?",
+            ev_eixos(
+                [("Preços", "Como evoluem os preços alimentares."),
+                 ("Despesa",
+                  "Quanto representa a alimentação na despesa e no consumo das "
+                  "famílias."),
+                 ("Esforço", "Como esse peso varia entre diferentes agregados.")],
+                complementar=("Cadeia",
+                              "Como os preços evoluem entre a produção e o consumo "
+                              "do mesmo produto, dimensão complementar.")),
+            conclusao=("Nenhum indicador reúne preço, despesa e esforço das famílias: "
+                       "cada dimensão responde a uma pergunta diferente e deve ser "
+                       "interpretada em conjunto com as restantes."),
+            menor=("O consumo em quantidades não é medido pelas fontes actualmente "
+                   "utilizadas."))
 
-        # ---- 5 · o que decide o número não é o que se discute ----
-        # A conclusão sai de confrontar duas grandezas que a aplicação calcula
-        # em separado e nunca punha lado a lado: quanto vale a escolha entre as
-        # duas fontes oficiais, e quanto vale o viés de substituição do cabaz de
-        # composição fixa, que é o que domina a discussão pública.
-        #
-        # É uma afirmação sobre **o debate**, e não sobre esta ferramenta: as
-        # duas grandezas existem independentemente de quem as calcula, e é o
-        # confronto entre elas que tem valor para quem decide.
-        def _euros_da_taxa(pontos_pct):
-            """Uma diferença de taxa de inflação, em euros por mês."""
-            if pontos_pct is None or pd.isna(pontos_pct):
-                return None
-            g = float(pontos_pct) / 100
-            return _despesa_sint * g / (1 + g)
+        # ===============================================================
+        bloco("03 · O que ainda não conseguimos medir bem")
+        # ===============================================================
+        # Quatro lacunas, e não as treze do levantamento: aqui entram as que
+        # **alteram a interpretação** dos números da página. As limitações
+        # técnicas ficam nos separadores onde os dados são explorados.
+        abertura(
+            "A estatística oficial permite responder a muitas perguntas, mas algumas "
+            "dimensões exigem maior granularidade ou novas fontes.")
+        dimensoes([
+            ("Consumo efectivo",
+             "<strong>A despesa não é o mesmo que quantidade consumida.</strong> As "
+             "fontes utilizadas observam preços e despesa, mas não acompanham de forma "
+             "integrada as quantidades efectivamente consumidas. A substituição entre "
+             "produtos não é, por isso, directamente observada.", False),
+            ("Composição do consumo",
+             "<strong>As famílias não têm todas a mesma estrutura de consumo.</strong> "
+             "Médias e cabazes representativos não captam integralmente a diversidade "
+             "das escolhas dos agregados.", False),
+            ("Heterogeneidade",
+             "<strong>Os valores médios escondem diferenças entre famílias e "
+             "territórios.</strong> Os indicadores disponíveis são maioritariamente "
+             "nacionais e agregados.", False),
+            ("Preços efectivamente enfrentados",
+             "<strong>Um índice nacional não reproduz necessariamente o preço pago por "
+             "cada família.</strong> A dispersão dos preços entre operadores, "
+             "territórios e famílias concretas não é observada.", False),
+        ])
 
-        _vies_eur, _vies_ano = None, None
-        _cmp_v = _da_sessao("_cmp_idx", pd.DataFrame())
-        if not _cmp_v.empty and len(_cmp_v) >= 3:
-            _anos_v = max(int(_cmp_v["ano"].iloc[-1]) - int(_cmp_v["ano"].iloc[0]), 1)
-            _vies_ano = float(_cmp_v["vies"].iloc[-1]) / _anos_v
-            _vies_eur = _euros_da_taxa(_vies_ano)
-
-        if _vies_eur is not None and not ancora.get("base_unica"):
-            # Sem rácio entre as duas grandezas. Uma é um efeito sobre a **taxa**
-            # de inflação e a outra uma diferença de **nível** da despesa: o
-            # quociente é aritmeticamente calculável e conceptualmente
-            # indefensável, e um número de quatro algarismos num confronto
-            # desses convida a desconfiar do resto. Os dois valores lado a lado
-            # dizem o mesmo sem essa fragilidade.
-            _rac_fontes = (float(ancora["maximo"]) / float(ancora["minimo"])
-                           if float(ancora["minimo"]) else None)
-            par_kpi_nota(
-                dict(rotulo="Intervalo entre as duas fontes oficiais",
-                     valor=f"{euro(ancora['minimo'], 0)} a {euro(ancora['maximo'], 0)}",
-                     unidade=("por mês, para o mesmo agregado médio nacional. O ponto "
-                              "central não é determinável com fontes públicas."),
-                     seg_valor=(f"{numero(_rac_fontes, 2)}×" if _rac_fontes else None),
-                     seg_rotulo=("é quanto a medição mais alta excede a mais baixa, "
-                                 "medindo ambas a mesma coisa")),
-                "5 · O que decide o valor da despesa alimentar não é o que se discute", f"""
-          A discussão pública sobre o cabaz alimentar centra-se em saber se uma lista fixa de
-          produtos acompanha, ou não, aquilo que as famílias realmente compram. Essa diferença
-          está medida: vale <strong>{euro(_vies_eur)}</strong> por mês na despesa de um agregado,
-          ou seja, {pontos(abs(_vies_ano), sufixo=" pontos percentuais por ano", sinal=False)} na
-          taxa de inflação alimentar.
-          <br><br>
-          Ao mesmo tempo, as duas fontes oficiais que medem a despesa alimentar das famílias não
-          chegam ao mesmo valor: para o mesmo agregado médio, uma diz
-          <strong>{euro(ancora['minimo'], 0)}</strong> por mês e a outra
-          <strong>{euro(ancora['maximo'], 0)}</strong>. Não é uma divergência de décimas, é uma
-          diferença de centenas de euros, e não há forma de arbitrar entre as duas com fontes
-          públicas.
-          <br><br>
-          <strong>Conclusões:</strong> A pergunta que o debate faz, se o
-          cabaz acompanha o consumo, está respondida e pesa cêntimos. A pergunta que decide o
-          valor, qual das duas fontes mede a despesa das famílias portuguesas, não é feita. É dela
-          que depende qualquer número que se cite sobre quanto uma família gasta em comida.
-          Ver <em>Metodologia e fontes</em>.""")
-
-        # ---------------------------------------------------------------
-        bloco("03 · Como melhorar o indicador")
-        # ---------------------------------------------------------------
-        # Terceira pergunta do mandato do Gabinete. As três grandezas já
-        # estavam todas calculadas, dispersas por três separadores, mas em
-        # nenhum deles se lia que eram **alternativas de método com efeito
-        # medido**: liam-se como discrepâncias, ou seja, como problemas.
-        #
-        # Regra desta secção: cada item tem de se ler como “medir assim seria
-        # melhor, e isto é o que muda”, e nunca como “há aqui uma divergência”.
-        # Uma divergência descreve um problema; uma melhoria diz o que fazer a
-        # seguir. Daí a ordenação por efeito no valor, que é o que permite
-        # decidir por onde começar (pedido da Inês, 02.09.2026).
-        #
-        # São propriedades do indicador, e valem para quem o construir. Nada
-        # aqui é sobre esta aplicação nem sobre o que a UPE tem em mãos.
-        _dif_fontes = (float(ancora["maximo"]) - float(ancora["minimo"])
-                       if not ancora.get("base_unica") else None)
-        _desvio_escalas = None
-        _idf_melhoria = (ancora["bases"].get("idf") or {})
-        if _idf_melhoria:
-            try:
-                _cmp_m = comparar_tipos_agregado(
-                    float(_idf_melhoria["valor"]), dim_efetiva,
-                    float(_idf_melhoria.get("fator") or 1.0))
-            except Exception:                                      # noqa: BLE001
-                _cmp_m = pd.DataFrame()
-            if not _cmp_m.empty:
-                _acima_m = _cmp_m[_cmp_m["observado"] > _cmp_m["maximo"]]
-                if not _acima_m.empty:
-                    _pior_m = _acima_m.iloc[
-                        (_acima_m["observado"] / _acima_m["maximo"]).argmax()]
-                    _desvio_escalas = (float(_pior_m["observado"])
-                                       / float(_pior_m["maximo"]) - 1) * 100
-
-        _itens_melhoria = []
+        # ---- exemplo concreto: as duas fontes oficiais ------------------
+        # A dificuldade não está apenas em articular indicadores diferentes: há
+        # dimensões que dão resultados diferentes conforme a fonte. Os dois
+        # níveis são fixos e não dependem da base que o leitor escolheu noutro
+        # separador (pedido da Inês, 02.09.2026).
         if not ancora.get("base_unica"):
-            _itens_melhoria.append(f"""
-          <li><strong>Fixar qual das duas fontes oficiais serve de base, e declará-lo.</strong>
-          Há hoje duas medições oficiais da despesa alimentar do mesmo agregado médio,
-          {euro(ancora['minimo'], 0)} e {euro(ancora['maximo'], 0)} por mês. Adotar uma delas de
-          forma explícita determina o valor publicado. O que está em causa na escolha é o que se
-          quer medir: o que as famílias declaram gastar quando são inquiridas, ou o que as contas
-          nacionais registam como consumo alimentar das famílias.
-          <br><strong>Efeito no valor: {euro(_dif_fontes, 0)} por mês.</strong></li>""")
+            # Numa **só** chamada. Abrir o `<div>` num `st.markdown` e fechá-lo
+            # noutro não funciona: o Streamlit fecha o HTML em cada chamada, e a
+            # moldura saía vazia com o conteúdo por baixo dela.
+            _min_a, _max_a = float(ancora["minimo"]), float(ancora["maximo"])
+            st.markdown(
+                '<div class="sg-duplo">'
+                + ev_confronto(
+                    ("Primeira fonte", euro(_min_a, 0), _min_a / _max_a),
+                    ("Segunda fonte", euro(_max_a, 0), 1.0),
+                    meio=("↔", "mesmo agregado"),
+                    legenda=(
+                        "<strong>Duas estimativas oficiais para a despesa alimentar "
+                        "mensal do mesmo agregado.</strong> A diferença decorre de as "
+                        "duas fontes medirem por métodos distintos, um inquérito às "
+                        "famílias e as contas nacionais, com âmbitos que não coincidem. "
+                        "Nenhuma das duas é, por isso, apresentada como a correcta."))
+                + '<p class="sg-duplo__fecho">A dificuldade não está apenas em '
+                  'articular indicadores diferentes: algumas dimensões apresentam '
+                  'resultados diferentes consoante a fonte e a metodologia '
+                  'adoptadas.</p></div>',
+                unsafe_allow_html=True)
 
-        if _desvio_escalas is not None:
-            _itens_melhoria.append(f"""
-          <li><strong>Usar os tipos de agregado observados no inquérito, em vez de escalas de
-          equivalência.</strong> Passar da despesa média nacional para a despesa de uma família
-          concreta exige hoje uma escala teórica, que reparte o consumo por número de adultos e
-          crianças. O inquérito publica a despesa alimentar já medida por tipo de agregado.
-          Confrontada com esses valores, a mais generosa das três escalas fica
-          {percentagem(_desvio_escalas, sinal=False)} abaixo do observado nos agregados de dois ou
-          mais adultos. Usar os valores publicados dispensa a escala, e com ela o desvio.
-          <br><strong>Efeito no valor: {percentagem(_desvio_escalas, sinal=False)} na despesa
-          apresentada a esse tipo de agregado.</strong></li>""")
+        # ===============================================================
+        bloco("04 · O que esta ferramenta acrescenta")
+        # ===============================================================
+        abertura(
+            "Apesar destas limitações, é possível construir uma leitura mais completa "
+            "da realidade alimentar.")
+        dimensoes([
+            ("Preços", "Como evoluem os preços alimentares, mês a mês e por grupo de "
+                       "produto.", False),
+            ("Despesa", "Quanto representa a alimentação no orçamento e no consumo das "
+                        "famílias.", False),
+            ("Distribuição", "Como esse peso varia entre agregados de rendimento "
+                             "diferente.", False),
+            ("Cadeia", "Como os preços evoluem entre a produção e o consumo do mesmo "
+                       "produto.", False),
+            ("Europa", "Como Portugal se compara com outros países europeus, por mais "
+                       "do que um indicador.", False),
+            ("Política pública",
+             "Que efeitos podem ser estimados para alterações das taxas de IVA sobre a "
+             "despesa alimentar, no separador <em>Simulador de IVA</em>.", False),
+        ], colunas=3)
+        destaque(
+            "O valor da ferramenta está em articular estas dimensões com dados "
+            "estatísticos oficiais, sem reduzir uma realidade complexa a um único "
+            "indicador.")
 
-        if _vies_eur is not None and _vies_ano is not None:
-            _itens_melhoria.append(f"""
-          <li><strong>Recompor o cabaz todos os anos, em vez de fixar a composição.</strong> Um
-          cabaz de composição fixa continua a pesar os produtos como as famílias os compravam no
-          ano de referência, e não como os compram hoje. Atualizar os pesos todos os anos
-          acompanha essa troca à medida que ela acontece.
-          <br><strong>Efeito no valor: {euro(_vies_eur)} por mês, ou
-          {pontos(abs(_vies_ano), sufixo=" pontos percentuais por ano", sinal=False)} na taxa de
-          inflação alimentar.</strong></li>""")
-
-        if len(_itens_melhoria) >= 2:
-            # Numerais até dez por extenso, como manda o livro de estilo. O
-            # número é dinâmico porque uma das três depende de haver as duas
-            # bases, e `numero()` devolveria o algarismo.
-            _n_melh = cardinal(len(_itens_melhoria), "f")
-            # O fecho distingue as duas naturezas: a escolha da fonte é uma
-            # decisão de quem publica, as outras são alterações de cálculo
-            # sobre fontes já disponíveis. Sem as duas bases essa distinção
-            # não se aplica e a nota fecha só com a segunda parte.
-            if ancora.get("base_unica"):
-                _fecho_melhoria = (
-                    "São independentes e podem ser adotadas em separado. Ambas são "
-                    "alterações de cálculo sobre fontes já publicadas, pelo que produzem "
-                    "um valor determinado e verificável.")
-            else:
-                _restantes = ("A outra é uma alteração de cálculo, e produz um valor "
-                              "determinado a partir de fontes já publicadas."
-                              if len(_itens_melhoria) == 2 else
-                              "As outras duas são alterações de cálculo, e produzem um "
-                              "valor determinado a partir de fontes já publicadas.")
-                _fecho_melhoria = (
-                    "São independentes e podem ser adotadas em separado. A primeira não é "
-                    "um cálculo, é uma decisão, e é a única que tem de ser tomada antes de "
-                    "se citar qualquer número: enquanto não for, cada valor publicado "
-                    "sobre despesa alimentar é um de dois valores igualmente oficiais. "
-                    + _restantes)
-            # O cartão leva a maior das melhorias disponíveis e, no segundo
-            # lugar, a seguinte. Não é uma escolha editorial: é a ordem por
-            # efeito, que é a própria conclusão da secção.
-            if not ancora.get("base_unica"):
-                _kpi_melhoria = dict(
-                    rotulo="A melhoria de maior efeito",
-                    valor=f"{euro(_dif_fontes, 0)} por mês",
-                    unidade=("é o que muda fixar qual das duas fontes oficiais mede a "
-                             "despesa alimentar das famílias."))
-                if _desvio_escalas is not None:
-                    _kpi_melhoria["seg_valor"] = percentagem(_desvio_escalas, sinal=False)
-                    _kpi_melhoria["seg_rotulo"] = (
-                        "é o que muda usar os tipos de agregado observados em vez de "
-                        "escalas de equivalência, a segunda maior das três")
-            else:
-                _kpi_melhoria = dict(
-                    rotulo="A melhoria de maior efeito",
-                    valor=percentagem(_desvio_escalas, sinal=False),
-                    unidade=("é o que muda usar os tipos de agregado observados em vez "
-                             "de escalas de equivalência."))
-            par_kpi_nota(
-                _kpi_melhoria,
-                f"6 · {_n_melh.capitalize()} alterações ao método, e o que cada "
-                "uma muda no valor", f"""
-          Medir quanto uma família gasta em alimentação obriga a {_n_melh} escolhas de método.
-          Cada uma pode ser feita de outra maneira, e o efeito de a mudar está quantificado.
-          Por ordem decrescente desse efeito:
-          <ul>{"".join(_itens_melhoria)}</ul>
-          <strong>O que isto significa para a decisão.</strong> {_fecho_melhoria}""")
+        # ===============================================================
+        bloco("05 · Como podemos melhorar a medição")
+        # ===============================================================
+        # Prospectiva, e não plano técnico: diz a direcção, não a tarefa. O
+        # detalhe do que cada caminho custaria e mudaria vive nos separadores
+        # analíticos, onde há espaço para o justificar.
+        abertura(
+            "Identificadas as lacunas, existem caminhos concretos para aprofundar a "
+            "medição e tornar a leitura da despesa alimentar mais completa.")
+        dimensoes([
+            ("Maior granularidade",
+             "Descer da média nacional para leituras por território e por tipo de "
+             "agregado.", False),
+            ("Melhoria da composição",
+             "Acompanhar a estrutura de consumo com maior frequência, em vez de a "
+             "fixar no inquérito mais recente.", False),
+            ("Melhores fontes",
+             "Substituir valores publicados apenas em documento por séries acessíveis "
+             "de forma automatizada e verificável.", False),
+            ("Novas dimensões",
+             "Incorporar o consumo em quantidades e a alimentação fora de casa, hoje "
+             "fora do âmbito das fontes utilizadas.", False),
+            ("Evolução metodológica",
+             "Fixar qual das fontes oficiais serve de base à despesa alimentar e "
+             "declarar essa escolha.", False),
+            ("Quantificação do impacto",
+             "Medir quanto cada uma destas escolhas altera o valor publicado, para que "
+             "a decisão entre elas seja informada.", False),
+        ], colunas=3)
+        destaque(
+            "A melhoria da medição permitirá reforçar a capacidade de acompanhar a "
+            "evolução da despesa alimentar e de apoiar a decisão pública com evidência "
+            "estatística mais completa.")
 
 
 # ==========================================================================

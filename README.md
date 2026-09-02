@@ -33,12 +33,18 @@ comparar Portugal com os restantes Estados-Membros.
 A aplicação organiza-se em nove separadores.
 
 **1 · Síntese.** O separador de abertura, e o único que se lê inteiro em cinco
-minutos. Dois blocos: **Onde estamos**, com os números de capa e a série do
-próprio indicador, e **O que os dados dizem**, com cinco conclusões que
-**cruzam** separadores e que nenhum deles dá sozinho. Não responde aos
-parâmetros definidos em «Despesa e composição»: fixa a base por defeito e o
-agregado médio nacional, e declara-o. Um resumo executivo que mudasse conforme o
-cursor que o leitor mexeu noutro separador não seria citável.
+minutos. É a página onde a aplicação **conclui**, e por isso não desenha
+gráficos: os gráficos ficam nos separadores analíticos. Cinco secções, e a ordem
+é a própria argumentação: **O ponto de partida**, **O que os dados nos dizem**
+(seis perguntas, cada uma com o número que a responde, a conclusão e a remissão
+para o separador que a desenvolve), **O que ainda não conseguimos medir bem**,
+**O que esta ferramenta acrescenta** e **Como podemos melhorar a medição**.
+
+Cada pergunta segue a mesma hierarquia: número, interpretação, conclusão,
+proveniência. Não responde aos parâmetros definidos em «Despesa e composição»,
+e nem sequer usa a âncora da despesa: todos os seus valores vêm de séries que
+não dependem da base escolhida nem da composição do agregado, pelo que dois
+leitores citam sempre os mesmos números.
 
 **2 · Evolução do Cabaz.** Preço do cabaz essencial da DECO PROteste (63 bens
 alimentares, composição fixa), série completa desde janeiro de 2022, com as
@@ -143,7 +149,7 @@ despesa-alimentar/
 ├── docs/
 │   └── 2026-08-07_levantamento_lacunas.md   # apuramento e decisões
 └── tests/
-    └── test_calculos.py    # 204 testes dos cálculos analíticos
+    └── test_calculos.py    # 207 testes dos cálculos analíticos
 ```
 
 A separação entre **acesso a dados** (`eurostat.py`, `observatorio.py`),
@@ -1054,50 +1060,57 @@ este indicador. É o que a aplicação já faz.
 
 ## A síntese
 
-O separador de abertura não resume os outros. Tem dois blocos.
+O separador de abertura não resume os outros: é a página onde a aplicação
+conclui. Cinco secções, e a ordem é a argumentação.
 
-### Onde estamos
+### A narrativa
 
-Os números de capa e a **série do próprio indicador**, que até aqui era
-apresentado como um ponto e nunca desenhado ao longo do tempo.
+| Secção | O que faz |
+|---|---|
+| 01 · O ponto de partida | Abre pela distinção entre preços, despesa e esforço, que o debate público tende a confundir. Sem estatísticas. |
+| 02 · O que os dados nos dizem | Seis perguntas, cada uma com o seu número, a sua conclusão e a remissão para o separador que a desenvolve. |
+| 03 · O que ainda não conseguimos medir bem | Quatro lacunas, e só quatro: as que **alteram a interpretação** dos números da página. |
+| 04 · O que esta ferramenta acrescenta | Seis dimensões que a aplicação articula, para que a página não termine na insuficiência dos dados. |
+| 05 · Como podemos melhorar a medição | Seis caminhos, prospectivos. Diz a direcção, não a tarefa. |
 
-**A série é de preços, não de despesa observada.** O nível da âncora é
-reindexado para trás pelo índice oficial, o que equivale a perguntar quanto
-custaria, em cada mês, o consumo alimentar de hoje. Não capta alterações de
-quantidade nem de composição do consumo ao longo do período. A ressalva está no
-(i) do gráfico.
+### As seis perguntas
 
-### O que os dados dizem
+Cada uma segue a mesma hierarquia, fixada por teste: **número, interpretação,
+conclusão, proveniência**. A conclusão nunca vai além do que o número sustenta,
+e a linha de proveniência traz sempre a limitação que altera a leitura.
 
-Cinco conclusões, cada uma com o número que a sustenta e a remissão para o
-separador que a desenvolve. **Não são resumos**: cada uma cruza dois separadores
-e nenhuma é dada por um deles sozinho.
-
-1. A inflação alimentar pode descer sem que nenhum preço desça, e no mês corrente
-   a repartição diz qual dos dois casos é.
-2. Os preços sobem quase por igual entre quintis, mas não pesam por igual: o
-   efeito desigual está na fração do orçamento, não na taxa.
-3. Com um custo da dieta saudável praticamente igual ao espanhol, Portugal tem
-   muito mais população sem capacidade para a pagar, o que remete para o
-   rendimento e não para os preços.
-4. A maior parte da despesa alimentar já está na taxa mínima de IVA, o que
-   delimita à partida o alcance de qualquer medida fiscal.
-5. O que decide o valor da despesa alimentar, a escolha entre as duas fontes
-   oficiais, não é o que a discussão pública trata, que é o viés de substituição
-   do cabaz de composição fixa. As duas grandezas estão medidas e a segunda é
-   residual face à primeira.
-
-**Regra de redação deste bloco**, fixada por teste: nenhuma frase pode exigir
-vocabulário técnico para se perceber. Sempre que entra um termo do ofício
-(variação homóloga, repercussão, quintil), a frase seguinte diz o que significa.
+1. **Os preços dos alimentos estão a subir?** Variação homóloga oficial, com a
+   variação acumulada como contexto. A acumulada é um cálculo desta aplicação,
+   com ponderadores fixos no ano-base, e vai declarada como tal.
+2. **O aumento dos preços afecta todas as famílias da mesma forma?** Peso da
+   alimentação no orçamento do 1.º e do 5.º quintil.
+3. **Uma alimentação saudável está igualmente ao alcance das famílias?**
+   População sem capacidade para suportar o custo dessa dieta, e o custo dela.
+   Declara que não é uma medida de fome.
+4. **Como evoluem os preços ao longo da cadeia?** O produto com maior
+   divergência entre as duas fases, com a ressalva de que a diferença não
+   permite inferir margens.
+5. **Como se posiciona Portugal face à UE-27?** Peso da alimentação no consumo,
+   com o nível de preços como contexto. A posição declara-se sobre os países
+   comparados, e nunca sobre os 27.
+6. **O que conseguimos realmente medir?** Sem KPI: a conclusão é sobre a
+   arquitetura do que se mede, e um número a encabeçá-la seria precisamente o
+   indicador único que a página diz não existir.
 
 ### O que a síntese não faz
 
-**Não responde aos parâmetros** definidos em «Despesa e composição». Fixa a base
-por defeito e o agregado médio nacional, e declara-o numa linha. Um resumo
-executivo que mudasse conforme o cursor que o leitor mexeu noutro separador não
-seria citável: dois leitores citariam números diferentes a partir da mesma
-página. Há um teste que impede que volte a responder-lhes.
+**Não desenha gráficos.** Os gráficos ficam nos separadores analíticos: na
+Síntese seriam ou repetição do separador que os desenvolve, ou o objeto mais
+fotografável da aplicação sem a legenda que o desarma. Há um teste que o impede.
+
+**Não responde aos parâmetros** definidos em «Despesa e composição», e não usa a
+âncora da despesa. Todos os seus valores vêm de séries que não dependem da base
+escolhida nem da composição do agregado, pelo que dois leitores citam sempre os
+mesmos números. Há testes que impedem que volte a depender de qualquer dos dois.
+
+**Não navega.** O «Explorar em …» é um ponteiro e não uma hiperligação: o
+Streamlit não permite mudar de separador por código. Um teste verifica que o
+nome indicado coincide exactamente com o rótulo de uma aba existente.
 
 **Não fala da própria aplicação.** O que a interface mostra é o resultado, nunca
 o estado do trabalho que lhe deu origem. Há um teste que rejeita a reintrodução
@@ -1224,7 +1237,7 @@ ECOICOP versão 2. Se os códigos `CP011x` deixarem de responder, basta atualiza
 campo `cod` em `CLASSES`; o resto da aplicação não precisa de alterações.
 
 **Antes de qualquer alteração aos cálculos**, correr `python -m pytest tests/ -v`.
-Os 204 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
+Os 207 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
 casos-limite conhecidos.
 
 ---
