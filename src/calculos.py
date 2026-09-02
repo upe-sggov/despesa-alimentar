@@ -34,7 +34,7 @@ from .config import (
     AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
     IDF_ALIMENTAR_QUINTIL, IDF_CLASSES_QUINTIL, IDF_DESPESA_TOTAL,
     IDF_PESO_ALIMENTAR, IDF_QUINTIS,
-    IDF_TIPOS_AGREGADO, IDF_TIPOS_POR_TRANSCREVER,
+    IDF_TIPOS_AGREGADO,
     REPERCUSSAO_BANDA, REPERCUSSAO_ESTIMATIVAS, REPERCUSSAO_PADRAO,
 )
 
@@ -1258,8 +1258,8 @@ def comparar_tipos_agregado(media_agregado: float, dimensao_media: float,
     perde sentido; a coluna `racio_*`, essa, é adimensional e vale em qualquer
     base. Cabe a quem chama decidir o que mostra.
 
-    Uma linha por tipo de agregado transcrito. Em `attrs`, `por_transcrever`, a
-    lista dos que faltam, para que a interface possa declarar a cobertura.
+    Uma linha por tipo de agregado disponível. Em `attrs`, `n_tipos`, para que a
+    interface possa declarar o âmbito da comparação.
     """
     linhas = []
     for chave, tipo in IDF_TIPOS_AGREGADO.items():
@@ -1307,46 +1307,8 @@ def comparar_tipos_agregado(media_agregado: float, dimensao_media: float,
         for coluna in ("observado", "minimo", "maximo"):
             df[f"racio_{coluna}"] = (df[coluna] / base[coluna]
                                      if base[coluna] else float("nan"))
-    df.attrs["por_transcrever"] = list(IDF_TIPOS_POR_TRANSCREVER)
-    df.attrs["n_transcritos"] = len(df)
+    df.attrs["n_tipos"] = len(df)
     return df
-
-
-# --------------------------------------------------------------------------
-# Hierarquia das incertezas
-# --------------------------------------------------------------------------
-def hierarquia_incertezas(entradas) -> pd.DataFrame:
-    """
-    Ordena as incertezas da ferramenta pela amplitude que cada uma introduz.
-
-    Existe porque a aplicação calculava seis amplitudes em seis sítios
-    diferentes e nunca as confrontava. Confrontadas, dizem uma coisa que nenhuma
-    delas diz sozinha: **o debate público está concentrado na incerteza mais
-    pequena de todas.** O viés de substituição do cabaz de composição fixa, que é
-    o argumento central da discussão, vale décimas; a escolha da base, que
-    ninguém discute, vale um fator próximo de 2.
-
-    `entradas` é uma sequência de dicionários com `fonte`, `afeta`, `amplitude`
-    (em euros por mês) e `nota`. Entradas sem amplitude, ou com amplitude nula,
-    são descartadas: uma barra de comprimento zero num gráfico de ordens de
-    grandeza é ruído.
-
-    **A unidade comum é deliberada e tem de ser declarada onde isto aparece.**
-    Cada barra é a amplitude em euros por mês do número que **essa** incerteza
-    afeta, que não é o mesmo número para todas: a base e a escala movem a
-    despesa, a repercussão move a poupança do simulador, a ponderação e o viés
-    movem o agravamento. Servem para comparar **ordens de grandeza**, não para
-    somar.
-    """
-    linhas = [e for e in entradas
-              if e.get("amplitude") is not None
-              and not pd.isna(e["amplitude"])
-              and abs(float(e["amplitude"])) > 0.005]
-    if not linhas:
-        return pd.DataFrame()
-    df = pd.DataFrame(linhas)
-    df["amplitude"] = df["amplitude"].astype(float).abs()
-    return df.sort_values("amplitude", ascending=False).reset_index(drop=True)
 
 
 # --------------------------------------------------------------------------

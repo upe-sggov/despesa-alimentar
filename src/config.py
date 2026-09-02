@@ -1353,9 +1353,10 @@ IDF_CLASSES_QUINTIL = {
 # aparece com os dois valores absolutos em comentário). Promovê-los a constante
 # é o que torna a comparação de níveis possível.
 #
-# Os restantes tipos do quadro Q.2.6.a **não estão transcritos**, e não são
-# inventados: ver `IDF_TIPOS_POR_TRANSCREVER`. Preencher essa lista é trabalho
-# manual de leitura do quadro, como se fez para `IDF_CLASSES_QUINTIL`.
+# São ambos agregados **sem crianças dependentes**, que é a restrição em que a
+# escala de equivalência é mais limpa: não depende do coeficiente atribuído aos
+# menores, que é o mais frágil dos três. É esse o âmbito que a interface
+# declara.
 #
 # `adultos` é None quando o grupo é composto: nesse caso o número médio de
 # adultos é **derivado** de `ESCALAS_TESTE_COMPOSICAO`, em `calculos.py`, e não
@@ -1381,20 +1382,6 @@ IDF_TIPOS_AGREGADO = {
         "alimentar_ano": 3066.0,
     },
 }
-
-# Os tipos que faltam, nomeados para que a lacuna seja visível na aplicação em
-# vez de ficar por dizer. Cada entrada é uma linha do quadro Q.2.6.a por
-# transcrever. Enquanto a lista não estiver vazia, a comparação entre observado
-# e simulado cobre apenas agregados **sem crianças**, e a interface di-lo.
-IDF_TIPOS_POR_TRANSCREVER = [
-    "Pessoa só com menos de 65 anos",
-    "Pessoa só com 65 ou mais anos",
-    "Casal sem filhos dependentes",
-    "Casal com um filho dependente",
-    "Casal com dois filhos dependentes",
-    "Casal com três ou mais filhos dependentes",
-    "Famílias monoparentais com filhos dependentes",
-]
 
 
 # --------------------------------------------------------------------------
@@ -1539,113 +1526,6 @@ SOFI_MILHOES = {2017: 2.3, 2019: 1.6, 2020: 1.7, 2021: 1.6,
                 2022: 1.8, 2023: 1.6, 2024: 1.5, 2025: 1.5}
 
 # --------------------------------------------------------------------------
-# Melhoria do indicador: o que falta e o que o fecharia
-# --------------------------------------------------------------------------
-# A aplicação declarava doze limitações e não dizia o que fazer com nenhuma
-# delas. Para um Gabinete que tem de decidir, isso é parar onde a decisão
-# começa: uma lista de defeitos não é um plano.
-#
-# Cada entrada diz **o que falta**, **o que a fecharia**, **quem tem os dados** e
-# **que esforço custa**, para que a lacuna possa ser transformada em pedido a
-# outra entidade ou em trabalho da própria UPE.
-#
-# `prioridade` é 1 (o que mais muda a leitura) a 3. Não é uma ordem de execução:
-# é a ordem pela qual as lacunas afetam a resposta à pergunta do Gabinete.
-#
-# `estado` distingue o que já se pode fazer do que depende de terceiros. Sem
-# essa coluna, uma lista de melhorias lê-se como uma lista de desejos.
-MELHORIAS_INDICADOR = [
-    {
-        "prioridade": 1,
-        "lacuna": "As duas âncoras oficiais divergem por um fator próximo de 2",
-        "consequencia": "O nível da despesa alimentar não é determinável; a "
-                        "aplicação só pode apresentar o intervalo",
-        "fecha": "Exercício de conciliação entre o inquérito e as Contas "
-                 "Nacionais ao nível da rubrica alimentar, com publicação da "
-                 "taxa de cobertura por classe COICOP",
-        "quem": "INE",
-        "esforco": "Externo, pedido formal",
-        "estado": "Depende de terceiros",
-    },
-    {
-        "prioridade": 1,
-        "lacuna": "Não há quantidades, só euros e percentagens",
-        "consequencia": "Não é possível distinguir “as famílias gastam mais” de "
-                        "“as famílias compram menos”, que é a pergunta política",
-        "fecha": "Dados de transação (e-fatura ou scanner data) ou microdados "
-                 "do IDF com quantidades",
-        "quem": "Autoridade Tributária, INE",
-        "esforco": "Externo, protocolo de dados",
-        "estado": "Depende de terceiros",
-    },
-    {
-        "prioridade": 1,
-        "lacuna": "A despesa por tipo de agregado é simulada, não observada",
-        "consequencia": "O ajustamento por composição assenta em escalas "
-                        "construídas para o consumo total, não para alimentação",
-        "fecha": "Transcrever o quadro Q.2.6.a do IDF por tipo de agregado, que "
-                 "está publicado e não exige pedido nenhum",
-        "quem": "UPE",
-        "esforco": "Interno, algumas horas",
-        "estado": "Parcialmente feito",
-    },
-    {
-        "prioridade": 2,
-        "lacuna": "Não há desagregação territorial",
-        "consequencia": "A despesa é uma média nacional; não distingue região "
-                        "nem grau de urbanização",
-        "fecha": "Quadros do IDF por NUTS II, já publicados",
-        "quem": "UPE",
-        "esforco": "Interno, transcrição",
-        "estado": "Por fazer",
-    },
-    {
-        "prioridade": 2,
-        "lacuna": "A alimentação fora de casa está fora do indicador",
-        "consequencia": "A restauração (divisão 11) e as bebidas não alcoólicas "
-                        "(grupo 01.2) não entram, e o seu peso não é quantificado",
-        "fecha": "Acrescentar as duas rubricas ao pedido do `nama_10_cp18`, que "
-                 "a aplicação já consulta, e apresentá-las como enquadramento",
-        "quem": "UPE",
-        "esforco": "Interno, alteração pequena",
-        "estado": "Por fazer",
-    },
-    {
-        "prioridade": 2,
-        "lacuna": "A repercussão do IVA é calibrada numa medida temporária",
-        "consequencia": "É o parâmetro que mais move o simulador, e a evidência "
-                        "cobre quatro meses de uma medida mediática",
-        "fecha": "Avaliação de uma alteração permanente de taxa, ou acesso aos "
-                 "microdados de preços do IPC",
-        "quem": "Banco de Portugal, INE",
-        "esforco": "Externo",
-        "estado": "Depende de terceiros",
-    },
-    {
-        "prioridade": 3,
-        "lacuna": "Não se mede a dispersão de preços entre operadores",
-        "consequencia": "O índice dá a variação média; o nível que cada família "
-                        "enfrenta oscila em torno dela e não é observável",
-        "fecha": "Dados de transação por insígnia e por território",
-        "quem": "Autoridade Tributária, operadores",
-        "esforco": "Externo",
-        "estado": "Depende de terceiros",
-    },
-    {
-        "prioridade": 3,
-        "lacuna": "O IVA é o único instrumento simulado",
-        "consequencia": "A comparação com apoios diretos, que dirigem maior "
-                        "parcela ao quintil inferior, não é quantificada",
-        "fecha": "Estender o simulador a transferências, com a mesma base de "
-                 "despesa por quintil que a aplicação já usa",
-        "quem": "UPE",
-        "esforco": "Interno, desenvolvimento",
-        "estado": "Por fazer",
-    },
-]
-
-
-# --------------------------------------------------------------------------
 # Metadados institucionais
 # --------------------------------------------------------------------------
 ORGANISMO = "Secretaria-Geral do Governo"
@@ -1751,6 +1631,37 @@ def numero(valor, casas: int = 0) -> str:
     if valor is None:
         return "—"
     return f"{valor:,.{casas}f}".replace(",", " ").replace(".", ",")
+
+
+CARDINAIS_PT = ("zero", "um", "dois", "três", "quatro", "cinco",
+                "seis", "sete", "oito", "nove", "dez")
+
+
+def cardinal(valor, genero: str = "m") -> str:
+    """
+    Contagem em texto corrido: até dez por extenso, a partir de 11 em algarismos.
+
+    É a regra do livro de estilo da SGGov, e `numero()` não a cumpre porque
+    devolve sempre o algarismo. Serve as contagens que entram no meio de uma
+    frase, como o número de meses conhecidos de um ano ou o número de
+    alterações de método propostas. Valores de medida continuam a ir por
+    `numero()`: a regra é para contagens, não para grandezas.
+
+    `genero` acorda "um"/"dois" com o substantivo que se segue: `cardinal(2)`
+    devolve "dois" e `cardinal(2, "f")` devolve "duas".
+    """
+    if valor is None:
+        return "—"
+    try:
+        inteiro = int(valor)
+    except (TypeError, ValueError):
+        return numero(valor)
+    if inteiro != valor or not 0 <= inteiro <= 10:
+        return numero(valor)
+    palavra = CARDINAIS_PT[inteiro]
+    if genero == "f":
+        palavra = {"um": "uma", "dois": "duas"}.get(palavra, palavra)
+    return palavra
 
 
 def milhoes(valor, casas: int = 1, sufixo: str = " M€") -> str:

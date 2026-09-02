@@ -21,7 +21,7 @@ comparar Portugal com os restantes Estados-Membros.
 7. [Fontes de dados](#fontes-de-dados)
 8. [Metodologia](#metodologia)
 9. [Indicadores de esforço](#indicadores-de-esforço)
-10. [A síntese: hierarquia das incertezas e melhoria do indicador](#a-síntese-hierarquia-das-incertezas-e-melhoria-do-indicador)
+10. [A síntese](#a-síntese)
 11. [Limitações a declarar](#limitações-a-declarar)
 12. [Manutenção](#manutenção)
 13. [Resolução de problemas](#resolução-de-problemas)
@@ -30,15 +30,15 @@ comparar Portugal com os restantes Estados-Membros.
 
 ## O que a aplicação faz
 
-A aplicação organiza-se em oito separadores.
+A aplicação organiza-se em nove separadores.
 
 **1 · Síntese.** O separador de abertura, e o único que se lê inteiro em cinco
-minutos. Reúne os números de capa, as conclusões que **cruzam** separadores e
-que nenhum deles dá sozinho, a **hierarquia das incertezas** e o plano de
-**melhoria do indicador**. Não responde aos parâmetros definidos em «Despesa e
-composição»: fixa a base por defeito e o agregado médio nacional, e declara-o.
-Um resumo executivo que mudasse conforme o cursor que o leitor mexeu noutro
-separador não seria citável.
+minutos. Dois blocos: **Onde estamos**, com os números de capa e a série do
+próprio indicador, e **O que os dados dizem**, com cinco conclusões que
+**cruzam** separadores e que nenhum deles dá sozinho. Não responde aos
+parâmetros definidos em «Despesa e composição»: fixa a base por defeito e o
+agregado médio nacional, e declara-o. Um resumo executivo que mudasse conforme o
+cursor que o leitor mexeu noutro separador não seria citável.
 
 **2 · Evolução do Cabaz.** Preço do cabaz essencial da DECO PROteste (63 bens
 alimentares, composição fixa), série completa desde janeiro de 2022, com as
@@ -143,7 +143,7 @@ despesa-alimentar/
 ├── docs/
 │   └── 2026-08-07_levantamento_lacunas.md   # apuramento e decisões
 └── tests/
-    └── test_calculos.py    # 202 testes dos cálculos analíticos
+    └── test_calculos.py    # 204 testes dos cálculos analíticos
 ```
 
 A separação entre **acesso a dados** (`eurostat.py`, `observatorio.py`),
@@ -695,12 +695,11 @@ O confronto corre **sempre na base do inquérito**, seja qual for a base ativa: 
 níveis observados vêm dele, e compará-los com um nível das Contas Nacionais seria
 confrontar universos diferentes.
 
-**Cobertura, declarada na interface.** Só estão transcritos **dois** tipos de
-agregado, ambos **sem crianças dependentes**. As restantes sete linhas do quadro
-Q.2.6.a estão publicadas e por transcrever, e enquanto faltarem o confronto nada
-diz sobre agregados com crianças, que são justamente aqueles em que o coeficiente
-da escala mais pesa. A lacuna está inscrita em `IDF_TIPOS_POR_TRANSCREVER` e
-aparece no plano de melhoria do indicador, no separador Síntese.
+**Âmbito, declarado na interface.** O confronto abrange agregados **sem crianças
+dependentes**, que é a restrição em que a escala é mais limpa: não depende do
+coeficiente atribuído aos menores, que é o mais frágil dos três. Nos agregados
+com crianças a comparação com a despesa observada não é feita, e o valor
+apresentado continua a ser o intervalo entre as três escalas.
 
 ### Sobre séries privadas de cabazes
 
@@ -1053,53 +1052,44 @@ identificador técnico do repositório, e garantir que **nada no que é visível
 — título, separadores, textos, ficheiros exportados — usa a palavra «cabaz» para designar
 este indicador. É o que a aplicação já faz.
 
-## A síntese: hierarquia das incertezas e melhoria do indicador
+## A síntese
 
-O separador de abertura existe por duas razões, e nenhuma delas é resumir os
-outros.
+O separador de abertura não resume os outros. Tem dois blocos.
 
-### A hierarquia das incertezas
+### Onde estamos
 
-A aplicação calculava **seis amplitudes em seis sítios diferentes** e nunca as
-confrontava. Confrontadas, dizem uma coisa que nenhuma delas diz sozinha.
+Os números de capa e a **série do próprio indicador**, que até aqui era
+apresentado como um ponto e nunca desenhado ao longo do tempo.
 
-Cada barra é a amplitude, **em euros por mês**, que essa incerteza introduz no
-número que ela afeta. A unidade é comum; o número afetado não é: a base e a
-escala movem a despesa, a repercussão e as atribuições de IVA movem a poupança do
-cenário simulado, a ponderação e o viés de substituição movem o agravamento dos
-últimos doze meses. **Servem para comparar ordens de grandeza, não para somar**,
-e a interface di-lo onde o gráfico aparece.
+**A série é de preços, não de despesa observada.** O nível da âncora é
+reindexado para trás pelo índice oficial, o que equivale a perguntar quanto
+custaria, em cada mês, o consumo alimentar de hoje. Não capta alterações de
+quantidade nem de composição do consumo ao longo do período. A ressalva está no
+(i) do gráfico.
 
-O resultado é consistente e não depende do mês: a **escolha da base oficial** e a
-**repercussão** dominam por duas ordens de grandeza tudo o resto, e o **viés de
-substituição do cabaz de composição fixa** — sobre o qual incide a crítica
-pública ao indicador — é das mais pequenas. As duas incertezas que decidem o
-número não são objeto de debate; a que é discutida está medida e é residual.
+### O que os dados dizem
 
-É a conclusão mais forte que a ferramenta permite, e é também a que responde
-diretamente à pergunta sobre **melhoria do indicador**: diz onde é que investir
-esforço tem retorno.
+Cinco conclusões, cada uma com o número que a sustenta e a remissão para o
+separador que a desenvolve. **Não são resumos**: cada uma cruza dois separadores
+e nenhuma é dada por um deles sozinho.
 
-### O plano de melhoria
+1. A inflação alimentar pode descer sem que nenhum preço desça, e no mês corrente
+   a repartição diz qual dos dois casos é.
+2. Os preços sobem quase por igual entre quintis, mas não pesam por igual: o
+   efeito desigual está na fração do orçamento, não na taxa.
+3. Com um custo da dieta saudável praticamente igual ao espanhol, Portugal tem
+   muito mais população sem capacidade para a pagar, o que remete para o
+   rendimento e não para os preços.
+4. A maior parte da despesa alimentar já está na taxa mínima de IVA, o que
+   delimita à partida o alcance de qualquer medida fiscal.
+5. O que decide o valor da despesa alimentar, a escolha entre as duas fontes
+   oficiais, não é o que a discussão pública trata, que é o viés de substituição
+   do cabaz de composição fixa. As duas grandezas estão medidas e a segunda é
+   residual face à primeira.
 
-A aplicação declarava doze limitações e não dizia o que fazer com nenhuma delas.
-Para quem tem de decidir, uma lista de defeitos não é um plano: falta quem tem os
-dados e o que custa obtê-los.
-
-O bloco final da síntese é um quadro com uma linha por lacuna: **o que falta**,
-**a consequência**, **o que a fecharia**, **quem detém os dados**, **que esforço
-custa** e se **depende de terceiros**. Está inscrito em `MELHORIAS_INDICADOR`, em
-`src/config.py`, e é exportável em CSV.
-
-A prioridade é **o efeito na resposta ao Gabinete**, e não a facilidade de
-execução. As duas não coincidem: a lacuna mais consequente, a divergência entre
-as duas âncoras oficiais, é também a que a UPE não pode fechar sozinha. Metade
-das lacunas, em contrapartida, não depende de ninguém: os dados estão publicados
-e por transcrever, ou o cálculo está ao alcance da própria ferramenta.
-
-Três das lacunas externas apontam para o mesmo sítio: **não existem dados de
-quantidade nem de transação**. Enquanto não existirem, esta ferramenta mede o que
-se paga, e não o que se leva para casa.
+**Regra de redação deste bloco**, fixada por teste: nenhuma frase pode exigir
+vocabulário técnico para se perceber. Sempre que entra um termo do ofício
+(variação homóloga, repercussão, quintil), a frase seguinte diz o que significa.
 
 ### O que a síntese não faz
 
@@ -1107,13 +1097,12 @@ se paga, e não o que se leva para casa.
 por defeito e o agregado médio nacional, e declara-o numa linha. Um resumo
 executivo que mudasse conforme o cursor que o leitor mexeu noutro separador não
 seria citável: dois leitores citariam números diferentes a partir da mesma
-página.
+página. Há um teste que impede que volte a responder-lhes.
 
-**A série do indicador é de preços, não de despesa observada.** O nível da âncora
-é reindexado para trás pelo índice oficial, o que equivale a perguntar quanto
-custaria, em cada mês, o consumo alimentar de hoje. Não capta alterações de
-quantidade nem de composição do consumo ao longo do período. A ressalva está no
-(i) do gráfico.
+**Não fala da própria aplicação.** O que a interface mostra é o resultado, nunca
+o estado do trabalho que lhe deu origem. Há um teste que rejeita a reintrodução
+de planos, lacunas por fechar ou repartição de tarefas em qualquer texto que a
+aplicação emita.
 
 ---
 
@@ -1235,7 +1224,7 @@ ECOICOP versão 2. Se os códigos `CP011x` deixarem de responder, basta atualiza
 campo `cod` em `CLASSES`; o resto da aplicação não precisa de alterações.
 
 **Antes de qualquer alteração aos cálculos**, correr `python -m pytest tests/ -v`.
-Os 202 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
+Os 204 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
 casos-limite conhecidos.
 
 ---

@@ -3997,41 +3997,17 @@ def test_comparacao_de_tipos_confirma_o_teste_das_escalas():
         "a conclusao que o teste dos racios ja dava")
 
 
-def test_comparacao_de_tipos_declara_o_que_falta_transcrever():
+def test_comparacao_de_tipos_declara_o_ambito():
     """
-    A lacuna tem de viajar com os dados: sem isto, a interface apresentaria dois
-    tipos de agregado como se fossem o quadro todo.
+    O ambito tem de viajar com os dados: a interface precisa de saber a quantos
+    tipos de agregado a comparacao se aplica, para o poder declarar.
     """
     from src.calculos import comparar_tipos_agregado
-    from src.config import IDF_TIPOS_POR_TRANSCREVER
 
     df = comparar_tipos_agregado(239.33, 2.4)
-    assert df.attrs["por_transcrever"] == list(IDF_TIPOS_POR_TRANSCREVER)
-    assert df.attrs["n_transcritos"] == len(df)
+    assert df.attrs["n_tipos"] == len(df)
+    assert df.attrs["n_tipos"] >= 2
 
-
-# =========================================================================
-# Hierarquia das incertezas
-# =========================================================================
-def test_hierarquia_ordena_por_amplitude_e_descarta_o_vazio():
-    from src.calculos import hierarquia_incertezas
-
-    df = hierarquia_incertezas([
-        {"fonte": "escala", "afeta": "despesa", "amplitude": 12.0, "nota": ""},
-        {"fonte": "base", "afeta": "despesa", "amplitude": -310.0, "nota": ""},
-        {"fonte": "ausente", "afeta": "nada", "amplitude": None, "nota": ""},
-        {"fonte": "nula", "afeta": "nada", "amplitude": 0.0, "nota": ""},
-    ])
-    assert list(df["fonte"]) == ["base", "escala"]
-    assert df["amplitude"].iloc[0] == pytest.approx(310.0), "amplitude e absoluta"
-
-
-def test_hierarquia_sem_entradas_uteis_devolve_vazio():
-    from src.calculos import hierarquia_incertezas
-
-    assert hierarquia_incertezas([]).empty
-    assert hierarquia_incertezas([{"fonte": "x", "afeta": "y",
-                                   "amplitude": None, "nota": ""}]).empty
 
 # =========================================================================
 # Doutrina da sintese: o que nao pode regredir em silencio
@@ -4086,40 +4062,52 @@ def test_o_momentum_declara_porque_nao_ha_taxa_ajustada_de_sazonalidade():
         "a seccao deixou de dizer que a reparticao e exata e nao uma estimativa")
 
 
-def test_a_hierarquia_declara_que_os_euros_nao_se_somam():
+def test_a_app_nao_fala_do_seu_proprio_processo_de_construcao():
     """
-    Cada barra e a amplitude do numero que **essa** incerteza afeta, e nao sao
-    todos o mesmo numero. Sem essa ressalva, o grafico convida a somar coisas
-    que nao se somam, que e exatamente o defeito que ele existe para corrigir.
-    """
-    import re
+    O que a aplicacao mostra e o resultado, nunca o estado do trabalho que lhe
+    deu origem: nem planos, nem lacunas por fechar, nem quem faz o que. Essas
+    coisas vivem no repositorio e na conversa, nao no ecra de quem decide
+    (regra da Ines, 02.09.2026).
 
+    A verificacao e sobre o texto **que a aplicacao emite**, e nao sobre os
+    comentarios do codigo, que continuam a poder explicar decisoes a quem o
+    mantem: e por isso que corre sobre `_fonte_viva`.
+    """
     vivo = _fonte_viva("app.py")
-    i = vivo.index("As incertezas desta ferramenta")
-    # As frases da interface estao partidas por varias linhas de codigo, e uma
-    # procura literal quebraria so por alguem reajustar a largura. Juntam-se os
-    # literais adjacentes antes de procurar.
-    bloco = re.sub(r'"\s*\n\s*"', "", vivo[i:i + 2500])
-    assert "não para somar" in bloco, (
-        "o grafico da hierarquia deixou de declarar que as amplitudes nao sao "
-        "somaveis entre si")
+    proibidos = [
+        "Melhoria do indicador",
+        "por transcrever",
+        "por_transcrever",
+        "MELHORIAS_INDICADOR",
+        "plano de melhoria",
+        "Lacunas identificadas",
+        "Resolúveis pela UPE",
+        "Dependentes de terceiros",
+    ]
+    achados = [p for p in proibidos if p in vivo]
+    assert not achados, (
+        "a interface voltou a expor o processo de construcao ou o que falta "
+        f"fazer: {achados}")
 
 
-def test_o_confronto_por_tipo_de_agregado_declara_a_cobertura():
+def test_o_confronto_por_tipo_de_agregado_declara_o_ambito():
     """
-    Estao transcritos dois tipos de agregado, ambos sem criancas. Apresentar a
-    comparacao sem dizer o que falta seria dar dois tipos por um quadro
-    completo, justamente onde o coeficiente da escala mais pesa.
+    A comparacao cobre agregados sem criancas dependentes, e isso tem de estar
+    dito: sem o ambito, dois tipos de agregado passariam por ser o quadro todo.
+    O que se declara e **a que casos a comparacao se aplica**, e nao o que
+    ficou por fazer.
     """
-    from src.config import IDF_TIPOS_AGREGADO, IDF_TIPOS_POR_TRANSCREVER
+    from src.config import IDF_TIPOS_AGREGADO
 
-    assert IDF_TIPOS_POR_TRANSCREVER, (
-        "se o quadro ficou completo, apague esta lista e o aviso na interface")
-    vivo = _fonte_viva("app.py")
-    assert "por_transcrever" in vivo, (
-        "a interface deixou de declarar os tipos de agregado por transcrever")
-    # E os que ja estao transcritos tem de trazer fonte.
+    assert IDF_TIPOS_AGREGADO
     assert all(t.get("alimentar_ano") for t in IDF_TIPOS_AGREGADO.values())
+    assert all(t.get("criancas") == 0 for t in IDF_TIPOS_AGREGADO.values()), (
+        "entrou um tipo de agregado com criancas: o aviso de ambito na "
+        "interface deixou de ser verdadeiro e tem de ser reescrito")
+
+    vivo = _fonte_viva("app.py")
+    assert "sem crianças dependentes" in vivo, (
+        "a interface deixou de declarar o ambito da comparacao")
 
 
 def test_os_niveis_do_idf_batem_com_o_racio_que_o_teste_das_escalas_usa():
@@ -4135,19 +4123,154 @@ def test_os_niveis_do_idf_batem_com_o_racio_que_o_teste_das_escalas_usa():
     assert dois / um == pytest.approx(ESCALAS_TESTE_RACIO["alimentar"], abs=1e-3)
 
 
-def test_o_plano_de_melhoria_esta_completo_em_todas_as_linhas():
+def test_as_contagens_ate_dez_saem_por_extenso_e_acordam_em_genero():
     """
-    Uma linha sem "quem tem os dados" ou sem "o que a fecha" nao e um plano, e
-    o quadro existe precisamente para nao ser uma lista de desejos.
+    Regra do livro de estilo da SGGov: numeros ate dez por extenso, a partir de
+    11 em algarismos. `numero()` nao a cumpre, devolve sempre o algarismo, e a
+    sintese tinha "com 7 meses conhecidos" no meio de uma frase.
     """
-    from src.config import MELHORIAS_INDICADOR
+    from src.config import cardinal
 
-    campos = ("prioridade", "lacuna", "consequencia", "fecha", "quem",
-              "esforco", "estado")
-    assert MELHORIAS_INDICADOR
-    for linha in MELHORIAS_INDICADOR:
-        for campo in campos:
-            assert linha.get(campo), f"falta “{campo}” em: {linha.get('lacuna')}"
-        assert linha["prioridade"] in (1, 2, 3)
-        assert linha["estado"] in ("Por fazer", "Parcialmente feito",
-                                   "Depende de terceiros")
+    assert cardinal(0) == "zero"
+    assert cardinal(7) == "sete"
+    assert cardinal(10) == "dez"
+    # A partir de 11 volta ao algarismo, delegando em `numero()` para nao ter
+    # uma segunda opiniao sobre o separador de milhares (que e um espaco
+    # inquebravel, e nao um espaco normal).
+    from src.config import numero
+
+    assert cardinal(11) == "11"
+    assert cardinal(1500) == numero(1500)
+    # Acordo de genero, para "duas alteracoes" e nao "dois alteracoes".
+    assert cardinal(2, "f") == "duas"
+    assert cardinal(1, "f") == "uma"
+    assert cardinal(3, "f") == "três"
+    # Nao inteiros e ausencias caem para o formatador geral.
+    assert cardinal(2.4) == "2"
+    assert cardinal(None) == "—"
+
+
+def test_a_conclusao_do_iva_reparte_a_despesa_toda_e_nao_so_duas_parcelas():
+    """
+    A sintese dizia "68,4% a 6%" e, logo a seguir, "so 24,4% a 23%". Somam
+    92,8%, e duas percentagens em sequencia leem-se como um par que fecha em
+    cem: o leitor atribuia a diferenca a arredondamento em vez de as duas
+    parcelas reais que faltavam, a taxa intermedia e os produtos de taxa nao
+    determinavel (auditoria da Ines, 02.09.2026).
+
+    A regra: o resto e calculado por diferenca, para fechar sempre em 100%, e
+    a nota nomeia as parcelas que o compoem.
+    """
+    vivo = _fonte_viva("app.py")
+    i = vivo.index("4 · A maior parte da despesa alimentar")
+    # Recua ate ao inicio do par, onde estao as parcelas calculadas, e fecha no
+    # titulo da conclusao seguinte. O delimitador tem de ser texto **vivo**:
+    # `_fonte_viva` retira os comentarios, e a primeira versao deste teste
+    # apontava para um deles.
+    par = vivo[vivo.rindex("if _iva_sint:", 0, i):
+               vivo.index("5 · O que decide o valor", i)]
+
+    assert "_iva_resto = max(100.0 - _iva_6 - _iva_23, 0.0)" in par, (
+        "o resto deixou de ser calculado por diferenca e as parcelas podem "
+        "deixar de fechar em 100%")
+    for parcela in ("_iva_6", "_iva_23", "_iva_resto"):
+        assert par.count(parcela) >= 2, f"a parcela {parcela} deixou de ser usada"
+
+    # O resto vai nomeado, mas as suas duas componentes vao **sem numero**: a
+    # uma casa decimal davam 0,9% e 6,2%, que somam 7,1% e nao os 7,2%
+    # anunciados. Tres percentagens que fecham em 100 valem mais do que cinco
+    # em que duas nao fecham.
+    assert "taxa intermédia" in par, (
+        "a conclusao do IVA deixou de nomear a taxa intermedia, que e uma das "
+        "parcelas em que o resto se divide")
+    for sub in ("_iva_13", "_iva_ind", "taxa_13_pct"):
+        assert sub not in par, (
+            f"a conclusao do IVA voltou a mostrar a subparcela {sub}; a uma "
+            "casa decimal as duas subparcelas somam 7,1% e o resto anunciado e "
+            "7,2%, e o desencontro fica a vista")
+
+
+def test_a_sintese_tem_tres_blocos_e_nenhum_deles_fica_vazio():
+    """
+    Um `bloco()` seguido de um `secao(grupo=...)` emite **dois** cabecalhos, e o
+    primeiro fica sem nada por baixo. Foi o que aconteceu ao bloco que aqui
+    esteve, e o leitor via um titulo vazio seguido de outro com o conteudo todo.
+
+    A regra: dentro da sintese, cada `bloco()` tem de ter conteudo proprio, e
+    nenhuma `secao` imediatamente a seguir pode trazer `grupo=`.
+    """
+    import re
+
+    vivo = _fonte_viva("app.py")
+    i = vivo.index("with _slot_sintese:")
+    bloco = vivo[i:vivo.index('<footer class="sg-rodape"', i)]
+
+    cabecalhos = re.findall(r'bloco\("(\d+ · [^"]+)"', bloco)
+    assert cabecalhos == ["01 · Onde estamos",
+                          "02 · O que os dados dizem",
+                          "03 · Como melhorar o indicador"], (
+        f"a estrutura da sintese mudou: {cabecalhos}")
+
+    # Nenhuma seccao da sintese emite o seu proprio cabecalho de bloco.
+    assert 'grupo="' not in bloco, (
+        "uma seccao da sintese voltou a trazer `grupo=`, o que desenha um "
+        "segundo cabecalho de bloco e deixa o primeiro vazio")
+
+
+def test_cada_conclusao_da_sintese_tem_o_seu_numero_ao_lado():
+    """
+    A estrutura da sintese e uma conclusao por linha: o cartao com o numero a
+    esquerda, a nota que o desenvolve a direita. Antes os numeros estavam todos
+    no bloco 01 e as notas todas no bloco 02, o que obrigava a subir e a descer
+    para ligar cada conclusao ao valor que a sustenta, e deixava dois numeros
+    sem nota nenhuma (pedido da Ines, 02.09.2026).
+
+    A regra: dentro da sintese nao ha `nota()` solta nem `st.metric`. Toda a
+    conclusao passa por `par_kpi_nota`, que garante o par.
+    """
+    import re
+
+    vivo = _fonte_viva("app.py")
+    i = vivo.index("with _slot_sintese:")
+    bloco = vivo[i:vivo.index('<footer class="sg-rodape"', i)]
+
+    assert re.search(r"(?<!par_kpi_)nota\(", bloco) is None, (
+        "ha uma nota solta na sintese: toda a conclusao tem de vir emparelhada "
+        "com o seu numero, por `par_kpi_nota`")
+    assert "st.metric" not in bloco and ".metric(" not in bloco, (
+        "voltou uma metrica solta a sintese; o numero de uma conclusao vive no "
+        "cartao ao lado dela")
+    # Uma conclusao por linha, e todas as que a aplicacao consegue sustentar.
+    assert bloco.count("par_kpi_nota(") >= 6, (
+        "a sintese perdeu conclusoes: eram seis pares")
+
+
+def test_a_melhoria_do_indicador_diz_o_que_muda_e_nao_so_o_que_diverge():
+    """
+    A seccao de melhoria e a terceira pergunta do mandato do Gabinete. Tem de se
+    ler como “medir assim seria melhor, e isto e o que muda”, e nunca como uma
+    lista de divergencias: uma divergencia descreve um problema, uma melhoria
+    diz o que fazer a seguir (pedido da Ines, 02.09.2026).
+
+    O sinal verificavel disso e cada item trazer o **efeito no valor**, e os
+    verbos serem de accao sobre o metodo.
+    """
+    vivo = _fonte_viva("app.py")
+    i = vivo.index('bloco("03 · Como melhorar o indicador")')
+    bloco = vivo[i:vivo.index('<footer class="sg-rodape"', i)]
+
+    assert bloco.count("Efeito no valor:") >= 3, (
+        "um item da melhoria deixou de declarar o efeito que teria no valor, "
+        "que e o que o distingue de um reparo")
+    for verbo in ("Fixar qual das duas fontes", "Usar os tipos de agregado",
+                  "Recompor o cabaz"):
+        assert verbo in bloco, f"a melhoria perdeu o item “{verbo}”"
+
+    # E continua a nao falar do processo: sao propriedades do indicador, e nao
+    # tarefas de quem construiu a aplicacao. As sondas sao frases inteiras: um
+    # fragmento curto como “fica para” apanha “significa para a decisao”, que
+    # foi o que este teste fez na primeira versao.
+    for proibido in ("ainda não", "por fazer", "próximo passo", "fica para depois",
+                     "está em falta", "a aplicação não", "não foi possível"):
+        assert proibido not in bloco.lower(), (
+            f"a seccao de melhoria passou a falar de processo: “{proibido}”")
