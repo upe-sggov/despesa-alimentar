@@ -32,8 +32,65 @@ comparar Portugal com os restantes Estados-Membros.
 
 A aplicação organiza-se em nove separadores.
 
-**1 · Síntese.** O separador de abertura, e o único que se lê inteiro em cinco
-minutos. É a página onde a aplicação **conclui**, e por isso não desenha
+**1 · Análise mediática.** O único separador que não é sobre preços, mas sobre o
+que se diz sobre eles. É o **primeiro** da aplicação: é a porta de entrada do
+tema, e o que enquadra os números que os restantes separadores calculam.
+
+Desde 02.09.2026, o seu conteúdo é o do entregável da UPE **«Contexto e perceção
+pública»**, transposto na íntegra: a síntese do varrimento mediático de **38
+casos** entre março de 2023 e agosto de 2026, organizada em **três narrativas**
+— rigor causal, estrutural e confronto político-empresarial —, o que cada um dos
+quatro órgãos mais representados fez com o tema, o alcance nas redes sociais com
+as três publicações de maior interação, e os **quatro sinais de atenção ao
+decisor**. Fecha com as **notas metodológicas** do entregável companheiro, num
+bloco recolhível fechado por omissão.
+
+Abre com uma **nota de perímetro**, antes do conteúdo e não num expansor no fim.
+A página faz afirmações categóricas («o único caso de notícia com atribuição de
+causalidade fundamentada») e emite juízos sobre a linha editorial de órgãos
+nomeados. Sem dizer que o levantamento é amostral, que nenhuma contagem é quota
+de cobertura e que o confronto é um juízo da UPE, essas frases leem-se como
+apuramento exaustivo.
+
+A página **não refere que existe um documento maior nem que esta é uma versão
+reduzida** (decisão da Inês, 02.09.2026): o leitor tem de poder ler o que vê sem
+depender de um trabalho a que não tem acesso.
+
+A transposição alterou três coisas e mais nenhuma: o **tom**, que passa da
+primeira pessoa do plural para o impessoal («distinguem-se» em vez de
+«distinguimos»), como no resto da aplicação; o **estilo**, tratado abaixo; e a
+**moldura**, porque a barra do organismo, o rodapé e a largura máxima do
+ficheiro já existem uma vez, na página, e não se repetem por separador.
+
+O texto foi todo passado pelo **Livro de Estilo da SGGov**, na revisão pedida
+para a entrega a membros do Governo: aspas elevadas e não angulares, datas por
+extenso no formato dia de mês de ano, siglas desenvolvidas na primeira
+ocorrência, títulos de peças entre aspas e não em itálico, ponto e vírgula
+eliminado, e termos como «CEO», «media», «facsimile» e «cluster» substituídos.
+Duas exceções deliberadas: as citações literais mantêm o texto original, como
+manda a regra F.6, e ficam por desenvolver as siglas **DGE** e **SETCS**, que não
+foi possível confirmar.
+
+Sobre o estilo, o ponto que interessa reter. O entregável desenhava a síntese
+sobre verde, o alcance sobre azul e os sinais ao decisor sobre vermelho.
+Cumprem as Normas Gráficas e destoavam mesmo assim, porque a regra desta
+aplicação não é sobre **que** cores se usam, é sobre **como**: a cor entra como
+acento — um filete de 3 px, um rótulo em versalete, uma barra sob um valor — e o
+único campo de cor cheio de toda a aplicação é o cabeçalho institucional, onde é
+identidade e não conteúdo. Os três blocos passaram a componentes que já
+existiam: o `destaque`, que traz o seu filete verde; dois `cartao_kpi`; e uma
+`nota --alerta`, com o filete vermelho à esquerda. As faixas das publicações
+perderam as cores de marca das plataformas e ficaram em versalete cinzento
+(decisão da Inês, 02.09.2026).
+
+Os números citados nesta página são os do entregável e estão **escritos à mão**,
+não são apurados por código nenhum. O registo estruturado que antes alimentava
+este separador, `src/media.py` e a sua bateria em `tests/test_media.py`, foi
+removido do repositório: ficava código morto, sem nenhum separador a consumi-lo
+(decisão da Inês, 02.09.2026).
+
+**2 · Síntese.** A página onde a aplicação **conclui**, e a única que se lê
+inteira em cinco minutos. Por isso não desenha
 gráficos: os gráficos ficam nos separadores analíticos. Cinco secções, e a ordem
 é a própria argumentação: **O ponto de partida**, **O que os dados nos dizem**
 (seis perguntas, cada uma com o número que a responde, a conclusão e a remissão
@@ -46,14 +103,14 @@ e nem sequer usa a âncora da despesa: todos os seus valores vêm de séries que
 não dependem da base escolhida nem da composição do agregado, pelo que dois
 leitores citam sempre os mesmos números.
 
-**2 · Evolução do Cabaz.** Preço do cabaz essencial da DECO PROteste (63 bens
+**3 · Evolução do Cabaz.** Preço do cabaz essencial da DECO PROteste (63 bens
 alimentares, composição fixa), série completa desde janeiro de 2022, com as
 variações face à semana anterior, desde o início do ano e desde o início da
 série, e os produtos que mais aumentaram em três janelas de comparação. É uma
 referência externa e privada, não o indicador que os restantes separadores
 calculam — ver [«Despesa alimentar» e não «cabaz»](#despesa-alimentar-e-não-cabaz).
 
-**3 · Despesa e composição.** A despesa alimentar mensal por agregado, a partir
+**4 · Despesa e composição.** A despesa alimentar mensal por agregado, a partir
 de uma de **duas bases oficiais à escolha** — o IDF ou as Contas Nacionais —,
 atualizada ao mês mais recente pelo índice de preços. A aplicação reparte-a pelas
 nove classes COICOP e aplica a cada uma a sua variação homóloga, devolvendo o
@@ -62,35 +119,22 @@ quintil de rendimento**, o **custo de compensar o agravamento** por quintil, o
 esforço face a três referências de rendimento e os **três limiares de
 acessibilidade alimentar**.
 
-**4 · Histórico.** Série mensal do índice de preços alimentares e da variação
+**5 · Histórico.** Série mensal do índice de preços alimentares e da variação
 homóloga, a decomposição do **efeito de base**, o **índice de difusão** por
 grupo, e a medição do **viés de substituição** — cabaz de composição fixa contra
 índice de Törnqvist.
 
-**5 · Da produção ao consumo.** Preços do mesmo produto nas duas pontas da
+**6 · Da produção ao consumo.** Preços do mesmo produto nas duas pontas da
 cadeia, a partir do Observatório de Preços Agroalimentar do GPP. Responde a
 *«onde na cadeia está o aumento?»* — que nenhum outro separador toca.
 
-**6 · Simulador de IVA.** Permite definir uma taxa por classe e, sobretudo,
+**7 · Simulador de IVA.** Permite definir uma taxa por classe e, sobretudo,
 regular a **repercussão** — a fração da alteração de imposto que chega ao preço
 final. Mostra quanto poupa o consumidor, quanto fica na margem do operador e
 qual a variação de receita.
 
-**7 · Comparação UE-27.** Inflação alimentar harmonizada de Portugal face à
+**8 · Comparação UE-27.** Inflação alimentar harmonizada de Portugal face à
 UE-27 e aos países selecionados, com ordenação do último mês disponível.
-
-**8 · Análise mediática.** O único separador que não é sobre preços, mas sobre o
-que se diz sobre eles. Levantamento **amostral e avaliativo** de 39 peças
-noticiosas e declarações públicas, entre março de 2023 e agosto de 2026,
-organizado em seis narrativas. Responde a *quem diz, o que diz e quando o diz*, e
-sustenta cinco achados que nenhum separador de dados dá: que a maioria das peças
-sobre o cabaz tem por gancho o comunicado semanal de uma associação privada; que
-a comparação de longo prazo vive quase sempre fora do título; que circulam quatro
-indicadores de cabaz que medem coisas diferentes; que o que separa uma atribuição
-causal sustentada de uma infundada não é o tempo decorrido, mas a existência de
-dados posteriores ao acontecimento; e que há afirmações de responsabilidade
-governativa por verificar. Os dados e os apuramentos vivem em `src/media.py`, com
-bateria própria em `tests/test_media.py`.
 
 **9 · Fontes e método.** O quadro dos **seis instrumentos** que o debate público
 confunde, a proveniência de cada elemento, o confronto entre a despesa
@@ -149,7 +193,7 @@ despesa-alimentar/
 ├── docs/
 │   └── 2026-08-07_levantamento_lacunas.md   # apuramento e decisões
 └── tests/
-    └── test_calculos.py    # 207 testes dos cálculos analíticos
+    └── test_calculos.py    # 207 testes dos cálculos analíticos e da estrutura do app
 ```
 
 A separação entre **acesso a dados** (`eurostat.py`, `observatorio.py`),
@@ -1060,8 +1104,10 @@ este indicador. É o que a aplicação já faz.
 
 ## A síntese
 
-O separador de abertura não resume os outros: é a página onde a aplicação
-conclui. Cinco secções, e a ordem é a argumentação.
+A síntese não resume os outros separadores: é a página onde a aplicação
+conclui. Cinco secções, e a ordem é a argumentação. Deixou de ser o primeiro
+separador a 02.09.2026, quando a Análise mediática passou para a frente, mas
+continua a ser a página que se lê inteira quando não há tempo para mais.
 
 ### A narrativa
 
@@ -1085,8 +1131,13 @@ e a linha de proveniência traz sempre a limitação que altera a leitura.
 2. **O aumento dos preços afecta todas as famílias da mesma forma?** Peso da
    alimentação no orçamento do 1.º e do 5.º quintil.
 3. **Uma alimentação saudável está igualmente ao alcance das famílias?**
-   População sem capacidade para suportar o custo dessa dieta, e o custo dela.
-   Declara que não é uma medida de fome.
+   Confronto entre a população sem capacidade para suportar o custo dessa dieta
+   em Portugal e em Espanha, com o custo da dieta — praticamente igual nos dois
+   países — na legenda. É o par que sustenta a conclusão: com custos
+   equivalentes e resultados divergentes, a diferença não vem do nível de
+   preços, mas do nível dos rendimentos e da sua distribuição. Declara que não é
+   uma medida de fome, e traz o limiar da privação severa para que o valor mais
+   baixo dos três não circule sozinho.
 4. **Como evoluem os preços ao longo da cadeia?** O produto com maior
    divergência entre as duas fases, com a ressalva de que a diferença não
    permite inferir margens.
@@ -1095,7 +1146,9 @@ e a linha de proveniência traz sempre a limitação que altera a leitura.
    comparados, e nunca sobre os 27.
 6. **O que conseguimos realmente medir?** Sem KPI: a conclusão é sobre a
    arquitetura do que se mede, e um número a encabeçá-la seria precisamente o
-   indicador único que a página diz não existir.
+   indicador único que a página diz não existir. Nomeia três eixos, e declara na
+   ressalva que o do esforço se apresenta como **limite superior** e não como
+   estimativa, pelo motivo apurado na auditoria de 27 de julho.
 
 ### O que a síntese não faz
 

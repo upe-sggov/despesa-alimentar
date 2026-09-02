@@ -18,7 +18,7 @@ import streamlit as st
 
 from pathlib import Path
 
-from src import deco, eurostat, media, observatorio
+from src import deco, eurostat, observatorio
 from src.calculos import (ESCALAS, agregados_do_ano, arrastamento_anual,
                           cabaz_quintis,
                           comparar_ponderadores, comparar_tipos_agregado,
@@ -1399,6 +1399,87 @@ footer:not(.sg-rodape) {{ visibility: hidden; }}
     min-width: 12rem;
   }}
 }}
+
+/* ================== separador «Análise mediática» ====================== */
+/* O conteúdo vem do entregável em HTML da UPE (dashboard, 02.09.2026), que
+   desenhava três campos de cor cheios: verde na síntese, azul no alcance e
+   vermelho nos sinais ao decisor. Cumpriam as Normas Gráficas e destoavam
+   mesmo assim, porque nesta aplicação a cor é sempre **acento** — um filete de
+   3 px, um rótulo em versalete, uma barra sob um valor — e nunca campo. O
+   único campo cheio da aplicação é o cabeçalho institucional, e ali é
+   identidade e não conteúdo (decisão da Inês, 02.09.2026).
+   Os três blocos passaram, por isso, a componentes que já existiam: o
+   `destaque` com o seu filete verde, o `cartao_kpi` e a `nota --alerta`. O que
+   sobra aqui são as duas grelhas que a aplicação não tinha. */
+.sg-am-orgaos {{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(28rem, 1fr));
+  gap: 1rem; margin-bottom: var(--sg-e4);
+}}
+.sg-am-orgao {{
+  background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
+  border-radius: var(--sg-raio); padding: 1.1rem 1.15rem;
+}}
+[data-testid="stMarkdownContainer"] .sg-am-orgao h3.sg-am-orgao__t {{
+  font-size: .875rem; font-weight: 600; color: var(--sg-texto);
+  margin: 0 0 .6rem; padding-bottom: .6rem;
+  border-bottom: 1px solid var(--sg-borda-1);
+}}
+.sg-am-etiquetas {{ display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .7rem; }}
+.sg-am-etiqueta {{
+  font-size: .625rem; font-weight: 600; letter-spacing: .02em;
+  text-transform: uppercase; padding: .22rem .5rem; border-radius: var(--sg-raio);
+}}
+.sg-am-etiqueta--p {{ background: #EAF1F7; color: var(--sg-azul); }}
+.sg-am-etiqueta--s {{ background: #F1F1F0; color: var(--sg-texto-3); }}
+.sg-am-orgao p,
+[data-testid="stMarkdownContainer"] .sg-am-orgao p {{
+  font-size: .75rem; line-height: 1.6; color: var(--sg-texto-2); margin: 0;
+}}
+.sg-am-orgao em {{ color: var(--sg-texto); font-style: italic; }}
+
+/* Publicações. A faixa de topo era preta no TikTok e azul-Facebook, cores das
+   plataformas e não da paleta. Passou a versalete cinzento sobre branco, com o
+   número de interações à direita: a plataforma continua identificada e o cartão
+   iguala-se aos dos órgãos, que estão logo acima na mesma página. */
+.sg-am-posts {{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem; margin-bottom: var(--sg-e4);
+}}
+.sg-am-post {{
+  background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
+  border-radius: var(--sg-raio); display: flex; flex-direction: column;
+}}
+.sg-am-post__topo {{
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: .65rem .85rem .5rem; border-bottom: 1px solid var(--sg-borda-1);
+}}
+[data-testid="stMarkdownContainer"] .sg-am-post p {{ margin: 0; }}
+.sg-am-post__p {{
+  font-size: .625rem; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--sg-texto-3);
+}}
+.sg-am-post__n {{
+  font-size: .8125rem; font-weight: 700; color: var(--sg-texto);
+  font-variant-numeric: tabular-nums;
+}}
+[data-testid="stMarkdownContainer"] .sg-am-post p.sg-am-post__a {{
+  font-size: .8125rem; font-weight: 600; color: var(--sg-texto);
+  padding: .75rem .85rem 0;
+}}
+[data-testid="stMarkdownContainer"] .sg-am-post p.sg-am-post__c {{
+  font-size: .6875rem; color: var(--sg-texto-3); padding: .1rem .85rem 0;
+}}
+[data-testid="stMarkdownContainer"] .sg-am-post p.sg-am-post__t {{
+  font-size: .75rem; line-height: 1.55; color: var(--sg-texto-2);
+  padding: .5rem .85rem .7rem; font-style: italic; flex: 1;
+}}
+[data-testid="stMarkdownContainer"] .sg-am-post p.sg-am-post__d {{
+  font-size: .6875rem; color: var(--sg-texto-3); margin: 0 .85rem .75rem;
+  padding-top: .5rem; border-top: 1px solid var(--sg-borda-1);
+}}
+.sg-am-post__d a {{ color: var(--sg-azul); text-decoration: none;
+  border-bottom: 1px solid rgba(43,86,131,.3); }}
+.sg-am-post__d a:hover {{ border-bottom-color: var(--sg-azul); }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -2506,7 +2587,6 @@ def csv_com_fonte(df: pd.DataFrame, titulo: str, dados: dict, extra=None,
     corpo = df.to_csv(index=False, sep=";", decimal=",")
     return ("\n".join(linhas) + corpo).encode("utf-8-sig")
 
-
 def cartao_classe(linha: pd.Series) -> str:
     """
     Indicador editorial de um grupo de produtos. A hierarquia é: nome, valor em
@@ -3077,10 +3157,10 @@ def painel(nome: str):
         )
 
 
-abaS, abaD, aba1, aba2, aba6, aba3, aba4, abaM, aba5 = st.tabs([
-    "Síntese", "Evolução do cabaz", "Despesa e composição", "Histórico",
-    "Da produção ao consumo",
-    "Simulador de IVA", "Comparação UE-27", "Análise mediática",
+abaM, abaS, abaD, aba1, aba2, aba6, aba3, aba4, aba5 = st.tabs([
+    "Análise mediática", "Síntese", "Evolução do cabaz", "Despesa e composição",
+    "Histórico", "Da produção ao consumo",
+    "Simulador de IVA", "Comparação UE-27",
     "Metodologia e fontes",
 ])
 
@@ -3098,9 +3178,12 @@ with abaS:
         "limitações de medição e das possibilidades de melhoria.")
     _slot_sintese = st.container()
 
-# --- momentum: calculado uma vez, consumido em dois separadores -----------
-# O Histórico demonstra-o e a Síntese cita-o. Fica aqui, antes dos dois, para
-# não haver duas contas a poder divergir.
+# --- momentum: calculado uma vez ------------------------------------------
+# Consumido no Histórico, que é onde as três medidas se demonstram. Dizia aqui
+# que a Síntese também as citava, e não citava: a Síntese não tem pergunta sobre
+# momentum (verificado a 02.09.2026). Fica calculado num sítio só, que era a
+# outra razão para estar aqui, para não haver duas contas a poder divergir se
+# vier a ser citado noutro separador.
 _efeito_base = efeito_de_base(dados.get("indice_pt", pd.DataFrame()))
 _arrasto = arrastamento_anual(dados.get("indice_pt", pd.DataFrame()))
 _difusao = difusao_por_classe(dados.get("indice_classes", pd.DataFrame()))
@@ -7095,349 +7178,413 @@ with aba4:
 # ABA M, Análise mediática
 # ==========================================================================
 # O único separador que não é sobre dados de preços: é sobre o que se diz sobre
-# eles. Existe porque a nota técnica de 21.07.2026 mostrou que o número que
-# domina o noticiário (o cabaz da DECO) não mede o que o noticiário lhe atribui,
-# e o gabinete precisa de saber onde é que essa distância aparece, quem a produz
-# e com que frequência.
+# eles. É o primeiro da aplicação por decisão da Inês (02.09.2026), por ser a
+# porta de entrada do tema.
 #
-# **É avaliativo, por decisão da Inês (02.09.2026).** Cada caso traz um juízo da
-# UPE sobre a distância entre a peça e os dados. Isso é exposição institucional,
-# e por isso o perímetro é declarado no topo do separador e os limites ficam
-# abertos, não escondidos num expansor no fim.
+# ## De onde vem o que está aqui
 #
-# Os dados vivem em `src/media.py` e os apuramentos também: aqui só se desenha.
-# É a mesma razão que separou `calculos.py` do desenho, e serve o mesmo fim, os
-# apuramentos são testáveis sem levantar a interface (`tests/test_media.py`).
+# O conteúdo é o do entregável da UPE «Contexto e perceção pública», de
+# 02.09.2026, e as notas metodológicas são as do entregável companheiro da mesma
+# data. Foi transposto na íntegra e sem cortes (pedido da Inês, 02.09.2026).
+#
+# **A página não refere que existe um documento maior nem que esta é uma versão
+# reduzida** (decisão da Inês, 02.09.2026): o leitor tem de poder ler o que vê
+# sem depender de um trabalho a que não tem acesso. Saíram, por isso, a menção à
+# «versão sucinta», a remissão para as «seis narrativas de origem» e a remissão
+# para o «documento de trabalho completo».
+#
+# ## Porque é que os três campos de cor desapareceram
+#
+# O entregável desenhava a síntese sobre verde, o alcance sobre azul e os sinais
+# ao decisor sobre vermelho. Cumprem as Normas Gráficas e destoavam mesmo assim,
+# porque a regra desta aplicação não é sobre que cores se usam, é sobre **como**:
+# a cor entra como acento, um filete de 3 px, um rótulo em versalete, uma barra
+# sob um valor, e o único campo cheio de toda a aplicação é o cabeçalho
+# institucional, onde é identidade e não conteúdo (decisão da Inês, 02.09.2026).
+#
+# Os três blocos passaram a componentes que já existiam, e nenhum precisou de ser
+# inventado:
+#
+#   síntese      `destaque`, que já traz o filete verde à esquerda, seguido das
+#                três narrativas em `componente` mais texto corrido
+#   alcance      dois `cartao_kpi`, que é o componente feito para «o número de
+#                uma conclusão»: cartão branco, rótulo em versalete, valor a tinta
+#   sinais       `nota --alerta`, filete vermelho à esquerda sobre branco, que é
+#                o que a aplicação reserva ao que assinala risco
+#
+# ## Conformidade com o Livro de Estilo da SGGov (02.09.2026)
+#
+# O texto do entregável foi todo passado pelo livro de estilo, na revisão pedida
+# para a entrega a membros do Governo. O que mudou, e a regra que o obriga:
+#
+#   aspas        elevadas ("") e nunca angulares («»), com aspas simples ('')
+#                dentro de aspas duplas. Regra de ouro 8 e glossário
+#   datas        dia de mês de ano por extenso, sem exceções. Havia mais de
+#                vinte formatos diferentes na mesma página. Parte I, E.7 e E.12
+#   siglas       desenvolvidas na primeira ocorrência, e só usadas se repetirem.
+#                A APED, que ocorre uma vez, passou a ir sempre por extenso.
+#                Parte I, H.1 e H.2
+#   itálico      os títulos de peças passam de itálico a aspas: o itálico é para
+#                estrangeirismos, e nunca se usam os dois. Parte I, G.5 e G.6
+#   ponto e      substituído por ponto final ou por vírgula em todo o separador.
+#   vírgula      Parte I, C.5
+#   termos       «CEO» passa a presidente executivo ou executiva, «media» a
+#                órgãos de comunicação social, «facsimile» a reprodução integral,
+#                «cluster» desaparece, «sectores» passa a setores (a aplicação
+#                usa «setor» em todo o lado). Regra de ouro 10, Parte I, A.1
+#   cargos       Ministro da Economia com maiúscula. Parte I, D.5
+#   moeda        «5,5 milhões» passa a «5,5 milhões de euros». Parte I, E.11
+#   reticências  sempre [...], nunca … . Parte I, C.10
+#
+# Duas exceções deliberadas. As **citações literais** de publicações mantêm o
+# texto original, mesmo onde ele não cumpre o livro de estilo, porque é o que a
+# regra F.6 manda. E ficam por desenvolver duas siglas, **DGE** e **SETCS**, que
+# não foi possível confirmar sem inventar: estão assinaladas à Inês.
+#
+# ## O perímetro, no topo e não no fim
+#
+# A página faz afirmações categóricas («o único caso de notícia com atribuição de
+# causalidade fundamentada») e emite juízos sobre a linha editorial de órgãos
+# nomeados. Sem dizer que o levantamento é amostral e que o confronto é um juízo
+# da UPE, essas frases leem-se como apuramento exaustivo. A nota de perímetro
+# fica **antes** do conteúdo, e não num expansor no fim, porque é condição de
+# leitura de tudo o que vem a seguir (pedido da Inês, 02.09.2026).
+#
+# ## O que aqui **não** está, e porquê
+#
+# O registo estruturado de peças que vivia em `src/media.py`, com as sete
+# conclusões e o bloco das afirmações por verificar, deixou de ser desenhado a
+# 02.09.2026 e o módulo, com a sua bateria em `tests/test_media.py`, foi
+# removido do repositório na entrega final: ficava código morto, sem
+# nenhum separador a consumi-lo (decisão da Inês, 02.09.2026).
+#
+# Os números citados nesta página (38 casos, 17 dos 38, cerca de 25 fontes) são
+# os do entregável e estão escritos à mão, não são apurados por código nenhum.
 with abaM:
     with painel("Análise mediática"):
         titulo_pagina(
-            "Análise mediática do cabaz alimentar",
-            "Quem diz, o que diz e quando o diz. Levantamento amostral de peças "
-            "noticiosas e declarações públicas sobre o cabaz alimentar e sobre "
-            "os lucros da distribuição, entre março de 2023 e agosto de 2026.")
+            "Contexto e perceção pública",
+            "Como o cabaz alimentar foi noticiado e discutido publicamente, "
+            "em três narrativas, e o que delas decorre para quem decide.")
 
-        _sinal = media.por_sinal()
-        _ini_m, _fim_m = media.PERIODO
+        barra_estado(
+            "Fonte: varrimento mediático da Unidade de Pesquisa e Estatísticas", [
+                ("Período", "março de 2023 a agosto de 2026"),
+                ("Casos catalogados", numero(38)),
+                ("Fontes de referência", "cerca de 25"),
+                ("Recolha concentrada em", "fevereiro a agosto de 2026"),
+            ])
 
-        barra_estado("Fonte: levantamento UPE/SGGov sobre imprensa portuguesa", [
-            ("Período", f"{mes_extenso(_ini_m.strftime('%Y-%m'))} a "
-                        f"{mes_extenso(_fim_m.strftime('%Y-%m'))}"),
-            ("Peças catalogadas", numero(len(media.CASOS))),
-            ("Recolha sistemática", "fevereiro a agosto de 2026"),
-            ("Narrativas", numero(len(media.NARRATIVAS))),
-        ])
-
-        # ---------------------------------------------------------------
-        secao("O que este levantamento é, e o que não é",
-              "Ler as contagens sem isto leva a conclusões que os dados não "
-              "sustentam.",
-              grupo="01 · Perímetro", topo=True)
-        # ---------------------------------------------------------------
-        indicador_principal(
-            "Peças em que a UPE identificou distância face aos dados",
-            f"{numero(_sinal['desvio'])} em {numero(len(media.CASOS))}",
-            contexto=(
-                f"<strong>{numero(_sinal['controlo'])}</strong> consistentes com os "
-                f"dados · <strong>{numero(_sinal['exemplo'])}</strong> com causalidade "
-                f"sustentada · <strong>{numero(_sinal['nao_testavel'])}</strong> não "
-                "são afirmações testáveis contra dados"),
-            sec_valor=numero(len(media.CASOS_DENSOS)),
-            sec_rotulo="na janela de recolha sistemática")
-
-        nota("Como ler estas contagens", """
-            <strong>Amostral.</strong> O levantamento não é exaustivo. Nenhuma
-            contagem aqui é uma quota de cobertura, e a ausência de um órgão não
-            significa que não tenha coberto o tema.<br>
-            <strong>Avaliativo.</strong> A classificação de cada caso é um juízo
-            da UPE sobre a distância entre o que a peça afirma e o que os dados
-            disponíveis sustentam. Não é um juízo sobre a orientação editorial do
-            órgão, e não há codificação de tom.<br>
-            <strong>A unidade é a peça noticiosa.</strong> As declarações
-            (cartas, conferências de resultados, comunicados à CMVM, ações de
-            rua) entram como atributo da peça que as veicula, para que as três
-            frentes sejam somáveis.<br>
-            <strong>Duas escalas de tempo.</strong> A recolha é sistemática entre
-            fevereiro e agosto de 2026. O bloco de março de 2023 entra por ser a
-            génese documentável do IVA Zero, e comparar densidades entre as duas
-            janelas não significa nada.
+        nota("Perímetro do levantamento", """
+            O levantamento é <strong>amostral</strong> e não exaustivo. Nenhuma
+            contagem aqui apresentada é uma quota de cobertura, e a ausência de
+            um órgão não significa que não tenha coberto o tema.<br>
+            O confronto entre o que cada peça afirma e o que os dados mostram é
+            um <strong>juízo da Unidade de Pesquisa e Estatísticas (UPE)</strong>,
+            e não uma classificação da orientação editorial do órgão.
         """)
 
-        with st.expander("Limites do levantamento, por extenso"):
-            for _lim in media.LIMITES:
-                st.markdown(f"- {_lim}")
-            st.caption("Registos de origem: "
-                       + " ".join(media.FONTES_REGISTO))
-
         # ---------------------------------------------------------------
-        secao("Quem diz",
-              "Que famílias de emissores compõem o levantamento, e de que "
-              "fonte depende a agenda noticiosa do tema.",
-              grupo="02 · Quem diz")
+        secao("Três narrativas na cobertura mediática",
+              "A síntese do varrimento, e o que cada narrativa agrega.",
+              grupo="01 · Síntese do varrimento")
         # ---------------------------------------------------------------
-        _emis = media.por_tipo_emissor()
-        st.dataframe(
-            pd.DataFrame([
-                {"Emissor": media.TIPOS_EMISSOR[k], "Peças": v,
-                 "Quota do levantamento": v / len(media.CASOS)}
-                for k, v in _emis.items()]),
-            width="stretch", hide_index=True,
-            column_config={
-                "Quota do levantamento": st.column_config.ProgressColumn(
-                    format="percent", min_value=0.0, max_value=1.0)})
+        destaque("Distinguem-se, na cobertura mediática realizada, as "
+                 "seguintes três narrativas.")
 
-        componente(
-            "Quem define a agenda",
-            "A Frente 1 é a que cobre o cabaz em si. É nela que a escolha do "
-            "gancho noticioso é do órgão, e não do calendário de resultados das "
-            "empresas.")
-
-        _dep = media.dependencia_de_fonte(1)
+        componente("Narrativa A · rigor causal")
         st.markdown(
-            f"**{numero(_dep['ancorados'])} das {numero(_dep['total'])} peças da "
-            f"Frente 1** ({percentagem(_dep['proporcao'] * 100, casas=0, sinal=False)}) têm "
-            "por gancho o comunicado semanal da DECO PROteste, uma associação "
-            "privada de consumidores. As restantes partem do INE ou do Eurostat, "
-            "do GPP, da ASAE, da fiscalização de margens ou de um indicador "
-            "regional.")
+            'Partindo da questão "as explicações dadas para a subida do cabaz '
+            'alimentar são sustentadas em dados?", observa-se que a atribuição '
+            'da causa "guerra" à subida dos preços do cabaz alimentar é '
+            'frequente nas peças analisadas. O único caso de notícia com '
+            'atribuição de causalidade fundamentada em dados oficiais é o '
+            'Diário de Notícias, nos artigos "Balança comercial nos cereais '
+            'está mais desequilibrada", de 7 de agosto de 2026, e "Calor e seca '
+            'estão a pressionar culturas de verão em Portugal", de 26 de agosto '
+            'de 2026, ambos em edição impressa e anexados. A segunda peça '
+            'reforça a primeira.')
 
-        nota("Por que é que isto importa a um gabinete", """
-            O calendário do noticiário sobre o cabaz alimentar é, em boa parte, o
-            calendário de publicação de uma entidade privada. Isso não é uma
-            crítica à DECO PROteste, que publica o que se propôs publicar. É uma
-            observação sobre a ausência de um indicador público de periodicidade
-            equivalente: o INE publica mensalmente e a DECO semanalmente, e a
-            imprensa segue a cadência mais rápida.
-        """)
-
-        componente(
-            "Quem é fonte e quem é réplica",
-            "Peças publicadas por mais do que um órgão, com texto praticamente "
-            "idêntico. A contagem é o número de órgãos identificados, e é um "
-            "mínimo, não um total.")
-        st.dataframe(
-            pd.DataFrame([
-                {"Caso": c["id"], "Data": c["data"], "Órgãos": c["replicacao"],
-                 "Peça": c["titulo"]}
-                for c in media.replicacao()]),
-            width="stretch", hide_index=True)
-
-        # ---------------------------------------------------------------
-        secao("O que diz",
-              "Que número o noticiário trata como facto público, e onde vive a "
-              "informação que o qualifica.",
-              grupo="03 · O que diz")
-        # ---------------------------------------------------------------
-        componente(
-            "Quatro indicadores em circulação, e nenhum deles é o preço da "
-            "alimentação em Portugal",
-            "Medem coisas diferentes, com composições, periodicidades e âmbitos "
-            "diferentes. A cautela de cada um não é uma nota de rodapé: é a "
-            "condição para o citar.")
-        for _ind in media.INDICADORES:
-            with st.expander(f"{_ind['nome']}  ·  {_ind['entidade']}"):
-                st.markdown(
-                    f"**Mede.** {_ind['mede']}\n\n"
-                    f"**Composição.** {_ind['produtos']}\n\n"
-                    f"**Periodicidade.** {_ind['frequencia']}  ·  "
-                    f"**Âmbito.** {_ind['ambito']}")
-                st.warning(f"**Cautela.** {_ind['cautela']}")
-
-        componente(
-            "Onde vive a comparação de longo prazo",
-            "Nas peças da Frente 1 que citam a variação acumulada, e não apenas "
-            "a da última semana.")
-        _ctx = media.contexto_no_titulo(1)
+        componente("Narrativa B · estrutural")
         st.markdown(
-            f"Das {numero(_ctx['total_com_contexto'])} peças que trazem a "
-            f"comparação de longo prazo, **{numero(len(_ctx['corpo']))} guardam-na "
-            f"para o subtítulo ou para o corpo** e apenas "
-            f"{numero(len(_ctx['titulo']))} a levam ao título. As restantes "
-            f"{numero(len(_ctx['ausente']))} peças da frente não a citam de todo.\n\n"
-            "O título segue sempre a variação da última semana, para cima ou "
-            "para baixo. A subida acumulada desde janeiro de 2022, que é a "
-            "grandeza que descreve o que aconteceu ao orçamento das famílias, "
-            "fica sistematicamente em segundo plano.")
-        st.dataframe(
-            pd.DataFrame([
-                {"Onde": rotulo, "Peças": numero(len(ids)),
-                 "Casos": ", ".join(ids)}
-                for rotulo, ids in (("No título", _ctx["titulo"]),
-                                    ("No subtítulo ou no corpo", _ctx["corpo"]),
-                                    ("Não é citada", _ctx["ausente"]))]),
-            width="stretch", hide_index=True)
+            'Agrega conteúdos noticiosos muito homogéneos em diferentes órgãos '
+            'de comunicação social, revelando um padrão de replicação dos '
+            'comunicados da DECO PROteste, associação de defesa do consumidor, '
+            'ou da Agência de Notícias Lusa, com o mesmo valor e enquadramento. '
+            'Exemplo disto é a reprodução integral do comunicado da DECO '
+            'PROteste nos seus termos comparativos ("X% mais caro do que no '
+            'início de 2022"), sempre no corpo do texto ou no subtítulo da '
+            'notícia, nunca no título.')
 
-        componente("As seis narrativas",
-                   "Cada caso pertence a uma e a uma só narrativa.")
-        for _nar in media.NARRATIVAS:
-            _casos_n = media.casos_da_narrativa(_nar["id"])
-            with st.expander(
-                    f"Narrativa {_nar['id']}  ·  {_nar['nome']}  "
-                    f"({numero(len(_casos_n))} casos)"):
-                st.markdown(_nar["sumario"])
-                st.dataframe(
-                    pd.DataFrame([{
-                        "Caso": c["id"],
-                        "Data": c["data"],
-                        "Quem publica": c["orgao"],
-                        "Quem fala": c["ator"] or "",
-                        "Peça ou ocasião": c["titulo"],
-                        "Juízo da UPE": media.CLASSES[c["classe"]],
-                        "Ligação": c["ligacao"] or "",
-                    } for c in _casos_n]),
-                    width="stretch", hide_index=True,
-                    column_config={
-                        "Peça ou ocasião": st.column_config.TextColumn(width="large"),
-                        "Juízo da UPE": st.column_config.TextColumn(width="medium"),
-                        "Ligação": st.column_config.LinkColumn(display_text="abrir")})
-                st.caption(
-                    "Recortes de imprensa em papel não têm ligação: foram "
-                    "consultados via PressReader.")
-
-        # ---------------------------------------------------------------
-        secao("Quando é dito",
-              "Se as atribuições causais precedem ou seguem os dados que as "
-              "sustentariam.",
-              grupo="04 · Quando é dito")
-        # ---------------------------------------------------------------
+        componente("Narrativa C · confronto político-empresarial")
         st.markdown(
-            "Seis peças atribuem a subida de preços ao conflito no Médio "
-            "Oriente, que recomeçou a **28 de fevereiro de 2026**. A hipótese "
-            "fácil seria a de que as atribuições precoces são as infundadas. "
-            "**Não é o que se observa.**")
-        st.dataframe(
-            pd.DataFrame([{
-                "Caso": linha["id"], "Data": linha["data"],
-                "Órgão": linha["orgao"],
-                "Dias após o choque": linha["dias"],
-                "Ancorada em dados posteriores ao choque":
-                    "Sim" if linha["ancorada_em_dados"] else "Não",
-                "Juízo da UPE": media.SINAIS[linha["sinal"]],
-            } for linha in media.latencia_causal()]),
-            width="stretch", hide_index=True,
-            column_config={
-                "Juízo da UPE": st.column_config.TextColumn(width="medium")})
-        nota("O que separa uma atribuição sustentada de uma infundada", """
-            Não é o tempo decorrido. Aos <strong>32 dias</strong> há uma peça bem
-            fundamentada, que atribui à guerra a subida da inflação de março com
-            um mês inteiro de dados do INE e do Eurostat; aos
-            <strong>40 dias</strong> há um título que atribui à guerra um recorde
-            do cabaz que a própria APED já tinha explicado por preçários
-            contratualizados no quarto trimestre de 2025, antes do conflito. O
-            que distingue as duas é a existência de dados do período posterior ao
-            acontecimento, e não a paciência de quem escreve.
-        """)
-
-        componente("Cronologia completa",
-                   "Todos os casos por ordem de acontecimento.")
-        st.dataframe(
-            pd.DataFrame([{
-                "Data": c["data"], "Caso": c["id"],
-                "Quem publica": c["orgao"], "Quem fala": c["ator"] or "",
-                "Peça ou ocasião": c["titulo"],
-                "Juízo da UPE": media.SINAIS[c["sinal"]],
-            } for c in media.cronologia()]),
-            width="stretch", hide_index=True, height=420,
-            column_config={
-                "Peça ou ocasião": st.column_config.TextColumn(width="large")})
+            "Opõe a acusação de lucros excessivos na distribuição alimentar, "
+            "feita por alguns setores da sociedade, partidos políticos e "
+            "sindicatos, à resposta em tom defensivo das próprias empresas. "
+            "Esta narrativa ganhou recentemente um novo dado jurídico, com o "
+            "Tribunal da Concorrência a anular, em primeira instância, a coima "
+            "de 5,5 milhões de euros a empresas de distribuição e bebidas, "
+            "acusadas de concertação de preços, por não ter encontrado provas "
+            "suficientes. A Autoridade da Concorrência vai recorrer da decisão.")
 
         # ---------------------------------------------------------------
-        secao("O que fica por reconciliar e por verificar",
-              "As duas listas que um gabinete pode usar diretamente.",
-              grupo="05 · Por resolver")
+        secao("O que cada órgão fez com o tema",
+              "Destacam-se os quatro órgãos com mais casos catalogados no "
+              "levantamento, 17 dos 38 casos, cerca de 45%. Esta amostra visa "
+              "tão somente exemplificar, com conteúdos concretos, as três "
+              "narrativas enunciadas.",
+              grupo="02 · Órgãos de comunicação")
         # ---------------------------------------------------------------
-        componente(
-            "Fontes que se contradizem sem reconciliação pública",
-            "Nenhuma destas contradições foi resolvida publicamente por quem as "
-            "produziu. Todas continuam a circular no debate.")
-        for _con in media.CONTRADICOES:
-            with st.expander(_con["tema"]):
-                st.markdown(
-                    f"**Uma fonte diz.** {_con['fonte_a']}\n\n"
-                    f"**A outra diz.** {_con['fonte_b']}\n\n"
-                    f"**Porquê.** {_con['porque']}\n\n"
-                    f"**Estado.** {_con['estado']}")
-                if _con["casos"]:
-                    st.caption("Casos do levantamento: "
-                               + ", ".join(_con["casos"]))
-
-        componente(
-            "Afirmações públicas por verificar",
-            "Separadas por quem responde por elas. As de responsabilidade "
-            "governativa são as que podem gerar pedido de esclarecimento.")
-        _grupos = media.por_verificar_por_responsabilidade()
-        _rotulos = {"governo": "Responsabilidade governativa",
-                    "politica": "Atores políticos",
-                    "empresarial": "Empresas",
-                    "opiniao": "Opinião publicada"}
-        for _chave in ("governo", "politica", "empresarial", "opiniao"):
-            _itens = _grupos.get(_chave)
-            if not _itens:
-                continue
-            st.markdown(f"**{_rotulos[_chave]}**")
-            st.dataframe(
-                pd.DataFrame([{
-                    "Quem": i["quem"], "Quando": i["quando"], "Onde": i["onde"],
-                    "Afirmação": i["afirmacao"], "Estado": i["estado"],
-                    "Contraponto": i["contraponto"],
-                } for i in _itens]),
-                width="stretch", hide_index=True,
-                column_config={
-                    "Afirmação": st.column_config.TextColumn(width="large"),
-                    "Contraponto": st.column_config.TextColumn(width="large")})
+        # A primeira etiqueta de cada cartão é a narrativa dominante, e vai a
+        # azul; as restantes ficam em cinzento. É a hierarquia do entregável.
+        _ORGAOS = [
+            ("Diário de Notícias",
+             [("Narrativa A · causal", "p"), ("exceção rigorosa", "s")],
+             'Entre as várias peças analisadas que atribuem subidas do cabaz '
+             'alimentar a causas não sustentadas (por exemplo "Guerra eleva '
+             'preço do cabaz alimentar para recorde", de 9 de abril de 2026, e '
+             "uma peça de 30 de julho de 2026 com a etiqueta 'GUERRA' sem "
+             'sustentação no corpo do texto), destaca-se a peça do Diário de '
+             'Notícias de 7 de agosto de 2026 como o único caso de conteúdo com '
+             'causalidade fundamentada, "Balança comercial nos cereais está '
+             'mais desequilibrada", que ancora a explicação em défice comercial '
+             'de cereais e em dados do Gabinete de Planeamento, Políticas e '
+             'Administração Geral (GPP) e do Instituto Nacional de Estatística '
+             '(INE). Esta boa prática do órgão foi reforçada a 26 de agosto de '
+             '2026, com o artigo "Calor e seca estão a pressionar culturas de '
+             'verão em Portugal", que cita o mais recente relatório do Centro '
+             'Comum de Investigação da Comissão Europeia sobre calor e seca, '
+             'revelando outras causas que não a "guerra" para o aumento da '
+             'inflação alimentar.'),
+            ("PÚBLICO",
+             [("Narrativa A", "p"), ("Narrativa C", "p")],
+             'Cobre o lado do consumidor, com "Cabaz alimentar nunca esteve tão '
+             'caro", de 27 de março de 2026, e com a contestação da Associação '
+             'Portuguesa de Empresas de Distribuição a um relatório da '
+             'Autoridade de Segurança Alimentar e Económica (ASAE) sobre '
+             'margens, de 9 de março de 2023. Cobre também o lado empresarial '
+             'em resposta a críticas, com a contestação da Sonae a uma taxa '
+             'sobre "lucros excedentários", de 13 de março de 2024. Opta por um '
+             'tom analítico, atento a ambos os lados.'),
+            ("ECO",
+             [("Narrativa C · contranarrativa", "p")],
+             'Canal preferencial da defesa empresarial: carta da presidente '
+             'executiva da Sonae sobre "campanha de desinformação", de 16 de '
+             'março de 2023, confronto do presidente executivo da Jerónimo '
+             'Martins com o Ministro da Economia, a 22 e 23 de março de 2023, e '
+             'promessa de "força anti-inflacionária", de 26 de abril de 2023. '
+             'Veículo consistente da resposta das empresas às críticas.'),
+            ("Esquerda.net",
+             [("Narrativa C · confronto político", "p")],
+             "Canal preferencial da crítica política: lucros ligados ao custo "
+             "de vida, a 12 de março de 2023, ação política junto da sede da "
+             "Jerónimo Martins, a 8 de junho de 2026, e resultados do semestre "
+             "ligados à subida do custo de vida, a 2 de agosto de 2026. "
+             "Consistentemente crítico ao longo de quatro anos."),
+        ]
+        _cartoes_orgao = "".join(
+            f'<article class="sg-am-orgao">'
+            f'<h3 class="sg-am-orgao__t">{_html(_nome)}</h3>'
+            '<div class="sg-am-etiquetas">'
+            + "".join(f'<span class="sg-am-etiqueta sg-am-etiqueta--{_c}">'
+                      f'{_html(_e)}</span>' for _e, _c in _etiquetas)
+            + f'</div><p>{_html(_texto)}</p></article>'
+            for _nome, _etiquetas, _texto in _ORGAOS)
+        st.markdown(f'<div class="sg-am-orgaos">{_cartoes_orgao}</div>',
+                    unsafe_allow_html=True)
 
         # ---------------------------------------------------------------
-        secao("Alcance público",
-              "O que a imprensa disse comparado com o que o público partilhou.",
-              grupo="06 · Alcance")
+        secao("Alcance nas redes sociais",
+              "O que o público partilhou, comparado com o que os órgãos de "
+              "comunicação social disseram.",
+              grupo="03 · Redes sociais")
         # ---------------------------------------------------------------
-        st.info(media.REDES_NOTA)
+        _kpi1, _kpi2 = st.columns(2, gap="large")
+        with _kpi1:
+            cartao_kpi("Publicação mais viral do levantamento", numero(17854),
+                       unidade="interações no TikTok")
+        with _kpi2:
+            cartao_kpi("IVA zero no cabaz, Partido Socialista e CHEGA",
+                       numero(12845),
+                       unidade="interações somadas, em quatro plataformas")
 
-        componente("As dez publicações mais partilhadas",
-                   "Todas as plataformas, ordenadas por interações totais.")
-        st.dataframe(
-            pd.DataFrame([{
-                "Data": p["data"], "Plataforma": p["plataforma"],
-                "Ator ou página": p["ator"],
-                "Emissor": media.TIPOS_EMISSOR[p["tipo_emissor"]],
-                "Assunto": p["resumo"],
-                "Interações": p["interacoes"],
-                "Caso do levantamento": p["caso"] or "novo",
-                "Ligação": p["ligacao"],
-            } for p in media.REDES_TOPO]),
-            width="stretch", hide_index=True,
-            column_config={
-                "Assunto": st.column_config.TextColumn(width="large"),
-                "Interações": st.column_config.NumberColumn(format="%d"),
-                "Ligação": st.column_config.LinkColumn(display_text="abrir")})
-
-        _politicos = sum(1 for p in media.REDES_TOPO
-                         if p["tipo_emissor"] == "politico")
+        # A última frase existe porque os dois números do texto (7 950 e 4 895)
+        # são somas de plataformas e os dos cartões abaixo (6 423 e 3 295) são
+        # publicações únicas. Sem ela, o leitor vê os mesmos nomes com números
+        # diferentes a quatro linhas de distância e conclui que há erro.
         st.markdown(
-            f"**{numero(_politicos)} das dez** publicações mais partilhadas são "
-            "de atores políticos, e a mais viral de todo o conjunto não tem "
-            "cobertura noticiosa correspondente no levantamento. O tema tem vida "
-            "política própria nas redes, por um canal que não passa pela imprensa.")
+            'O tema tem vida própria nas redes sociais, para lá dos órgãos de '
+            'comunicação social. A publicação mais partilhada de todo o '
+            'levantamento, com **quase 18 mil interações no TikTok**, não veio '
+            'de nenhum órgão de comunicação social, mas de uma figura política, '
+            'Inês Sousa Real, do PAN. Destaca-se ainda que o tema "IVA zero no '
+            'cabaz" gerou publicações virais de lados opostos do espetro '
+            f'político: **José Luís Carneiro**, do Partido Socialista, com '
+            f'{numero(7950)} interações somadas nas várias plataformas, e o '
+            f'**CHEGA**, com {numero(4895)}. Os cartões abaixo mostram, de cada '
+            'um, apenas a publicação de maior alcance, à data da recolha de '
+            'dados no NewsWhip.')
 
-        componente(
-            "Rigor e alcance",
-            "Interações em artigos web dos casos já catalogados que aparecem no "
-            "export.")
-        st.dataframe(
-            pd.DataFrame([{
-                "Caso": linha["caso"], "Data": linha["data"],
-                "Órgão": linha["orgao"], "Tipo de peça": linha["tipo"],
-                "Interações": linha["interacoes"],
-            } for linha in media.ALCANCE_WEB]),
-            width="stretch", hide_index=True,
-            column_config={
-                "Interações": st.column_config.NumberColumn(format="%d")})
-        nota("Não tire conclusões desta tabela", """
-            São <strong>cinco observações</strong>. A ordenação é sugestiva, as
-            duas peças mais bem fundamentadas do levantamento têm mais interações
-            do que o reporte semanal de rotina, mas uma amostra deste tamanho não
-            sustenta a afirmação de que o rigor é recompensado pelo alcance.
-            Fica como hipótese a testar com amostra maior, e não como achado.
-        """, alerta=True)
+        # As citações mantêm o texto original, mesmo onde ele não cumpre o livro
+        # de estilo (por exemplo «primeiro-ministro» em minúscula): é o que a
+        # regra F.6 manda para o discurso direto.
+        _POSTS = [
+            ("TikTok", 17854, "@ines.sousa.real", "Inês Sousa Real · PAN",
+             '"Apesar do cabaz alimentar registar um aumento histórico e custos '
+             'elevados [...]"', "10 de abril de 2026",
+             "https://www.tiktok.com/@ines.sousa.real/video/7627154011023609120"),
+            ("Facebook", 6423, "José Luís Carneiro",
+             "Secretário-geral · Partido Socialista",
+             '"Se o primeiro-ministro, Luís Montenegro, tivesse verdadeira '
+             '[...]"', "11 de maio de 2026",
+             "https://www.facebook.com/108820094072933/posts/1568327965293604"),
+            ("Facebook", 3295, "CHEGA", "Página oficial do partido",
+             '"Montenegro podia baixar impostos e aplicar IVA zero no ca[baz] '
+             '[...]"', "15 de abril de 2026",
+             "https://www.facebook.com/1989920374407828/posts/1522610799221968"),
+        ]
+        _cartoes_post = "".join(
+            '<article class="sg-am-post"><div class="sg-am-post__topo">'
+            f'<p class="sg-am-post__p">{_html(_plat)}</p>'
+            f'<p class="sg-am-post__n">{numero(_inter)}</p></div>'
+            f'<p class="sg-am-post__a">{_html(_autor)}</p>'
+            f'<p class="sg-am-post__c">{_html(_cargo)}</p>'
+            f'<p class="sg-am-post__t">{_html(_texto)}</p>'
+            f'<p class="sg-am-post__d">{_html(_data)} · '
+            f'<a href="{_lig}" target="_blank" rel="noopener">'
+            'Ver publicação</a></p></article>'
+            for _plat, _inter, _autor, _cargo, _texto, _data, _lig in _POSTS)
+        st.markdown(f'<div class="sg-am-posts">{_cartoes_post}</div>',
+                    unsafe_allow_html=True)
+
+        # ---------------------------------------------------------------
+        # Sinais ao decisor
+        # ---------------------------------------------------------------
+        # O rótulo do bloco é o título desta parte, e por isso a nota não leva
+        # título próprio: escrito nos dois sítios, o leitor lia a mesma frase
+        # duas vezes em versalete, com quatro linhas de intervalo. O filete
+        # vermelho da `nota --alerta` é o que assinala o registo.
+        bloco("04 · Sinais de atenção ao decisor")
+        _SINAIS = (
+            "A ambiguidade dos números sobre os preços alimentares é uma "
+            "constante, quer nos órgãos de comunicação social, quer no debate "
+            "político (ASAE contra DECO PROteste em 2023, GPP contra "
+            "comunicados da DECO PROteste agora). Qualquer decisão futura devia "
+            "vir acompanhada, desde o início, de uma metodologia de avaliação "
+            "de impacto acordada publicamente.",
+            "O IVA zero no cabaz mantém potencial de mobilização política e "
+            "mediática elevado. Reapareceu em 2023, como precedente, e em 2026, "
+            "com uma proposta sobre combustíveis e cabaz, e gerou o conteúdo "
+            "mais viral de todo o levantamento. É expectável que volte a surgir "
+            "em ciclos orçamentais futuros.",
+            "Existe uma frente jurídica em aberto, o recurso pendente da "
+            "Autoridade da Concorrência sobre concertação de preços na "
+            "distribuição, que pode reabrir o debate político sobre práticas "
+            "anticoncorrenciais a qualquer momento.",
+            "A cobertura editorial está polarizada entre fontes, e não é plural "
+            "dentro de cada uma. O ECO tem funcionado como canal quase "
+            "exclusivo da defesa empresarial e o Esquerda.net como canal quase "
+            "exclusivo da crítica política. Um leitor que siga só um destes "
+            "órgãos recebe uma imagem incompleta do debate.",
+        )
+        st.markdown(
+            '<div class="sg-nota sg-nota--alerta"><ol>'
+            + "".join(f"<li>{_html(_s)}</li>" for _s in _SINAIS)
+            + "</ol></div>",
+            unsafe_allow_html=True)
+
+        st.caption(
+            "As peças são identificadas por órgão e data. Não são identificados "
+            "jornalistas nem reproduzidas citações literais das peças.")
+
+        # ---------------------------------------------------------------
+        # Notas metodológicas
+        # ---------------------------------------------------------------
+        # Fechado por omissão, que é a regra de todos os blocos recolhíveis da
+        # aplicação: quem precisa do método abre-o, e quem quer a leitura rápida
+        # não tem de o atravessar. O conteúdo é o do entregável companheiro.
+        with st.expander("Notas metodológicas"):
+            componente("Âmbito do levantamento")
+            st.markdown(
+                "Varrimento de 38 casos em cerca de 25 fontes de referência, "
+                "entre março de 2023 e agosto de 2026, com forte concentração "
+                "entre fevereiro e agosto de 2026. A relação completa dos "
+                "artigos utilizados (data, órgão, título e ligação ou "
+                "referência de fonte) consta de ficheiro em folha de cálculo à "
+                "parte. Os artigos disponíveis apenas em edição impressa, "
+                "consultados no PressReader, são anexados em pasta comprimida "
+                "separada.")
+
+            componente('Porquê "cabaz" e "lucros de distribuidoras"')
+            st.markdown(
+                "Este levantamento nasce de uma nota técnica de enquadramento "
+                "da UPE, de 21 de julho de 2026, pedida pelo Gabinete do SETCS, "
+                "que mapeou as fontes disponíveis sobre inflação alimentar "
+                "(Instituto Nacional de Estatística, DECO PROteste, Gabinete de "
+                "Planeamento, Políticas e Administração Geral, DGE, Autoridade "
+                "de Segurança Alimentar e Económica e Eurostat) e alertou para "
+                "um ponto metodológico central. O índice da DECO PROteste, o "
+                "número que domina o noticiário, é um índice de Laspeyres com "
+                "cabaz congelado (63 produtos, quantidades fixas desde janeiro "
+                "de 2022), e não um indicador de custo de vida: **\"um cabaz "
+                "que sobe de preço não implica que as famílias estejam a gastar "
+                "mais em alimentação\"**.")
+            st.markdown(
+                "A nota também identificou fissuras entre dados e narrativa que "
+                "se viriam a revelar centrais, nomeadamente o precedente do "
+                "cabaz IVA Zero, onde a ASAE (−10,1%) e a DECO PROteste (−8,45%) "
+                "mediram impactos diferentes para a mesma medida, por diferença "
+                "de metodologia e não de factos.")
+            st.markdown(
+                "A partir daí, o levantamento foi estruturado em três frentes. "
+                "A **Frente 1** é o cabaz em si, o seu valor, a sua evolução e "
+                "a forma como a imprensa o cobre. A **Frente 2** é a sua "
+                "relação com os lucros das distribuidoras, incluindo o "
+                "precedente do IVA Zero acima referido. A **Frente 3** é o peso "
+                "da alimentação no orçamento das famílias.")
+
+            componente("Porquê março de 2023")
+            st.markdown(
+                "A 23 de março de 2023, na conferência de apresentação de "
+                "resultados de 2022 da Jerónimo Martins, o presidente "
+                "executivo, Pedro Soares dos Santos, confrontou diretamente o "
+                "então Ministro da Economia, António Costa Silva, que tinha "
+                "citado dados da ASAE apontando margens brutas de **50%** em "
+                "produtos como a cebola. O presidente executivo acusou o "
+                "Ministro de \"desonestidade intelectual\". A diretora "
+                "financeira, Ana Luísa Virgínia, contrapôs com uma margem "
+                "líquida de apenas 0,7%.")
+            st.markdown(
+                "Esta disputa pública sobre margens no retalho alimentar é o "
+                "episódio imediatamente anterior à **Lei n.º 17/2023, de 14 de "
+                "abril**, que criou o IVA Zero. Março de 2023 marca, por isso, "
+                "a génese documentável da própria medida que a Frente 2 deste "
+                "levantamento analisa, e não uma data de corte arbitrária.")
+            st.caption("Fontes: PÚBLICO, Observador e ECO, de 22 e 23 de março "
+                       "de 2023.")
+
+            componente("Notas sobre os dados de redes sociais (NewsWhip)")
+            st.markdown(
+                "Dados extraídos do NewsWhip com uma consulta em português "
+                "restrita a Portugal (termos: cabaz alimentar, DECO PROteste, "
+                "inflação alimentar, Jerónimo Martins, Pingo Doce, Sonae, "
+                "Continente, IVA zero, e os principais atores políticos já "
+                "identificados no levantamento), cobrindo oito plataformas: "
+                "artigos web, Facebook, X, Instagram, Bluesky, Reddit, TikTok e "
+                "YouTube.")
+            st.markdown(
+                "**Período:** de 27 de agosto de 2025 a 27 de agosto de 2026, "
+                "com o limite de doze meses imposto pela própria ferramenta. Os "
+                "casos de março e abril de 2023, que estão na génese do "
+                "levantamento, não estão representados nestas métricas.")
+            nota("Aviso da própria ferramenta", """
+                Os dados de interações incluem o Bluesky a partir de 24 de junho
+                de 2026 e o Reddit a partir de 13 de maio de 2026. Os resultados
+                do Bluesky reportam-se a partir de 19 de março de 2026. Para
+                qualquer conteúdo anterior a essas datas, as interações do
+                Bluesky e do Reddit estão <strong>subcontadas por limitação da
+                ferramenta</strong>.
+            """, alerta=True)
 
 
     # ==========================================================================
@@ -9312,6 +9459,11 @@ with _slot_sintese:
         _sofi_sint = _da_sessao("_sofi_pt")
         _sofi_es_sint = _da_sessao("_sofi_es")
         _ano_sofi_sint = _da_sessao("_ano_sofi")
+        # O limiar mais baixo dos três da acessibilidade alimentar. Entra aqui
+        # pela mesma razão que o bloco de “Despesa e composição” o traz: é o
+        # número que alguém cita para circunscrever a questão a dois por cento
+        # da população, e a página que se lê sozinha tem de o antecipar.
+        _sev_sint = _da_sessao("_sev")
 
         # ===============================================================
         bloco("01 · O ponto de partida", topo=True)
@@ -9401,32 +9553,95 @@ with _slot_sintese:
                 explorar_em="Despesa e composição")
 
         # ---- 03 · dieta saudável ---------------------------------------
-        # Composição: um valor e o seu contexto, mas aqui as duas grandezas são
-        # de naturezas diferentes, capacidade e custo. O filete que as separa
-        # existe para o dizer, e nenhuma frase liga uma à outra por causa.
+        # Composição: **confronto**, e não hierarquia. A resposta a esta pergunta
+        # não é o valor português isolado, é o par: o custo de uma dieta saudável
+        # é praticamente o mesmo nos dois países e a proporção de quem não o
+        # consegue suportar não é, e é essa divergência que sustenta a conclusão
+        # (pedido da Inês, 02.09.2026). Com um só número, o leitor não tinha como
+        # saber que a diferença não vem do nível de preços, que é precisamente o
+        # que a pergunta serve para estabelecer.
+        #
+        # O custo desceu da capa para a legenda pela mesma razão. Não é um
+        # segundo indicador de igual peso: é a condição que torna o confronto
+        # legível, e é essa a função da legenda nas restantes perguntas.
+        #
+        # O argumento é o mesmo que o bloco da acessibilidade alimentar, em
+        # “Despesa e composição”, já fazia. Fica também aqui porque a Síntese é
+        # a página que muita gente lê sozinha, e sem o par não ficava dito.
+        #
+        # Sem o valor espanhol, a pergunta recua para a composição anterior, um
+        # valor e o seu contexto: é a regra de toda a Síntese, um separador que
+        # não correu não pode deixar a página por desenhar.
+        #
+        # As duas composições ficam **dentro** da chamada, e não numa variável
+        # decidida antes: há um teste que exige que cada pergunta traga a sua
+        # evidência composta na própria chamada, e é uma exigência acertada, uma
+        # pergunta cuja evidência se monta longe da chamada é uma pergunta que se
+        # pode ficar sem ela sem ninguém dar por isso.
         if _sofi_sint is not None:
             _custo_pt_sint = SOFI_CUSTO["Portugal"].get(_ano_sofi_sint)
             _custo_es_sint = SOFI_CUSTO["Espanha"].get(_ano_sofi_sint)
+            _confronto_dieta = _sofi_es_sint is not None
+            _maior_sofi = max(_sofi_sint, _sofi_es_sint or 0) or 1.0
+
+            _leg_dieta = ("<strong>População que não consegue suportar o custo "
+                          "de uma dieta saudável.</strong>")
+            if _custo_pt_sint and _custo_es_sint:
+                _leg_dieta += (
+                    " O custo dessa dieta é praticamente o mesmo nos dois "
+                    f"países, <strong>{numero(_custo_pt_sint, 2)} PPP$</strong> "
+                    "por pessoa e por dia em Portugal contra "
+                    f"<strong>{numero(_custo_es_sint, 2)}</strong> em Espanha.")
+
             _ctx_dieta = None
             if _custo_pt_sint:
                 _rot = "Custo da dieta saudável em Portugal"
                 if _custo_es_sint:
                     _rot += (f", contra {numero(_custo_es_sint, 2)} em Espanha")
                 _ctx_dieta = (f"{numero(_custo_pt_sint, 2)} PPP$", _rot)
+
             pergunta_editorial(
                 "03",
                 "Uma alimentação saudável está igualmente ao alcance das famílias?",
+                ev_confronto(
+                    ("Portugal", percentagem(_sofi_sint, sinal=False),
+                     _sofi_sint / _maior_sofi),
+                    ("Espanha", percentagem(_sofi_es_sint, sinal=False),
+                     _sofi_es_sint / _maior_sofi),
+                    meio=(pontos(_sofi_sint - _sofi_es_sint, casas=1),
+                          "de diferença"),
+                    legenda=_leg_dieta)
+                if _confronto_dieta else
                 ev_hierarquia(
                     (percentagem(_sofi_sint, sinal=False),
                      "População que não consegue suportar o custo de uma dieta "
                      "saudável"),
                     _ctx_dieta),
-                conclusao=("O acesso a uma alimentação saudável depende da relação "
-                           "entre o custo dessa dieta e a capacidade económica das "
-                           "famílias."),
-                ressalva=("Este indicador mede a capacidade económica para suportar o "
-                          "custo de uma dieta saudável; não é uma medida directa de "
-                          "fome ou privação alimentar."),
+                conclusao=(
+                    "Com custos equivalentes e resultados divergentes, a diferença "
+                    "não é atribuível ao nível de preços, o que remete para o nível "
+                    "dos rendimentos e para a sua distribuição."
+                    if _confronto_dieta else
+                    "O acesso a uma alimentação saudável depende da relação entre o "
+                    "custo dessa dieta e a capacidade económica das famílias."),
+                ressalva=(
+                    "Este indicador mede a capacidade económica para suportar o "
+                    "custo de uma dieta saudável; não é uma medida directa de fome "
+                    "ou privação alimentar. Essa é medida por outro limiar, o da "
+                    "privação severa, que regista o valor mínimo da série em "
+                    f"{percentagem(_sev_sint, sinal=False)}: apresentado sozinho, "
+                    "circunscreveria a questão a essa proporção da população, "
+                    "quando por um limiar nutricionalmente definido é de "
+                    f"{percentagem(_sofi_sint, sinal=False)}. Os dois registam "
+                    "evoluções distintas e devem ser lidos em conjunto."
+                    if _sev_sint is not None else
+                    "Este indicador mede a capacidade económica para suportar o "
+                    "custo de uma dieta saudável; não é uma medida directa de fome "
+                    "ou privação alimentar."),
+                menor=("O par ilustra a distinção entre um indicador de preços e "
+                       "um indicador de acessibilidade: o primeiro mede quanto "
+                       "custa, o segundo mede quem o consegue pagar."
+                       if _confronto_dieta else None),
                 fonte=[("Período", str(_ano_sofi_sint) if _ano_sofi_sint else None),
                        ("Fonte", f"FAO, SOFI {SOFI_EDICAO}"),
                        ("Unidade", "% da população; PPP$ por pessoa e por dia")],
@@ -9567,6 +9782,16 @@ with _slot_sintese:
             conclusao=("Nenhum indicador reúne preço, despesa e esforço das famílias: "
                        "cada dimensão responde a uma pergunta diferente e deve ser "
                        "interpretada em conjunto com as restantes."),
+            # A ressalva do esforço vem da auditoria de 27 de julho de 2026, que a
+            # classificou como grave. A pergunta nomeia o eixo, e nomear um eixo
+            # sem dizer em que condições ele se lê é o que faz um número circular
+            # sozinho: esta é a página que se cita.
+            ressalva=("Dos três eixos, o do esforço é o que se lê com mais cautela. "
+                      "Mede despesa sobre rendimento combinando duas fontes de "
+                      "universos distintos, as Contas Nacionais e o EU-SILC, e por "
+                      "isso é apresentado como limite superior e não como "
+                      "estimativa. A correcção exigiria despesa e rendimento da "
+                      "mesma fonte."),
             menor=("O consumo em quantidades não é medido pelas fontes actualmente "
                    "utilizadas."))
 
