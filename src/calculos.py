@@ -985,6 +985,13 @@ def indices_comparados(indice_classes: pd.DataFrame,
 #
 # As três medidas abaixo dão a mesma informação **sem ajustamento nenhum**, por
 # aritmética exata sobre o índice publicado.
+#
+# **`efeito_de_base` e `arrastamento_anual` não são chamadas pelo app.py desde
+# 02.09.2026**, quando o bloco "O que fez a taxa mexer" saiu do separador
+# Histórico. Ficam aqui, com a sua bateria de testes intacta, por serem
+# aritmética exata e independente da interface: quem precisar de repor a leitura
+# no ecrã não tem cálculo nenhum para refazer, só o desenho. `difusao_por_classe`
+# continua em uso, no bloco "Quantos grupos estão a acelerar".
 
 
 def efeito_de_base(indice: pd.DataFrame) -> pd.DataFrame:

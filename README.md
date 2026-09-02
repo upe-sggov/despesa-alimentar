@@ -193,7 +193,7 @@ despesa-alimentar/
 ├── docs/
 │   └── 2026-08-07_levantamento_lacunas.md   # apuramento e decisões
 └── tests/
-    └── test_calculos.py    # 207 testes dos cálculos analíticos e da estrutura do app
+    └── test_calculos.py    # 206 testes dos cálculos analíticos e da estrutura do app
 ```
 
 A separação entre **acesso a dados** (`eurostat.py`, `observatorio.py`),
@@ -590,44 +590,16 @@ O Törnqvist aqui construído fica a 0,12 pontos do IHPC oficial, que é calcula
 é o melhor indício disponível de que a aproximação de ponderadores (declarada na interface) se
 comporta.
 
-### Momentum: o que a variação homóloga esconde
+### Índice de difusão: o que a variação homóloga esconde
 
-A aplicação apresentava apenas a **variação homóloga**, que é o sinal mais lento
-que existe: cada leitura carrega onze meses de história, e por isso identifica
-uma inflexão com cinco a seis meses de atraso. O separador **Histórico** passou a
-trazer três leituras que a antecipam.
-
-**Efeito de base.** A variação da taxa homóloga entre dois meses consecutivos
-explica-se **por inteiro** por dois números: a variação de preços do mês que
-entra na janela e a do mês que sai. Não é aproximação, é identidade. Sendo `r(m)`
-a variação mensal e `π(m)` a homóloga, `1+π(m)` é o produto das doze variações
-mensais da janela; dividindo por `1+π(m−1)`, tudo se cancela menos os extremos:
-
-```
-(1 + π(m)) / (1 + π(m−1)) = (1 + r(m)) / (1 + r(m−12))
-```
-
-Daí a repartição aditiva exata, com `A = 1 + π(m−1)`:
-
-```
-Δπ = A · [r(m) − r(m−12)] / [1 + r(m−12)]
-```
-
-As duas parcelas somam exatamente a variação da taxa, e a igualdade está travada
-por teste automático. Responde à pergunta que mais engana a leitura pública:
-**a taxa desceu porque os preços desceram, ou porque saiu da comparação um mês
-mau do ano passado?**
-
-**Arrastamento.** Fixando o índice no último valor conhecido até dezembro, qual
-seria a variação da média anual face ao ano anterior. É a parte da inflação
-alimentar do ano que **já não depende** do que acontecer daqui para a frente, e
-sobre a qual nenhuma medida tomada agora pode atuar.
-
-**Índice de difusão.** Quantas das nove classes têm hoje uma variação homóloga
-superior à de há três meses. Cada classe é comparada **consigo própria**, em base
-homóloga nos dois momentos, pelo que a sazonalidade se cancela. Distingue pressão
-generalizada de choque concentrado, distinção que a aplicação afirmava em texto e
-não media.
+A aplicação apresenta a **variação homóloga**, que é o sinal mais lento que
+existe: cada leitura carrega onze meses de história, e por isso identifica uma
+inflexão com cinco a seis meses de atraso. O separador **Histórico** traz o
+**índice de difusão**, que a antecipa sem exigir ajustamento de sazonalidade:
+quantas das nove classes têm hoje uma variação homóloga superior à de há três
+meses. Cada classe é comparada **consigo própria**, em base homóloga nos dois
+momentos, pelo que a sazonalidade se cancela. Distingue pressão generalizada de
+choque concentrado, distinção que a aplicação afirmava em texto e não media.
 
 **Porque não há uma taxa em cadeia anualizada.** Seria o indicador clássico de
 momentum e exigiria uma série corrigida de sazonalidade. O Eurostat difunde o
@@ -635,8 +607,8 @@ IHPC **em bruto**, e nos alimentos a sazonalidade da fruta e dos hortícolas
 domina qualquer janela de três meses: o indicador oscilaria sem significar nada.
 Corrigi-la por conta própria resolveria isso e quebraria o princípio que rege
 esta ferramenta, o de que **cada número é verificável na fonte oficial** — uma
-série ajustada por nós é um cálculo da UPE, não um número do INE. As três medidas
-acima dão a mesma informação sem ajustamento nenhum.
+série ajustada por nós é um cálculo da UPE, não um número do INE. O índice de
+difusão dá essa antecipação sem ajustamento nenhum.
 
 ### Cabaz por quintil de rendimento
 
@@ -1290,7 +1262,7 @@ ECOICOP versão 2. Se os códigos `CP011x` deixarem de responder, basta atualiza
 campo `cod` em `CLASSES`; o resto da aplicação não precisa de alterações.
 
 **Antes de qualquer alteração aos cálculos**, correr `python -m pytest tests/ -v`.
-Os 207 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
+Os 206 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
 casos-limite conhecidos.
 
 ---

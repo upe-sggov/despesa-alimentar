@@ -19,13 +19,12 @@ import streamlit as st
 from pathlib import Path
 
 from src import deco, eurostat, observatorio
-from src.calculos import (ESCALAS, agregados_do_ano, arrastamento_anual,
+from src.calculos import (ESCALAS, agregados_do_ano,
                           cabaz_quintis,
                           comparar_ponderadores, comparar_tipos_agregado,
                           composicao_iva,
                           composicao_quintis, custo_compensacao, decompor,
                           despesa_do_agregado, difusao_por_classe,
-                          efeito_de_base,
                           escala_mais_proxima, frescura_das_series,
                           frescura_do_observatorio,
                           idade_fonte, indices_comparados,
@@ -3178,14 +3177,7 @@ with abaS:
         "limitações de medição e das possibilidades de melhoria.")
     _slot_sintese = st.container()
 
-# --- momentum: calculado uma vez ------------------------------------------
-# Consumido no Histórico, que é onde as três medidas se demonstram. Dizia aqui
-# que a Síntese também as citava, e não citava: a Síntese não tem pergunta sobre
-# momentum (verificado a 02.09.2026). Fica calculado num sítio só, que era a
-# outra razão para estar aqui, para não haver duas contas a poder divergir se
-# vier a ser citado noutro separador.
-_efeito_base = efeito_de_base(dados.get("indice_pt", pd.DataFrame()))
-_arrasto = arrastamento_anual(dados.get("indice_pt", pd.DataFrame()))
+# --- difusão: calculada uma vez, consumida no Histórico -------------------
 _difusao = difusao_por_classe(dados.get("indice_classes", pd.DataFrame()))
 
 # ==========================================================================
@@ -5019,109 +5011,6 @@ with aba2:
             "acesso automático, e as variações semanais são muito voláteis por efeitos de base."
         )
 
-        # ---------- momentum: o que a taxa homóloga esconde ----------
-        # A taxa homóloga carrega onze meses de história e identifica uma
-        # inflexão com cinco a seis meses de atraso. Estas duas leituras
-        # antecipam-na sem exigir correção de sazonalidade, que o IHPC não traz
-        # e que fazer por conta própria quebraria o princípio de que cada
-        # número é verificável na fonte. Ver `efeito_de_base` em calculos.py.
-        if not _efeito_base.empty:
-            _ult_eb = _efeito_base.iloc[-1]
-            secao("O que fez a taxa mexer: o mês que entra e o que sai",
-                  "A variação da taxa homóloga entre dois meses consecutivos "
-                  "explica-se, <strong>por inteiro</strong>, por dois números: a "
-                  "variação de preços do mês que entra na janela e a do mês que "
-                  "sai. O resto é comum às duas leituras e cancela-se.",
-                  ajuda=(
-                      "**Não é uma aproximação, é uma identidade.** Sendo `r(m)` a "
-                      "variação mensal e `π(m)` a homóloga, `1+π(m)` é o produto "
-                      "das doze variações mensais da janela. Dividindo por "
-                      "`1+π(m−1)`, tudo se cancela menos os dois extremos:\n\n"
-                      "`(1+π(m)) / (1+π(m−1)) = (1+r(m)) / (1+r(m−12))`\n\n"
-                      "As duas parcelas apresentadas somam exatamente a variação "
-                      "da taxa, e essa igualdade está travada por teste "
-                      "automático.\n\n"
-                      "**Porque a leitura é esta e não uma taxa de três meses.** "
-                      "Uma taxa de três meses anualizada exigiria uma série "
-                      "corrigida de sazonalidade, e o índice oficial é publicado "
-                      "em bruto. Nos alimentos, a sazonalidade da fruta e dos "
-                      "hortícolas dominaria uma janela tão curta, e o resultado "
-                      "oscilaria sem significado. A repartição acima não tem esse "
-                      "problema: é aritmética exata sobre o índice publicado."),
-                  grupo="02 · Momentum")
-
-            _mb1, _mb2, _mb3 = st.columns(3)
-            _mb1.metric(f"Variação da taxa homóloga ({mes_pt(_ult_eb['time'])})",
-                        pontos(float(_ult_eb["delta_homologa"]), casas=2),
-                        help="Face ao mês anterior. É esta variação que as duas "
-                             "parcelas seguintes repartem.")
-            _mb2.metric("Devido ao mês que entra",
-                        pontos(float(_ult_eb["contributo_novo"]), casas=2),
-                        help=(f"Os preços variaram "
-                              f"{percentagem(float(_ult_eb['mensal']), casas=2)} "
-                              f"em {mes_pt(_ult_eb['time'])}, face ao mês anterior."))
-            _mb3.metric("Devido ao mês que sai (efeito de base)",
-                        pontos(float(_ult_eb["contributo_base"]), casas=2),
-                        help=(f"Há um ano, os preços tinham variado "
-                              f"{percentagem(float(_ult_eb['mensal_ha_um_ano']), casas=2)} "
-                              "nesse mês. Ao sair da janela, deixa de contar."))
-
-            _dom_base = abs(float(_ult_eb["contributo_base"])) > abs(
-                float(_ult_eb["contributo_novo"]))
-            nota("Como ler esta variação", f"""
-          Em {mes_extenso(_ult_eb['time'])} a taxa homóloga
-          {'desceu' if _ult_eb['delta_homologa'] < 0 else 'subiu'}
-          <strong>{pontos(abs(float(_ult_eb['delta_homologa'])), casas=2, sinal=False)}</strong>.
-          {'A maior parte dessa variação vem do <strong>mês que saiu da janela</strong>, e não do que aconteceu aos preços agora: é efeito de base, aritmética da comparação, e não um movimento novo do mercado.'
-           if _dom_base else
-           'A maior parte dessa variação vem do <strong>mês que entrou</strong>, ou seja, do que os preços fizeram neste mês: é movimento novo, e não efeito de base.'}
-          <br><br>
-          É a distinção que mais engana na leitura pública da inflação: uma taxa
-          homóloga pode descer sem que nenhum preço tenha descido, bastando que o
-          mês que sai da comparação tenha sido mau.""")
-
-            _janela_eb = _efeito_base.tail(24)
-            figEB = go.Figure()
-            figEB.add_trace(go.Bar(
-                x=[mes_pt(t) for t in _janela_eb["time"]],
-                y=_janela_eb["contributo_novo"], name="Mês que entra",
-                marker_color=AZUL,
-                hovertemplate="%{x}<br>Mês que entra: %{y:+.2f} p.p.<extra></extra>"))
-            figEB.add_trace(go.Bar(
-                x=[mes_pt(t) for t in _janela_eb["time"]],
-                y=_janela_eb["contributo_base"], name="Mês que sai (efeito de base)",
-                marker_color=DOURADO,
-                hovertemplate="%{x}<br>Efeito de base: %{y:+.2f} p.p.<extra></extra>"))
-            figEB.add_trace(go.Scatter(
-                x=[mes_pt(t) for t in _janela_eb["time"]],
-                y=_janela_eb["delta_homologa"], name="Variação da taxa homóloga",
-                mode="lines+markers", line=dict(color=VERMELHO, width=2.2),
-                hovertemplate="%{x}<br>Variação da taxa: %{y:+.2f} p.p.<extra></extra>"))
-            figEB.update_layout(
-                barmode="relative", height=420, margin=dict(t=34, b=42, l=10, r=10),
-                yaxis_title="Pontos percentuais",
-                legend=dict(orientation="h", y=1.13, x=0),
-                hovermode="x unified")
-            figEB.update_xaxes(showgrid=False)
-            figEB.update_yaxes(zeroline=True, zerolinecolor=TEXTO_3, zerolinewidth=1.5)
-            grafico(figEB, rodape=carimbo_do_grafico(dados))
-            st.caption(
-                "As duas barras somam exatamente a linha vermelha. Últimos "
-                f"{numero(len(_janela_eb))} meses da série."
-            )
-
-            if _arrasto:
-                st.info(f"""
-    **Quanto do ano já está fechado.** Com {numero(_arrasto['meses_conhecidos'])} meses conhecidos
-    de {_arrasto['ano']}, e **mesmo que o índice não volte a mexer** até dezembro, a inflação
-    alimentar média de {_arrasto['ano']} será de
-    **{percentagem(_arrasto['arrastamento'], sinal=False)}**.
-
-    É o *arrastamento*: a parte da média anual que já não depende do que acontecer daqui para a
-    frente. Uma medida tomada agora atua apenas sobre os meses que faltam, e não sobre esta
-    parcela.{'' if not _arrasto['completo'] else ' O ano está completo, pelo que este valor já é a variação observada e não uma projeção.'}
-                """)
-
         # ---------- difusão: a pressão é geral ou concentrada? ----------
         if not _difusao.empty:
             _n_ac = _difusao.attrs.get("n_acelera", 0)
@@ -5131,7 +5020,7 @@ with aba2:
                   "a sua variação homóloga atual e a de há "
                   f"{numero(_difusao.attrs.get('meses', 3))} meses. Como as duas "
                   "leituras são homólogas, a sazonalidade cancela-se em ambas.",
-                  grupo="03 · Difusão")
+                  grupo="02 · Difusão")
 
             _dif1, _dif2 = st.columns([1, 2])
             _dif1.metric("Grupos a acelerar", f"{_n_ac} de {_n_tot}",
@@ -5203,7 +5092,7 @@ with aba2:
             # primeira linha, e o leitor lia a mesma frase duas vezes antes de
             # chegar ao gráfico (relatado pela Inês, 01.09.2026).
             secao("Composição da variação: frescos e transformados",
-                  ajuda=_ajuda_alem, grupo="04 · Frescos e transformados")
+                  ajuda=_ajuda_alem, grupo="03 · Frescos e transformados")
             st.info("""
     A alimentação não constitui um agregado homogéneo. **Os produtos não transformados e os
     transformados respondem a determinantes distintos:**
@@ -5322,7 +5211,7 @@ with aba2:
                   "substituição de consumo. Nesta secção essa crítica é quantificada"
                   ", comparando um índice de ponderadores fixos com um índice "
                   "superlativo de Törnqvist, que usa a média dos ponderadores dos dois "
-                  "extremos de cada ano.", grupo="05 · Viés de substituição")
+                  "extremos de cada ano.", grupo="04 · Viés de substituição")
 
             _ano_base = int(_cmp_idx["ano"].iloc[0])
             # O ano-base é fixo em `config.py`. Se não estiver disponível nos

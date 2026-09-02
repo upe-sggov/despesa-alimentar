@@ -4064,24 +4064,6 @@ def test_a_sintese_nao_escolhe_uma_base_de_calculo():
             "confronto existe justamente para nao eleger nenhum dos dois")
 
 
-def test_o_momentum_declara_porque_nao_ha_taxa_ajustada_de_sazonalidade():
-    """
-    O IHPC vem em bruto. Uma taxa em cadeia anualizada sobre a serie bruta dos
-    alimentos e dominada pela sazonalidade da fruta e dos horticolas, e
-    corrigi-la por conta propria tornaria o numero um calculo da UPE em vez de
-    um numero do INE. Se alguem acrescentar essa taxa, tem de reescrever esta
-    justificacao primeiro, e este teste obriga a passar por ai.
-    """
-    vivo = _fonte_viva("app.py")
-    i = vivo.index("02 · Momentum")
-    ajuda = vivo[max(0, i - 3000):i]
-    assert "sazonalidade" in ajuda, (
-        "a seccao de momentum deixou de declarar porque nao apresenta uma taxa "
-        "em cadeia anualizada")
-    assert "identidade" in ajuda, (
-        "a seccao deixou de dizer que a reparticao e exata e nao uma estimativa")
-
-
 def test_a_app_nao_fala_do_seu_proprio_processo_de_construcao():
     """
     O que a aplicacao mostra e o resultado, nunca o estado do trabalho que lhe
