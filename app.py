@@ -967,15 +967,30 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 /* Um exemplo concreto de que a dificuldade não é só juntar indicadores: há
    dimensões que dão resultados diferentes conforme a fonte. Nenhuma das duas
    é apresentada como a verdadeira. */
+/* O exemplo vai **centrado na página** e o texto sem medida imposta. É o fecho
+   da secção das lacunas, não mais um item dela: encostado à esquerda como os
+   cartões acima, lia-se como se fosse a quinta lacuna
+   (pedido da Inês, 02.09.2026). */
 .sg-duplo {{ margin: var(--sg-e4) 0 0; padding-top: 1.75rem;
-  border-top: 1px solid var(--sg-grelha); }}
-/* A frase que fecha o exemplo é a moral das quatro lacunas todas, e não uma
-   nota de rodapé do confronto que a precede: vai centrada e sem medida
-   imposta, que é a forma de a ler como fecho de secção. */
+  border-top: 1px solid var(--sg-grelha); text-align: center; }}
+/* Os dois lados com largura fixa e igual, e sem crescer: é o que centra o
+   grupo e, ao mesmo tempo, mantém os dois filetes com a mesma escala. Com
+   `flex: 1 1` as colunas cresciam para as pontas e a proporção entre os dois
+   filetes deixava de se ler. */
+.sg-duplo .sg-conf {{ justify-content: center; }}
+.sg-duplo .sg-conf__l {{ flex: 0 0 16rem; max-width: 16rem; text-align: left; }}
+[data-testid="stMarkdownContainer"] .sg-duplo p.sg-conf__leg {{
+  max-width: none; text-align: center; margin-top: 1.6rem;
+}}
+/* A frase final é a moral das quatro lacunas todas, e não uma nota de rodapé
+   do confronto que a precede. */
 [data-testid="stMarkdownContainer"] p.sg-duplo__fecho {{
   font-size: .875rem; color: var(--sg-texto-2); line-height: 1.62;
   max-width: none; text-align: center; margin: 1.9rem 0 0;
   padding-top: 1.4rem; border-top: 1px solid var(--sg-grelha);
+}}
+@media (max-width: 760px) {{
+  .sg-duplo .sg-conf__l {{ flex: 1 1 auto; max-width: none; }}
 }}
 
 /* ---------- repartição consumidor / margem ---------------------------- */
