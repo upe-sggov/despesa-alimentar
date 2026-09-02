@@ -21,50 +21,75 @@ comparar Portugal com os restantes Estados-Membros.
 7. [Fontes de dados](#fontes-de-dados)
 8. [Metodologia](#metodologia)
 9. [Indicadores de esforço](#indicadores-de-esforço)
-10. [Limitações a declarar](#limitações-a-declarar)
-11. [Manutenção](#manutenção)
-12. [Resolução de problemas](#resolução-de-problemas)
+10. [A síntese: hierarquia das incertezas e melhoria do indicador](#a-síntese-hierarquia-das-incertezas-e-melhoria-do-indicador)
+11. [Limitações a declarar](#limitações-a-declarar)
+12. [Manutenção](#manutenção)
+13. [Resolução de problemas](#resolução-de-problemas)
 
 ---
 
 ## O que a aplicação faz
 
-A aplicação organiza-se em sete separadores.
+A aplicação organiza-se em oito separadores.
 
-**1 · Evolução do Cabaz.** Preço do cabaz essencial da DECO PROteste (63 bens
+**1 · Síntese.** O separador de abertura, e o único que se lê inteiro em cinco
+minutos. Reúne os números de capa, as conclusões que **cruzam** separadores e
+que nenhum deles dá sozinho, a **hierarquia das incertezas** e o plano de
+**melhoria do indicador**. Não responde aos parâmetros definidos em «Despesa e
+composição»: fixa a base por defeito e o agregado médio nacional, e declara-o.
+Um resumo executivo que mudasse conforme o cursor que o leitor mexeu noutro
+separador não seria citável.
+
+**2 · Evolução do Cabaz.** Preço do cabaz essencial da DECO PROteste (63 bens
 alimentares, composição fixa), série completa desde janeiro de 2022, com as
 variações face à semana anterior, desde o início do ano e desde o início da
 série, e os produtos que mais aumentaram em três janelas de comparação. É uma
 referência externa e privada, não o indicador que os restantes separadores
 calculam — ver [«Despesa alimentar» e não «cabaz»](#despesa-alimentar-e-não-cabaz).
 
-**2 · Despesa e composição.** A despesa alimentar mensal por agregado, a partir
+**3 · Despesa e composição.** A despesa alimentar mensal por agregado, a partir
 de uma de **duas bases oficiais à escolha** — o IDF ou as Contas Nacionais —,
 atualizada ao mês mais recente pelo índice de preços. A aplicação reparte-a pelas
 nove classes COICOP e aplica a cada uma a sua variação homóloga, devolvendo o
 contributo de cada tipo de produto para o agravamento. Inclui o **cabaz por
-quintil de rendimento**, o esforço face a três referências de rendimento e os
-**três limiares de acessibilidade alimentar**.
+quintil de rendimento**, o **custo de compensar o agravamento** por quintil, o
+esforço face a três referências de rendimento e os **três limiares de
+acessibilidade alimentar**.
 
-**3 · Histórico.** Série mensal do índice de preços alimentares e da variação
-homóloga, e a medição do **viés de substituição** — cabaz de composição fixa
-contra índice de Törnqvist.
+**4 · Histórico.** Série mensal do índice de preços alimentares e da variação
+homóloga, a decomposição do **efeito de base**, o **índice de difusão** por
+grupo, e a medição do **viés de substituição** — cabaz de composição fixa contra
+índice de Törnqvist.
 
-**4 · Da produção ao consumo.** Preços do mesmo produto nas duas pontas da
+**5 · Da produção ao consumo.** Preços do mesmo produto nas duas pontas da
 cadeia, a partir do Observatório de Preços Agroalimentar do GPP. Responde a
 *«onde na cadeia está o aumento?»* — que nenhum outro separador toca.
 
-**5 · Simulador de IVA.** Permite definir uma taxa por classe e, sobretudo,
+**6 · Simulador de IVA.** Permite definir uma taxa por classe e, sobretudo,
 regular a **repercussão** — a fração da alteração de imposto que chega ao preço
 final. Mostra quanto poupa o consumidor, quanto fica na margem do operador e
 qual a variação de receita.
 
-**6 · Comparação UE-27.** Inflação alimentar harmonizada de Portugal face à
+**7 · Comparação UE-27.** Inflação alimentar harmonizada de Portugal face à
 UE-27 e aos países selecionados, com ordenação do último mês disponível.
 
-**7 · Fontes e método.** O quadro dos **seis instrumentos** que o debate público
-confunde, a proveniência de cada elemento, o registo das ligações da sessão e as
-limitações a declarar.
+**8 · Análise mediática.** O único separador que não é sobre preços, mas sobre o
+que se diz sobre eles. Levantamento **amostral e avaliativo** de 39 peças
+noticiosas e declarações públicas, entre março de 2023 e agosto de 2026,
+organizado em seis narrativas. Responde a *quem diz, o que diz e quando o diz*, e
+sustenta cinco achados que nenhum separador de dados dá: que a maioria das peças
+sobre o cabaz tem por gancho o comunicado semanal de uma associação privada; que
+a comparação de longo prazo vive quase sempre fora do título; que circulam quatro
+indicadores de cabaz que medem coisas diferentes; que o que separa uma atribuição
+causal sustentada de uma infundada não é o tempo decorrido, mas a existência de
+dados posteriores ao acontecimento; e que há afirmações de responsabilidade
+governativa por verificar. Os dados e os apuramentos vivem em `src/media.py`, com
+bateria própria em `tests/test_media.py`.
+
+**9 · Fontes e método.** O quadro dos **seis instrumentos** que o debate público
+confunde, a proveniência de cada elemento, o confronto entre a despesa
+**observada** e a **simulada** por tipo de agregado, o registo das ligações da
+sessão e as limitações a declarar.
 
 ---
 
@@ -118,7 +143,7 @@ despesa-alimentar/
 ├── docs/
 │   └── 2026-08-07_levantamento_lacunas.md   # apuramento e decisões
 └── tests/
-    └── test_calculos.py    # 178 testes dos cálculos analíticos
+    └── test_calculos.py    # 202 testes dos cálculos analíticos
 ```
 
 A separação entre **acesso a dados** (`eurostat.py`, `observatorio.py`),
@@ -515,6 +540,54 @@ O Törnqvist aqui construído fica a 0,12 pontos do IHPC oficial, que é calcula
 é o melhor indício disponível de que a aproximação de ponderadores (declarada na interface) se
 comporta.
 
+### Momentum: o que a variação homóloga esconde
+
+A aplicação apresentava apenas a **variação homóloga**, que é o sinal mais lento
+que existe: cada leitura carrega onze meses de história, e por isso identifica
+uma inflexão com cinco a seis meses de atraso. O separador **Histórico** passou a
+trazer três leituras que a antecipam.
+
+**Efeito de base.** A variação da taxa homóloga entre dois meses consecutivos
+explica-se **por inteiro** por dois números: a variação de preços do mês que
+entra na janela e a do mês que sai. Não é aproximação, é identidade. Sendo `r(m)`
+a variação mensal e `π(m)` a homóloga, `1+π(m)` é o produto das doze variações
+mensais da janela; dividindo por `1+π(m−1)`, tudo se cancela menos os extremos:
+
+```
+(1 + π(m)) / (1 + π(m−1)) = (1 + r(m)) / (1 + r(m−12))
+```
+
+Daí a repartição aditiva exata, com `A = 1 + π(m−1)`:
+
+```
+Δπ = A · [r(m) − r(m−12)] / [1 + r(m−12)]
+```
+
+As duas parcelas somam exatamente a variação da taxa, e a igualdade está travada
+por teste automático. Responde à pergunta que mais engana a leitura pública:
+**a taxa desceu porque os preços desceram, ou porque saiu da comparação um mês
+mau do ano passado?**
+
+**Arrastamento.** Fixando o índice no último valor conhecido até dezembro, qual
+seria a variação da média anual face ao ano anterior. É a parte da inflação
+alimentar do ano que **já não depende** do que acontecer daqui para a frente, e
+sobre a qual nenhuma medida tomada agora pode atuar.
+
+**Índice de difusão.** Quantas das nove classes têm hoje uma variação homóloga
+superior à de há três meses. Cada classe é comparada **consigo própria**, em base
+homóloga nos dois momentos, pelo que a sazonalidade se cancela. Distingue pressão
+generalizada de choque concentrado, distinção que a aplicação afirmava em texto e
+não media.
+
+**Porque não há uma taxa em cadeia anualizada.** Seria o indicador clássico de
+momentum e exigiria uma série corrigida de sazonalidade. O Eurostat difunde o
+IHPC **em bruto**, e nos alimentos a sazonalidade da fruta e dos hortícolas
+domina qualquer janela de três meses: o indicador oscilaria sem significar nada.
+Corrigi-la por conta própria resolveria isso e quebraria o princípio que rege
+esta ferramenta, o de que **cada número é verificável na fonte oficial** — uma
+série ajustada por nós é um cálculo da UPE, não um número do INE. As três medidas
+acima dão a mesma informação sem ajustamento nenhum.
+
 ### Cabaz por quintil de rendimento
 
 O separador «Despesa e composição» apresenta a despesa alimentar por quintil de
@@ -594,7 +667,40 @@ consoante a restrição do IDF que se privilegie, a subestimação fica entre 10
 13 %.
 
 O separador inclui um comparador de composições típicas (pessoa só, casal,
-monoparental com filhos, casal com filhos), com o intervalo de cada uma.
+monoparental com filhos, casal com filhos), com o intervalo de cada uma. **São
+valores simulados**, e a distinção passou a estar escrita ao lado deles.
+
+**O confronto com o observado.** O teste acima compara **rácios** entre dois
+tipos de agregado, que é o que sobrevive à mudança de base. Faltava a pergunta
+que o utilizador faz: o valor que a aplicação apresenta para um agregado concreto
+é o que o inquérito mediu para esse agregado? O IDF publica a despesa alimentar
+por tipo de agregado, e os dois níveis que o teste dos rácios já usava estavam
+escritos num comentário do `config.py` em vez de numa constante. Promovidos a
+constante, permitem a comparação em níveis:
+
+| Tipo de agregado | Observado no IDF | Intervalo simulado | Dentro |
+|---|---|---|---|
+| 1 adulto, sem crianças | 162,23 €/mês | 117,37 a 165,70 € | sim |
+| 2 ou mais adultos, sem crianças | 300,72 €/mês | 277,07 a 278,43 € | **não, 8,0% acima** |
+
+Os valores são de uma sessão concreta e movem-se com o mês do índice; o que não
+se move é o **veredicto**, porque as duas colunas são indexadas pelo mesmo fator
+(propriedade travada por teste). O resultado confirma, em níveis, o que o teste
+dos rácios já dizia: as escalas de equivalência **subestimam** o custo alimentar
+dos agregados maiores, na mesma ordem de grandeza. Não é uma segunda medição da
+mesma coisa — o teste dos rácios podia ficar certo com os dois níveis errados na
+mesma proporção; este não.
+
+O confronto corre **sempre na base do inquérito**, seja qual for a base ativa: os
+níveis observados vêm dele, e compará-los com um nível das Contas Nacionais seria
+confrontar universos diferentes.
+
+**Cobertura, declarada na interface.** Só estão transcritos **dois** tipos de
+agregado, ambos **sem crianças dependentes**. As restantes sete linhas do quadro
+Q.2.6.a estão publicadas e por transcrever, e enquanto faltarem o confronto nada
+diz sobre agregados com crianças, que são justamente aqueles em que o coeficiente
+da escala mais pesa. A lacuna está inscrita em `IDF_TIPOS_POR_TRANSCREVER` e
+aparece no plano de melhoria do indicador, no separador Síntese.
 
 ### Sobre séries privadas de cabazes
 
@@ -947,6 +1053,70 @@ identificador técnico do repositório, e garantir que **nada no que é visível
 — título, separadores, textos, ficheiros exportados — usa a palavra «cabaz» para designar
 este indicador. É o que a aplicação já faz.
 
+## A síntese: hierarquia das incertezas e melhoria do indicador
+
+O separador de abertura existe por duas razões, e nenhuma delas é resumir os
+outros.
+
+### A hierarquia das incertezas
+
+A aplicação calculava **seis amplitudes em seis sítios diferentes** e nunca as
+confrontava. Confrontadas, dizem uma coisa que nenhuma delas diz sozinha.
+
+Cada barra é a amplitude, **em euros por mês**, que essa incerteza introduz no
+número que ela afeta. A unidade é comum; o número afetado não é: a base e a
+escala movem a despesa, a repercussão e as atribuições de IVA movem a poupança do
+cenário simulado, a ponderação e o viés de substituição movem o agravamento dos
+últimos doze meses. **Servem para comparar ordens de grandeza, não para somar**,
+e a interface di-lo onde o gráfico aparece.
+
+O resultado é consistente e não depende do mês: a **escolha da base oficial** e a
+**repercussão** dominam por duas ordens de grandeza tudo o resto, e o **viés de
+substituição do cabaz de composição fixa** — sobre o qual incide a crítica
+pública ao indicador — é das mais pequenas. As duas incertezas que decidem o
+número não são objeto de debate; a que é discutida está medida e é residual.
+
+É a conclusão mais forte que a ferramenta permite, e é também a que responde
+diretamente à pergunta sobre **melhoria do indicador**: diz onde é que investir
+esforço tem retorno.
+
+### O plano de melhoria
+
+A aplicação declarava doze limitações e não dizia o que fazer com nenhuma delas.
+Para quem tem de decidir, uma lista de defeitos não é um plano: falta quem tem os
+dados e o que custa obtê-los.
+
+O bloco final da síntese é um quadro com uma linha por lacuna: **o que falta**,
+**a consequência**, **o que a fecharia**, **quem detém os dados**, **que esforço
+custa** e se **depende de terceiros**. Está inscrito em `MELHORIAS_INDICADOR`, em
+`src/config.py`, e é exportável em CSV.
+
+A prioridade é **o efeito na resposta ao Gabinete**, e não a facilidade de
+execução. As duas não coincidem: a lacuna mais consequente, a divergência entre
+as duas âncoras oficiais, é também a que a UPE não pode fechar sozinha. Metade
+das lacunas, em contrapartida, não depende de ninguém: os dados estão publicados
+e por transcrever, ou o cálculo está ao alcance da própria ferramenta.
+
+Três das lacunas externas apontam para o mesmo sítio: **não existem dados de
+quantidade nem de transação**. Enquanto não existirem, esta ferramenta mede o que
+se paga, e não o que se leva para casa.
+
+### O que a síntese não faz
+
+**Não responde aos parâmetros** definidos em «Despesa e composição». Fixa a base
+por defeito e o agregado médio nacional, e declara-o numa linha. Um resumo
+executivo que mudasse conforme o cursor que o leitor mexeu noutro separador não
+seria citável: dois leitores citariam números diferentes a partir da mesma
+página.
+
+**A série do indicador é de preços, não de despesa observada.** O nível da âncora
+é reindexado para trás pelo índice oficial, o que equivale a perguntar quanto
+custaria, em cada mês, o consumo alimentar de hoje. Não capta alterações de
+quantidade nem de composição do consumo ao longo do período. A ressalva está no
+(i) do gráfico.
+
+---
+
 ## Limitações a declarar
 
 Qualquer utilização destes resultados em suporte à decisão ou em comunicação
@@ -1065,7 +1235,7 @@ ECOICOP versão 2. Se os códigos `CP011x` deixarem de responder, basta atualiza
 campo `cod` em `CLASSES`; o resto da aplicação não precisa de alterações.
 
 **Antes de qualquer alteração aos cálculos**, correr `python -m pytest tests/ -v`.
-Os 178 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
+Os 202 testes cobrem a aditividade da decomposição e a aritmética do IVA, incluindo
 casos-limite conhecidos.
 
 ---

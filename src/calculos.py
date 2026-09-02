@@ -34,6 +34,7 @@ from .config import (
     AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FONTE,
     IDF_ALIMENTAR_QUINTIL, IDF_CLASSES_QUINTIL, IDF_DESPESA_TOTAL,
     IDF_PESO_ALIMENTAR, IDF_QUINTIS,
+    IDF_TIPOS_AGREGADO, IDF_TIPOS_POR_TRANSCREVER,
     REPERCUSSAO_BANDA, REPERCUSSAO_ESTIMATIVAS, REPERCUSSAO_PADRAO,
 )
 
@@ -826,20 +827,31 @@ def composicao_quintis() -> pd.DataFrame:
 # por serem esses os que se reportam àqueles dois momentos. Não é o Törnqvist
 # exato, é a melhor aproximação possível sem microdados de despesa anuais.
 
+def _base_unica(indice: pd.DataFrame) -> pd.DataFrame:
+    """
+    Restringe uma série de índices a **uma só base**, a mais recente presente.
+
+    A base do índice mudou ao longo do tempo (2015 = 100 para 2025 = 100), e um
+    quociente entre observações de bases diferentes produz lixo silencioso: os
+    números continuam a ser números. Estava escrito dentro de `_dezembros`, e
+    passou a ser preciso também no cálculo do momentum, que usa a série mensal.
+    """
+    if indice.empty or "unit" not in indice.columns:
+        return indice
+    contagem = indice["unit"].value_counts()
+    if contagem.empty:
+        return indice
+    preferida = next((u for u in ("I25", "I15", "I05", "I96")
+                      if u in contagem.index), contagem.index[0])
+    return indice[indice["unit"] == preferida]
+
+
 def _dezembros(indice_classes: pd.DataFrame) -> pd.DataFrame:
     """Índice de dezembro de cada ano, por classe, numa base única."""
     if indice_classes.empty:
         return pd.DataFrame()
 
-    df = indice_classes.copy()
-    if "unit" in df.columns:
-        # A base do índice mudou ao longo do tempo (2015=100 → 2025=100).
-        # Misturar bases numa razão de índices produz lixo silencioso.
-        contagem = df["unit"].value_counts()
-        preferida = next((u for u in ("I25", "I15", "I05", "I96")
-                          if u in contagem.index), contagem.index[0])
-        df = df[df["unit"] == preferida]
-
+    df = _base_unica(indice_classes).copy()
     df = df[df["time"].astype(str).str.endswith("-12")].copy()
     df["ano"] = df["time"].astype(str).str[:4].astype(int)
     return df.pivot_table(index="ano", columns="coicop", values="valor",
@@ -952,6 +964,389 @@ def indices_comparados(indice_classes: pd.DataFrame,
     df.attrs["ano_base"] = base
     df.attrs["ano_base_pedido"] = alvo
     return df
+
+
+# --------------------------------------------------------------------------
+# Momentum: efeito de base, arrastamento e difusão
+# --------------------------------------------------------------------------
+# A aplicação só mostrava **variação homóloga**, que é o sinal mais lento que
+# existe: identifica uma inflexão com cinco a seis meses de atraso, porque cada
+# leitura ainda carrega onze meses de história. Para quem tem de decidir, a
+# diferença entre “está a abrandar” e “abrandou há quatro meses” é material.
+#
+# **Porque não há aqui uma taxa em cadeia anualizada.** Seria o indicador
+# clássico de momentum, e exigiria uma série corrigida de sazonalidade. O IHPC
+# do Eurostat é difundido **em bruto**: nos alimentos, a sazonalidade da fruta e
+# dos hortícolas domina qualquer variação de três meses, e o indicador
+# resultante oscilaria sem significar nada. Corrigir a sazonalidade por conta
+# própria resolveria isso e quebraria o princípio que rege esta ferramenta, o de
+# que cada número é verificável na fonte oficial: uma série ajustada por nós é um
+# cálculo da UPE, não um número do INE.
+#
+# As três medidas abaixo dão a mesma informação **sem ajustamento nenhum**, por
+# aritmética exata sobre o índice publicado.
+
+
+def efeito_de_base(indice: pd.DataFrame) -> pd.DataFrame:
+    """
+    Reparte a **variação da taxa homóloga** entre o mês que entra na janela e o
+    mês que sai dela.
+
+    A identidade é exata e não envolve sazonalidade. Sendo `r(m)` a variação
+    mensal do índice e `π(m)` a homóloga:
+
+        1 + π(m) = Π(k=0..11) [1 + r(m−k)]
+
+    donde, dividindo por `1 + π(m−1)`:
+
+        (1 + π(m)) / (1 + π(m−1)) = (1 + r(m)) / (1 + r(m−12))
+
+    Ou seja, **toda** a variação da taxa homóloga entre dois meses consecutivos
+    se explica por dois números: a variação mensal que entra e a que sai. O
+    resto da janela é comum às duas leituras e cancela-se.
+
+    Daí a repartição aditiva exata, com `A = 1 + π(m−1)`:
+
+        Δπ = A · [r(m) − r(m−12)] / [1 + r(m−12)]
+
+    `contributo_novo` é a parcela de `r(m)` e `contributo_base` a de `r(m−12)`,
+    com sinal trocado: as duas somam exatamente `delta_homologa`. Um efeito de
+    base positivo significa que a taxa subiu por ter saído da janela um mês
+    fraco do ano anterior, e **não** porque os preços tenham acelerado agora.
+
+    Uma linha por mês com os dois meses de referência disponíveis. Devolve
+    DataFrame vazio se a série não tiver 14 meses, que é o mínimo para haver um
+    `r(m−12)` e um `π(m−1)`.
+    """
+    if indice is None or indice.empty:
+        return pd.DataFrame()
+
+    df = _base_unica(indice)[["time", "valor"]].copy()
+    df["time"] = df["time"].astype(str)
+    df = (df.dropna(subset=["valor"]).drop_duplicates(subset=["time"], keep="last")
+            .sort_values("time").reset_index(drop=True))
+    if len(df) < 14:
+        return pd.DataFrame()
+
+    valores = df["valor"].astype(float)
+    # Variação mensal e homóloga em fração, não em percentagem: a aritmética
+    # acima é sobre `1 + r`, e converter no fim evita dividir por 100 em cinco
+    # sítios diferentes.
+    r = valores / valores.shift(1) - 1
+    pi = valores / valores.shift(12) - 1
+
+    df["mensal"] = r * 100
+    df["homologa"] = pi * 100
+    df["mensal_ha_um_ano"] = (r.shift(12)) * 100
+    df["delta_homologa"] = (pi - pi.shift(1)) * 100
+
+    a = 1 + pi.shift(1)
+    denom = 1 + r.shift(12)
+    df["contributo_novo"] = (a * r / denom) * 100
+    df["contributo_base"] = (-a * r.shift(12) / denom) * 100
+
+    df = df.dropna(subset=["delta_homologa", "contributo_novo", "contributo_base"])
+    return df.reset_index(drop=True)
+
+
+def arrastamento_anual(indice: pd.DataFrame) -> dict | None:
+    """
+    Quanto da média anual do ano corrente já está determinado, mesmo que o índice
+    não volte a mexer.
+
+    É o *carry-over*: fixando o índice no último valor conhecido até dezembro,
+    qual seria a variação da média anual face à média do ano anterior. Responde a
+    uma pergunta que a taxa homóloga não responde e que interessa a quem decide:
+    **quanto da inflação alimentar deste ano já está fechado**.
+
+    Exige o ano anterior completo (doze meses). Devolve None se não houver.
+    """
+    if indice is None or indice.empty:
+        return None
+
+    df = _base_unica(indice)[["time", "valor"]].copy()
+    df["time"] = df["time"].astype(str)
+    df = (df.dropna(subset=["valor"]).drop_duplicates(subset=["time"], keep="last")
+            .sort_values("time"))
+    if df.empty:
+        return None
+
+    df["ano"] = df["time"].str[:4]
+    ano = df["ano"].iloc[-1]
+    corrente = df[df["ano"] == ano]["valor"].astype(float).tolist()
+    anterior = df[df["ano"] == str(int(ano) - 1)]["valor"].astype(float).tolist()
+    if len(anterior) < 12 or not corrente:
+        return None
+
+    media_anterior = sum(anterior) / len(anterior)
+    if media_anterior <= 0:
+        return None
+
+    conhecidos = len(corrente)
+    ultimo = corrente[-1]
+    projetada = (sum(corrente) + (12 - conhecidos) * ultimo) / 12
+    return {
+        "ano": int(ano),
+        "meses_conhecidos": conhecidos,
+        "ultimo_periodo": df["time"].iloc[-1],
+        "arrastamento": (projetada / media_anterior - 1) * 100,
+        "media_anterior": media_anterior,
+        "completo": conhecidos >= 12,
+    }
+
+
+def difusao_por_classe(indice_classes: pd.DataFrame, meses: int = 3) -> pd.DataFrame:
+    """
+    Quantas das nove classes estão a acelerar, e quantas a abrandar.
+
+    Cada classe é comparada **consigo própria**, entre a sua taxa homóloga atual
+    e a de há `meses` meses. Como as duas leituras são homólogas, a sazonalidade
+    cancela-se em ambas e não é preciso corrigir nada.
+
+    Diz se a pressão é geral ou concentrada em dois ou três grupos, que é a
+    diferença entre um choque de oferta e inflação estrutural. A aplicação
+    afirmava essa distinção em texto; isto mede-a.
+
+    Uma linha por classe. Em `attrs`: `indice_difusao` (fração das classes a
+    acelerar, de 0 a 1), `n_acelera`, `n_abranda`, `mes` e `mes_anterior`.
+    """
+    vazio = pd.DataFrame()
+    if indice_classes is None or indice_classes.empty or meses < 1:
+        return vazio
+
+    df = _base_unica(indice_classes).copy()
+    df["time"] = df["time"].astype(str)
+    largo = df.pivot_table(index="time", columns="coicop", values="valor",
+                           aggfunc="last").sort_index()
+    # 12 meses para a homóloga mais `meses` para a comparação, e um a mais para
+    # que exista a própria observação de partida.
+    if len(largo) < 12 + meses + 1:
+        return vazio
+
+    homologa = (largo / largo.shift(12) - 1) * 100
+    homologa = homologa.dropna(how="all")
+    if len(homologa) < meses + 1:
+        return vazio
+
+    atual, anterior = homologa.iloc[-1], homologa.iloc[-1 - meses]
+    linhas = []
+    for classe in CLASSES:
+        cod = classe["cod"]
+        if cod not in homologa.columns:
+            continue
+        a, b = atual.get(cod), anterior.get(cod)
+        if pd.isna(a) or pd.isna(b):
+            continue
+        linhas.append({
+            "codigo": cod,
+            "classe": classe["nome"],
+            "homologa_atual": float(a),
+            "homologa_anterior": float(b),
+            "delta": float(a) - float(b),
+            "acelera": float(a) > float(b),
+        })
+
+    res = pd.DataFrame(linhas)
+    if res.empty:
+        return vazio
+
+    res = res.sort_values("delta", ascending=False).reset_index(drop=True)
+    res.attrs["n_acelera"] = int(res["acelera"].sum())
+    res.attrs["n_abranda"] = int((~res["acelera"]).sum())
+    res.attrs["indice_difusao"] = float(res["acelera"].mean())
+    res.attrs["mes"] = str(homologa.index[-1])
+    res.attrs["mes_anterior"] = str(homologa.index[-1 - meses])
+    res.attrs["meses"] = int(meses)
+    return res
+
+
+# --------------------------------------------------------------------------
+# Quanto custaria compensar o agravamento
+# --------------------------------------------------------------------------
+def custo_compensacao(df_quintis: pd.DataFrame, agregados: int,
+                      quintis=("q1",)) -> dict | None:
+    """
+    Custo anual de compensar integralmente um ou mais quintis pelo agravamento
+    dos últimos doze meses.
+
+    Cada quintil é, por construção, **um quinto dos agregados**. O custo é o
+    agravamento mensal desse quintil, multiplicado pelo número de agregados que
+    lhe cabe e por doze.
+
+    Existe porque o simulador de IVA já dava a poupança agregada de uma medida e
+    não havia com que a comparar: sem o custo do problema, o custo da solução não
+    se lê. Devolve None se o agravamento não estiver disponível, que é o caso em
+    que faltam variações homólogas.
+    """
+    if df_quintis is None or df_quintis.empty or not agregados:
+        return None
+
+    n_quintis = int((df_quintis["quintil"] != "total").sum())
+    if n_quintis <= 0:
+        return None
+    agregados_por_quintil = float(agregados) / n_quintis
+
+    linhas, total = [], 0.0
+    for chave in quintis:
+        alvo = df_quintis[df_quintis["quintil"] == chave]
+        if alvo.empty:
+            continue
+        agravamento = alvo["agravamento"].iloc[0]
+        if agravamento is None or pd.isna(agravamento):
+            continue
+        anual = float(agravamento) * agregados_por_quintil * 12
+        total += anual
+        linhas.append({
+            "quintil": chave,
+            "nome": alvo["nome"].iloc[0],
+            "agravamento_mes": float(agravamento),
+            "agregados": agregados_por_quintil,
+            "custo_anual": anual,
+            "custo_anual_milhoes": anual / 1e6,
+        })
+
+    if not linhas:
+        return None
+    return {
+        "linhas": pd.DataFrame(linhas),
+        "total_anual": total,
+        "total_milhoes": total / 1e6,
+        "agregados_por_quintil": agregados_por_quintil,
+        "cobertura": float(df_quintis.attrs.get("cobertura_minima", 1.0)),
+    }
+
+
+# --------------------------------------------------------------------------
+# Observado contra simulado, por tipo de agregado
+# --------------------------------------------------------------------------
+def adultos_do_tipo(chave: str) -> float | None:
+    """
+    Número médio de adultos de um tipo de agregado do IDF.
+
+    Para o grupo composto (“2 ou mais adultos”) o número não é publicado: é
+    **derivado** de `ESCALAS_TESTE_COMPOSICAO`, a repartição do grupo por
+    resíduo a partir das contagens do quadro Q.1.3. Fica calculado, e não
+    inscrito à mão, para que acompanhe qualquer revisão dessa constante.
+    """
+    tipo = IDF_TIPOS_AGREGADO.get(chave)
+    if tipo is None:
+        return None
+    if tipo["adultos"] is not None:
+        return float(tipo["adultos"])
+    peso = sum(f for _n, f in ESCALAS_TESTE_COMPOSICAO)
+    if peso <= 0:
+        return None
+    return sum(n * f for n, f in ESCALAS_TESTE_COMPOSICAO) / peso
+
+
+def comparar_tipos_agregado(media_agregado: float, dimensao_media: float,
+                            fator_idf: float = 1.0) -> pd.DataFrame:
+    """
+    Confronta a despesa alimentar **observada** no IDF, por tipo de agregado, com
+    a que as escalas de equivalência **simulam** para a mesma composição.
+
+    É a validação que faltava: todo o ajustamento por composição desta aplicação
+    assenta em escalas construídas para o consumo total, e até aqui a única
+    aferição era sobre o **rácio** entre dois tipos. Comparar níveis diz mais.
+
+    `fator_idf` indexa o nível observado do IDF ao mês corrente, com o mesmo
+    fator que a âncora usa. Sem ele comparar-se-iam preços de 2022/2023 com
+    preços de hoje.
+
+    **Só é comparação de níveis na base IDF.** Nas Contas Nacionais o
+    `media_agregado` vem de outro universo, e a coluna `dentro_do_intervalo`
+    perde sentido; a coluna `racio_*`, essa, é adimensional e vale em qualquer
+    base. Cabe a quem chama decidir o que mostra.
+
+    Uma linha por tipo de agregado transcrito. Em `attrs`, `por_transcrever`, a
+    lista dos que faltam, para que a interface possa declarar a cobertura.
+    """
+    linhas = []
+    for chave, tipo in IDF_TIPOS_AGREGADO.items():
+        adultos = adultos_do_tipo(chave)
+        if adultos is None:
+            continue
+        observado = float(tipo["alimentar_ano"]) / 12 * float(fator_idf)
+
+        # As escalas recebem um número inteiro de adultos, e o grupo composto
+        # tem 2,36 em média. Arredondar destruiria o que se quer medir, por isso
+        # a interpolação é feita sobre as **unidades equivalentes**, que são
+        # lineares no número de adultos: é a mesma fórmula de
+        # `unidades_equivalentes`, aplicada a um valor não inteiro.
+        simulado = {}
+        for nome_escala, e in ESCALAS.items():
+            eq_medio = e["primeiro"] + e["adulto"] * (max(dimensao_media, 1.0) - 1)
+            if eq_medio <= 0:
+                continue
+            eq_tipo = (e["primeiro"] + e["adulto"] * (adultos - 1)
+                       + e["crianca"] * float(tipo["criancas"]))
+            simulado[nome_escala] = media_agregado / eq_medio * eq_tipo
+        if not simulado:
+            continue
+
+        minimo, maximo = min(simulado.values()), max(simulado.values())
+        linhas.append({
+            "chave": chave,
+            "nome": tipo["nome"],
+            "detalhe": tipo["detalhe"],
+            "adultos": adultos,
+            "criancas": float(tipo["criancas"]),
+            "observado": observado,
+            "minimo": minimo,
+            "maximo": maximo,
+            "dentro_do_intervalo": minimo <= observado <= maximo,
+            **{f"simulado_{k}": v for k, v in simulado.items()},
+        })
+
+    df = pd.DataFrame(linhas)
+    if not df.empty:
+        # Rácio observado contra rácio simulado, adimensional: é o que sobrevive
+        # à mudança de base e o que permite ler a comparação nas Contas
+        # Nacionais, onde os níveis não são comparáveis.
+        base = df.iloc[0]
+        for coluna in ("observado", "minimo", "maximo"):
+            df[f"racio_{coluna}"] = (df[coluna] / base[coluna]
+                                     if base[coluna] else float("nan"))
+    df.attrs["por_transcrever"] = list(IDF_TIPOS_POR_TRANSCREVER)
+    df.attrs["n_transcritos"] = len(df)
+    return df
+
+
+# --------------------------------------------------------------------------
+# Hierarquia das incertezas
+# --------------------------------------------------------------------------
+def hierarquia_incertezas(entradas) -> pd.DataFrame:
+    """
+    Ordena as incertezas da ferramenta pela amplitude que cada uma introduz.
+
+    Existe porque a aplicação calculava seis amplitudes em seis sítios
+    diferentes e nunca as confrontava. Confrontadas, dizem uma coisa que nenhuma
+    delas diz sozinha: **o debate público está concentrado na incerteza mais
+    pequena de todas.** O viés de substituição do cabaz de composição fixa, que é
+    o argumento central da discussão, vale décimas; a escolha da base, que
+    ninguém discute, vale um fator próximo de 2.
+
+    `entradas` é uma sequência de dicionários com `fonte`, `afeta`, `amplitude`
+    (em euros por mês) e `nota`. Entradas sem amplitude, ou com amplitude nula,
+    são descartadas: uma barra de comprimento zero num gráfico de ordens de
+    grandeza é ruído.
+
+    **A unidade comum é deliberada e tem de ser declarada onde isto aparece.**
+    Cada barra é a amplitude em euros por mês do número que **essa** incerteza
+    afeta, que não é o mesmo número para todas: a base e a escala movem a
+    despesa, a repercussão move a poupança do simulador, a ponderação e o viés
+    movem o agravamento. Servem para comparar **ordens de grandeza**, não para
+    somar.
+    """
+    linhas = [e for e in entradas
+              if e.get("amplitude") is not None
+              and not pd.isna(e["amplitude"])
+              and abs(float(e["amplitude"])) > 0.005]
+    if not linhas:
+        return pd.DataFrame()
+    df = pd.DataFrame(linhas)
+    df["amplitude"] = df["amplitude"].astype(float).abs()
+    return df.sort_values("amplitude", ascending=False).reset_index(drop=True)
 
 
 # --------------------------------------------------------------------------

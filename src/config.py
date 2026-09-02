@@ -1340,6 +1340,64 @@ IDF_CLASSES_QUINTIL = {
 }
 
 # --------------------------------------------------------------------------
+# Despesa alimentar por tipo de agregado, tal como observada
+# --------------------------------------------------------------------------
+# Tudo o que a aplicação diz sobre composição do agregado sai de **escalas de
+# equivalência aplicadas à média nacional**: é simulação, não observação. O IDF
+# publica a despesa por tipo de agregado, o que permite confrontar as duas e
+# dizer se o aparelho das escalas reproduz o que o inquérito mediu.
+#
+# **Só dois tipos estão aqui, e é deliberado.** São os dois que o teste das
+# escalas já usava, e cujos níveis estavam escritos num comentário em vez de
+# numa constante (ver `ESCALAS_TESTE_RACIO`, logo abaixo, onde o rácio 1,854
+# aparece com os dois valores absolutos em comentário). Promovê-los a constante
+# é o que torna a comparação de níveis possível.
+#
+# Os restantes tipos do quadro Q.2.6.a **não estão transcritos**, e não são
+# inventados: ver `IDF_TIPOS_POR_TRANSCREVER`. Preencher essa lista é trabalho
+# manual de leitura do quadro, como se fez para `IDF_CLASSES_QUINTIL`.
+#
+# `adultos` é None quando o grupo é composto: nesse caso o número médio de
+# adultos é **derivado** de `ESCALAS_TESTE_COMPOSICAO`, em `calculos.py`, e não
+# fixado à mão. Um número derivado escrito à mão desatualiza-se em silêncio, que
+# é o modo de falha que as auditorias C2, E9, K8 e L16 fecharam noutros sítios.
+IDF_TIPOS_FONTE = ("INE, Inquérito às Despesas das Famílias 2022/2023, "
+                   "quadros Q.2.6.a (despesa por tipo de agregado) e Q.1.3 "
+                   "(contagens)")
+
+IDF_TIPOS_AGREGADO = {
+    "1_adulto": {
+        "nome": "1 adulto",
+        "detalhe": "sem crianças dependentes",
+        "adultos": 1.0,
+        "criancas": 0.0,
+        "alimentar_ano": 1654.0,
+    },
+    "2mais_adultos": {
+        "nome": "2 ou mais adultos",
+        "detalhe": "sem crianças dependentes",
+        "adultos": None,          # derivado de ESCALAS_TESTE_COMPOSICAO
+        "criancas": 0.0,
+        "alimentar_ano": 3066.0,
+    },
+}
+
+# Os tipos que faltam, nomeados para que a lacuna seja visível na aplicação em
+# vez de ficar por dizer. Cada entrada é uma linha do quadro Q.2.6.a por
+# transcrever. Enquanto a lista não estiver vazia, a comparação entre observado
+# e simulado cobre apenas agregados **sem crianças**, e a interface di-lo.
+IDF_TIPOS_POR_TRANSCREVER = [
+    "Pessoa só com menos de 65 anos",
+    "Pessoa só com 65 ou mais anos",
+    "Casal sem filhos dependentes",
+    "Casal com um filho dependente",
+    "Casal com dois filhos dependentes",
+    "Casal com três ou mais filhos dependentes",
+    "Famílias monoparentais com filhos dependentes",
+]
+
+
+# --------------------------------------------------------------------------
 # Teste empírico das escalas de equivalência na alimentação
 # --------------------------------------------------------------------------
 # A aplicação sempre declarou que a escala OCDE modificada subestima o custo
@@ -1479,6 +1537,113 @@ SOFI_INCAPACIDADE = {
 # Pessoas, em milhões, Portugal
 SOFI_MILHOES = {2017: 2.3, 2019: 1.6, 2020: 1.7, 2021: 1.6,
                 2022: 1.8, 2023: 1.6, 2024: 1.5, 2025: 1.5}
+
+# --------------------------------------------------------------------------
+# Melhoria do indicador: o que falta e o que o fecharia
+# --------------------------------------------------------------------------
+# A aplicação declarava doze limitações e não dizia o que fazer com nenhuma
+# delas. Para um Gabinete que tem de decidir, isso é parar onde a decisão
+# começa: uma lista de defeitos não é um plano.
+#
+# Cada entrada diz **o que falta**, **o que a fecharia**, **quem tem os dados** e
+# **que esforço custa**, para que a lacuna possa ser transformada em pedido a
+# outra entidade ou em trabalho da própria UPE.
+#
+# `prioridade` é 1 (o que mais muda a leitura) a 3. Não é uma ordem de execução:
+# é a ordem pela qual as lacunas afetam a resposta à pergunta do Gabinete.
+#
+# `estado` distingue o que já se pode fazer do que depende de terceiros. Sem
+# essa coluna, uma lista de melhorias lê-se como uma lista de desejos.
+MELHORIAS_INDICADOR = [
+    {
+        "prioridade": 1,
+        "lacuna": "As duas âncoras oficiais divergem por um fator próximo de 2",
+        "consequencia": "O nível da despesa alimentar não é determinável; a "
+                        "aplicação só pode apresentar o intervalo",
+        "fecha": "Exercício de conciliação entre o inquérito e as Contas "
+                 "Nacionais ao nível da rubrica alimentar, com publicação da "
+                 "taxa de cobertura por classe COICOP",
+        "quem": "INE",
+        "esforco": "Externo, pedido formal",
+        "estado": "Depende de terceiros",
+    },
+    {
+        "prioridade": 1,
+        "lacuna": "Não há quantidades, só euros e percentagens",
+        "consequencia": "Não é possível distinguir “as famílias gastam mais” de "
+                        "“as famílias compram menos”, que é a pergunta política",
+        "fecha": "Dados de transação (e-fatura ou scanner data) ou microdados "
+                 "do IDF com quantidades",
+        "quem": "Autoridade Tributária, INE",
+        "esforco": "Externo, protocolo de dados",
+        "estado": "Depende de terceiros",
+    },
+    {
+        "prioridade": 1,
+        "lacuna": "A despesa por tipo de agregado é simulada, não observada",
+        "consequencia": "O ajustamento por composição assenta em escalas "
+                        "construídas para o consumo total, não para alimentação",
+        "fecha": "Transcrever o quadro Q.2.6.a do IDF por tipo de agregado, que "
+                 "está publicado e não exige pedido nenhum",
+        "quem": "UPE",
+        "esforco": "Interno, algumas horas",
+        "estado": "Parcialmente feito",
+    },
+    {
+        "prioridade": 2,
+        "lacuna": "Não há desagregação territorial",
+        "consequencia": "A despesa é uma média nacional; não distingue região "
+                        "nem grau de urbanização",
+        "fecha": "Quadros do IDF por NUTS II, já publicados",
+        "quem": "UPE",
+        "esforco": "Interno, transcrição",
+        "estado": "Por fazer",
+    },
+    {
+        "prioridade": 2,
+        "lacuna": "A alimentação fora de casa está fora do indicador",
+        "consequencia": "A restauração (divisão 11) e as bebidas não alcoólicas "
+                        "(grupo 01.2) não entram, e o seu peso não é quantificado",
+        "fecha": "Acrescentar as duas rubricas ao pedido do `nama_10_cp18`, que "
+                 "a aplicação já consulta, e apresentá-las como enquadramento",
+        "quem": "UPE",
+        "esforco": "Interno, alteração pequena",
+        "estado": "Por fazer",
+    },
+    {
+        "prioridade": 2,
+        "lacuna": "A repercussão do IVA é calibrada numa medida temporária",
+        "consequencia": "É o parâmetro que mais move o simulador, e a evidência "
+                        "cobre quatro meses de uma medida mediática",
+        "fecha": "Avaliação de uma alteração permanente de taxa, ou acesso aos "
+                 "microdados de preços do IPC",
+        "quem": "Banco de Portugal, INE",
+        "esforco": "Externo",
+        "estado": "Depende de terceiros",
+    },
+    {
+        "prioridade": 3,
+        "lacuna": "Não se mede a dispersão de preços entre operadores",
+        "consequencia": "O índice dá a variação média; o nível que cada família "
+                        "enfrenta oscila em torno dela e não é observável",
+        "fecha": "Dados de transação por insígnia e por território",
+        "quem": "Autoridade Tributária, operadores",
+        "esforco": "Externo",
+        "estado": "Depende de terceiros",
+    },
+    {
+        "prioridade": 3,
+        "lacuna": "O IVA é o único instrumento simulado",
+        "consequencia": "A comparação com apoios diretos, que dirigem maior "
+                        "parcela ao quintil inferior, não é quantificada",
+        "fecha": "Estender o simulador a transferências, com a mesma base de "
+                 "despesa por quintil que a aplicação já usa",
+        "quem": "UPE",
+        "esforco": "Interno, desenvolvimento",
+        "estado": "Por fazer",
+    },
+]
+
 
 # --------------------------------------------------------------------------
 # Metadados institucionais

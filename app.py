@@ -18,12 +18,17 @@ import streamlit as st
 
 from pathlib import Path
 
-from src import deco, eurostat, observatorio
-from src.calculos import (ESCALAS, agregados_do_ano, cabaz_quintis,
-                          comparar_ponderadores, composicao_iva,
-                          composicao_quintis, decompor, despesa_do_agregado,
+from src import deco, eurostat, media, observatorio
+from src.calculos import (ESCALAS, agregados_do_ano, arrastamento_anual,
+                          cabaz_quintis,
+                          comparar_ponderadores, comparar_tipos_agregado,
+                          composicao_iva,
+                          composicao_quintis, custo_compensacao, decompor,
+                          despesa_do_agregado, difusao_por_classe,
+                          efeito_de_base,
                           escala_mais_proxima, frescura_das_series,
                           frescura_do_observatorio,
+                          hierarquia_incertezas,
                           idade_fonte, indices_comparados,
                           intervalo_agregado, intervalo_engel,
                           pontos_de_rutura_das_escalas,
@@ -48,6 +53,8 @@ from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FO
                         IDF_ALIMENTAR_ANUAL,
                         IDF_JANELA_FONTE, IDF_JANELA_RECOLHA,
                         IDF_PESO_ALIMENTAR, IDF_QUINTIS,
+                        IDF_TIPOS_FONTE, IDF_TIPOS_POR_TRANSCREVER,
+                        MELHORIAS_INDICADOR,
                         LIMITE_ANOS_SOFI, LIMITE_DIAS_DECO, LIMITE_DIAS_OBSERVATORIO,
                         LIMITES_FRESCURA,
                         SOFI_CUSTO, SOFI_EDICAO, SOFI_FONTE, SOFI_INCAPACIDADE,
@@ -2495,10 +2502,33 @@ def painel(nome: str):
         )
 
 
-abaD, aba1, aba2, aba6, aba3, aba4, aba5 = st.tabs([
-    "Evolução do cabaz", "Despesa e composição", "Histórico", "Da produção ao consumo",
-    "Simulador de IVA", "Comparação UE-27", "Metodologia e fontes",
+abaS, abaD, aba1, aba2, aba6, aba3, aba4, abaM, aba5 = st.tabs([
+    "Síntese", "Evolução do cabaz", "Despesa e composição", "Histórico",
+    "Da produção ao consumo",
+    "Simulador de IVA", "Comparação UE-27", "Análise mediática",
+    "Metodologia e fontes",
 ])
+
+# --- lugar da síntese, preenchido no fim do ficheiro ----------------------
+# A síntese consome números que só existem depois de os parâmetros serem lidos
+# e de os restantes separadores correrem: a decomposição, os quintis, o
+# apuramento do IVA, a comparação de índices. No Streamlit a ordem do ficheiro é
+# a ordem de execução, pelo que o separador que aparece **primeiro** tem de ser
+# escrito **por último**. É o mesmo mecanismo do alarme de cobertura e do índice
+# da metodologia: guarda-se o lugar aqui e enche-se lá em baixo.
+with abaS:
+    titulo_pagina(
+        "Síntese",
+        "O que os dados dizem, o que o indicador não capta e o que o "
+        "melhoraria. Os restantes separadores desenvolvem cada ponto.")
+    _slot_sintese = st.container()
+
+# --- momentum: calculado uma vez, consumido em dois separadores -----------
+# O Histórico demonstra-o e a Síntese cita-o. Fica aqui, antes dos dois, para
+# não haver duas contas a poder divergir.
+_efeito_base = efeito_de_base(dados.get("indice_pt", pd.DataFrame()))
+_arrasto = arrastamento_anual(dados.get("indice_pt", pd.DataFrame()))
+_difusao = difusao_por_classe(dados.get("indice_classes", pd.DataFrame()))
 
 # ==========================================================================
 # Parâmetros de análise, no topo de “Despesa e composição”
@@ -3711,6 +3741,14 @@ with aba1:
         df_quintis = cabaz_quintis(dados["variacoes_classe"])
         df_comp_q = composicao_quintis()
 
+        # Quanto custaria compensar o agravamento. O simulador de IVA já dava a
+        # poupança agregada de uma medida e não havia com que a comparar: sem o
+        # custo do problema, o custo da solução não se lê. É a mesma conta que a
+        # tabela acima já faz por agregado, multiplicada pelo quinto dos
+        # agregados que cabe a cada quintil.
+        _custo_q1 = custo_compensacao(df_quintis, agregados, ("q1",))
+        _custo_q12 = custo_compensacao(df_quintis, agregados, ("q1", "q2"))
+
         tab_q = pd.DataFrame([{
             "Quintil": r.nome,
             "Despesa alimentar": euro(r.despesa_mensal, 0) + "/mês",
@@ -3786,6 +3824,44 @@ with aba1:
           metade.<br><br>{_frase_esforco}Nenhuma destas colunas deve por isso ser lida
           isoladamente: a taxa, só por si, sugere neutralidade; os euros, só por si, sugerem o
           inverso.""")
+
+        # ---- dimensão do problema, em euros de orçamento público ----
+        # A tabela acima dá o agravamento por agregado e por mês. Multiplicado
+        # pelo quinto dos agregados que cabe a cada quintil, dá a ordem de
+        # grandeza de **compensar** esse agravamento, que é o que permite
+        # confrontar o custo do problema com o custo de qualquer medida. Sem
+        # isto, a poupança agregada do simulador de IVA não tinha termo de
+        # comparação nenhum.
+        if _custo_q1:
+            componente(
+                "Dimensão do agravamento, em orçamento público",
+                "Custo anual de compensar integralmente o agravamento dos "
+                "últimos 12 meses, por transferência direta, sem qualquer "
+                "efeito sobre os preços.")
+            _cc1, _cc2, _cc3 = st.columns(3)
+            _cc1.metric(
+                "Compensar o 1.º quintil",
+                milhoes(_custo_q1["total_milhoes"]),
+                help=(f"{euro(_custo_q1['linhas']['agravamento_mes'].iloc[0])} por mês "
+                      f"e por agregado, sobre {numero(_custo_q1['agregados_por_quintil'])} "
+                      "agregados, durante 12 meses."))
+            if _custo_q12:
+                _cc2.metric("Compensar os dois primeiros quintis",
+                            milhoes(_custo_q12["total_milhoes"]))
+            _cc3.metric("Agregados abrangidos (1.º quintil)",
+                        numero(_custo_q1["agregados_por_quintil"]),
+                        help="Um quintil é, por construção, um quinto dos agregados.")
+            st.caption(
+                "**É uma ordem de grandeza, não uma estimativa orçamental.** Supõe "
+                "compensação integral, universal dentro do quintil e sem custos de "
+                "administração, e assenta no agravamento medido sobre a estrutura de "
+                "consumo do IDF 2022/2023. Serve para uma coisa: dar termo de "
+                "comparação ao valor da poupança agregada que o **Simulador de IVA** "
+                "apresenta, que de outro modo se lê sem escala."
+                + ("" if _custo_q1["cobertura"] >= 0.999 else
+                   f" A cobertura desta sessão é de "
+                   f"{percentagem(_custo_q1['cobertura'] * 100, sinal=False)} da despesa "
+                   "alimentar, pelo que o valor está subestimado na mesma proporção."))
 
         # Era [3, 2], e os dois gráficos ficavam apertados. A legenda das nove
         # classes ocupava um terço da figura da esquerda, em coluna, e o que
@@ -4133,6 +4209,9 @@ with aba1:
                 + (f" Nesta escala a coluna coincide com um dos limites em "
                    f"{_coincide} das {len(comps)} composições, a **{_rot_esc}** é uma "
                    "das escalas extremas." if _coincide else "")
+                + " **Estes valores são simulados**, não observados: o confronto com "
+                  "a despesa que o inquérito mediu por tipo de agregado está em "
+                  "“Escalas de equivalência”, no separador Metodologia."
             )
 
         with e3.expander("Tabela detalhada"):
@@ -4282,6 +4361,159 @@ with aba2:
             "acesso automático, e as variações semanais são muito voláteis por efeitos de base."
         )
 
+        # ---------- momentum: o que a taxa homóloga esconde ----------
+        # A taxa homóloga carrega onze meses de história e identifica uma
+        # inflexão com cinco a seis meses de atraso. Estas duas leituras
+        # antecipam-na sem exigir correção de sazonalidade, que o IHPC não traz
+        # e que fazer por conta própria quebraria o princípio de que cada
+        # número é verificável na fonte. Ver `efeito_de_base` em calculos.py.
+        if not _efeito_base.empty:
+            _ult_eb = _efeito_base.iloc[-1]
+            secao("O que fez a taxa mexer: o mês que entra e o que sai",
+                  "A variação da taxa homóloga entre dois meses consecutivos "
+                  "explica-se, <strong>por inteiro</strong>, por dois números: a "
+                  "variação de preços do mês que entra na janela e a do mês que "
+                  "sai. O resto é comum às duas leituras e cancela-se.",
+                  ajuda=(
+                      "**Não é uma aproximação, é uma identidade.** Sendo `r(m)` a "
+                      "variação mensal e `π(m)` a homóloga, `1+π(m)` é o produto "
+                      "das doze variações mensais da janela. Dividindo por "
+                      "`1+π(m−1)`, tudo se cancela menos os dois extremos:\n\n"
+                      "`(1+π(m)) / (1+π(m−1)) = (1+r(m)) / (1+r(m−12))`\n\n"
+                      "As duas parcelas apresentadas somam exatamente a variação "
+                      "da taxa, e essa igualdade está travada por teste "
+                      "automático.\n\n"
+                      "**Porque não há aqui uma taxa em cadeia anualizada.** Seria "
+                      "o indicador clássico de momentum e exigiria uma série "
+                      "corrigida de sazonalidade. O Eurostat difunde o índice em "
+                      "bruto, e nos alimentos a sazonalidade da fruta e dos "
+                      "hortícolas dominaria qualquer janela de três meses. "
+                      "Corrigi-la por nossa conta tornaria o número um cálculo da "
+                      "UPE em vez de um número do INE."),
+                  grupo="02 · Momentum")
+
+            _mb1, _mb2, _mb3 = st.columns(3)
+            _mb1.metric(f"Variação da taxa homóloga ({mes_pt(_ult_eb['time'])})",
+                        pontos(float(_ult_eb["delta_homologa"]), casas=2),
+                        help="Face ao mês anterior. É esta variação que as duas "
+                             "parcelas seguintes repartem.")
+            _mb2.metric("Devido ao mês que entra",
+                        pontos(float(_ult_eb["contributo_novo"]), casas=2),
+                        help=(f"Os preços variaram "
+                              f"{percentagem(float(_ult_eb['mensal']), casas=2)} "
+                              f"em {mes_pt(_ult_eb['time'])}, face ao mês anterior."))
+            _mb3.metric("Devido ao mês que sai (efeito de base)",
+                        pontos(float(_ult_eb["contributo_base"]), casas=2),
+                        help=(f"Há um ano, os preços tinham variado "
+                              f"{percentagem(float(_ult_eb['mensal_ha_um_ano']), casas=2)} "
+                              "nesse mês. Ao sair da janela, deixa de contar."))
+
+            _dom_base = abs(float(_ult_eb["contributo_base"])) > abs(
+                float(_ult_eb["contributo_novo"]))
+            nota("Como ler esta variação", f"""
+          Em {mes_extenso(_ult_eb['time'])} a taxa homóloga
+          {'desceu' if _ult_eb['delta_homologa'] < 0 else 'subiu'}
+          <strong>{pontos(abs(float(_ult_eb['delta_homologa'])), casas=2, sinal=False)}</strong>.
+          {'A maior parte dessa variação vem do <strong>mês que saiu da janela</strong>, e não do que aconteceu aos preços agora: é efeito de base, aritmética da comparação, e não um movimento novo do mercado.'
+           if _dom_base else
+           'A maior parte dessa variação vem do <strong>mês que entrou</strong>, ou seja, do que os preços fizeram neste mês: é movimento novo, e não efeito de base.'}
+          <br><br>
+          É a distinção que mais engana na leitura pública da inflação: uma taxa
+          homóloga pode descer sem que nenhum preço tenha descido, bastando que o
+          mês que sai da comparação tenha sido mau.""")
+
+            _janela_eb = _efeito_base.tail(24)
+            figEB = go.Figure()
+            figEB.add_trace(go.Bar(
+                x=[mes_pt(t) for t in _janela_eb["time"]],
+                y=_janela_eb["contributo_novo"], name="Mês que entra",
+                marker_color=AZUL,
+                hovertemplate="%{x}<br>Mês que entra: %{y:+.2f} p.p.<extra></extra>"))
+            figEB.add_trace(go.Bar(
+                x=[mes_pt(t) for t in _janela_eb["time"]],
+                y=_janela_eb["contributo_base"], name="Mês que sai (efeito de base)",
+                marker_color=DOURADO,
+                hovertemplate="%{x}<br>Efeito de base: %{y:+.2f} p.p.<extra></extra>"))
+            figEB.add_trace(go.Scatter(
+                x=[mes_pt(t) for t in _janela_eb["time"]],
+                y=_janela_eb["delta_homologa"], name="Variação da taxa homóloga",
+                mode="lines+markers", line=dict(color=VERMELHO, width=2.2),
+                hovertemplate="%{x}<br>Variação da taxa: %{y:+.2f} p.p.<extra></extra>"))
+            figEB.update_layout(
+                barmode="relative", height=420, margin=dict(t=34, b=42, l=10, r=10),
+                yaxis_title="Pontos percentuais",
+                legend=dict(orientation="h", y=1.13, x=0),
+                hovermode="x unified")
+            figEB.update_xaxes(showgrid=False)
+            figEB.update_yaxes(zeroline=True, zerolinecolor=TEXTO_3, zerolinewidth=1.5)
+            grafico(figEB, rodape=carimbo_do_grafico(dados))
+            st.caption(
+                "As duas barras somam exatamente a linha vermelha. Últimos "
+                f"{numero(len(_janela_eb))} meses da série."
+            )
+
+            if _arrasto:
+                st.info(f"""
+    **Quanto do ano já está fechado.** Com {numero(_arrasto['meses_conhecidos'])} meses conhecidos
+    de {_arrasto['ano']}, e **mesmo que o índice não volte a mexer** até dezembro, a inflação
+    alimentar média de {_arrasto['ano']} será de
+    **{percentagem(_arrasto['arrastamento'], sinal=False)}**.
+
+    É o *arrastamento*: a parte da média anual que já não depende do que acontecer daqui para a
+    frente. Uma medida tomada agora atua apenas sobre os meses que faltam, e não sobre esta
+    parcela.{'' if not _arrasto['completo'] else ' O ano está completo, pelo que este valor já é a variação observada e não uma projeção.'}
+                """)
+
+        # ---------- difusão: a pressão é geral ou concentrada? ----------
+        if not _difusao.empty:
+            _n_ac = _difusao.attrs.get("n_acelera", 0)
+            _n_tot = len(_difusao)
+            secao("Quantos grupos estão a acelerar",
+                  "Cada grupo é comparado <strong>consigo próprio</strong>, entre "
+                  "a sua variação homóloga atual e a de há "
+                  f"{numero(_difusao.attrs.get('meses', 3))} meses. Como as duas "
+                  "leituras são homólogas, a sazonalidade cancela-se em ambas.",
+                  grupo="03 · Difusão")
+
+            _dif1, _dif2 = st.columns([1, 2])
+            _dif1.metric("Grupos a acelerar", f"{_n_ac} de {_n_tot}",
+                         help=(f"Variação homóloga de "
+                               f"{mes_pt(_difusao.attrs.get('mes'))} superior à de "
+                               f"{mes_pt(_difusao.attrs.get('mes_anterior'))}."))
+            with _dif2:
+                st.markdown(
+                    f"<p class='sg-comp__d' style='padding-top:26px'>"
+                    + ("<strong>Pressão generalizada.</strong> A maioria dos grupos "
+                       "está a acelerar, o que aponta para causas comuns a toda a "
+                       "alimentação e não para um choque num produto."
+                       if _n_ac > _n_tot / 2 else
+                       "<strong>Pressão concentrada.</strong> A minoria dos grupos "
+                       "está a acelerar, o que aponta para choques localizados e "
+                       "não para uma subida transversal.")
+                    + "</p>", unsafe_allow_html=True)
+
+            figDF = go.Figure(go.Bar(
+                y=_difusao["classe"], x=_difusao["delta"], orientation="h",
+                marker_color=[VERMELHO if v > 0 else VERDE for v in _difusao["delta"]],
+                customdata=list(zip(_difusao["homologa_anterior"],
+                                    _difusao["homologa_atual"])),
+                hovertemplate="<b>%{y}</b><br>%{customdata[0]:.1f}% → "
+                              "%{customdata[1]:.1f}%<br>%{x:+.2f} p.p.<extra></extra>"))
+            figDF.update_layout(height=max(400, 42 * len(_difusao)),
+                                margin=dict(t=12, b=42, l=10, r=20),
+                                xaxis_title=(
+                                    "Variação da taxa homóloga em "
+                                    f"{numero(_difusao.attrs.get('meses', 3))} meses (p.p.)"))
+            figDF.update_xaxes(zeroline=True, zerolinecolor=TEXTO_3, zerolinewidth=1.5)
+            grafico(figDF, rodape=carimbo_do_grafico(dados))
+            st.caption(
+                "Vermelho: grupos cuja inflação **acelerou** face a "
+                f"{mes_pt(_difusao.attrs.get('mes_anterior'))}. Verde: grupos que "
+                "abrandaram. **Não é o nível da inflação**, é a sua variação: um "
+                "grupo pode estar a abrandar e continuar com a taxa mais alta de "
+                "todos."
+            )
+
         # ---------- o que está por trás da inflação alimentar ----------
         agr_esp = dados.get("agregados_especiais")
         if agr_esp is not None and not agr_esp.empty:
@@ -4313,7 +4545,7 @@ with aba2:
             # primeira linha, e o leitor lia a mesma frase duas vezes antes de
             # chegar ao gráfico (relatado pela Inês, 01.09.2026).
             secao("Composição da variação: frescos e transformados",
-                  ajuda=_ajuda_alem, grupo="02 · Frescos e transformados")
+                  ajuda=_ajuda_alem, grupo="04 · Frescos e transformados")
             st.info("""
     A alimentação não constitui um agregado homogéneo. **Os produtos não transformados e os
     transformados respondem a determinantes distintos:**
@@ -4432,7 +4664,7 @@ with aba2:
                   "substituição de consumo. Nesta secção essa crítica é quantificada"
                   ", comparando um índice de ponderadores fixos com um índice "
                   "superlativo de Törnqvist, que usa a média dos ponderadores dos dois "
-                  "extremos de cada ano.", grupo="03 · Viés de substituição")
+                  "extremos de cada ano.", grupo="05 · Viés de substituição")
 
             _ano_base = int(_cmp_idx["ano"].iloc[0])
             # O ano-base é fixo em `config.py`. Se não estiver disponível nos
@@ -6284,6 +6516,355 @@ with aba4:
                                              ("Grupo", grupo_sel)]),
                         f"despesa_alimentar_ue27_{date.today()}.csv", "text/csv")
 
+# ==========================================================================
+# ABA M, Análise mediática
+# ==========================================================================
+# O único separador que não é sobre dados de preços: é sobre o que se diz sobre
+# eles. Existe porque a nota técnica de 21.07.2026 mostrou que o número que
+# domina o noticiário (o cabaz da DECO) não mede o que o noticiário lhe atribui,
+# e o gabinete precisa de saber onde é que essa distância aparece, quem a produz
+# e com que frequência.
+#
+# **É avaliativo, por decisão da Inês (02.09.2026).** Cada caso traz um juízo da
+# UPE sobre a distância entre a peça e os dados. Isso é exposição institucional,
+# e por isso o perímetro é declarado no topo do separador e os limites ficam
+# abertos, não escondidos num expansor no fim.
+#
+# Os dados vivem em `src/media.py` e os apuramentos também: aqui só se desenha.
+# É a mesma razão que separou `calculos.py` do desenho, e serve o mesmo fim, os
+# apuramentos são testáveis sem levantar a interface (`tests/test_media.py`).
+with abaM:
+    with painel("Análise mediática"):
+        titulo_pagina(
+            "Análise mediática do cabaz alimentar",
+            "Quem diz, o que diz e quando o diz. Levantamento amostral de peças "
+            "noticiosas e declarações públicas sobre o cabaz alimentar e sobre "
+            "os lucros da distribuição, entre março de 2023 e agosto de 2026.")
+
+        _sinal = media.por_sinal()
+        _ini_m, _fim_m = media.PERIODO
+
+        barra_estado("Fonte: levantamento UPE/SGGov sobre imprensa portuguesa", [
+            ("Período", f"{mes_extenso(_ini_m.strftime('%Y-%m'))} a "
+                        f"{mes_extenso(_fim_m.strftime('%Y-%m'))}"),
+            ("Peças catalogadas", numero(len(media.CASOS))),
+            ("Recolha sistemática", "fevereiro a agosto de 2026"),
+            ("Narrativas", numero(len(media.NARRATIVAS))),
+        ])
+
+        # ---------------------------------------------------------------
+        secao("O que este levantamento é, e o que não é",
+              "Ler as contagens sem isto leva a conclusões que os dados não "
+              "sustentam.",
+              grupo="01 · Perímetro", topo=True)
+        # ---------------------------------------------------------------
+        indicador_principal(
+            "Peças em que a UPE identificou distância face aos dados",
+            f"{numero(_sinal['desvio'])} em {numero(len(media.CASOS))}",
+            contexto=(
+                f"<strong>{numero(_sinal['controlo'])}</strong> consistentes com os "
+                f"dados · <strong>{numero(_sinal['exemplo'])}</strong> com causalidade "
+                f"sustentada · <strong>{numero(_sinal['nao_testavel'])}</strong> não "
+                "são afirmações testáveis contra dados"),
+            sec_valor=numero(len(media.CASOS_DENSOS)),
+            sec_rotulo="na janela de recolha sistemática")
+
+        nota("Como ler estas contagens", """
+            <strong>Amostral.</strong> O levantamento não é exaustivo. Nenhuma
+            contagem aqui é uma quota de cobertura, e a ausência de um órgão não
+            significa que não tenha coberto o tema.<br>
+            <strong>Avaliativo.</strong> A classificação de cada caso é um juízo
+            da UPE sobre a distância entre o que a peça afirma e o que os dados
+            disponíveis sustentam. Não é um juízo sobre a orientação editorial do
+            órgão, e não há codificação de tom.<br>
+            <strong>A unidade é a peça noticiosa.</strong> As declarações
+            (cartas, conferências de resultados, comunicados à CMVM, ações de
+            rua) entram como atributo da peça que as veicula, para que as três
+            frentes sejam somáveis.<br>
+            <strong>Duas escalas de tempo.</strong> A recolha é sistemática entre
+            fevereiro e agosto de 2026. O bloco de março de 2023 entra por ser a
+            génese documentável do IVA Zero, e comparar densidades entre as duas
+            janelas não significa nada.
+        """)
+
+        with st.expander("Limites do levantamento, por extenso"):
+            for _lim in media.LIMITES:
+                st.markdown(f"- {_lim}")
+            st.caption("Registos de origem: "
+                       + " ".join(media.FONTES_REGISTO))
+
+        # ---------------------------------------------------------------
+        secao("Quem diz",
+              "Que famílias de emissores compõem o levantamento, e de que "
+              "fonte depende a agenda noticiosa do tema.",
+              grupo="02 · Quem diz")
+        # ---------------------------------------------------------------
+        _emis = media.por_tipo_emissor()
+        st.dataframe(
+            pd.DataFrame([
+                {"Emissor": media.TIPOS_EMISSOR[k], "Peças": v,
+                 "Quota do levantamento": v / len(media.CASOS)}
+                for k, v in _emis.items()]),
+            width="stretch", hide_index=True,
+            column_config={
+                "Quota do levantamento": st.column_config.ProgressColumn(
+                    format="percent", min_value=0.0, max_value=1.0)})
+
+        componente(
+            "Quem define a agenda",
+            "A Frente 1 é a que cobre o cabaz em si. É nela que a escolha do "
+            "gancho noticioso é do órgão, e não do calendário de resultados das "
+            "empresas.")
+
+        _dep = media.dependencia_de_fonte(1)
+        st.markdown(
+            f"**{numero(_dep['ancorados'])} das {numero(_dep['total'])} peças da "
+            f"Frente 1** ({percentagem(_dep['proporcao'] * 100, casas=0, sinal=False)}) têm "
+            "por gancho o comunicado semanal da DECO PROteste, uma associação "
+            "privada de consumidores. As restantes partem do INE ou do Eurostat, "
+            "do GPP, da ASAE, da fiscalização de margens ou de um indicador "
+            "regional.")
+
+        nota("Por que é que isto importa a um gabinete", """
+            O calendário do noticiário sobre o cabaz alimentar é, em boa parte, o
+            calendário de publicação de uma entidade privada. Isso não é uma
+            crítica à DECO PROteste, que publica o que se propôs publicar. É uma
+            observação sobre a ausência de um indicador público de periodicidade
+            equivalente: o INE publica mensalmente e a DECO semanalmente, e a
+            imprensa segue a cadência mais rápida.
+        """)
+
+        componente(
+            "Quem é fonte e quem é réplica",
+            "Peças publicadas por mais do que um órgão, com texto praticamente "
+            "idêntico. A contagem é o número de órgãos identificados, e é um "
+            "mínimo, não um total.")
+        st.dataframe(
+            pd.DataFrame([
+                {"Caso": c["id"], "Data": c["data"], "Órgãos": c["replicacao"],
+                 "Peça": c["titulo"]}
+                for c in media.replicacao()]),
+            width="stretch", hide_index=True)
+
+        # ---------------------------------------------------------------
+        secao("O que diz",
+              "Que número o noticiário trata como facto público, e onde vive a "
+              "informação que o qualifica.",
+              grupo="03 · O que diz")
+        # ---------------------------------------------------------------
+        componente(
+            "Quatro indicadores em circulação, e nenhum deles é o preço da "
+            "alimentação em Portugal",
+            "Medem coisas diferentes, com composições, periodicidades e âmbitos "
+            "diferentes. A cautela de cada um não é uma nota de rodapé: é a "
+            "condição para o citar.")
+        for _ind in media.INDICADORES:
+            with st.expander(f"{_ind['nome']}  ·  {_ind['entidade']}"):
+                st.markdown(
+                    f"**Mede.** {_ind['mede']}\n\n"
+                    f"**Composição.** {_ind['produtos']}\n\n"
+                    f"**Periodicidade.** {_ind['frequencia']}  ·  "
+                    f"**Âmbito.** {_ind['ambito']}")
+                st.warning(f"**Cautela.** {_ind['cautela']}")
+
+        componente(
+            "Onde vive a comparação de longo prazo",
+            "Nas peças da Frente 1 que citam a variação acumulada, e não apenas "
+            "a da última semana.")
+        _ctx = media.contexto_no_titulo(1)
+        st.markdown(
+            f"Das {numero(_ctx['total_com_contexto'])} peças que trazem a "
+            f"comparação de longo prazo, **{numero(len(_ctx['corpo']))} guardam-na "
+            f"para o subtítulo ou para o corpo** e apenas "
+            f"{numero(len(_ctx['titulo']))} a levam ao título. As restantes "
+            f"{numero(len(_ctx['ausente']))} peças da frente não a citam de todo.\n\n"
+            "O título segue sempre a variação da última semana, para cima ou "
+            "para baixo. A subida acumulada desde janeiro de 2022, que é a "
+            "grandeza que descreve o que aconteceu ao orçamento das famílias, "
+            "fica sistematicamente em segundo plano.")
+        st.dataframe(
+            pd.DataFrame([
+                {"Onde": rotulo, "Peças": numero(len(ids)),
+                 "Casos": ", ".join(ids)}
+                for rotulo, ids in (("No título", _ctx["titulo"]),
+                                    ("No subtítulo ou no corpo", _ctx["corpo"]),
+                                    ("Não é citada", _ctx["ausente"]))]),
+            width="stretch", hide_index=True)
+
+        componente("As seis narrativas",
+                   "Cada caso pertence a uma e a uma só narrativa.")
+        for _nar in media.NARRATIVAS:
+            _casos_n = media.casos_da_narrativa(_nar["id"])
+            with st.expander(
+                    f"Narrativa {_nar['id']}  ·  {_nar['nome']}  "
+                    f"({numero(len(_casos_n))} casos)"):
+                st.markdown(_nar["sumario"])
+                st.dataframe(
+                    pd.DataFrame([{
+                        "Caso": c["id"],
+                        "Data": c["data"],
+                        "Quem publica": c["orgao"],
+                        "Quem fala": c["ator"] or "",
+                        "Peça ou ocasião": c["titulo"],
+                        "Juízo da UPE": media.CLASSES[c["classe"]],
+                        "Ligação": c["ligacao"] or "",
+                    } for c in _casos_n]),
+                    width="stretch", hide_index=True,
+                    column_config={
+                        "Peça ou ocasião": st.column_config.TextColumn(width="large"),
+                        "Juízo da UPE": st.column_config.TextColumn(width="medium"),
+                        "Ligação": st.column_config.LinkColumn(display_text="abrir")})
+                st.caption(
+                    "Recortes de imprensa em papel não têm ligação: foram "
+                    "consultados via PressReader.")
+
+        # ---------------------------------------------------------------
+        secao("Quando é dito",
+              "Se as atribuições causais precedem ou seguem os dados que as "
+              "sustentariam.",
+              grupo="04 · Quando é dito")
+        # ---------------------------------------------------------------
+        st.markdown(
+            "Seis peças atribuem a subida de preços ao conflito no Médio "
+            "Oriente, que recomeçou a **28 de fevereiro de 2026**. A hipótese "
+            "fácil seria a de que as atribuições precoces são as infundadas. "
+            "**Não é o que se observa.**")
+        st.dataframe(
+            pd.DataFrame([{
+                "Caso": linha["id"], "Data": linha["data"],
+                "Órgão": linha["orgao"],
+                "Dias após o choque": linha["dias"],
+                "Ancorada em dados posteriores ao choque":
+                    "Sim" if linha["ancorada_em_dados"] else "Não",
+                "Juízo da UPE": media.SINAIS[linha["sinal"]],
+            } for linha in media.latencia_causal()]),
+            width="stretch", hide_index=True,
+            column_config={
+                "Juízo da UPE": st.column_config.TextColumn(width="medium")})
+        nota("O que separa uma atribuição sustentada de uma infundada", """
+            Não é o tempo decorrido. Aos <strong>32 dias</strong> há uma peça bem
+            fundamentada, que atribui à guerra a subida da inflação de março com
+            um mês inteiro de dados do INE e do Eurostat; aos
+            <strong>40 dias</strong> há um título que atribui à guerra um recorde
+            do cabaz que a própria APED já tinha explicado por preçários
+            contratualizados no quarto trimestre de 2025, antes do conflito. O
+            que distingue as duas é a existência de dados do período posterior ao
+            acontecimento, e não a paciência de quem escreve.
+        """)
+
+        componente("Cronologia completa",
+                   "Todos os casos por ordem de acontecimento.")
+        st.dataframe(
+            pd.DataFrame([{
+                "Data": c["data"], "Caso": c["id"],
+                "Quem publica": c["orgao"], "Quem fala": c["ator"] or "",
+                "Peça ou ocasião": c["titulo"],
+                "Juízo da UPE": media.SINAIS[c["sinal"]],
+            } for c in media.cronologia()]),
+            width="stretch", hide_index=True, height=420,
+            column_config={
+                "Peça ou ocasião": st.column_config.TextColumn(width="large")})
+
+        # ---------------------------------------------------------------
+        secao("O que fica por reconciliar e por verificar",
+              "As duas listas que um gabinete pode usar diretamente.",
+              grupo="05 · Por resolver")
+        # ---------------------------------------------------------------
+        componente(
+            "Fontes que se contradizem sem reconciliação pública",
+            "Nenhuma destas contradições foi resolvida publicamente por quem as "
+            "produziu. Todas continuam a circular no debate.")
+        for _con in media.CONTRADICOES:
+            with st.expander(_con["tema"]):
+                st.markdown(
+                    f"**Uma fonte diz.** {_con['fonte_a']}\n\n"
+                    f"**A outra diz.** {_con['fonte_b']}\n\n"
+                    f"**Porquê.** {_con['porque']}\n\n"
+                    f"**Estado.** {_con['estado']}")
+                if _con["casos"]:
+                    st.caption("Casos do levantamento: "
+                               + ", ".join(_con["casos"]))
+
+        componente(
+            "Afirmações públicas por verificar",
+            "Separadas por quem responde por elas. As de responsabilidade "
+            "governativa são as que podem gerar pedido de esclarecimento.")
+        _grupos = media.por_verificar_por_responsabilidade()
+        _rotulos = {"governo": "Responsabilidade governativa",
+                    "politica": "Atores políticos",
+                    "empresarial": "Empresas",
+                    "opiniao": "Opinião publicada"}
+        for _chave in ("governo", "politica", "empresarial", "opiniao"):
+            _itens = _grupos.get(_chave)
+            if not _itens:
+                continue
+            st.markdown(f"**{_rotulos[_chave]}**")
+            st.dataframe(
+                pd.DataFrame([{
+                    "Quem": i["quem"], "Quando": i["quando"], "Onde": i["onde"],
+                    "Afirmação": i["afirmacao"], "Estado": i["estado"],
+                    "Contraponto": i["contraponto"],
+                } for i in _itens]),
+                width="stretch", hide_index=True,
+                column_config={
+                    "Afirmação": st.column_config.TextColumn(width="large"),
+                    "Contraponto": st.column_config.TextColumn(width="large")})
+
+        # ---------------------------------------------------------------
+        secao("Alcance público",
+              "O que a imprensa disse comparado com o que o público partilhou.",
+              grupo="06 · Alcance")
+        # ---------------------------------------------------------------
+        st.info(media.REDES_NOTA)
+
+        componente("As dez publicações mais partilhadas",
+                   "Todas as plataformas, ordenadas por interações totais.")
+        st.dataframe(
+            pd.DataFrame([{
+                "Data": p["data"], "Plataforma": p["plataforma"],
+                "Ator ou página": p["ator"],
+                "Emissor": media.TIPOS_EMISSOR[p["tipo_emissor"]],
+                "Assunto": p["resumo"],
+                "Interações": p["interacoes"],
+                "Caso do levantamento": p["caso"] or "novo",
+                "Ligação": p["ligacao"],
+            } for p in media.REDES_TOPO]),
+            width="stretch", hide_index=True,
+            column_config={
+                "Assunto": st.column_config.TextColumn(width="large"),
+                "Interações": st.column_config.NumberColumn(format="%d"),
+                "Ligação": st.column_config.LinkColumn(display_text="abrir")})
+
+        _politicos = sum(1 for p in media.REDES_TOPO
+                         if p["tipo_emissor"] == "politico")
+        st.markdown(
+            f"**{numero(_politicos)} das dez** publicações mais partilhadas são "
+            "de atores políticos, e a mais viral de todo o conjunto não tem "
+            "cobertura noticiosa correspondente no levantamento. O tema tem vida "
+            "política própria nas redes, por um canal que não passa pela imprensa.")
+
+        componente(
+            "Rigor e alcance",
+            "Interações em artigos web dos casos já catalogados que aparecem no "
+            "export.")
+        st.dataframe(
+            pd.DataFrame([{
+                "Caso": linha["caso"], "Data": linha["data"],
+                "Órgão": linha["orgao"], "Tipo de peça": linha["tipo"],
+                "Interações": linha["interacoes"],
+            } for linha in media.ALCANCE_WEB]),
+            width="stretch", hide_index=True,
+            column_config={
+                "Interações": st.column_config.NumberColumn(format="%d")})
+        nota("Não tire conclusões desta tabela", """
+            São <strong>cinco observações</strong>. A ordenação é sugestiva, as
+            duas peças mais bem fundamentadas do levantamento têm mais interações
+            do que o reporte semanal de rotina, mas uma amostra deste tamanho não
+            sustenta a afirmação de que o rigor é recompensado pelo alcance.
+            Fica como hipótese a testar com amostra maior, e não como achado.
+        """, alerta=True)
+
+
     # ==========================================================================
     # ABA 5, Metodologia e fontes
     # ==========================================================================
@@ -7130,6 +7711,90 @@ with aba5:
                         f"mais próxima do observado em {_n_original} dos {len(_sens)} cenários; "
                         f"{_txt_rut}A direção do resultado não depende do pressuposto; a "
                         f"magnitude depende."
+                    )
+
+            # ---- o mesmo teste, em níveis e não em rácios ----
+            # O teste acima compara **rácios** entre dois tipos de agregado, que
+            # é o que sobrevive à mudança de base. Falta a pergunta que o
+            # utilizador faz: o valor que a aplicação apresenta para um agregado
+            # concreto é o que o inquérito mediu para esse agregado?
+            #
+            # O confronto corre **sempre na base IDF**, seja qual for a base
+            # ativa: os níveis observados vêm desse inquérito, e compará-los com
+            # um nível das Contas Nacionais seria confrontar universos
+            # diferentes, que é precisamente o defeito que a aplicação declara
+            # em todo o lado. As duas colunas são indexadas pelo mesmo fator,
+            # pelo que o veredicto não depende do mês (travado por teste).
+            _idf_para_tipos = (ancora["bases"].get("idf") or {})
+            _cmp_tipos = pd.DataFrame()
+            if _idf_para_tipos:
+                _cmp_tipos = comparar_tipos_agregado(
+                    float(_idf_para_tipos["valor"]), dim_efetiva,
+                    float(_idf_para_tipos.get("fator") or 1.0))
+
+            if not _cmp_tipos.empty:
+                st.markdown("---")
+                st.markdown("**O mesmo confronto em níveis, e não em rácios**")
+                st.markdown(
+                    "Até aqui a aferição era sobre o **rácio** entre dois tipos de "
+                    "agregado. Isto compara o que a aplicação **apresentaria** para "
+                    "cada tipo com o que o inquérito **mediu** para esse mesmo tipo. "
+                    "É a validação direta do ajustamento por composição, que é o "
+                    "passo menos observado de todo o cálculo."
+                )
+                st.dataframe(
+                    pd.DataFrame([{
+                        "Tipo de agregado": f"{r.nome} ({r.detalhe})",
+                        "Adultos": round(float(r.adultos), 2),
+                        "Observado no IDF (€/mês)": round(float(r.observado), 2),
+                        "Simulado, mínimo (€/mês)": round(float(r.minimo), 2),
+                        "Simulado, máximo (€/mês)": round(float(r.maximo), 2),
+                        "Observado dentro do intervalo": ("sim" if r.dentro_do_intervalo
+                                                          else "não"),
+                    } for r in _cmp_tipos.itertuples()]),
+                    width="stretch", hide_index=True)
+
+                _fora = _cmp_tipos[~_cmp_tipos["dentro_do_intervalo"]]
+                _acima = _fora[_fora["observado"] > _fora["maximo"]]
+                if not _acima.empty:
+                    _pior = _acima.iloc[(_acima["observado"] / _acima["maximo"]).argmax()]
+                    _desvio_nivel = (float(_pior["observado"]) / float(_pior["maximo"]) - 1) * 100
+                    st.success(f"""
+    **O confronto em níveis confirma o dos rácios, e é a validação mais direta que existe.**
+
+    Para **{_pior['nome']}**, o inquérito mediu **{euro(_pior['observado'])}** por mês, e a escala
+    mais generosa das três não passa de **{euro(_pior['maximo'])}**: as escalas de equivalência
+    subestimam o custo alimentar desse agregado em **{percentagem(_desvio_nivel, sinal=False)}**,
+    a mesma ordem de grandeza que o teste dos rácios devolve.
+
+    Não é uma segunda medição da mesma coisa: o teste dos rácios podia ficar certo com os dois
+    níveis errados na mesma proporção. Este não.
+                    """)
+                else:
+                    st.info(
+                        "Nesta sessão o observado cai dentro do intervalo simulado em "
+                        "todos os tipos transcritos, o que confirma o ajustamento por "
+                        "composição ao nível a que é possível verificá-lo."
+                    )
+
+                _falta = _cmp_tipos.attrs.get("por_transcrever") or []
+                st.caption(
+                    f"Fonte: {IDF_TIPOS_FONTE}. O nível observado é indexado ao mês "
+                    "corrente pelo mesmo fator da âncora, para que as duas colunas "
+                    "estejam a preços do mesmo momento. O confronto corre sempre na "
+                    "base do inquérito, seja qual for a base ativa: os níveis "
+                    "observados vêm dele."
+                )
+                if _falta:
+                    st.warning(
+                        f"**Cobertura: {len(_cmp_tipos)} tipos de agregado, todos sem "
+                        f"crianças dependentes.** Faltam {len(_falta)} linhas do quadro "
+                        "Q.2.6.a, que estão publicadas e por transcrever: "
+                        + ", ".join(f"*{t}*" for t in _falta)
+                        + ". Enquanto faltarem, **o confronto nada diz sobre agregados "
+                        "com crianças**, que são justamente aqueles em que o coeficiente "
+                        "da escala mais pesa. Ver “Melhoria do indicador”, no separador "
+                        "Síntese."
                     )
 
 
@@ -8030,6 +8695,519 @@ uma insígnia concreta: não há aqui o preço de nenhum supermercado em particu
                 placeholder="Procurar por assunto: escalas, IVA, turistas…",
                 label_visibility="collapsed")
             indice_metodologia(_q)
+
+# ==========================================================================
+# Síntese, escrita no lugar guardado no topo
+# ==========================================================================
+# Escrita no fim porque consome o que os outros separadores calculam. Um
+# separador que falhe deixa o seu nome por definir, e a síntese tem de continuar
+# a desenhar-se: daí o acesso por nome, com valor de recuo, em vez de referência
+# direta. É o preço de a síntese depender de tudo o resto.
+def _da_sessao(nome: str, defeito=None):
+    """
+    Valor calculado noutro separador, ou `defeito` se esse separador não chegou
+    a correr. Não é conveniência: sem isto, um `NameError` numa sessão em que o
+    Eurostat falhou uma série derrubava a página de abertura.
+    """
+    valor = globals().get(nome, defeito)
+    return defeito if valor is None else valor
+
+
+with _slot_sintese:
+    with painel("Síntese"):
+        # A síntese **não responde aos parâmetros** de “Despesa e composição”.
+        # Fixa a base por defeito e o agregado médio nacional, e declara-o. Um
+        # resumo executivo que muda conforme o leitor mexeu num cursor noutro
+        # separador não é citável: dois leitores citariam números diferentes a
+        # partir da mesma página.
+        _chave_sint = (BASE_POR_DEFEITO if BASE_POR_DEFEITO in ancora["bases"]
+                       else next(iter(ancora["bases"])))
+        _base_sint = ancora["bases"][_chave_sint]
+        _despesa_sint = float(_base_sint["valor"])
+        _quintis_sint = _da_sessao("df_quintis", pd.DataFrame())
+        _iva_sint = _da_sessao("_res_iva", {})
+
+        # ---------------------------------------------------------------
+        bloco("01 · Onde estamos", topo=True)
+        # ---------------------------------------------------------------
+        indicador_principal(
+            "Despesa alimentar mensal do agregado médio",
+            euro(_despesa_sint, casas=0),
+            contexto=(f"Base <strong>{_base_sint['nome']}</strong> · agregado médio "
+                      f"nacional de {numero(dim_efetiva, 1)} pessoas · a preços de "
+                      f"<strong>{mes_pt(ultimo_mes)}</strong>"),
+            sec_valor=(percentagem(dados["variacao_oficial"])
+                       if dados.get("variacao_oficial") is not None else None),
+            sec_rotulo="variação homóloga oficial",
+            sec_cor=(None if dados.get("variacao_oficial") is None
+                     else (VERDE if dados["variacao_oficial"] < 0 else VERMELHO)))
+
+        _s1, _s2, _s3 = st.columns(3)
+        if not ancora.get("base_unica"):
+            _s1.metric("Intervalo entre as duas bases oficiais",
+                       f"{euro(ancora['minimo'], 0)} a {euro(ancora['maximo'], 0)}",
+                       help=("As duas fontes oficiais medem grandezas diferentes e não "
+                             "coincidem. O ponto central não é determinável. Ver "
+                             "“Despesa e composição”."))
+        else:
+            _s1.metric("Bases oficiais disponíveis", "1 de 2",
+                       help="Sem a segunda base não há intervalo a apresentar.")
+
+        if not _quintis_sint.empty:
+            _sq1 = _quintis_sint[_quintis_sint["quintil"] == "q1"].iloc[0]
+            _sq5 = _quintis_sint[_quintis_sint["quintil"] == "q5"].iloc[0]
+            _s2.metric("Peso da alimentação no orçamento do 1.º quintil",
+                       percentagem(_sq1.peso_orcamento, sinal=False),
+                       f"{numero(_sq1.peso_orcamento / _sq5.peso_orcamento, 2)}× o 5.º quintil",
+                       delta_color="off",
+                       help=("Fração do orçamento total que a alimentação absorve nos "
+                             "20% de menor rendimento, contra os 20% de maior. É aqui "
+                             "que está o efeito distributivo, e não na taxa."))
+        _custo_sint = _da_sessao("_custo_q1")
+        if _custo_sint:
+            _s3.metric("Compensar o agravamento no 1.º quintil",
+                       milhoes(_custo_sint["total_milhoes"]),
+                       help=("Custo anual de compensar integralmente, por transferência "
+                             "direta, o agravamento dos últimos 12 meses. Ordem de "
+                             "grandeza, não estimativa orçamental."))
+
+        _s4, _s5, _s6 = st.columns(3)
+        if _iva_sint:
+            _s4.metric("Despesa alimentar já à taxa reduzida",
+                       percentagem(_iva_sint["taxa_6_pct"], sinal=False),
+                       help=("Fração onde não há imposto a reduzir a não ser até zero. "
+                             "Delimita o alcance de qualquer medida de IVA."))
+        _sofi_sint = _da_sessao("_sofi_pt")
+        _sofi_es_sint = _da_sessao("_sofi_es")
+        if _sofi_sint is not None and _sofi_es_sint is not None:
+            _s5.metric("Sem capacidade para uma dieta saudável",
+                       percentagem(_sofi_sint, sinal=False),
+                       f"Espanha: {percentagem(_sofi_es_sint, sinal=False)}",
+                       delta_color="off",
+                       help=("Proporção da população que não consegue suportar o custo "
+                             "da dieta nutricionalmente adequada mais barata. O custo "
+                             "dessa dieta é praticamente igual nos dois países."))
+        if _arrasto:
+            _s6.metric(f"Inflação alimentar de {_arrasto['ano']} já fechada",
+                       percentagem(_arrasto["arrastamento"], sinal=False),
+                       help=(f"Com {numero(_arrasto['meses_conhecidos'])} meses "
+                             "conhecidos, é a média anual que resultaria se o índice "
+                             "não voltasse a mexer. Ver “Histórico”."))
+
+        # ---- a série do próprio indicador ----
+        # A aplicação calculava este número e apresentava-o como **um ponto**.
+        # A série é o que permite contar a história, e não existia em lado
+        # nenhum: o Histórico mostra o índice, que não são euros.
+        _idx_sint = dados.get("indice_pt", pd.DataFrame())
+        if not _idx_sint.empty and len(_idx_sint) > 12:
+            _serie_eur = _idx_sint.sort_values("time").copy()
+            _ref = float(_serie_eur["valor"].iloc[-1])
+            if _ref > 0:
+                _serie_eur["euros"] = _serie_eur["valor"].astype(float) / _ref * _despesa_sint
+                _serie_eur = _serie_eur.tail(72)
+                secao("A despesa alimentar do agregado médio, mês a mês",
+                      "O número de capa ao longo do tempo, na base "
+                      f"<strong>{_base_sint['nome']}</strong>.",
+                      ajuda=(
+                          "**É uma série de preços, não uma série de despesa observada.** "
+                          "O nível da âncora é reindexado para trás pelo índice oficial, "
+                          "o que equivale a perguntar quanto custaria, em cada mês, o "
+                          "consumo alimentar de hoje. Não capta alterações de quantidade "
+                          "nem de composição do consumo ao longo do período: para isso "
+                          "seriam precisas quantidades, que nenhuma fonte pública "
+                          "publica. Ver “Melhoria do indicador”, mais abaixo."))
+                figSint = go.Figure(go.Scatter(
+                    x=[mes_pt(t) for t in _serie_eur["time"]],
+                    y=_serie_eur["euros"], mode="lines",
+                    line=dict(color=VERDE, width=2.6),
+                    fill="tozeroy", fillcolor="rgba(14,116,51,0.07)",
+                    hovertemplate="%{x}<br>%{y:.0f} € por mês<extra></extra>"))
+                figSint.update_layout(height=380, margin=dict(t=12, b=42, l=10, r=10),
+                                      yaxis_title="Euros por mês")
+                figSint.update_xaxes(showgrid=False)
+                figSint.update_yaxes(rangemode="tozero")
+                grafico(figSint, rodape=carimbo_do_grafico(
+                    dados, mes_indice=ancora.get("mes"), variacao=False))
+                _primeiro = _serie_eur.iloc[0]
+                st.caption(
+                    f"De {mes_pt(_primeiro['time'])} a {mes_pt(ultimo_mes)}, a mesma "
+                    f"despesa passou de {euro(_primeiro['euros'], 0)} para "
+                    f"{euro(_despesa_sint, 0)} por mês, "
+                    f"{percentagem(_despesa_sint / float(_primeiro['euros']) * 100 - 100)}. "
+                    + base_de_calculo(dados, _base_sint, mes_indice=ancora.get("mes")))
+
+        # ---------------------------------------------------------------
+        bloco("02 · O que os dados dizem")
+        # ---------------------------------------------------------------
+        # Uma conclusão por nota, cada uma com o número que a sustenta e a
+        # remissão para o separador que a desenvolve. Não são resumos dos
+        # separadores: são afirmações que nenhum separador faz sozinho, porque
+        # cada uma cruza dois deles.
+        #
+        # **Regra de redação deste bloco.** É o que vai ser lido por quem decide,
+        # e por quem não tem de saber o que é uma janela homóloga. Nenhuma frase
+        # pode exigir vocabulário técnico para se perceber: sempre que aparece um
+        # termo do ofício (variação homóloga, repercussão, quintil), a frase
+        # seguinte diz o que ele significa. Termos como “identidade”,
+        # “exposição orçamental” ou “janela de comparação” não entram, porque
+        # descrevem o método a quem só precisa do resultado
+        # (pedido da Inês, 02.09.2026).
+        if not _efeito_base.empty:
+            _u_eb = _efeito_base.iloc[-1]
+            _dominou_base = abs(float(_u_eb["contributo_base"])) > abs(
+                float(_u_eb["contributo_novo"]))
+            _desceu_eb = float(_u_eb["delta_homologa"]) < 0
+            _mes_agora = mes_extenso(_u_eb["time"])
+            _mes_saiu = mes_homologo(_u_eb["time"])
+            _homologa_antes = float(_u_eb["homologa"]) - float(_u_eb["delta_homologa"])
+            # “pontos percentuais” por extenso, e não a abreviatura. A abreviatura
+            # termina em ponto, e a meio de uma frase produzia “0,75 p.p..”; e
+            # neste bloco, que é o que vai ao Gabinete, a forma por extenso
+            # dispensa o leitor de saber o que a sigla quer dizer.
+            def _pp(valor):
+                return pontos(abs(float(valor)), casas=2, sinal=False,
+                              sufixo=" pontos percentuais")
+
+            _pp_delta = _pp(_u_eb["delta_homologa"])
+            _pp_novo = _pp(_u_eb["contributo_novo"])
+            _pp_base = _pp(_u_eb["contributo_base"])
+            _conclusao_eb = (
+                f"Neste caso, a {'descida' if _desceu_eb else 'subida'} da inflação "
+                f"alimentar deveu-se sobretudo ao <strong>mês que saiu da "
+                f"comparação</strong>, e não ao que os preços fizeram em {_mes_agora}."
+                if _dominou_base else
+                f"Neste caso, a {'descida' if _desceu_eb else 'subida'} da inflação "
+                f"alimentar deveu-se sobretudo ao que os preços fizeram em "
+                f"<strong>{_mes_agora}</strong>, e não ao mês que saiu da comparação.")
+            # O título segue o sinal do mês. A afirmação vale nos dois sentidos,
+            # mas anunciar uma descida por cima de um mês em que a inflação subiu
+            # obrigaria o leitor a reconciliar as duas coisas antes de perceber
+            # qualquer uma delas.
+            _titulo_eb = ("1 · A inflação alimentar pode descer sem que nenhum preço desça"
+                          if _desceu_eb else
+                          "1 · A inflação alimentar pode subir sem que nenhum preço suba")
+            nota(_titulo_eb, f"""
+          Em {_mes_agora} os preços dos alimentos estavam
+          <strong>{percentagem(float(_u_eb['homologa']), sinal=False)}</strong> acima do que
+          estavam um ano antes. No mês anterior essa diferença era de
+          <strong>{percentagem(_homologa_antes, sinal=False)}</strong>, ou seja,
+          {'baixou' if _desceu_eb else 'aumentou'}
+          <strong>{_pp_delta}</strong>.
+          <br><br>
+          Essa {'descida' if _desceu_eb else 'subida'} não quer dizer que os preços tenham
+          {'baixado' if _desceu_eb else 'subido'}. A inflação de cada mês compara os preços desse
+          mês com os do mesmo mês do ano anterior. Ao passar do mês anterior para {_mes_agora},
+          <strong>entra</strong> um mês novo na comparação e <strong>sai</strong> o mês
+          equivalente do ano passado. São esses dois meses, e só esses, que fazem a inflação mexer:
+          <ul>
+            <li><strong>Entrou {_mes_agora}</strong>, em que os preços variaram
+                {percentagem(float(_u_eb['mensal']), casas=2)} face ao mês anterior. Isso
+                {'aumentou' if float(_u_eb['contributo_novo']) > 0 else 'reduziu'} a inflação em
+                <strong>{_pp_novo}</strong>.</li>
+            <li><strong>Saiu {_mes_saiu}</strong>, em que os preços tinham variado
+                {percentagem(float(_u_eb['mensal_ha_um_ano']), casas=2)}. Ao deixar de contar,
+                {'aumentou' if float(_u_eb['contributo_base']) > 0 else 'reduziu'} a inflação em
+                <strong>{_pp_base}</strong>.</li>
+          </ul>
+          As duas parcelas somam exatamente os <strong>{_pp_delta}</strong> de variação. Não é uma
+          estimativa: é a única repartição possível.
+          <br><br>
+          <strong>O que isto significa para a decisão.</strong> {_conclusao_eb} Uma descida da
+          inflação alimentar não é, por si, prova de que os alimentos ficaram mais baratos. Ver
+          <em>Histórico</em>, bloco 02.""")
+
+        if not _quintis_sint.empty:
+            _amp_taxas = _quintis_sint[_quintis_sint["quintil"] != "total"]["inflacao"].dropna()
+            _racio_q = _sq1.peso_orcamento / _sq5.peso_orcamento
+            _txt_amp = ""
+            if not _amp_taxas.empty:
+                _txt_amp = (
+                    f"Os preços dos alimentos subiram praticamente o mesmo para todos: entre o "
+                    f"grupo onde subiram mais e aquele onde subiram menos há apenas "
+                    f"<strong>{numero(float(_amp_taxas.max() - _amp_taxas.min()), 2)} pontos "
+                    f"percentuais</strong> de diferença.<br><br>")
+            nota("2 · Os preços sobem quase por igual, mas não pesam por igual", f"""
+          {_txt_amp}O que muda de família para família é <strong>quanto do orçamento vai para a
+          alimentação</strong>. Nas 20% de menor rendimento, a comida absorve
+          <strong>{percentagem(_sq1.peso_orcamento, sinal=False)}</strong> de tudo o que gastam;
+          nas 20% de maior rendimento, absorve
+          <strong>{percentagem(_sq5.peso_orcamento, sinal=False)}</strong>. É uma fatia
+          <strong>{numero(_racio_q, 2)} vezes maior</strong> nas famílias com menos rendimento.
+          <br><br>
+          <strong>O que isto significa para a decisão.</strong> Uma subida de preços encarece a
+          alimentação na mesma proporção para toda a gente. Mas essa alimentação ocupa uma fatia
+          {numero(_racio_q, 1)} vezes maior do orçamento das famílias com menos rendimento, e esse
+          orçamento é, ele próprio, menos de metade do das famílias com mais rendimento. O impacto
+          desigual vem daqui, e não de uma inflação diferente para ricos e pobres. Ver
+          <em>Despesa e composição</em>, bloco 06.""")
+
+        if _sofi_sint is not None and _sofi_es_sint is not None:
+            _custo_pt_s = SOFI_CUSTO["Portugal"].get(_da_sessao("_ano_sofi"))
+            _custo_es_s = SOFI_CUSTO["Espanha"].get(_da_sessao("_ano_sofi"))
+            _txt_custo = ""
+            if _custo_pt_s and _custo_es_s:
+                _txt_custo = (
+                    f"Comer de forma saudável custa praticamente o mesmo nos dois países: "
+                    f"<strong>{numero(_custo_pt_s, 2)}</strong> contra "
+                    f"<strong>{numero(_custo_es_s, 2)} dólares</strong> por pessoa e por dia, "
+                    f"ajustados ao poder de compra de cada país. É o preço da alimentação mais "
+                    f"barata que cumpre as necessidades nutricionais.<br><br>")
+            # O rácio é calculado. Esteve aqui “o dobro”, escrito à mão, quando
+            # os números davam 1,55: é o defeito que estas notas existem para
+            # não ter, e que as auditorias já apanharam quatro vezes noutros
+            # sítios (C2, E9, K8, L16).
+            _racio_sofi = (_sofi_sint / _sofi_es_sint) if _sofi_es_sint else None
+            _txt_racio = (f", ou seja, <strong>{numero(_racio_sofi, 2)} vezes mais</strong>"
+                          if _racio_sofi and _racio_sofi > 1.05 else "")
+            nota("3 · Com o mesmo preço, muito mais gente em Portugal não consegue "
+                 "comer bem", f"""
+          {_txt_custo}Apesar desse preço praticamente igual,
+          <strong>{percentagem(_sofi_sint, sinal=False)}</strong> da população portuguesa não
+          consegue pagá-la, contra <strong>{percentagem(_sofi_es_sint, sinal=False)}</strong> da
+          espanhola{_txt_racio}.
+          <br><br>
+          <strong>O que isto significa para a decisão.</strong> Se o preço é o mesmo e o resultado
+          é diferente, a causa não está nos preços: está no rendimento das famílias e na forma como
+          está distribuído. Uma medida que faça descer preços não corrige, por si, a incapacidade
+          de os pagar. Ver <em>Despesa e composição</em>, bloco 07.""")
+
+        if _iva_sint:
+            nota("4 · A maior parte da despesa alimentar já está na taxa mínima de IVA", f"""
+          <strong>{percentagem(_iva_sint['taxa_6_pct'], sinal=False)}</strong> da despesa alimentar
+          já paga a taxa reduzida de 6%, a mais baixa que existe. Apenas
+          <strong>{percentagem(_iva_sint['taxa_23_pct'], sinal=False)}</strong> paga a taxa normal
+          de 23%.
+          <br><br>
+          Sobre a parte que já está nos 6% não há descida possível que não seja levar o imposto a
+          zero. Foi essa a limitação com que a medida de 2023 se deparou: isentou 46 alimentos, dos
+          quais a maioria já estava na taxa mínima.
+          <br><br>
+          <strong>O que isto significa para a decisão.</strong> Qualquer alteração de IVA que não
+          seja a isenção total atua sobre uma parte pequena da despesa alimentar. E quanto do
+          benefício chega às famílias depende sobretudo de <em>quanto da descida do imposto o
+          vendedor passa para o preço</em>, e não do valor da taxa que se escolher. Ver
+          <em>Simulador de IVA</em>.""")
+
+        # ---------------------------------------------------------------
+        bloco("03 · O que o indicador não capta")
+        # ---------------------------------------------------------------
+        # As seis amplitudes estavam calculadas em seis sítios diferentes e
+        # nunca eram confrontadas. Confrontadas, dizem o que nenhuma delas diz
+        # sozinha: o debate público está concentrado na mais pequena de todas.
+        def _euros_da_taxa(pontos_pct):
+            """Uma diferença de taxa, em euros de agravamento mensal."""
+            if pontos_pct is None or pd.isna(pontos_pct):
+                return None
+            g = float(pontos_pct) / 100
+            return _despesa_sint * g / (1 + g)
+
+        _entradas_inc = []
+        if not ancora.get("base_unica"):
+            _entradas_inc.append({
+                "fonte": "Escolha da base oficial",
+                "afeta": "a despesa alimentar",
+                "amplitude": ancora["maximo"] - ancora["minimo"],
+                "nota": (f"{_base_sint['nome']} contra a outra base: um fator de "
+                         f"{numero(ancora['maximo'] / ancora['minimo'], 2)}"),
+            })
+
+        _band_rho_sint = _da_sessao("_band_rho")
+        if _band_rho_sint:
+            _entradas_inc.append({
+                "fonte": "Repercussão do IVA",
+                "afeta": "a poupança do cenário simulado",
+                "amplitude": _band_rho_sint[1][0] - _band_rho_sint[0][0],
+                "nota": "entre os extremos das estimativas publicadas do Banco de Portugal",
+            })
+
+        _band_pred = _da_sessao("_res_band_pred")
+        if _band_pred:
+            _entradas_inc.append({
+                "fonte": "Atribuições de IVA por predominância",
+                "afeta": "a poupança do cenário simulado",
+                "amplitude": _band_pred[1] - _band_pred[0],
+                "nota": "limite exterior, se todas estivessem erradas no mesmo sentido",
+            })
+
+        _band_ind = _da_sessao("_res_band")
+        if _band_ind:
+            _entradas_inc.append({
+                "fonte": "Parcela de IVA indeterminada",
+                "afeta": "a poupança do cenário simulado",
+                "amplitude": _band_ind[1] - _band_ind[0],
+                "nota": "subclasses que atravessam taxas em proporção não repartível",
+            })
+
+        # A escala é avaliada num agregado **fixo**, e não no que o utilizador
+        # escolheu: as três escalas cruzam-se na dimensão média, onde a
+        # amplitude é nula por construção. Num casal com dois filhos, que é
+        # onde a escolha pesa, mede-se alguma coisa.
+        _iv_esc = intervalo_agregado(_despesa_sint, dim_efetiva, 2, 2)
+        _entradas_inc.append({
+            "fonte": "Escala de equivalência",
+            "afeta": "a despesa de um casal com duas crianças",
+            "amplitude": _iv_esc["maximo"] - _iv_esc["minimo"],
+            "nota": "entre a mais restritiva e a mais generosa das três",
+        })
+
+        _cmp_pond = comparar_ponderadores(dados["pesos"], dados["variacoes_classe"])
+        if _cmp_pond.get("diferenca") is not None:
+            _e_ihpc = _euros_da_taxa(_cmp_pond["inflacao_ihpc"])
+            _e_idf = _euros_da_taxa(_cmp_pond["inflacao_idf"])
+            if _e_ihpc is not None and _e_idf is not None:
+                _entradas_inc.append({
+                    "fonte": "Estrutura de ponderação (IDF ou IHPC)",
+                    "afeta": "o agravamento dos últimos 12 meses",
+                    "amplitude": _e_idf - _e_ihpc,
+                    "nota": (f"{pontos(_cmp_pond['diferenca'])} na taxa de inflação "
+                             "alimentar"),
+                })
+
+        _cmp_v = _da_sessao("_cmp_idx", pd.DataFrame())
+        if not _cmp_v.empty and len(_cmp_v) >= 3:
+            _anos_v = max(int(_cmp_v["ano"].iloc[-1]) - int(_cmp_v["ano"].iloc[0]), 1)
+            _vies_ano = float(_cmp_v["vies"].iloc[-1]) / _anos_v
+            _e_vies = _euros_da_taxa(_vies_ano)
+            if _e_vies is not None:
+                _entradas_inc.append({
+                    "fonte": "Viés de substituição do cabaz de composição fixa",
+                    "afeta": "o agravamento dos últimos 12 meses",
+                    "amplitude": _e_vies,
+                    "nota": (f"{pontos(_vies_ano, sufixo=' p.p. por ano')}, medido "
+                             "contra um índice superlativo"),
+                })
+
+        _hier = hierarquia_incertezas(_entradas_inc)
+        if not _hier.empty:
+            secao("As incertezas desta ferramenta, por ordem de grandeza",
+                  "Cada barra é a amplitude, <strong>em euros por mês</strong>, que "
+                  "essa incerteza introduz no número que ela afeta.",
+                  ajuda=(
+                      "**A unidade é comum, o número afetado não é.** A base e a escala "
+                      "movem a despesa; a repercussão e as atribuições de IVA movem a "
+                      "poupança do cenário simulado; a ponderação e o viés de "
+                      "substituição movem o agravamento dos últimos doze meses. Os "
+                      "euros servem para comparar **ordens de grandeza**, não para "
+                      "somar.\n\nAs amplitudes de IVA dependem do cenário que estiver "
+                      "escolhido no simulador; as restantes não."))
+            figH = go.Figure(go.Bar(
+                y=_hier["fonte"], x=_hier["amplitude"], orientation="h",
+                # As duas maiores a vermelho. Sem inverter a lista: o eixo é que
+                # está invertido (`autorange`), pelo que o índice desta lista
+                # continua a corresponder à linha do `_hier`.
+                marker_color=[VERMELHO if i < 2 else NEUTRO
+                              for i in range(len(_hier))],
+                text=[euro(v, 0) for v in _hier["amplitude"]],
+                textposition="outside", cliponaxis=False,
+                customdata=list(zip(_hier["afeta"], _hier["nota"])),
+                hovertemplate="<b>%{y}</b><br>%{x:.2f} € por mês"
+                              "<br>Afeta: %{customdata[0]}"
+                              "<br>%{customdata[1]}<extra></extra>"))
+            # Ascendente: o Plotly desenha a primeira categoria em baixo, e a
+            # maior incerteza tem de ficar no topo, que é onde a leitura começa.
+            figH.update_layout(height=max(360, 46 * len(_hier)),
+                               margin=dict(t=12, b=42, l=10, r=90),
+                               xaxis_title="Amplitude em euros por mês",
+                               yaxis=dict(autorange="reversed"),
+                               showlegend=False)
+            grafico(figH)
+
+            # O confronto que fecha o argumento não é com a menor barra
+            # qualquer, é com o **viés de substituição**: é sobre ele que
+            # incide a crítica pública ao cabaz de composição fixa, e é a sua
+            # posição nesta ordem que diz alguma coisa a quem decide. Se a
+            # série não chegar para o calcular, recua-se para a menor barra, que
+            # sustenta uma versão mais fraca da mesma frase.
+            _maior = _hier.iloc[0]
+            _alvo = _hier[_hier["fonte"].str.contains("Viés", case=False, na=False)]
+            _alvo = _alvo.iloc[0] if not _alvo.empty else _hier.iloc[-1]
+            _e_o_vies = "Viés" in str(_alvo["fonte"])
+            _fator_h = (_maior["amplitude"] / _alvo["amplitude"]
+                        if _alvo["amplitude"] else None)
+            _txt_fator = (f", um fator de <strong>{numero(_fator_h, 0)}</strong> entre as duas"
+                          if _fator_h and _fator_h > 2 else "")
+            nota("A incerteza que o debate discute é a mais pequena de todas", f"""
+          A maior amplitude desta ferramenta é a <strong>{_maior['fonte'].lower()}</strong>, que
+          move {_maior['afeta']} em <strong>{euro(_maior['amplitude'])}</strong> por mês.
+          {'O <strong>viés de substituição do cabaz de composição fixa</strong>, sobre o qual incide a crítica pública ao indicador, move'
+           if _e_o_vies else
+           f'A menor, a <strong>{_alvo["fonte"].lower()}</strong>, move'}
+          <strong>{euro(_alvo['amplitude'])}</strong>{_txt_fator}.
+          <br><br>
+          As duas incertezas que decidem o número, a <strong>base oficial</strong> e a
+          <strong>repercussão</strong>, não são objeto de debate público; a que é discutida está
+          medida e é residual. <strong>É por aqui que uma melhoria do indicador tem retorno</strong>,
+          e é isso que o bloco seguinte organiza.""")
+
+        # ---------------------------------------------------------------
+        bloco("04 · Melhoria do indicador")
+        # ---------------------------------------------------------------
+        # A aplicação declarava doze limitações e não dizia o que fazer com
+        # nenhuma. Para quem tem de decidir, uma lista de defeitos não é um
+        # plano: falta quem tem os dados e o que custa obtê-los.
+        _melh = pd.DataFrame(MELHORIAS_INDICADOR).sort_values("prioridade")
+        _internas = _melh[_melh["quem"] == "UPE"]
+        _externas = _melh[_melh["estado"] == "Depende de terceiros"]
+
+        secao("O que falta ao indicador, e o que o fecharia",
+              "Cada linha é uma lacuna identificada, com o que a resolveria, quem "
+              "detém os dados e se depende de terceiros. Ordenadas pelo efeito na "
+              "resposta ao Gabinete, não por facilidade de execução.",
+              grupo="04 · Plano")
+
+        _m1, _m2, _m3 = st.columns(3)
+        _m1.metric("Lacunas identificadas", numero(len(_melh)))
+        _m2.metric("Resolúveis pela UPE", numero(len(_internas)),
+                   help="Não dependem de pedido a nenhuma outra entidade.")
+        _m3.metric("Dependentes de terceiros", numero(len(_externas)),
+                   help="Exigem pedido formal, protocolo de dados ou nova avaliação.")
+
+        st.dataframe(
+            pd.DataFrame([{
+                "Prioridade": int(r.prioridade),
+                "Lacuna": r.lacuna,
+                "Consequência": r.consequencia,
+                "O que a fecha": r.fecha,
+                "Quem tem os dados": r.quem,
+                "Esforço": r.esforco,
+                "Estado": r.estado,
+            } for r in _melh.itertuples()]),
+            width="stretch", hide_index=True, row_height=64,
+            column_config={
+                "Prioridade": st.column_config.NumberColumn(width="small"),
+                "Lacuna": st.column_config.TextColumn(width="medium"),
+                "Consequência": st.column_config.TextColumn(width="large"),
+                "O que a fecha": st.column_config.TextColumn(width="large"),
+            })
+        st.caption(
+            "**Prioridade 1** é o que mais altera a resposta à pergunta do Gabinete, e "
+            "não o que é mais rápido de fazer. As duas coisas não coincidem: a lacuna "
+            "mais consequente, a divergência entre as duas âncoras oficiais, é também a "
+            "que a UPE não pode fechar sozinha."
+        )
+
+        nota("O que se pode fazer sem pedir nada a ninguém", f"""
+          <strong>{numero(len(_internas))} das {numero(len(_melh))} lacunas</strong> não dependem
+          de terceiros: os dados estão publicados e por transcrever, ou o cálculo está ao alcance
+          da própria ferramenta. Entre elas, a despesa por tipo de agregado já está parcialmente
+          feita, e a desagregação territorial usa quadros do mesmo inquérito que a aplicação já
+          consome.
+          <br><br>
+          As restantes <strong>{numero(len(_externas))}</strong> exigem decisão de outra entidade,
+          e três delas apontam para o mesmo sítio: <strong>não existem dados de quantidade nem de
+          transação</strong>. Enquanto não existirem, esta ferramenta mede o que se paga, e não o
+          que se leva para casa.""")
+
+        st.download_button(
+            "Descarregar plano de melhoria do indicador (CSV com fonte)",
+            csv_com_fonte(_melh, "Melhoria do indicador da despesa alimentar", dados,
+                          fonte=("Levantamento da UPE sobre as limitações declaradas "
+                                 "da ferramenta"),
+                          conjuntos=[],
+                          extra=[("Natureza", "Documento de trabalho, não é posição "
+                                              "oficial da Secretaria-Geral do Governo")]),
+            f"melhoria_indicador_{date.today()}.csv", "text/csv")
+
 
 # ==========================================================================
 # Rodapé institucional

@@ -3762,3 +3762,392 @@ def test_a_reconstituida_pondera_pelos_valores_de_ha_um_ano():
     corrente = sum(l.quota * l.variacao for l in com.itertuples())
     assert corrente > r["variacao_implicita"]
     assert abs(corrente - r["variacao_implicita"]) > 0.05
+
+
+# =========================================================================
+# Momentum: efeito de base, arrastamento e difusao
+# =========================================================================
+def _serie_mensal(taxas, inicio_ano=2023, base=100.0):
+    """Serie de indice construida a partir de uma lista de variacoes mensais."""
+    meses, valores, v, i = [], [], base, 0
+    ano, mes = inicio_ano, 1
+    for t in taxas:
+        v *= (1 + t / 100)
+        meses.append(f"{ano}-{mes:02d}")
+        valores.append(v)
+        mes += 1
+        if mes > 12:
+            ano, mes = ano + 1, 1
+        i += 1
+    return pd.DataFrame({"unit": "I25", "coicop": "CP011",
+                         "time": meses, "valor": valores})
+
+
+def test_efeito_de_base_e_uma_identidade_exata():
+    """
+    A soma das duas parcelas tem de dar **exatamente** a variacao da taxa
+    homologa. Nao e uma aproximacao: e a identidade
+    (1+pi(m))/(1+pi(m-1)) = (1+r(m))/(1+r(m-12)), reescrita de forma aditiva.
+    Se deixasse de bater certo, a leitura apresentada ao Gabinete estaria a
+    atribuir a variacao a meses que nao a explicam.
+    """
+    from src.calculos import efeito_de_base
+
+    import random
+    random.seed(7)
+    taxas = [random.uniform(-1.5, 2.0) for _ in range(48)]
+    df = efeito_de_base(_serie_mensal(taxas))
+
+    assert not df.empty
+    for linha in df.itertuples():
+        assert (linha.contributo_novo + linha.contributo_base) == pytest.approx(
+            linha.delta_homologa, abs=1e-9)
+
+
+def test_efeito_de_base_isola_o_mes_que_sai_da_janela():
+    """
+    Com todos os meses iguais menos um, a queda da taxa homologa doze meses
+    depois desse mes tem de ser atribuida **ao efeito de base**, e nao ao mes
+    novo: os precos nao mudaram de ritmo, saiu da janela um mes atipico.
+    """
+    from src.calculos import efeito_de_base
+
+    taxas = [0.5] * 48
+    taxas[12] = 4.0                      # um unico mes atipico: 2024-01
+    df = efeito_de_base(_serie_mensal(taxas)).set_index("time")
+
+    # Em 2025-01 o mes atipico e o que sai da janela homologa: r(m-12).
+    linha = df.loc["2025-01"]
+    assert linha.contributo_base < -3.0, "o mes que sai tinha de dominar"
+    assert abs(linha.contributo_novo) < 1.0, "o mes novo e igual a todos os outros"
+    assert linha.delta_homologa < 0
+
+
+def test_efeito_de_base_precisa_de_serie_suficiente():
+    from src.calculos import efeito_de_base
+
+    assert efeito_de_base(pd.DataFrame()).empty
+    assert efeito_de_base(_serie_mensal([0.5] * 13)).empty
+
+
+def test_arrastamento_com_ano_estavel_reproduz_a_variacao_conhecida():
+    """
+    Se o indice ficar parado o ano inteiro, o arrastamento tem de ser
+    exatamente a distancia entre esse patamar e a media do ano anterior.
+    """
+    from src.calculos import arrastamento_anual
+
+    # 2023 inteiro a 100, 2024 inteiro a 110.
+    df = pd.DataFrame({
+        "unit": "I25", "coicop": "CP011",
+        "time": [f"2023-{m:02d}" for m in range(1, 13)]
+             + [f"2024-{m:02d}" for m in range(1, 13)],
+        "valor": [100.0] * 12 + [110.0] * 12,
+    })
+    r = arrastamento_anual(df)
+    assert r["ano"] == 2024
+    assert r["completo"] is True
+    assert r["arrastamento"] == pytest.approx(10.0)
+
+
+def test_arrastamento_projeta_os_meses_em_falta():
+    """Com meio ano conhecido, os meses que faltam entram ao ultimo valor."""
+    from src.calculos import arrastamento_anual
+
+    df = pd.DataFrame({
+        "unit": "I25", "coicop": "CP011",
+        "time": [f"2023-{m:02d}" for m in range(1, 13)]
+             + [f"2024-{m:02d}" for m in range(1, 7)],
+        "valor": [100.0] * 12 + [110.0] * 6,
+    })
+    r = arrastamento_anual(df)
+    assert r["meses_conhecidos"] == 6
+    assert r["completo"] is False
+    # Seis meses a 110 e seis projetados a 110 dao media 110.
+    assert r["arrastamento"] == pytest.approx(10.0)
+
+
+def test_arrastamento_exige_o_ano_anterior_completo():
+    from src.calculos import arrastamento_anual
+
+    df = pd.DataFrame({
+        "unit": "I25", "coicop": "CP011",
+        "time": [f"2024-{m:02d}" for m in range(1, 7)],
+        "valor": [100.0] * 6,
+    })
+    assert arrastamento_anual(df) is None
+    assert arrastamento_anual(pd.DataFrame()) is None
+
+
+def test_difusao_conta_as_classes_que_aceleram():
+    """
+    Metade das classes a acelerar e metade a abrandar: o indice de difusao tem
+    de o refletir, e a sazonalidade nao entra, porque cada classe e comparada
+    consigo propria em base homologa.
+    """
+    from src.calculos import difusao_por_classe
+
+    partes = []
+    for i, cod in enumerate(CODIGOS):
+        # As primeiras quatro classes aceleram no fim da serie; as restantes nao.
+        taxas = [0.3] * 30 + ([0.9] * 12 if i < 4 else [0.3] * 12)
+        s = _serie_mensal(taxas)
+        partes.append(s.assign(coicop=cod))
+    df = difusao_por_classe(pd.concat(partes, ignore_index=True), meses=3)
+
+    assert len(df) == len(CODIGOS)
+    assert df.attrs["n_acelera"] == 4
+    assert df.attrs["n_abranda"] == len(CODIGOS) - 4
+    assert df.attrs["indice_difusao"] == pytest.approx(4 / len(CODIGOS))
+    # Ordenado da maior aceleracao para a maior desaceleracao.
+    assert df["delta"].is_monotonic_decreasing
+
+
+def test_difusao_com_serie_curta_nao_inventa():
+    from src.calculos import difusao_por_classe
+
+    assert difusao_por_classe(pd.DataFrame()).empty
+    curta = pd.concat([_serie_mensal([0.3] * 10).assign(coicop=c) for c in CODIGOS],
+                      ignore_index=True)
+    assert difusao_por_classe(curta).empty
+
+
+# =========================================================================
+# Custo de compensar o agravamento
+# =========================================================================
+def test_custo_compensacao_e_o_agravamento_vezes_um_quinto_dos_agregados():
+    from src.calculos import cabaz_quintis, custo_compensacao
+
+    q = cabaz_quintis({c: 5.0 for c in CODIGOS})
+    agregados = 4_000_000
+    r = custo_compensacao(q, agregados)
+
+    agrav = float(q[q["quintil"] == "q1"]["agravamento"].iloc[0])
+    assert r["agregados_por_quintil"] == pytest.approx(agregados / 5)
+    assert r["total_anual"] == pytest.approx(agrav * (agregados / 5) * 12)
+    assert r["total_milhoes"] == pytest.approx(r["total_anual"] / 1e6)
+
+
+def test_custo_compensacao_soma_varios_quintis():
+    from src.calculos import cabaz_quintis, custo_compensacao
+
+    q = cabaz_quintis({c: 5.0 for c in CODIGOS})
+    um = custo_compensacao(q, 4_000_000, quintis=("q1",))
+    dois = custo_compensacao(q, 4_000_000, quintis=("q1", "q2"))
+    assert len(dois["linhas"]) == 2
+    assert dois["total_anual"] > um["total_anual"]
+
+
+def test_custo_compensacao_sem_variacoes_devolve_nada():
+    """Sem variacoes homologas nao ha agravamento, e nao se inventa um custo."""
+    from src.calculos import cabaz_quintis, custo_compensacao
+
+    assert custo_compensacao(cabaz_quintis({}), 4_000_000) is None
+    assert custo_compensacao(pd.DataFrame(), 4_000_000) is None
+
+
+# =========================================================================
+# Observado contra simulado, por tipo de agregado
+# =========================================================================
+def test_adultos_do_grupo_composto_sai_da_composicao_e_nao_da_mao():
+    """
+    O numero medio de adultos do grupo "2 ou mais" e derivado da repartição do
+    grupo, nao inscrito. Se alguem alterar a composicao, este numero acompanha.
+    """
+    from src.calculos import adultos_do_tipo
+    from src.config import ESCALAS_TESTE_COMPOSICAO
+
+    esperado = (sum(n * f for n, f in ESCALAS_TESTE_COMPOSICAO)
+                / sum(f for _n, f in ESCALAS_TESTE_COMPOSICAO))
+    assert adultos_do_tipo("2mais_adultos") == pytest.approx(esperado)
+    assert adultos_do_tipo("1_adulto") == pytest.approx(1.0)
+    assert adultos_do_tipo("nao_existe") is None
+
+
+def test_comparacao_de_tipos_e_invariante_a_indexacao():
+    """
+    Indexar o observado e a media pelo mesmo fator nao pode alterar o veredicto:
+    se alterasse, a comparacao estaria a medir a inflacao e nao as escalas.
+    """
+    from src.calculos import comparar_tipos_agregado
+
+    a = comparar_tipos_agregado(239.33, 2.4, fator_idf=1.0)
+    b = comparar_tipos_agregado(239.33 * 1.35, 2.4, fator_idf=1.35)
+    assert list(a["dentro_do_intervalo"]) == list(b["dentro_do_intervalo"])
+    for coluna in ("racio_observado", "racio_minimo", "racio_maximo"):
+        assert a[coluna].tolist() == pytest.approx(b[coluna].tolist())
+
+
+def test_comparacao_de_tipos_confirma_o_teste_das_escalas():
+    """
+    O teste das escalas ja dizia que a OCDE modificada subestima o custo dos
+    agregados maiores. Com niveis, isso tem de aparecer como o observado a cair
+    **acima** do intervalo simulado no grupo dos agregados maiores, e dentro
+    dele no agregado de uma pessoa.
+    """
+    from src.calculos import comparar_tipos_agregado
+
+    df = comparar_tipos_agregado(2872.0 / 12, 2.4).set_index("chave")
+    um, dois = df.loc["1_adulto"], df.loc["2mais_adultos"]
+
+    assert um["dentro_do_intervalo"], "o agregado de uma pessoa cai no intervalo"
+    assert not dois["dentro_do_intervalo"]
+    assert dois["observado"] > dois["maximo"], (
+        "as escalas subestimam o custo alimentar dos agregados maiores, que e "
+        "a conclusao que o teste dos racios ja dava")
+
+
+def test_comparacao_de_tipos_declara_o_que_falta_transcrever():
+    """
+    A lacuna tem de viajar com os dados: sem isto, a interface apresentaria dois
+    tipos de agregado como se fossem o quadro todo.
+    """
+    from src.calculos import comparar_tipos_agregado
+    from src.config import IDF_TIPOS_POR_TRANSCREVER
+
+    df = comparar_tipos_agregado(239.33, 2.4)
+    assert df.attrs["por_transcrever"] == list(IDF_TIPOS_POR_TRANSCREVER)
+    assert df.attrs["n_transcritos"] == len(df)
+
+
+# =========================================================================
+# Hierarquia das incertezas
+# =========================================================================
+def test_hierarquia_ordena_por_amplitude_e_descarta_o_vazio():
+    from src.calculos import hierarquia_incertezas
+
+    df = hierarquia_incertezas([
+        {"fonte": "escala", "afeta": "despesa", "amplitude": 12.0, "nota": ""},
+        {"fonte": "base", "afeta": "despesa", "amplitude": -310.0, "nota": ""},
+        {"fonte": "ausente", "afeta": "nada", "amplitude": None, "nota": ""},
+        {"fonte": "nula", "afeta": "nada", "amplitude": 0.0, "nota": ""},
+    ])
+    assert list(df["fonte"]) == ["base", "escala"]
+    assert df["amplitude"].iloc[0] == pytest.approx(310.0), "amplitude e absoluta"
+
+
+def test_hierarquia_sem_entradas_uteis_devolve_vazio():
+    from src.calculos import hierarquia_incertezas
+
+    assert hierarquia_incertezas([]).empty
+    assert hierarquia_incertezas([{"fonte": "x", "afeta": "y",
+                                   "amplitude": None, "nota": ""}]).empty
+
+# =========================================================================
+# Doutrina da sintese: o que nao pode regredir em silencio
+# =========================================================================
+def test_a_sintese_nao_segue_os_parametros_do_utilizador():
+    """
+    A sintese fixa a base por defeito e o agregado medio nacional. Se alguem a
+    ligar a `base_chave` ou a `despesa_mensal`, que seguem os controlos de
+    "Despesa e composicao", dois leitores passam a citar numeros diferentes a
+    partir da mesma pagina, e o separador deixa de servir para o que existe.
+    """
+    vivo = _fonte_viva("app.py")
+    i = vivo.index("with _slot_sintese:")
+    # O delimitador nao pode ser um comentario: `_fonte_viva` retira-os. O
+    # rodape e o primeiro elemento desenhado depois da sintese.
+    bloco = vivo[i:vivo.index('<footer class="sg-rodape"', i)]
+
+    assert "BASE_POR_DEFEITO" in bloco, (
+        "a sintese deixou de fixar a base por defeito")
+    assert "base_chave" not in bloco, (
+        "a sintese passou a ler a base escolhida pelo utilizador noutro "
+        "separador: deixa de ser citavel")
+    assert "despesa_mensal" not in bloco, (
+        "a sintese passou a usar a despesa ajustada a composicao escolhida "
+        "pelo utilizador, em vez do agregado medio nacional")
+
+
+def test_a_sintese_declara_que_fixa_a_base():
+    """Fixar e nao dizer que se fixou seria pior do que nao fixar."""
+    vivo = _fonte_viva("app.py")
+    i = vivo.index("with _slot_sintese:")
+    bloco = vivo[i:i + 4000]
+    assert "agregado médio" in bloco, (
+        "a sintese deixou de declarar que o valor e o do agregado medio nacional")
+
+
+def test_o_momentum_declara_porque_nao_ha_taxa_ajustada_de_sazonalidade():
+    """
+    O IHPC vem em bruto. Uma taxa em cadeia anualizada sobre a serie bruta dos
+    alimentos e dominada pela sazonalidade da fruta e dos horticolas, e
+    corrigi-la por conta propria tornaria o numero um calculo da UPE em vez de
+    um numero do INE. Se alguem acrescentar essa taxa, tem de reescrever esta
+    justificacao primeiro, e este teste obriga a passar por ai.
+    """
+    vivo = _fonte_viva("app.py")
+    i = vivo.index("02 · Momentum")
+    ajuda = vivo[max(0, i - 3000):i]
+    assert "sazonalidade" in ajuda, (
+        "a seccao de momentum deixou de declarar porque nao apresenta uma taxa "
+        "em cadeia anualizada")
+    assert "identidade" in ajuda, (
+        "a seccao deixou de dizer que a reparticao e exata e nao uma estimativa")
+
+
+def test_a_hierarquia_declara_que_os_euros_nao_se_somam():
+    """
+    Cada barra e a amplitude do numero que **essa** incerteza afeta, e nao sao
+    todos o mesmo numero. Sem essa ressalva, o grafico convida a somar coisas
+    que nao se somam, que e exatamente o defeito que ele existe para corrigir.
+    """
+    import re
+
+    vivo = _fonte_viva("app.py")
+    i = vivo.index("As incertezas desta ferramenta")
+    # As frases da interface estao partidas por varias linhas de codigo, e uma
+    # procura literal quebraria so por alguem reajustar a largura. Juntam-se os
+    # literais adjacentes antes de procurar.
+    bloco = re.sub(r'"\s*\n\s*"', "", vivo[i:i + 2500])
+    assert "não para somar" in bloco, (
+        "o grafico da hierarquia deixou de declarar que as amplitudes nao sao "
+        "somaveis entre si")
+
+
+def test_o_confronto_por_tipo_de_agregado_declara_a_cobertura():
+    """
+    Estao transcritos dois tipos de agregado, ambos sem criancas. Apresentar a
+    comparacao sem dizer o que falta seria dar dois tipos por um quadro
+    completo, justamente onde o coeficiente da escala mais pesa.
+    """
+    from src.config import IDF_TIPOS_AGREGADO, IDF_TIPOS_POR_TRANSCREVER
+
+    assert IDF_TIPOS_POR_TRANSCREVER, (
+        "se o quadro ficou completo, apague esta lista e o aviso na interface")
+    vivo = _fonte_viva("app.py")
+    assert "por_transcrever" in vivo, (
+        "a interface deixou de declarar os tipos de agregado por transcrever")
+    # E os que ja estao transcritos tem de trazer fonte.
+    assert all(t.get("alimentar_ano") for t in IDF_TIPOS_AGREGADO.values())
+
+
+def test_os_niveis_do_idf_batem_com_o_racio_que_o_teste_das_escalas_usa():
+    """
+    Os dois niveis promovidos a constante **sao** os que produzem o racio
+    observado usado em `testar_escalas`. Se alguem alterar um sem alterar o
+    outro, as duas leituras da mesma coisa passam a divergir em silencio.
+    """
+    from src.config import IDF_TIPOS_AGREGADO, ESCALAS_TESTE_RACIO
+
+    um = IDF_TIPOS_AGREGADO["1_adulto"]["alimentar_ano"]
+    dois = IDF_TIPOS_AGREGADO["2mais_adultos"]["alimentar_ano"]
+    assert dois / um == pytest.approx(ESCALAS_TESTE_RACIO["alimentar"], abs=1e-3)
+
+
+def test_o_plano_de_melhoria_esta_completo_em_todas_as_linhas():
+    """
+    Uma linha sem "quem tem os dados" ou sem "o que a fecha" nao e um plano, e
+    o quadro existe precisamente para nao ser uma lista de desejos.
+    """
+    from src.config import MELHORIAS_INDICADOR
+
+    campos = ("prioridade", "lacuna", "consequencia", "fecha", "quem",
+              "esforco", "estado")
+    assert MELHORIAS_INDICADOR
+    for linha in MELHORIAS_INDICADOR:
+        for campo in campos:
+            assert linha.get(campo), f"falta “{campo}” em: {linha.get('lacuna')}"
+        assert linha["prioridade"] in (1, 2, 3)
+        assert linha["estado"] in ("Por fazer", "Parcialmente feito",
+                                   "Depende de terceiros")
