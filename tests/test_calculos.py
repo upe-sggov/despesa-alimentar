@@ -4325,7 +4325,7 @@ def test_a_sintese_respeita_as_regras_estatisticas_do_briefing():
 
     # 6. O indicador de dieta saudavel nao e fome, e nao se confunde com o
     #    da privacao severa do EU-SILC.
-    assert "não é uma medida directa de fome" in bloco, (
+    assert "não é uma medida direta de fome" in bloco, (
         "a conclusao da dieta saudavel deixou de declarar que nao mede fome")
     assert "privação alimentar severa" not in bloco or "EU-SILC" in bloco, (
         "a sintese cita a privacao severa sem a distinguir do indicador da FAO")

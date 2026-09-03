@@ -9649,7 +9649,7 @@ with _slot_sintese:
                     "custo dessa dieta e a capacidade económica das famílias."),
                 ressalva=(
                     "Este indicador mede a capacidade económica para suportar o "
-                    "custo de uma dieta saudável; não é uma medida directa de fome "
+                    "custo de uma dieta saudável; não é uma medida direta de fome "
                     "ou privação alimentar. Essa é medida por outro limiar, o da "
                     "privação severa, que regista o valor mínimo da série em "
                     f"{percentagem(_sev_sint, sinal=False)}: apresentado sozinho, "
@@ -9659,7 +9659,7 @@ with _slot_sintese:
                     "evoluções distintas e devem ser lidos em conjunto."
                     if _sev_sint is not None else
                     "Este indicador mede a capacidade económica para suportar o "
-                    "custo de uma dieta saudável; não é uma medida directa de fome "
+                    "custo de uma dieta saudável; não é uma medida direta de fome "
                     "ou privação alimentar."),
                 menor=("O par ilustra a distinção entre um indicador de preços e "
                        "um indicador de acessibilidade: o primeiro mede quanto "
@@ -9824,9 +9824,9 @@ with _slot_sintese:
                       "Mede despesa sobre rendimento combinando duas fontes de "
                       "universos distintos, as Contas Nacionais e o EU-SILC, e por "
                       "isso é apresentado como limite superior e não como "
-                      "estimativa. A correcção exigiria despesa e rendimento da "
+                      "estimativa. A correção exigiria despesa e rendimento da "
                       "mesma fonte."),
-            menor=("O consumo em quantidades não é medido pelas fontes actualmente "
+            menor=("O consumo em quantidades não é medido pelas fontes atualmente "
                    "utilizadas."))
 
         # ===============================================================
@@ -9839,11 +9839,11 @@ with _slot_sintese:
             "A estatística oficial permite responder a muitas perguntas, mas algumas "
             "dimensões exigem maior granularidade ou novas fontes.")
         dimensoes([
-            ("Consumo efectivo",
+            ("Consumo efetivo",
              "<strong>A despesa não é o mesmo que quantidade consumida.</strong> As "
              "fontes utilizadas observam preços e despesa, mas não acompanham de forma "
-             "integrada as quantidades efectivamente consumidas. A substituição entre "
-             "produtos não é, por isso, directamente observada.", False),
+             "integrada as quantidades efetivamente consumidas. A substituição entre "
+             "produtos não é, por isso, diretamente observada.", False),
             ("Composição do consumo",
              "<strong>As famílias não têm todas a mesma estrutura de consumo.</strong> "
              "Médias e cabazes representativos não captam integralmente a diversidade "
@@ -9852,7 +9852,7 @@ with _slot_sintese:
              "<strong>Os valores médios escondem diferenças entre famílias e "
              "territórios.</strong> Os indicadores disponíveis são maioritariamente "
              "nacionais e agregados.", False),
-            ("Preços efectivamente enfrentados",
+            ("Preços efetivamente enfrentados",
              "<strong>Um índice nacional não reproduz necessariamente o preço pago por "
              "cada família.</strong> A dispersão dos preços entre operadores, "
              "territórios e famílias concretas não é observada.", False),
@@ -9872,7 +9872,7 @@ with _slot_sintese:
             # sem forma de saber qual era o do inquérito e qual era o das contas
             # nacionais (pedido da Inês, 03.09.2026). Nomear as duas não é
             # arbitrar entre elas: a legenda continua a dizer que nenhuma é
-            # apresentada como a correcta.
+            # apresentada como a correta.
             #
             # Chegou a haver, por baixo de cada número, a referência exata do
             # conjunto de dados. Saiu no mesmo dia, também a pedido da Inês:
@@ -9894,11 +9894,16 @@ with _slot_sintese:
                         "mensal do mesmo agregado.</strong> A diferença decorre de as "
                         "duas fontes medirem por métodos distintos, um inquérito às "
                         "famílias e as contas nacionais, com âmbitos que não coincidem. "
-                        "Nenhuma das duas é, por isso, apresentada como a correcta."))
+                        "Nenhuma das duas é, por isso, apresentada como a correta. A "
+                        "primeira constitui um <strong>piso</strong>: a medição direta "
+                        "às famílias tende a sub-reportar. A segunda, um "
+                        "<strong>teto</strong>: inclui consumo no território que não é "
+                        "das famílias residentes. O valor pretendido situa-se entre "
+                        "ambas."))
                 + '<p class="sg-duplo__fecho">A dificuldade não está apenas em '
                   'articular indicadores diferentes: algumas dimensões apresentam '
                   'resultados diferentes consoante a fonte e a metodologia '
-                  'adoptadas.</p></div>',
+                  'adotadas.</p></div>',
                 unsafe_allow_html=True)
 
         # ===============================================================
@@ -9957,9 +9962,12 @@ with _slot_sintese:
              "a decisão entre elas seja informada.", False),
         ], colunas=3)
         destaque(
-            "A melhoria da medição permitirá reforçar a capacidade de acompanhar a "
-            "evolução da despesa alimentar e de apoiar a decisão pública com evidência "
-            "estatística mais completa.")
+            "Esta ferramenta apoia já a decisão pública com a melhor evidência "
+            "estatística oficial disponível: preços, despesa, distribuição, cadeia e "
+            "comparação europeia, com fontes e limitações declaradas. Os caminhos "
+            "acima indicam como torná-la ainda mais completa, e o compromisso de "
+            "quantificar o impacto de cada escolha garante que essa evolução se fará, "
+            "também ela, com método.")
 
 
 # ==========================================================================
