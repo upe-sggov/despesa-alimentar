@@ -4805,7 +4805,15 @@ with aba1:
                 figd = go.Figure(go.Bar(
                     y=df_delta["classe"], x=df_delta["delta"], orientation="h",
                     marker_color=[AZUL if v > 0 else DOURADO for v in df_delta["delta"]],
-                    hovertemplate="%{y}<br>%{x:+.1f} p.p.<extra></extra>",
+                    # O sinalizador `+` do d3-format quebra em silêncio quando
+                    # combinado com o `separators` da vírgula decimal desta
+                    # aplicação: o hover deixa de formatar e mostra o `float`
+                    # bruto, com quinze casas decimais (relatado pela Inês,
+                    # 03.09.2026). A app já tinha o padrão certo para isto
+                    # noutros gráficos, pré-formatar em Python e ler por
+                    # `customdata`, sem sinalizador `+` nenhum no hovertemplate.
+                    customdata=[pontos(v, casas=2) for v in df_delta["delta"]],
+                    hovertemplate="%{y}<br>%{customdata}<extra></extra>",
                 ))
                 # A mesma altura da figura da esquerda, para as duas assentarem na
                 # mesma linha. Acompanha a subida que a legenda lá provocou.
@@ -5170,10 +5178,16 @@ with aba2:
             figDF = go.Figure(go.Bar(
                 y=_difusao["classe"], x=_difusao["delta"], orientation="h",
                 marker_color=[VERMELHO if v > 0 else VERDE for v in _difusao["delta"]],
+                # O sinalizador `+` do d3-format quebra em silêncio combinado
+                # com o `separators` desta aplicação: o `p.p.` saía por
+                # formatar, com o `float` bruto (relatado pela Inês,
+                # 03.09.2026). Pré-formatado em Python, sem `+` no
+                # hovertemplate, como o resto da aplicação já fazia.
                 customdata=list(zip(_difusao["homologa_anterior"],
-                                    _difusao["homologa_atual"])),
+                                    _difusao["homologa_atual"],
+                                    [pontos(v, casas=2) for v in _difusao["delta"]])),
                 hovertemplate="<b>%{y}</b><br>%{customdata[0]:.1f}% → "
-                              "%{customdata[1]:.1f}%<br>%{x:+.2f} p.p.<extra></extra>"))
+                              "%{customdata[1]:.1f}%<br>%{customdata[2]}<extra></extra>"))
             figDF.update_layout(height=max(400, 42 * len(_difusao)),
                                 margin=dict(t=12, b=42, l=10, r=20),
                                 xaxis_title=(
@@ -6599,7 +6613,14 @@ with aba3:
             _fig_inf.add_trace(go.Bar(
                 y=_qs_inf["Quintil"], x=_qs_inf["Bens alimentares afetados"],
                 orientation="h", marker_color=VERDE, showlegend=False,
-                hovertemplate="%{y}<br>%{x} p.p.<extra></extra>"))
+                # O sinalizador `+` do d3-format quebra em silêncio combinado
+                # com o `separators` desta aplicação (auditoria de
+                # 03.09.2026, apanhada ao corrigir o mesmo problema em "Onde
+                # a diferença é maior"). Pré-formatado em Python, sem `+` no
+                # hovertemplate.
+                customdata=[pontos(v, casas=1)
+                            for v in _qs_inf["Bens alimentares afetados"]],
+                hovertemplate="%{y}<br>%{customdata}<extra></extra>"))
             if not _ref_inf.empty:
                 _fig_inf.add_vline(
                     x=float(_ref_inf["Bens alimentares afetados"].iloc[0]),
