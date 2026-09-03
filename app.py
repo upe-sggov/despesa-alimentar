@@ -465,6 +465,34 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
   margin-top: .55rem;
 }}
 
+/* ---------- vista de análise: seletor entre as leituras de um separador --
+   Cartão próprio para o seletor de "Despesa e composição", e não mais um
+   rótulo de bloco como outro qualquer: ganha moldura e o mesmo friso verde de
+   destaque que assinala os controlos importantes da aplicação, para não se
+   perder entre o cartão do indicador de capa, acima, e os cartões de "Cada
+   grupo em detalhe", abaixo (relatado pela Inês, 03.09.2026). O `key` do
+   contentor sai no HTML como a classe `st-key-vista-analise`, o mesmo
+   mecanismo já usado para os contadores da composição do agregado. */
+.st-key-vista-analise {{
+  background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
+  border-top: 3px solid var(--sg-verde); border-radius: var(--sg-raio);
+  padding: 1.5rem 1.7rem 1.35rem; margin: var(--sg-e4) 0 var(--sg-e2);
+}}
+[data-testid="stMarkdownContainer"] p.sg-vista__r {{
+  font-size: .6875rem; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--sg-verde); margin: 0; line-height: 1.4;
+}}
+[data-testid="stMarkdownContainer"] h2.sg-vista__t {{
+  font-size: 1.3125rem; font-weight: 700; letter-spacing: -.014em;
+  color: var(--sg-texto); margin: .4rem 0 1.05rem; padding: 0; line-height: 1.28;
+}}
+/* As pills herdam a `primaryColor` do tema (verde SGGov) para o estado
+   selecionado, sem regra própria; só o espaçamento a seguir precisa de ajuste,
+   para a nota explicativa não colar aos botões. */
+.st-key-vista-analise [data-testid="stElementContainer"]:has([data-testid="stPills"]) {{
+  margin-bottom: .9rem;
+}}
+
 .sg-comp {{ margin: var(--sg-e3) 0 .6rem; }}
 [data-testid="stMarkdownContainer"] p.sg-comp__t {{
   font-size: .8125rem; font-weight: 600; letter-spacing: .01em;
@@ -3230,6 +3258,14 @@ with aba1:
     # mostra dependem da base escolhida (pedido da Inês, 01.09.2026).
     _slot_faixa = st.container()
 
+    # Lugar do indicador de capa, aqui e não onde ele é calculado. Vinha
+    # depois dos parâmetros, e a leitura abria pelo controlo antes de mostrar
+    # o número a que ele se refere. Sobe para logo abaixo do título, antes
+    # dos parâmetros: é o valor a que toda a aplicação se refere, e é o que
+    # tem de se ver primeiro (pedido da Inês, 03.09.2026). Continua a ser
+    # preenchido depois dos parâmetros, porque o valor depende deles.
+    _slot_indicador = st.container()
+
     # O bloco não tinha cabeçalho: os controlos abriam o separador sem nada os
     # nomear. Não se chamam “cenário” de propósito, que nesta aplicação cenário
     # é o do simulador de IVA, e o mesmo termo para duas coisas diferentes é o
@@ -3924,26 +3960,38 @@ with aba1:
         # ---- o número da página ----
         # Antes era o primeiro de uma fila de cinco indicadores do mesmo
         # tamanho, a meio da página. É o valor a que toda a aplicação se
-        # refere: passa a abrir o separador e a dominá-lo. A proveniência
-        # (base, composição, escala) estava num *tooltip* e passa a estar à
-        # vista, que é onde tem de estar num documento que se cita.
-        indicador_principal(
-            "Despesa alimentar mensal",
-            euro(despesa_mensal),
-            contexto=f"{origem} · a preços de <strong>{mes_pt(ultimo_mes)}</strong>",
-            sec_valor=(percentagem(_taxa_capa) if _taxa_capa is not None else None),
-            sec_rotulo="variação homóloga",
-            sec_cor=(None if _taxa_capa is None
-                     else (VERDE if _taxa_capa < 0 else VERMELHO)))
+        # refere: abre o separador e domina-o, antes até dos parâmetros que o
+        # determinam (pedido da Inês, 03.09.2026). A proveniência (base,
+        # composição, escala) estava num *tooltip* e passa a estar à vista,
+        # que é onde tem de estar num documento que se cita.
+        #
+        # Escrito no `_slot_indicador` reservado lá em cima, e não aqui: o
+        # valor só existe depois de os parâmetros serem lidos, mas o lugar
+        # onde aparece é antes deles.
+        with _slot_indicador:
+            indicador_principal(
+                "Despesa alimentar mensal",
+                euro(despesa_mensal),
+                contexto=f"{origem} · a preços de <strong>{mes_pt(ultimo_mes)}</strong>",
+                sec_valor=(percentagem(_taxa_capa) if _taxa_capa is not None else None),
+                sec_rotulo="variação homóloga",
+                sec_cor=(None if _taxa_capa is None
+                         else (VERDE if _taxa_capa < 0 else VERMELHO)))
 
         # ---- vista: como o resto do separador se organiza ----
         # Eram nove blocos analíticos em sequência, sempre todos desenhados, e a
         # folha ficava longa e sem porta de entrada por tema. Passam a existir
-        # três vistas, mutuamente exclusivas, com o mesmo mecanismo já usado na
-        # Comparação UE-27: um `st.radio`, não um `st.tabs` aninhado, para não
-        # abrir uma segunda fila de separadores dentro da aba. Só o ramo da
-        # vista escolhida corre, o que é também o que encurta a página
-        # (pedido da Inês, 03.09.2026).
+        # três vistas, mutuamente exclusivas, com o mesmo princípio já usado na
+        # Comparação UE-27 (um seletor único, não um `st.tabs` aninhado, para não
+        # abrir uma segunda fila de separadores dentro da aba), mas não o mesmo
+        # controlo: ali é um `st.radio`, aqui é `st.pills`. O seletor tinha o
+        # mesmo peso visual de um cabeçalho de bloco numerado qualquer, entre o
+        # cartão do indicador de capa e os cartões de "Cada grupo em detalhe", e
+        # passava despercebido: nada dizia ao leitor que ali se escolhia o que
+        # via a seguir. Ganha cartão próprio, com o mesmo friso verde de destaque
+        # que assinala os controlos importantes da aplicação, e pontos de rádio
+        # dão lugar a botões, que se leem como interativos sem precisar de
+        # explicação (relatado e pedido pela Inês, 03.09.2026).
         #
         # O que fica fora das três vistas, os parâmetros acima e o indicador de
         # capa, não muda com a escolha: as três dependem deles. Os cálculos de
@@ -3956,23 +4004,31 @@ with aba1:
             "peso": "Peso da alimentação",
             "acessibilidade": "Acessibilidade alimentar",
         }
-        bloco("02 · Vista de análise", topo=True)
-        vista_despesa = st.radio(
-            "O que quer ver",
-            options=list(VISTAS_DESPESA.keys()),
-            format_func=lambda k: VISTAS_DESPESA[k],
-            horizontal=True, label_visibility="collapsed",
-        )
-        st.info(
-            "**As três vistas respondem a questões distintas.** *Preços dos "
-            "alimentos* mostra onde está concentrada a variação de preços e "
-            "como se reparte o cabaz por grupo de produtos. *Peso da "
-            "alimentação* mede quanto a alimentação absorve do orçamento, do "
-            "agregado médio nacional ao quintil de rendimento. *Acessibilidade "
-            "alimentar* responde a uma pergunta diferente das duas primeiras: "
-            "se as famílias conseguem pagar a alimentação, não quanto custa "
-            "nem quanto pesa."
-        )
+        with st.container(key="vista-analise"):
+            st.markdown(
+                '<p class="sg-vista__r">02 · Vista de análise</p>'
+                '<h2 class="sg-vista__t">O que quer explorar?</h2>',
+                unsafe_allow_html=True)
+            # `default="precos"` porque, ao contrário do `st.radio`, o `st.pills`
+            # não escolhe sozinho a primeira opção: sem isto, `vista_despesa`
+            # entrava `None` na primeira execução e caía no `else` (a última
+            # vista, acessibilidade), em vez de abrir em "Preços dos alimentos".
+            vista_despesa = st.pills(
+                "O que quer ver",
+                options=list(VISTAS_DESPESA.keys()),
+                format_func=lambda k: VISTAS_DESPESA[k],
+                default="precos", label_visibility="collapsed",
+            )
+            st.info(
+                "**As três vistas respondem a questões distintas.** *Preços dos "
+                "alimentos* mostra onde está concentrada a variação de preços e "
+                "como se reparte o cabaz por grupo de produtos. *Peso da "
+                "alimentação* mede quanto a alimentação absorve do orçamento, do "
+                "agregado médio nacional ao quintil de rendimento. *Acessibilidade "
+                "alimentar* responde a uma pergunta diferente das duas primeiras: "
+                "se as famílias conseguem pagar a alimentação, não quanto custa "
+                "nem quanto pesa."
+            )
 
         if vista_despesa == "precos":
             # “Últimos 12 meses” não dizia de que doze meses se tratava. A janela

@@ -113,15 +113,20 @@ calculam — ver [«Despesa alimentar» e não «cabaz»](#despesa-alimentar-e-n
 **4 · Despesa e composição.** A despesa alimentar mensal por agregado, a partir
 de uma de **duas bases oficiais à escolha** — o IDF ou as Contas Nacionais —,
 atualizada ao mês mais recente pelo índice de preços. Desde 03.09.2026, o resto
-do separador organiza-se em **três vistas**, escolhidas por um seletor único, o
-mesmo mecanismo já usado na Comparação UE-27: *Preços dos alimentos* (onde está
-concentrada a variação, como se reparte o cabaz pelas nove classes COICOP,
-cada grupo em detalhe), *Peso da alimentação* (referência nacional, indicadores
-do agregado selecionado, esforço face a três referências de rendimento, **cabaz
-por quintil de rendimento** e **custo de compensar o agravamento** por quintil)
-e *Acessibilidade alimentar* (os **três limiares** de acessibilidade, que não
-dependem da base ou da composição escolhidas). Os parâmetros de análise e o
-indicador de capa ficam fora das três vistas, por lhes serem comuns.
+do separador organiza-se em **três vistas**, mutuamente exclusivas como as da
+Comparação UE-27, mas escolhidas por um cartão próprio com destaque visual e
+botões (`st.pills`), e não pelos pontos de rádio discretos que a UE-27 usa: o
+seletor original passava despercebido entre o número de capa e os cartões de
+produto (relatado pela Inês, 03.09.2026). As três vistas são *Preços dos
+alimentos* (onde está concentrada a variação, como se reparte o cabaz pelas
+nove classes COICOP, cada grupo em detalhe), *Peso da alimentação* (referência
+nacional, indicadores do agregado selecionado, esforço face a três referências
+de rendimento, **cabaz por quintil de rendimento** e **custo de compensar o
+agravamento** por quintil) e *Acessibilidade alimentar* (os **três limiares**
+de acessibilidade, que não dependem da base ou da composição escolhidas). O
+indicador de capa abre a página, antes dos parâmetros de análise que o
+determinam; os parâmetros e o indicador ficam fora das três vistas, por lhes
+serem comuns.
 
 **5 · Histórico.** Série mensal do índice de preços alimentares e da variação
 homóloga, o **índice de difusão** por grupo, e a medição do **viés de
