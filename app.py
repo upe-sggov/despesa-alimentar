@@ -1429,7 +1429,6 @@ footer:not(.sg-rodape) {{ visibility: hidden; }}
   text-transform: uppercase; padding: .22rem .5rem; border-radius: var(--sg-raio);
 }}
 .sg-am-etiqueta--p {{ background: #EAF1F7; color: var(--sg-azul); }}
-.sg-am-etiqueta--s {{ background: #F1F1F0; color: var(--sg-texto-3); }}
 .sg-am-orgao p,
 [data-testid="stMarkdownContainer"] .sg-am-orgao p {{
   font-size: .75rem; line-height: 1.6; color: var(--sg-texto-2); margin: 0;
@@ -1899,8 +1898,26 @@ def pergunta_editorial(numero: str, titulo: str, evidencia: str,
     conclusão: a primeira frase diz o que os dados mostram, a segunda o que não
     se pode inferir deles, e apresentá-las com o mesmo peso confundia as duas.
 
-    `explorar_em` é um ponteiro e não uma hiperligação: o Streamlit não permite
-    mudar de separador por código. O nome tem de coincidir com o rótulo da aba.
+    `explorar_em` é um **ponteiro e não uma hiperligação**. O nome tem de
+    coincidir com o rótulo da aba, e sai sem seta.
+
+    A seta saiu a 03.09.2026. Dizia ao leitor que ali havia uma ligação, e não
+    havia: prometia um comportamento que a aplicação não cumpre, e a promessa é
+    que estava errada, não o ponteiro.
+
+    Dizia aqui, até essa data, que «o Streamlit não permite mudar de separador
+    por código». **Isso não é verdade**, e foi verificado num navegador a
+    03.09.2026: um `components.html` corre dentro de um iframe da mesma origem,
+    alcança `window.parent` e consegue carregar no botão da aba de destino, e
+    até saltar para uma âncora lá dentro. Um `<script>` em `st.markdown` é que
+    não corre, porque o Streamlit limpa o HTML.
+
+    O ponteiro continua a ser texto por **decisão**, e não por impossibilidade:
+    o mecanismo assenta no atributo `data-testid="stTab"` e na correspondência
+    do rótulo por texto, que são interioridades do Streamlit e podem mudar numa
+    atualização sem aviso, e o `AppTest` não executa o JavaScript do componente,
+    pelo que a bateria desta aplicação não o conseguiria vigiar. Fica para
+    quando houver testes de navegador (decisão da Inês, 03.09.2026).
     """
     res = f'<p class="sg-q__ress">{ressalva}</p>' if ressalva else ""
     men = f'<p class="sg-q__menor">{menor}</p>' if menor else ""
@@ -1913,7 +1930,7 @@ def pergunta_editorial(numero: str, titulo: str, evidencia: str,
     exp = ""
     if explorar_em:
         exp = ('<p class="sg-q__ex">Explorar em '
-               f'<span>{_html(explorar_em)}</span> →</p>')
+               f'<span>{_html(explorar_em)}</span></p>')
     classe = "sg-q sg-q--primeira" if primeira else "sg-q"
     st.markdown(
         f'<section class="{classe}">'
@@ -7142,13 +7159,13 @@ with aba4:
 # ## O que aqui **não** está, e porquê
 #
 # O registo estruturado de peças que vivia em `src/media.py`, com as sete
-# conclusões e o bloco das afirmações por verificar, deixou de ser desenhado a
-# 02.09.2026 e o módulo, com a sua bateria em `tests/test_media.py`, foi
-# removido do repositório na entrega final: ficava código morto, sem
-# nenhum separador a consumi-lo (decisão da Inês, 02.09.2026).
+# conclusões e o bloco das afirmações por verificar, deixou de ser desenhado.
+# O módulo e a sua bateria ficam no repositório, por decisão da Inês
+# (02.09.2026), para poderem ser retomados: **não estão em uso**, e quem os
+# alterar não está a alterar nada do que aparece no ecrã.
 #
 # Os números citados nesta página (38 casos, 17 dos 38, cerca de 25 fontes) são
-# os do entregável e estão escritos à mão, não são apurados por código nenhum.
+# os do entregável e estão escritos à mão, não são apurados do registo.
 with abaM:
     with painel("Análise mediática"):
         titulo_pagina(
@@ -7186,13 +7203,12 @@ with abaM:
             'Partindo da questão "as explicações dadas para a subida do cabaz '
             'alimentar são sustentadas em dados?", observa-se que a atribuição '
             'da causa "guerra" à subida dos preços do cabaz alimentar é '
-            'frequente nas peças analisadas. O único caso de notícia com '
-            'atribuição de causalidade fundamentada em dados oficiais é o '
-            'Diário de Notícias, nos artigos "Balança comercial nos cereais '
-            'está mais desequilibrada", de 7 de agosto de 2026, e "Calor e seca '
-            'estão a pressionar culturas de verão em Portugal", de 26 de agosto '
-            'de 2026, ambos em edição impressa e anexados. A segunda peça '
-            'reforça a primeira.')
+            'frequente nas peças analisadas. Um dos poucos casos com atribuição '
+            'de causalidade fundamentada em dados oficiais é o Diário de '
+            'Notícias, nos artigos "Balança comercial nos cereais está mais '
+            'desequilibrada", de 7 de agosto de 2026, e "Calor e seca estão a '
+            'pressionar culturas de verão em Portugal", de 26 de agosto de '
+            '2026, ambos em edição impressa e anexados.')
 
         componente("Narrativa B · estrutural")
         st.markdown(
@@ -7224,45 +7240,52 @@ with abaM:
               "narrativas enunciadas.",
               grupo="02 · Órgãos de comunicação")
         # ---------------------------------------------------------------
-        # A primeira etiqueta de cada cartão é a narrativa dominante, e vai a
-        # azul; as restantes ficam em cinzento. É a hierarquia do entregável.
+        # As etiquetas dizem que narrativa o órgão serve. Houve uma segunda
+        # família, em cinzento, para qualificar o cartão do Diário de Notícias
+        # com «exceção rigorosa». Saiu a 03.09.2026: a expressão não transmitia
+        # uma ideia clara (decisão da Inês), e com ela saiu a variante de cor
+        # que a desenhava, que ficaria sem quem a use.
         _ORGAOS = [
             ("Diário de Notícias",
-             [("Narrativa A · causal", "p"), ("exceção rigorosa", "s")],
-             'Entre as várias peças analisadas que atribuem subidas do cabaz '
-             'alimentar a causas não sustentadas (por exemplo "Guerra eleva '
-             'preço do cabaz alimentar para recorde", de 9 de abril de 2026, e '
-             "uma peça de 30 de julho de 2026 com a etiqueta 'GUERRA' sem "
-             'sustentação no corpo do texto), destaca-se a peça do Diário de '
-             'Notícias de 7 de agosto de 2026 como o único caso de conteúdo com '
-             'causalidade fundamentada, "Balança comercial nos cereais está '
-             'mais desequilibrada", que ancora a explicação em défice comercial '
-             'de cereais e em dados do Gabinete de Planeamento, Políticas e '
+             [("Narrativa A · causal", "p")],
+             'Distinta das várias peças analisadas, que atribuem subidas do '
+             'cabaz alimentar a causas não sustentadas (de que é exemplo o '
+             'título "Guerra eleva preço do cabaz alimentar para recorde", de 9 '
+             'de abril de 2026, do Diário de Notícias), destaca-se a peça do '
+             'mesmo órgão de comunicação social, intitulada "Balança comercial '
+             'nos cereais está mais desequilibrada", de 7 de agosto de 2026, '
+             'como um dos poucos casos de conteúdos com causalidade '
+             'fundamentada e que ancora a explicação em défice comercial de '
+             'cereais e em dados do Gabinete de Planeamento, Políticas e '
              'Administração Geral (GPP) e do Instituto Nacional de Estatística '
              '(INE). Esta boa prática do órgão foi reforçada a 26 de agosto de '
              '2026, com o artigo "Calor e seca estão a pressionar culturas de '
              'verão em Portugal", que cita o mais recente relatório do Centro '
              'Comum de Investigação da Comissão Europeia sobre calor e seca, '
-             'revelando outras causas que não a "guerra" para o aumento da '
+             'mencionando outras causas que não a "guerra" para o aumento da '
              'inflação alimentar.'),
             ("PÚBLICO",
              [("Narrativa A", "p"), ("Narrativa C", "p")],
-             'Cobre o lado do consumidor, com "Cabaz alimentar nunca esteve tão '
-             'caro", de 27 de março de 2026, e com a contestação da Associação '
-             'Portuguesa de Empresas de Distribuição a um relatório da '
-             'Autoridade de Segurança Alimentar e Económica (ASAE) sobre '
-             'margens, de 9 de março de 2023. Cobre também o lado empresarial '
-             'em resposta a críticas, com a contestação da Sonae a uma taxa '
-             'sobre "lucros excedentários", de 13 de março de 2024. Opta por um '
-             'tom analítico, atento a ambos os lados.'),
+             'Cobre o lado do consumidor, com "Cabaz alimentar nunca esteve '
+             'tão caro", de 27 de março de 2026, e, do lado empresarial, a '
+             'contestação da Associação Portuguesa de Empresas de Distribuição '
+             'a um relatório da Autoridade de Segurança Alimentar e Económica '
+             '(ASAE) sobre margens, conforme artigo de 9 de março de 2023. A '
+             'contestação da Sonae a uma taxa sobre "lucros excedentários", de '
+             '13 de março de 2024, foi também noticiada por este órgão de '
+             'comunicação social. O PÚBLICO opta, assim, por um tom analítico, '
+             'atento a ambos os lados.'),
             ("ECO",
              [("Narrativa C · contranarrativa", "p")],
              'Canal preferencial da defesa empresarial: carta da presidente '
-             'executiva da Sonae sobre "campanha de desinformação", de 16 de '
-             'março de 2023, confronto do presidente executivo da Jerónimo '
-             'Martins com o Ministro da Economia, a 22 e 23 de março de 2023, e '
-             'promessa de "força anti-inflacionária", de 26 de abril de 2023. '
-             'Veículo consistente da resposta das empresas às críticas.'),
+             'executiva da Sonae, Cláudia Azevedo, sobre "campanha de '
+             'desinformação", de 16 de março de 2023, confronto do presidente '
+             'executivo da Jerónimo Martins, Pedro Soares dos Santos, com o '
+             'Ministro da Economia, a 22 e 23 de março de 2023. Este órgão de '
+             'comunicação social reportou ainda a promessa da Jerónimo Martins '
+             'em ser uma "força anti-inflacionária", conforme artigo de 26 de '
+             'abril de 2023. Veículo consistente da resposta das empresas às '
+             'críticas.'),
             ("Esquerda.net",
              [("Narrativa C · confronto político", "p")],
              "Canal preferencial da crítica política: lucros ligados ao custo "
@@ -7306,8 +7329,8 @@ with abaM:
             'comunicação social. A publicação mais partilhada de todo o '
             'levantamento, com **quase 18 mil interações no TikTok**, não veio '
             'de nenhum órgão de comunicação social, mas de uma figura política, '
-            'Inês Sousa Real, do PAN. Destaca-se ainda que o tema "IVA zero no '
-            'cabaz" gerou publicações virais de lados opostos do espetro '
+            'Inês Sousa Real, do PAN. Destaca-se ainda o tema "IVA zero no '
+            'cabaz", que gerou publicações virais de lados opostos do espetro '
             f'político: **José Luís Carneiro**, do Partido Socialista, com '
             f'{numero(7950)} interações somadas nas várias plataformas, e o '
             f'**CHEGA**, com {numero(4895)}. Os cartões abaixo mostram, de cada '
@@ -7421,7 +7444,7 @@ with abaM:
             st.markdown(
                 "A nota também identificou fissuras entre dados e narrativa que "
                 "se viriam a revelar centrais, nomeadamente o precedente do "
-                "cabaz IVA Zero, onde a ASAE (−10,1%) e a DECO PROteste (−8,45%) "
+                "cabaz IVA Zero, onde a ASAE (−10,1%) e a DECO PROteste (−5,8%) "
                 "mediram impactos diferentes para a mesma medida, por diferença "
                 "de metodologia e não de factos.")
             st.markdown(
@@ -9565,8 +9588,15 @@ with _slot_sintese:
                          _prod),
                         ("Consumo", percentagem(float(_dv["consumo_var"]), casas=2),
                          _prod),
-                        detalhe=("Variação acumulada na janela comum às duas fases, "
-                                 f"de {_janela}."))
+                        # O produto é um **exemplo**, e a página tem de o dizer:
+                        # sem isso, o leitor sai daqui com a ideia de que a
+                        # conclusão é sobre este produto e não sobre a cadeia
+                        # (pedido da Inês, 03.09.2026).
+                        detalhe=(f"<strong>{_html(_prod)}</strong> entra aqui "
+                                 "como exemplo, por ser o produto com maior "
+                                 "divergência entre as duas fases. Variação "
+                                 "acumulada na janela comum às duas fases, de "
+                                 f"{_janela}."))
                     + ev_proporcao(
                         numero(_transm), numero(_com_duas),
                         "produtos em que o choque na origem foi transmitido ao "
@@ -9579,6 +9609,10 @@ with _slot_sintese:
                               "fases incorpora transporte, transformação, embalagem, "
                               "distribuição e IVA, e as duas fases podem referir-se a "
                               "formas diferentes do mesmo produto."),
+                    menor=(f"Os restantes {numero(_com_duas - 1)} produtos com "
+                           "preço nas duas fases, e a comparação produto a "
+                           "produto, estão no separador Da produção ao consumo."
+                           if _com_duas > 1 else None),
                     fonte=[("Período", _janela),
                            ("Fonte", "GPP, Observatório de Preços Agroalimentar"),
                            ("Unidade", "variação acumulada, %")],
@@ -9722,12 +9756,27 @@ with _slot_sintese:
             # Numa **só** chamada. Abrir o `<div>` num `st.markdown` e fechá-lo
             # noutro não funciona: o Streamlit fecha o HTML em cada chamada, e a
             # moldura saía vazia com o conteúdo por baixo dela.
-            _min_a, _max_a = float(ancora["minimo"]), float(ancora["maximo"])
+            # Cada lado é identificado pelo **instrumento** de onde vem. Dizia
+            # «Primeira fonte» e «Segunda fonte», e o leitor via dois valores
+            # sem forma de saber qual era o do inquérito e qual era o das contas
+            # nacionais (pedido da Inês, 03.09.2026). Nomear as duas não é
+            # arbitrar entre elas: a legenda continua a dizer que nenhuma é
+            # apresentada como a correcta.
+            #
+            # Chegou a haver, por baixo de cada número, a referência exata do
+            # conjunto de dados. Saiu no mesmo dia, também a pedido da Inês:
+            # fica só o nome do instrumento. A referência de cada base continua
+            # declarada onde é precisa, no separador «Metodologia e fontes».
+            _b_idf = (ancora.get("bases") or {}).get("idf") or {}
+            _b_cn = (ancora.get("bases") or {}).get("contas") or {}
+            _v_idf, _v_cn = float(_b_idf["valor"]), float(_b_cn["valor"])
+            _maior_f = max(_v_idf, _v_cn) or 1.0
             st.markdown(
                 '<div class="sg-duplo">'
                 + ev_confronto(
-                    ("Primeira fonte", euro(_min_a, 0), _min_a / _max_a),
-                    ("Segunda fonte", euro(_max_a, 0), 1.0),
+                    ("Inquérito às Despesas das Famílias", euro(_v_idf, 0),
+                     _v_idf / _maior_f),
+                    ("Contas Nacionais", euro(_v_cn, 0), _v_cn / _maior_f),
                     meio=("↔", "mesmo agregado"),
                     legenda=(
                         "<strong>Duas estimativas oficiais para a despesa alimentar "

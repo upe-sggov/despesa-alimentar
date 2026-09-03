@@ -84,10 +84,10 @@ perderam as cores de marca das plataformas e ficaram em versalete cinzento
 (decisão da Inês, 02.09.2026).
 
 Os números citados nesta página são os do entregável e estão **escritos à mão**,
-não são apurados por código nenhum. O registo estruturado que antes alimentava
-este separador, `src/media.py` e a sua bateria em `tests/test_media.py`, foi
-removido do repositório: ficava código morto, sem nenhum separador a consumi-lo
-(decisão da Inês, 02.09.2026).
+não são apurados de nenhum registo. O registo estruturado que antes alimentava
+este separador continua em `src/media.py`, com a sua bateria em
+`tests/test_media.py`, mas **não está em uso**: quem o alterar não altera nada do
+que aparece no ecrã.
 
 **2 · Síntese.** A página onde a aplicação **conclui**, e a única que se lê
 inteira em cinco minutos. Por isso não desenha
@@ -120,8 +120,8 @@ esforço face a três referências de rendimento e os **três limiares de
 acessibilidade alimentar**.
 
 **5 · Histórico.** Série mensal do índice de preços alimentares e da variação
-homóloga, a decomposição do **efeito de base**, o **índice de difusão** por
-grupo, e a medição do **viés de substituição** — cabaz de composição fixa contra
+homóloga, o **índice de difusão** por grupo, e a medição do **viés de
+substituição** — cabaz de composição fixa contra
 índice de Törnqvist.
 
 **6 · Da produção ao consumo.** Preços do mesmo produto nas duas pontas da
@@ -180,7 +180,8 @@ despesa-alimentar/
 │   ├── eurostat.py         # acesso aos dados (duas vias independentes)
 │   ├── calculos.py         # decomposição, IVA, quintis, Törnqvist, escalas
 │   ├── observatorio.py     # leitura e análise dos dados do GPP
-│   └── deco.py             # leitura e variações do cabaz da DECO PROteste
+│   ├── deco.py             # leitura e variações do cabaz da DECO PROteste
+│   └── media.py            # registo mediático estruturado · SEM USO desde 02.09.2026
 ├── scripts/
 │   ├── recolher_observatorio.py   # recolha do Observatório (passo manual)
 │   └── recolher_deco.py           # recolha do cabaz DECO (passo manual)
@@ -193,7 +194,8 @@ despesa-alimentar/
 ├── docs/
 │   └── 2026-08-07_levantamento_lacunas.md   # apuramento e decisões
 └── tests/
-    └── test_calculos.py    # 206 testes dos cálculos analíticos e da estrutura do app
+    ├── test_calculos.py    # 206 testes dos cálculos analíticos e da estrutura do app
+    └── test_media.py       # bateria do registo em src/media.py, que está sem uso
 ```
 
 A separação entre **acesso a dados** (`eurostat.py`, `observatorio.py`),
@@ -1111,8 +1113,10 @@ e a linha de proveniência traz sempre a limitação que altera a leitura.
    uma medida de fome, e traz o limiar da privação severa para que o valor mais
    baixo dos três não circule sozinho.
 4. **Como evoluem os preços ao longo da cadeia?** O produto com maior
-   divergência entre as duas fases, com a ressalva de que a diferença não
-   permite inferir margens.
+   divergência entre as duas fases, apresentado **como exemplo** e não como a
+   conclusão, com a remissão para os restantes produtos no separador «Da
+   produção ao consumo», e com a ressalva de que a diferença não permite
+   inferir margens.
 5. **Como se posiciona Portugal face à UE-27?** Peso da alimentação no consumo,
    com o nível de preços como contexto. A posição declara-se sobre os países
    comparados, e nunca sobre os 27.
@@ -1121,6 +1125,20 @@ e a linha de proveniência traz sempre a limitação que altera a leitura.
    indicador único que a página diz não existir. Nomeia três eixos, e declara na
    ressalva que o do esforço se apresenta como **limite superior** e não como
    estimativa, pelo motivo apurado na auditoria de 27 de julho.
+
+### As duas estimativas oficiais
+
+O bloco «O que ainda não conseguimos medir bem» fecha com o confronto entre as
+duas estimativas oficiais para a despesa alimentar mensal do mesmo agregado.
+Desde 03.09.2026, **cada valor é identificado pelo instrumento de onde vem**: o
+da esquerda pelo Inquérito às Despesas das Famílias, o da direita pelas Contas
+Nacionais. Dizia «Primeira fonte» e «Segunda fonte», e o leitor via dois números
+sem saber qual era qual. Nomeá-las não é arbitrar entre elas: a legenda continua
+a declarar que nenhuma é apresentada como a correcta.
+
+Fica só o nome do instrumento. A referência exata de cada base, com o conjunto
+de dados e o método, chegou a estar por baixo de cada número e saiu no mesmo
+dia: está declarada onde é precisa, no separador «Metodologia e fontes».
 
 ### O que a síntese não faz
 
@@ -1133,9 +1151,20 @@ fotografável da aplicação sem a legenda que o desarma. Há um teste que o imp
 escolhida nem da composição do agregado, pelo que dois leitores citam sempre os
 mesmos números. Há testes que impedem que volte a depender de qualquer dos dois.
 
-**Não navega.** O «Explorar em …» é um ponteiro e não uma hiperligação: o
-Streamlit não permite mudar de separador por código. Um teste verifica que o
-nome indicado coincide exactamente com o rótulo de uma aba existente.
+**Não navega.** O «Explorar em …» é um ponteiro e não uma hiperligação, e sai
+sem seta desde 03.09.2026 — a seta prometia uma ligação que não existia. Um
+teste verifica que o nome indicado coincide exactamente com o rótulo de uma aba
+existente.
+
+Dizia-se aqui que o Streamlit não permitia mudar de separador por código.
+**Não é verdade**, e foi verificado num navegador a 03.09.2026: um
+`components.html` corre num iframe da mesma origem, alcança o documento da
+página e consegue carregar no botão da aba de destino, e até saltar para uma
+âncora lá dentro. O ponteiro continua a ser texto por decisão: o mecanismo
+depende do atributo `data-testid="stTab"` e da correspondência do rótulo por
+texto, ambos interioridades do Streamlit que podem mudar sem aviso, e o
+`AppTest` não executa o JavaScript do componente, pelo que esta bateria não o
+conseguiria vigiar. Fica para quando houver testes de navegador.
 
 **Não fala da própria aplicação.** O que a interface mostra é o resultado, nunca
 o estado do trabalho que lhe deu origem. Há um teste que rejeita a reintrodução
