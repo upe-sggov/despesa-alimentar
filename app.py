@@ -3647,6 +3647,84 @@ with _slot_cobertura:
         )
 
 
+# --- quintis e acessibilidade: calculados aqui, e não dentro da vista de
+# "Despesa e composição" que os desenha. A Síntese lê-os por nome
+# (`_da_sessao`) e tem de continuar a funcionar seja qual for a vista aberta
+# nesse separador nessa sessão, porque a Síntese não responde às escolhas do
+# leitor noutros separadores. Gatilhar este cálculo ao seletor de vista
+# quebraria essa garantia (decisão da Inês, 03.09.2026).
+df_quintis = cabaz_quintis(dados["variacoes_classe"])
+df_comp_q = composicao_quintis()
+_custo_q1 = custo_compensacao(df_quintis, agregados, ("q1",))
+_custo_q12 = custo_compensacao(df_quintis, agregados, ("q1", "q2"))
+
+rendimentos = dados.get("rendimento") or {}
+sm_pt = (dados.get("salario") or {}).get("PT")
+sme_pt = (dados.get("salario_medio") or {}).get("PT")
+tem_rend = any(rendimentos.get(k, {}).get("PT")
+               for k in eurostat.RENDIMENTO_INDICADORES)
+
+# O indicador de rendimento em uso e o rácio Contas Nacionais/EU-SILC eram
+# apurados dentro do ramo que desenha "Quanto pesa no orçamento". O separador
+# Metodologia consome-os diretamente, sem ramo nenhum a garanti-los: numa
+# sessão sem EU-SILC, ou com a vista "Preços dos alimentos"/"Acessibilidade
+# alimentar" aberta, a aplicação rebentaria com NameError. Correm sempre
+# (13.08.2026, reafirmado 03.09.2026 quando a vista de "Despesa e composição"
+# passou a esconder o ramo que os calculava).
+indic_r = None
+if tem_rend:
+    _disp_r = [k for k in eurostat.RENDIMENTO_INDICADORES
+               if rendimentos.get(k, {}).get("PT")]
+    indic_r = "MEAN_EI" if "MEAN_EI" in _disp_r else _disp_r[0]
+# O rácio entre consumo total das Contas Nacionais por agregado e rendimento
+# do EU-SILC estava inscrito à mão como "cerca de 1,8 vezes". Com o
+# `nama_10_cp18` de 2024 e o EU-SILC de 2025 são hoje cerca de 1,5, o número
+# tinha ficado para trás, num bloco que a própria aplicação rotula "leitura
+# obrigatória" (auditoria de 12.08.2026, L3). Passa a ser calculado.
+_racio_cn_silc = None
+_eng_cn = (dados.get("engel") or {}).get("PT")
+if base_chave == "contas" and _eng_cn and tem_rend and indic_r:
+    _den_cn = agregados_do_ano(dados.get("agregados_serie") or {},
+                               _eng_cn["ano"])
+    _consumo_mes = _eng_cn["total"] * 1e6 / _den_cn["valor"] / 12
+    _ue_medio = unidades_equivalentes(
+        max(int(round(dim_efetiva)), 1), 0, "ocde_modificada")
+    _rend_mes_medio = rendimentos[indic_r]["PT"]["valor"] * _ue_medio / 12
+    if _rend_mes_medio > 0:
+        _racio_cn_silc = _consumo_mes / _rend_mes_medio
+
+_priv = dados.get("privacao", pd.DataFrame())
+_priv_pt = pd.DataFrame()
+if not _priv.empty:
+    _priv_pt = _priv[(_priv["geo"] == "PT")].sort_values("time")
+
+# O ano de referência tem de existir nos **três** quadros do SOFI, que
+# são inscritos à mão e já hoje não têm o mesmo conjunto de anos: o de
+# incapacidade tem 2020, o de custo não. Tomar o máximo de um deles e
+# indexar os outros por esse ano rebentaria na próxima edição em que os
+# anexos divergissem (auditoria de 12.08.2026, L17).
+_anos_sofi = (set(SOFI_INCAPACIDADE["Portugal"]) & set(SOFI_INCAPACIDADE["Espanha"])
+              & set(SOFI_CUSTO["Portugal"]) & set(SOFI_CUSTO["Espanha"]))
+_ano_sofi = max(_anos_sofi) if _anos_sofi else max(SOFI_INCAPACIDADE["Portugal"])
+_sofi_pt = SOFI_INCAPACIDADE["Portugal"][_ano_sofi]
+_sofi_es = SOFI_INCAPACIDADE["Espanha"][_ano_sofi]
+_sofi_pessoas = SOFI_MILHOES.get(_ano_sofi)
+_custo_pt = SOFI_CUSTO["Portugal"][_ano_sofi]
+_custo_es = SOFI_CUSTO["Espanha"][_ano_sofi]
+_idade_sofi = idade_fonte(_ano_sofi, LIMITE_ANOS_SOFI * 365)
+
+_sev, _ano_sev, _sev_pobres = None, None, None
+if not _priv_pt.empty:
+    _tot = _priv_pt[_priv_pt["rskpovth"] == "TOTAL"]
+    if not _tot.empty:
+        _sev = float(_tot.iloc[-1]["valor"])
+        _ano_sev = str(_tot.iloc[-1]["time"])
+        _pob = _priv_pt[(_priv_pt["rskpovth"] == "B_60")
+                        & (_priv_pt["time"] == _ano_sev)]
+        if not _pob.empty:
+            _sev_pobres = float(_pob.iloc[0]["valor"])
+
+
 # ==========================================================================
 # ABA D, Evolução do cabaz
 # ==========================================================================
@@ -3858,941 +3936,1005 @@ with aba1:
             sec_cor=(None if _taxa_capa is None
                      else (VERDE if _taxa_capa < 0 else VERMELHO)))
 
-        # Primeiro o país, depois o agregado escolhido. A ordem estava invertida:
-        # a página abria com os valores já ajustados à barra lateral e só no fim
-        # mostrava a referência nacional de que eles derivam, apesar de o próprio
-        # texto dessa referência lhe chamar “o ponto de partida do cálculo”
-        # (decisão da Inês, 13.08.2026).
-        secao("Referência nacional",
-              "O agregado médio português, antes de qualquer ajustamento. É deste "
-              "valor que parte o cálculo dos indicadores ajustados, mais abaixo.",
-              grupo="02 · Referência nacional")
-        dim_txt = ('%.1f' % dim_efetiva).replace('.', ',')
-        r1, r2, r3 = st.columns([1, 1, 2])
-        r1.metric(f"Agregado médio nacional ({dim_txt} pessoas)",
-                  euro(valor_medio_agregado),
-                  help=(f"Base {base_ancora['nome']}. "
-                        + (f"Na outra base seria {euro(outra_ancora['valor'])}. "
-                           if outra_ancora is not None else
-                           "A outra base não está disponível nesta sessão. ")
-                        + "Valor de referência antes de qualquer ajustamento de composição."))
-        r2.metric("Equivalente anual (agregado médio)", euro(valor_medio_agregado * 12))
-        eng_pt = (dados.get("engel") or {}).get("PT")
-        _eng = intervalo_engel(eng_pt)
-
-        if eng_pt:
-            # Intervalo, e não ponto: as duas bases oficiais divergem, e é a
-            # mesma divergência que já leva a âncora a ser apresentada como
-            # intervalo. O extremo inferior é o número do INE que aparece na
-            # tabela por quintil logo abaixo (auditoria de 10.08.2026, B4).
-            r3.metric("Peso da alimentação na despesa total",
-                      f"{percentagem(_eng['minimo'], sinal=False)} a {percentagem(_eng['maximo'], sinal=False)}",
-                      help=("Coeficiente de Engel nas duas bases oficiais: "
-                            f"{percentagem(_eng['idf'], sinal=False)} no Inquérito às Despesas "
-                            "das Famílias de 2022/2023 (agregados residentes) "
-                            f"e {percentagem(_eng['contas'], sinal=False)} nas Contas Nacionais de "
-                            f"{_eng['ano_contas']} (conceito macroeconómico). Divergem "
-                            "porque a despesa alimentar por agregado difere entre bases "
-                            "mais do que a despesa total, o mesmo motivo por que a "
-                            "âncora é um intervalo. O limite inferior é o valor que "
-                            "consta da tabela por quintil, mais abaixo. Comparação "
-                            "europeia no separador UE-27, que usa as Contas Nacionais "
-                            "por serem a única base comparável entre países."))
-        else:
-            r3.markdown(
-            f"<p class='sg-comp__d' style='padding-top:14px'>"
-            f"É este o ponto de partida do cálculo: a despesa alimentar de um agregado "
-            f"com a dimensão média portuguesa ({dim_txt} pessoas). Os valores mais abaixo "
-            f"estão ajustados para <strong>{composicao}</strong>.</p>",
-            unsafe_allow_html=True)
-
-        # Fora das colunas, e por duas razões. A visual: dentro da terceira, o
-        # cartão parava onde ela começava e a fila desalinhava na base, porque a
-        # regra que estica os cartões só age quando o indicador é filho único da
-        # coluna. Tentei corrigi-lo por CSS e não pegou, o contentor é desenhado
-        # por um mecanismo próprio do Streamlit que a folha de autor não vence.
+        # ---- vista: como o resto do separador se organiza ----
+        # Eram nove blocos analíticos em sequência, sempre todos desenhados, e a
+        # folha ficava longa e sem porta de entrada por tema. Passam a existir
+        # três vistas, mutuamente exclusivas, com o mesmo mecanismo já usado na
+        # Comparação UE-27: um `st.radio`, não um `st.tabs` aninhado, para não
+        # abrir uma segunda fila de separadores dentro da aba. Só o ramo da
+        # vista escolhida corre, o que é também o que encurta a página
+        # (pedido da Inês, 03.09.2026).
         #
-        # A editorial, que é a que a justifica mesmo: estas são as duas bases em
-        # que assentam **os três** cartões, e não só o do coeficiente de Engel.
-        # Uma nota só contextualiza o bloco inteiro (relatado pela Inês,
-        # 01.09.2026).
-        if eng_pt:
-            st.caption(f"Inquérito às Despesas das Famílias 2022/2023 · Contas "
-                       f"Nacionais {_eng['ano_contas']}, ver Metodologia")
+        # O que fica fora das três vistas, os parâmetros acima e o indicador de
+        # capa, não muda com a escolha: as três dependem deles. Os cálculos de
+        # que a Síntese e a Metodologia dependem por nome, os quintis, a
+        # acessibilidade e o rendimento, estão no bloco incondicional antes
+        # desta aba, precisamente para não dependerem de qual vista aqui está
+        # aberta.
+        VISTAS_DESPESA = {
+            "precos": "Preços dos alimentos",
+            "peso": "Peso da alimentação",
+            "acessibilidade": "Acessibilidade alimentar",
+        }
+        bloco("02 · Vista de análise", topo=True)
+        vista_despesa = st.radio(
+            "O que quer ver",
+            options=list(VISTAS_DESPESA.keys()),
+            format_func=lambda k: VISTAS_DESPESA[k],
+            horizontal=True, label_visibility="collapsed",
+        )
+        st.info(
+            "**As três vistas respondem a questões distintas.** *Preços dos "
+            "alimentos* mostra onde está concentrada a variação de preços e "
+            "como se reparte o cabaz por grupo de produtos. *Peso da "
+            "alimentação* mede quanto a alimentação absorve do orçamento, do "
+            "agregado médio nacional ao quintil de rendimento. *Acessibilidade "
+            "alimentar* responde a uma pergunta diferente das duas primeiras: "
+            "se as famílias conseguem pagar a alimentação, não quanto custa "
+            "nem quanto pesa."
+        )
 
-        if outra_ancora is not None:
-            nota("O valor exato não é determinável, use o intervalo", f"""
-          As duas fontes oficiais que medem a despesa alimentar das famílias não coincidem.
-          Para o agregado médio, a despesa mensal situa-se entre
-          <strong>{euro(ancora['minimo'])}</strong> e <strong>{euro(ancora['maximo'])}</strong>,
-          consoante se use o inquérito às despesas ou as Contas Nacionais. O ponto central
-          <strong>não é determinável</strong>: o inquérito subestima e as Contas Nacionais
-          sobrestimam, e não existe exercício de conciliação que permita arbitrar.
-          Os valores desta página usam a base <strong>{base_ancora['nome']}</strong>,
-          escolhida no bloco acima. Ver separador Metodologia.""")
-        else:
-            nota("Uma só base, não há intervalo nesta sessão", f"""
-          A aplicação apresenta normalmente a despesa como um <strong>intervalo</strong> entre as
-          duas fontes oficiais, que divergem por um fator próximo de 2. Nesta sessão só a base
-          <strong>{base_ancora['nome']}</strong> está disponível, pelo que os valores desta página são
-          um <strong>ponto de uma só base</strong> e não devem ser lidos como o valor central de
-          nada. Ver o registo de ligações no separador Metodologia.""", alerta=True)
+        if vista_despesa == "precos":
+            # “Últimos 12 meses” não dizia de que doze meses se tratava. A janela
+            # passa a ser nomeada pelos dois extremos, aqui e no detalhe por
+            # grupo, logo a seguir. Calculada uma vez para as secções que a
+            # usam.
+            _janela = (f"de {mes_homologo(ultimo_mes)} para {mes_extenso(ultimo_mes)}"
+                       if ultimo_mes and ultimo_mes != "—" else "nos últimos 12 meses")
+            _desal_nota = nota_desalinhamento(dados)
 
-        # A redacção anterior encadeava três ideias num parágrafo, com um ponto e
-        # vírgula pelo meio e um “qualificam-na” que obrigava a voltar atrás para
-        # descobrir o que era “na”. Três frases, uma ideia em cada (pedido da
-        # Inês, 01.09.2026).
-        secao(f"Ajustado ao agregado selecionado ({composicao})",
-              "A despesa que abre o separador, ajustada à composição escolhida "
-              "acima. Os indicadores seguintes mostram como ela se reparte e "
-              "quanto pesa. O cálculo da escala de equivalência está no separador "
-              "Metodologia.",
-              grupo="03 · O agregado selecionado")
-        # Quatro indicadores, e não cinco: a despesa mensal saiu daqui para o
-        # indicador de capa, no topo da página, onde ocupa o lugar que o seu
-        # peso na aplicação justifica. O rótulo e o *tooltip* que tinha (a
-        # proveniência, em `origem`) acompanharam-na.
-        colunas = st.columns(4)
-        if resumo["contributo_total"] is not None:
-            # A percentagem é uma **taxa de variação de preços** e não depende da
-            # base de despesa: mudar de IDF para Contas Nacionais muda os euros,
-            # não a taxa. Sem esta nota parece que a app ignorou a mudança de base
-            # (relatado pela utilizadora, 12.08.2026).
-            _nota_taxa = ("A percentagem é uma **taxa de variação de preços**, vem do índice "
-                          "e dos ponderadores, não do nível de despesa. Por isso **não muda** "
-                          "quando troca a base entre IDF e Contas Nacionais: o que muda é o "
-                          "valor em euros, porque a mesma taxa aplicada a uma despesa maior "
-                          "dá mais euros.")
-            # A taxa de capa (`_taxa_capa`) é a **oficial** do CP011 e foi
-            # apurada no topo do separador, porque o indicador principal a
-            # consome antes deste. Numa ferramenta que vai apoiar o Gabinete em
-            # debate público, o número de capa tem de ser o que qualquer pessoa
-            # pode ir verificar ao INE: um número que não bate certo com o
-            # publicado é fácil de atacar e difícil de neutralizar, e o risco
-            # reputacional é assimétrico.
+            # ---- detalhe por grupo ----
+            # Sobe para o topo da vista: dá o número dos nove grupos de uma vez,
+            # antes de os gráficos abaixo isolarem cada uma das suas dimensões
+            # (pedido da Inês, 03.09.2026).
+            secao("Cada grupo em detalhe",
+                  "Para cada grupo: quanto se gasta por mês, que proporção do cabaz representa, "
+                  f"quanto variaram os seus preços <strong>{_janela}</strong>, e quantos "
+                  "euros da variação desse período são atribuíveis a esse grupo. Os nove "
+                  "contributos somam a variação total.",
+                  grupo="03 · Cada grupo em detalhe", topo=True)
+            for inicio in range(0, len(df_decomp), 3):
+                cols = st.columns(3)
+                for col, (_, linha) in zip(cols, df_decomp.iloc[inicio:inicio + 3].iterrows()):
+                    col.markdown(cartao_classe(linha), unsafe_allow_html=True)
+            # Aqui a proveniência vai inteira: são cartões, não há figura para
+            # carimbar, logo não há nada de que repartir.
+            st.caption(proveniencia(dados, base_ancora,
+                                    mes_indice=ancora.get("mes")))
+            # É nos cartões que a taxa de cada classe aparece isolada, e por isso é
+            # aqui que uma classe de outro mês mais engana.
+            if _desal_nota:
+                st.caption(_desal_nota)
+
+            # ---- onde está concentrado o aumento ----
+            # “Contributo” e não “o que está a pesar mais”: é a palavra que os cartões
+            # e a tabela detalhada já usam para exatamente este número. O mesmo
+            # conceito tinha três nomes ao longo do separador (Inês, 13.08.2026).
             #
-            # Os euros continuam a ser a **soma dos nove contributos**, que é a
-            # propriedade que a decomposição promete e que está travada por
-            # teste. As duas grandezas correspondem a taxas ligeiramente
-            # diferentes, e é isso que o tooltip diz, e a legenda por baixo dos
-            # gráficos de decomposição.
-            _nota_capa = ""
-            if _var_of is not None and resumo["variacao_implicita"] is not None:
-                _nota_capa = (
-                    f"\n\n**A percentagem é a taxa oficial** do agregado alimentar "
-                    f"({mes_pt(dados.get('mes_variacao_oficial'))}), o número "
-                    "publicado pelo INE, que se pode verificar diretamente na fonte. "
-                    "**Os euros são a soma dos nove contributos** apresentados abaixo, "
-                    "que corresponde a "
-                    f"{percentagem(resumo['variacao_implicita'], sinal=False)}: essa "
-                    "agregação pondera as nove taxas pelos valores de há um ano, e a "
-                    "oficial pelos do período corrente. A diferença é de décimas de "
-                    "ponto, ver a nota sob os gráficos.")
-            # `_desce` foi apurado no topo do separador, pela mesma razão de
-            # `_taxa_capa`. Os rótulos seguem o **sinal**: a inflação alimentar
-            # já foi negativa em Portugal, e nesse caso o cartão anunciava um
-            # “Agravamento” de −9,79 € e um “Maior contributo” que era, na
-            # verdade, a classe que menos contribuiu para a descida
-            # (auditoria de 12.08.2026, M2).
-            _rot_agr = ("Alívio nos últimos 12 meses" if _desce
-                        else "Agravamento nos últimos 12 meses")
-            _verbo_agr = "Descida" if _desce else "Subida"
-            colunas[0].metric(_rot_agr, euro(abs(resumo["contributo_total"])),
-                              percentagem(_taxa_capa),
-                              help=f"{_verbo_agr} da despesa alimentar face ao mesmo mês do ano "
-                                   f"anterior, à composição de consumo atual. {_nota_taxa}"
-                                   f"{_nota_capa}")
-            colunas[1].metric("Despesa há 12 meses", euro(resumo["valor_ha_um_ano"]),
-                              help="A mesma despesa deflacionada pela variação homóloga de "
-                                   "cada classe. Escala com a base escolhida.")
-            if resumo["maior"]:
-                maior = resumo["maior"]
-                # `resumo_decomposicao` devolve a classe de maior contributo em
-                # **valor absoluto**; o rótulo diz em que sentido pesou.
-                _rot_maior = ("Maior alívio" if maior["contributo"] < 0
-                              else "Maior contributo")
-                colunas[2].metric(f"{_rot_maior} ({maior['classe']})",
-                                  euro(abs(maior["contributo"])),
-                                  percentagem(maior["variacao"]),
-                                  help=f"A classe que mais pesou {'na descida' if _desce else 'no agravamento'}"
-                                       ", em euros, combinando a sua variação de preços com o "
-                                       f"seu peso no cabaz. {_nota_taxa}")
-        colunas[3].metric(f"Equivalente anual ({composicao})",
-                          euro(despesa_mensal * vezes_ano),
-                          help=f"Despesa mensal × {vezes_ano}. Mesma base e mesma "
-                               f"composição: {origem}.")
-
-        # ---- esforço do agregado escolhido ----
-        # O `st.divider()` que aqui estava saiu: pertence ao mesmo bloco
-        # analítico da secção anterior (o agregado selecionado), e o filete de
-        # bloco já separa o que tem de ser separado. Dois traços seguidos a
-        # dividir níveis diferentes anulam-se um ao outro.
-        #
-        # A página dá três números que o leitor arruma todos como “peso no
-        # orçamento”, o coeficiente de Engel no topo, o peso por quintil mais
-        # abaixo, e este. Os denominadores são diferentes, e o quadro
-        # que os distingue está no separador UE-27, que pode nunca ser aberto.
-        # A distinção passa a ser feita onde a confusão acontece.
-        secao(f"Quanto pesa no orçamento ({composicao})",
-              "<strong>Aqui o denominador é o rendimento, não a despesa.</strong> "
-              "O coeficiente de Engel, em cima, e o peso no orçamento por quintil, "
-              "mais abaixo, repartem o que as famílias <em>gastam</em>. Esta mede "
-              "quanto do que <em>recebem</em> é absorvido pela alimentação, e é a única "
-              "<strong>das três</strong> que responde à composição escolhida no topo "
-              "deste separador.",
-              ajuda=("Estes valores são **limites superiores**, a despesa e o rendimento "
-                     "vêm de fontes com bases estatísticas diferentes, e combiná-las "
-                     "sobrestima o esforço. Leia as **diferenças entre composições** e a "
-                     "**direção** como informativas, e o **nível** como majorante. O "
-                     "desenvolvimento está em “Pressupostos subjacentes a estes valores”, "
-                     "no separador Metodologia."))
-
-        rendimentos = dados.get("rendimento") or {}
-        sm_pt = (dados.get("salario") or {}).get("PT")
-        sme_pt = (dados.get("salario_medio") or {}).get("PT")
-        tem_rend = any(rendimentos.get(k, {}).get("PT")
-                       for k in eurostat.RENDIMENTO_INDICADORES)
-
-        # O indicador de rendimento em uso e o rácio Contas Nacionais/EU-SILC
-        # eram apurados **dentro** do ramo que desenha esta secção. O separador
-        # Metodologia passou a consumi-los, e lá não há ramo nenhum a garanti-los:
-        # numa sessão sem EU-SILC a aplicação rebentaria com NameError. Sobem
-        # para aqui, onde correm sempre (13.08.2026).
-        indic_r = None
-        if tem_rend:
-            _disp_r = [k for k in eurostat.RENDIMENTO_INDICADORES
-                       if rendimentos.get(k, {}).get("PT")]
-            indic_r = "MEAN_EI" if "MEAN_EI" in _disp_r else _disp_r[0]
-        # O rácio entre consumo total das Contas Nacionais por agregado e
-        # rendimento do EU-SILC estava **inscrito à mão** como “cerca de 1,8
-        # vezes”. Com o `nama_10_cp18` de 2024 e o EU-SILC de 2025 são hoje
-        # cerca de 1,5, o número tinha ficado para trás, num bloco que a
-        # própria aplicação rotula “leitura obrigatória”
-        # (auditoria de 12.08.2026, L3). Passa a ser calculado.
-        _racio_cn_silc = None
-        _eng_cn = (dados.get("engel") or {}).get("PT")
-        if base_chave == "contas" and _eng_cn and tem_rend and indic_r:
-            _den_cn = agregados_do_ano(dados.get("agregados_serie") or {},
-                                       _eng_cn["ano"])
-            _consumo_mes = _eng_cn["total"] * 1e6 / _den_cn["valor"] / 12
-            _ue_medio = unidades_equivalentes(
-                max(int(round(dim_efetiva)), 1), 0, "ocde_modificada")
-            _rend_mes_medio = rendimentos[indic_r]["PT"]["valor"] * _ue_medio / 12
-            if _rend_mes_medio > 0:
-                _racio_cn_silc = _consumo_mes / _rend_mes_medio
-
-
-        if not tem_rend and not sm_pt and not sme_pt:
-            st.info(
-                "Os indicadores de rendimento não estão disponíveis nesta sessão. "
-                "Consulte o registo de ligações no separador Metodologia."
-            )
-        else:
-            # A coluna do contador estreita com ele: com o campo limitado a
-            # 9rem, um terço da largura deixava um vazio entre o contador e o
-            # texto que o qualifica, e os dois lêem-se como um só bloco.
-            #
-            # Um sexto, e não um quarto: a um quarto o vazio continuava grande
-            # de mais (Inês, 20.08.2026). Abaixo disto o rótulo do contador
-            # deixa de caber numa linha, que é o que fixa o limite.
-            ca_, cb_ = st.columns([1, 5])
-            with ca_:
-                trabalhadores = st.number_input(
-                    "Quantos auferem rendimento", min_value=1, max_value=int(adultos),
-                    value=min(int(adultos), 2), step=1,
-                    help=("Das pessoas com 14 ou mais anos, quantas auferem "
-                          "efetivamente rendimento. Jovens dependentes, estudantes "
-                          "e pessoas sem rendimento próprio não contam, mas "
-                          "continuam a pesar na despesa alimentar."),
+            # A aditividade é a propriedade central da decomposição, e continua a
+            # valer, mas a taxa que ela implica não é exatamente a oficial que está
+            # na capa. Isso tem de estar escrito onde os contributos aparecem
+            # (auditoria de 12.08.2026, K1). Estava numa legenda de treze linhas por
+            # baixo do gráfico; passa para o (i) do título, que é onde a encontra
+            # quem a procura e onde não estorva quem não a procura
+            # (decisão da Inês, 13.08.2026).
+            _ajuda_adit = None
+            if (resumo["contributo_total"] is not None
+                    and resumo["variacao_implicita"] is not None
+                    and dados.get("variacao_oficial") is not None):
+                _dif_k1 = dados["variacao_oficial"] - resumo["variacao_implicita"]
+                _ajuda_adit = (
+                    f"**Os nove contributos somam exatamente "
+                    f"{euro(resumo['contributo_total'])}**, é a propriedade que esta "
+                    "decomposição garante, e está verificada por teste automático. Essa "
+                    f"soma corresponde a uma {'descida' if _desce else 'subida'} de "
+                    f"**{percentagem(abs(resumo['variacao_implicita']), sinal=False)}**, "
+                    f"enquanto o índice oficial do agregado alimentar regista "
+                    f"**{percentagem(dados['variacao_oficial'], sinal=False)}** em "
+                    f"{mes_pt(dados.get('mes_variacao_oficial'))}, uma diferença de "
+                    f"{pontos(abs(_dif_k1), casas=2, sinal=False)}\n\n"
+                    "**Não é discrepância: são duas agregações da mesma coisa.** Para os "
+                    "nove contributos somarem ao total, a taxa que deles resulta pondera "
+                    "as nove classes pelos seus valores **de há um ano**; a oficial "
+                    "pondera-as pelos do **período corrente**. Verificado: ponderando "
+                    "pelos valores correntes obtêm-se "
+                    f"{percentagem(sum(r.quota * r.variacao for r in df_decomp.itertuples() if r.variacao is not None), sinal=False)}, "
+                    "que reproduz a oficial. Sobre 90 meses de série, a diferença tem "
+                    "média absoluta de 0,15 p.p. e nunca chegou a 1 p.p. **A percentagem "
+                    "no indicador de topo é a oficial**, para que seja verificável na "
+                    "fonte; os euros são os desta decomposição."
                 )
-                dependentes = int(adultos) - int(trabalhadores)
-            with cb_:
-                st.markdown(
-                    f"<p class='sg-comp__d' style='padding-top:26px'>"
-                    f"<strong>{pessoas}</strong> pessoa{'s' if pessoas > 1 else ''} a "
-                    f"alimentar · <strong>{trabalhadores}</strong> "
-                    + ("auferem" if trabalhadores > 1 else "aufere")
-                    + " rendimento"
-                    + (f" · <strong>{dependentes}</strong> com 14+ anos sem rendimento próprio"
-                       if dependentes else "")
-                    + (f" · <strong>{criancas}</strong> com menos de 14 anos"
-                       if criancas else "")
-                    + f"<br>Despesa alimentar mensal: <strong>{euro(despesa_mensal)}</strong>."
-                    "</p>",
-                    unsafe_allow_html=True)
+            secao("Contributo de cada grupo para a variação homóloga",
+                  f"Euros de variação <strong>{_janela}</strong> atribuíveis a cada "
+                  "grupo, positivos à direita, negativos à esquerda.",
+                  ajuda=_ajuda_adit, grupo="04 · Onde está a variação")
+            com_dados = df_decomp.dropna(subset=["contributo"]).sort_values("contributo")
+            if com_dados.empty:
+                st.info("Sem variações disponíveis para o período.")
+            else:
+                fig = go.Figure(go.Bar(
+                    y=list(com_dados["classe"]),
+                    x=com_dados["contributo"], orientation="h",
+                    marker_color=[VERMELHO if v > 0 else VERDE for v in com_dados["contributo"]],
+                    hovertemplate="%{y}<br>%{x:.2f} €<extra></extra>",
+                ))
+                fig.update_layout(height=max(450, 45 * len(com_dados)),
+                                  margin=dict(t=12, b=42, l=10, r=20),
+                                  xaxis_title="Euros por mês")
+                # O zero é a leitura central deste gráfico, separa quem agrava de
+                # quem alivia, e vinha com o mesmo peso das linhas de grelha.
+                fig.update_xaxes(zeroline=True, zerolinecolor=TEXTO_3, zerolinewidth=1.5)
+                grafico(fig, rodape=carimbo_do_grafico(dados,
+                                                       mes_indice=ancora.get("mes")))
+                st.caption("Vermelho: grupos que encareceram e agravam a despesa. "
+                           "Verde: grupos que baixaram e a aliviam. A linha vertical "
+                           "marca o zero.")
+                st.caption(base_de_calculo(dados, base_ancora,
+                                           mes_indice=ancora.get("mes")))
+                # O aviso de desalinhamento esteve aqui, e saiu a 01.09.2026. Estava
+                # a ser dito três vezes na mesma página: por inteiro no topo, com a
+                # lista das classes e os meses de cada uma, aqui, e outra vez nos
+                # cartões cinquenta linhas abaixo. Ficou o dos cartões, que é onde
+                # mais engana: ali cada classe mostra a sua taxa isolada, e uma
+                # classe de outro mês passa por comparável com as vizinhas. Nestas
+                # barras seria a terceira legenda seguida sob o mesmo gráfico
+                # (decisão da Inês).
 
-                if dependentes:
-                    st.warning(f"""
+            # ---- composição da despesa ----
+            # A caixa que estava à direita do donut explicava os **cartões**, dizia-o
+            # ela própria, “mais abaixo”, e não o gráfico que acompanhava. O texto não
+            # se perdeu: foi reescrito para o subtítulo de “Cada grupo em detalhe”, que
+            # é o que ele sempre descreveu (relatado pela Inês, 13.08.2026).
+            #
+            # O donut deu lugar a um ranking horizontal: mesmos dados, mesmas
+            # percentagens, sem o salto entre o círculo e a legenda. Ver
+            # `grafico_composicao`. O total mensal, que estava no centro do donut,
+            # é agora o indicador de capa do separador.
+            secao("Como se distribui a despesa",
+                  "Fração da despesa alimentar mensal que vai para cada grupo de produtos, "
+                  "do maior para o menor. Cada barra é o <strong>peso</strong> do grupo no "
+                  "cabaz, não a variação dos seus preços."
+                  + (f" Repartição segundo os ponderadores oficiais de "
+                     f"<strong>{dados['ano_pesos']}</strong>."
+                     if dados.get("ano_pesos") else ""),
+                  grupo="05 · Composição da despesa")
+            # Este gráfico não mostra variação nenhuma, logo a janela homóloga não é
+            # o seu período de referência. O que o data são duas outras coisas: o
+            # ano dos ponderadores, que decide a repartição, e o mês a que o nível
+            # de despesa está indexado.
+            grafico(grafico_composicao(df_decomp),
+                    rodape=carimbo_do_grafico(dados, mes_indice=ancora.get("mes"),
+                                              variacao=False))
+            # Sem a base de cálculo por baixo. Era a segunda de três declarações da
+            # mesma base em cinquenta linhas, e a única que não acrescentava nada:
+            # a primeira abre o bloco, sob os contributos, a terceira fecha-o, na
+            # proveniência inteira dos cartões, e entre elas nada mudou. O ano dos
+            # ponderadores, que era a outra metade desta linha, já está no subtítulo
+            # desta secção, três elementos acima (decisão da Inês, 01.09.2026).
+
+            # Estava ao lado de “Comparar composições”, sob um cabeçalho partilhado
+            # de “Comparações e detalhe”. Com as duas vistas, deixaram de ter onde
+            # partilhar cabeçalho: esta fica aqui, é o CSV desta vista, a outra vai
+            # para “Peso da alimentação” (decisão da Inês, 03.09.2026).
+            with st.expander("Tabela detalhada"):
+                tabela = df_decomp[["codigo", "classe", "classe_oficial", "ponderador",
+                                    "quota", "valor", "variacao", "contributo"]].copy()
+                tabela.columns = ["Código", "Grupo", "Designação oficial (INE)",
+                                  "Ponderador (‰)", "Quota",
+                                  "Valor (€)", "Variação (%)", "Contributo (€)"]
+                # A coluna do código sai do ecrã, é nomenclatura que só interessa a
+                # quem vai à fonte, mas fica no CSV, que circula sozinho e precisa
+                # de ser rastreável (decisão da Inês, 13.08.2026).
+                st.dataframe(tabela.drop(columns=["Código"]),
+                             width="stretch", hide_index=True,
+                             column_config={
+                                 "Quota": st.column_config.ProgressColumn(
+                                     "Quota", format="%.1f%%", min_value=0, max_value=1),
+                                 "Valor (€)": st.column_config.NumberColumn(format="%.2f"),
+                                 "Variação (%)": st.column_config.NumberColumn(format="%.1f"),
+                                 "Contributo (€)": st.column_config.NumberColumn(format="%.2f"),
+                                 "Ponderador (‰)": st.column_config.NumberColumn(format="%.1f"),
+                             })
+                st.download_button(
+                    "Descarregar tabela (CSV)",
+                    csv_com_fonte(tabela, "Decomposição por grupo de produto", dados,
+                                  # A âncora pode ser do INE (IDF) ou do Eurostat
+                                  # (Contas Nacionais): o cabeçalho segue a que
+                                  # estiver ativa.
+                                  fonte=(f"{base_ancora['fonte']} (âncora da despesa); "
+                                         "Eurostat, IHPC (ponderadores e variações)"),
+                                  extra=[("Base de cálculo", base_ancora["nome"]),
+                                         ("Composição do agregado", composicao),
+                                         ("Escala", ESCALAS[escala_chave]["nome"])]),
+                    f"despesa_alimentar_decomposicao_{date.today()}.csv", "text/csv",
+                    width="stretch")
+
+        elif vista_despesa == "peso":
+            # Primeiro o país, depois o agregado escolhido. A ordem estava invertida:
+            # a página abria com os valores já ajustados à barra lateral e só no fim
+            # mostrava a referência nacional de que eles derivam, apesar de o próprio
+            # texto dessa referência lhe chamar “o ponto de partida do cálculo”
+            # (decisão da Inês, 13.08.2026).
+            secao("Referência nacional",
+                  "O agregado médio português, antes de qualquer ajustamento. É deste "
+                  "valor que parte o cálculo dos indicadores ajustados, mais abaixo.",
+                  grupo="03 · Referência nacional", topo=True)
+            dim_txt = ('%.1f' % dim_efetiva).replace('.', ',')
+            r1, r2, r3 = st.columns([1, 1, 2])
+            r1.metric(f"Agregado médio nacional ({dim_txt} pessoas)",
+                      euro(valor_medio_agregado),
+                      help=(f"Base {base_ancora['nome']}. "
+                            + (f"Na outra base seria {euro(outra_ancora['valor'])}. "
+                               if outra_ancora is not None else
+                               "A outra base não está disponível nesta sessão. ")
+                            + "Valor de referência antes de qualquer ajustamento de composição."))
+            r2.metric("Equivalente anual (agregado médio)", euro(valor_medio_agregado * 12))
+            eng_pt = (dados.get("engel") or {}).get("PT")
+            _eng = intervalo_engel(eng_pt)
+
+            if eng_pt:
+                # Intervalo, e não ponto: as duas bases oficiais divergem, e é a
+                # mesma divergência que já leva a âncora a ser apresentada como
+                # intervalo. O extremo inferior é o número do INE que aparece na
+                # tabela por quintil logo abaixo (auditoria de 10.08.2026, B4).
+                r3.metric("Peso da alimentação na despesa total",
+                          f"{percentagem(_eng['minimo'], sinal=False)} a {percentagem(_eng['maximo'], sinal=False)}",
+                          help=("Coeficiente de Engel nas duas bases oficiais: "
+                                f"{percentagem(_eng['idf'], sinal=False)} no Inquérito às Despesas "
+                                "das Famílias de 2022/2023 (agregados residentes) "
+                                f"e {percentagem(_eng['contas'], sinal=False)} nas Contas Nacionais de "
+                                f"{_eng['ano_contas']} (conceito macroeconómico). Divergem "
+                                "porque a despesa alimentar por agregado difere entre bases "
+                                "mais do que a despesa total, o mesmo motivo por que a "
+                                "âncora é um intervalo. O limite inferior é o valor que "
+                                "consta da tabela por quintil, mais abaixo. Comparação "
+                                "europeia no separador UE-27, que usa as Contas Nacionais "
+                                "por serem a única base comparável entre países."))
+            else:
+                r3.markdown(
+                f"<p class='sg-comp__d' style='padding-top:14px'>"
+                f"É este o ponto de partida do cálculo: a despesa alimentar de um agregado "
+                f"com a dimensão média portuguesa ({dim_txt} pessoas). Os valores mais abaixo "
+                f"estão ajustados para <strong>{composicao}</strong>.</p>",
+                unsafe_allow_html=True)
+
+            # Fora das colunas, e por duas razões. A visual: dentro da terceira, o
+            # cartão parava onde ela começava e a fila desalinhava na base, porque a
+            # regra que estica os cartões só age quando o indicador é filho único da
+            # coluna. Tentei corrigi-lo por CSS e não pegou, o contentor é desenhado
+            # por um mecanismo próprio do Streamlit que a folha de autor não vence.
+            #
+            # A editorial, que é a que a justifica mesmo: estas são as duas bases em
+            # que assentam **os três** cartões, e não só o do coeficiente de Engel.
+            # Uma nota só contextualiza o bloco inteiro (relatado pela Inês,
+            # 01.09.2026).
+            if eng_pt:
+                st.caption(f"Inquérito às Despesas das Famílias 2022/2023 · Contas "
+                           f"Nacionais {_eng['ano_contas']}, ver Metodologia")
+
+            if outra_ancora is not None:
+                nota("O valor exato não é determinável, use o intervalo", f"""
+              As duas fontes oficiais que medem a despesa alimentar das famílias não coincidem.
+              Para o agregado médio, a despesa mensal situa-se entre
+              <strong>{euro(ancora['minimo'])}</strong> e <strong>{euro(ancora['maximo'])}</strong>,
+              consoante se use o inquérito às despesas ou as Contas Nacionais. O ponto central
+              <strong>não é determinável</strong>: o inquérito subestima e as Contas Nacionais
+              sobrestimam, e não existe exercício de conciliação que permita arbitrar.
+              Os valores desta página usam a base <strong>{base_ancora['nome']}</strong>,
+              escolhida no bloco acima. Ver separador Metodologia.""")
+            else:
+                nota("Uma só base, não há intervalo nesta sessão", f"""
+              A aplicação apresenta normalmente a despesa como um <strong>intervalo</strong> entre as
+              duas fontes oficiais, que divergem por um fator próximo de 2. Nesta sessão só a base
+              <strong>{base_ancora['nome']}</strong> está disponível, pelo que os valores desta página são
+              um <strong>ponto de uma só base</strong> e não devem ser lidos como o valor central de
+              nada. Ver o registo de ligações no separador Metodologia.""", alerta=True)
+
+            # A redacção anterior encadeava três ideias num parágrafo, com um ponto e
+            # vírgula pelo meio e um “qualificam-na” que obrigava a voltar atrás para
+            # descobrir o que era “na”. Três frases, uma ideia em cada (pedido da
+            # Inês, 01.09.2026).
+            secao(f"Ajustado ao agregado selecionado ({composicao})",
+                  "A despesa que abre o separador, ajustada à composição escolhida "
+                  "acima. Os indicadores seguintes mostram como ela se reparte e "
+                  "quanto pesa. O cálculo da escala de equivalência está no separador "
+                  "Metodologia.",
+                  grupo="04 · O agregado selecionado")
+            # Quatro indicadores, e não cinco: a despesa mensal saiu daqui para o
+            # indicador de capa, no topo da página, onde ocupa o lugar que o seu
+            # peso na aplicação justifica. O rótulo e o *tooltip* que tinha (a
+            # proveniência, em `origem`) acompanharam-na.
+            colunas = st.columns(4)
+            if resumo["contributo_total"] is not None:
+                # A percentagem é uma **taxa de variação de preços** e não depende da
+                # base de despesa: mudar de IDF para Contas Nacionais muda os euros,
+                # não a taxa. Sem esta nota parece que a app ignorou a mudança de base
+                # (relatado pela utilizadora, 12.08.2026).
+                _nota_taxa = ("A percentagem é uma **taxa de variação de preços**, vem do índice "
+                              "e dos ponderadores, não do nível de despesa. Por isso **não muda** "
+                              "quando troca a base entre IDF e Contas Nacionais: o que muda é o "
+                              "valor em euros, porque a mesma taxa aplicada a uma despesa maior "
+                              "dá mais euros.")
+                # A taxa de capa (`_taxa_capa`) é a **oficial** do CP011 e foi
+                # apurada no topo do separador, porque o indicador principal a
+                # consome antes deste. Numa ferramenta que vai apoiar o Gabinete em
+                # debate público, o número de capa tem de ser o que qualquer pessoa
+                # pode ir verificar ao INE: um número que não bate certo com o
+                # publicado é fácil de atacar e difícil de neutralizar, e o risco
+                # reputacional é assimétrico.
+                #
+                # Os euros continuam a ser a **soma dos nove contributos**, que é a
+                # propriedade que a decomposição promete e que está travada por
+                # teste. As duas grandezas correspondem a taxas ligeiramente
+                # diferentes, e é isso que o tooltip diz, e a legenda por baixo dos
+                # gráficos de decomposição.
+                _nota_capa = ""
+                if _var_of is not None and resumo["variacao_implicita"] is not None:
+                    _nota_capa = (
+                        f"\n\n**A percentagem é a taxa oficial** do agregado alimentar "
+                        f"({mes_pt(dados.get('mes_variacao_oficial'))}), o número "
+                        "publicado pelo INE, que se pode verificar diretamente na fonte. "
+                        "**Os euros são a soma dos nove contributos** apresentados abaixo, "
+                        "que corresponde a "
+                        f"{percentagem(resumo['variacao_implicita'], sinal=False)}: essa "
+                        "agregação pondera as nove taxas pelos valores de há um ano, e a "
+                        "oficial pelos do período corrente. A diferença é de décimas de "
+                        "ponto, ver a nota sob os gráficos.")
+                # `_desce` foi apurado no topo do separador, pela mesma razão de
+                # `_taxa_capa`. Os rótulos seguem o **sinal**: a inflação alimentar
+                # já foi negativa em Portugal, e nesse caso o cartão anunciava um
+                # “Agravamento” de −9,79 € e um “Maior contributo” que era, na
+                # verdade, a classe que menos contribuiu para a descida
+                # (auditoria de 12.08.2026, M2).
+                _rot_agr = ("Alívio nos últimos 12 meses" if _desce
+                            else "Agravamento nos últimos 12 meses")
+                _verbo_agr = "Descida" if _desce else "Subida"
+                colunas[0].metric(_rot_agr, euro(abs(resumo["contributo_total"])),
+                                  percentagem(_taxa_capa),
+                                  help=f"{_verbo_agr} da despesa alimentar face ao mesmo mês do ano "
+                                       f"anterior, à composição de consumo atual. {_nota_taxa}"
+                                       f"{_nota_capa}")
+                colunas[1].metric("Despesa há 12 meses", euro(resumo["valor_ha_um_ano"]),
+                                  help="A mesma despesa deflacionada pela variação homóloga de "
+                                       "cada classe. Escala com a base escolhida.")
+                if resumo["maior"]:
+                    maior = resumo["maior"]
+                    # `resumo_decomposicao` devolve a classe de maior contributo em
+                    # **valor absoluto**; o rótulo diz em que sentido pesou.
+                    _rot_maior = ("Maior alívio" if maior["contributo"] < 0
+                                  else "Maior contributo")
+                    colunas[2].metric(f"{_rot_maior} ({maior['classe']})",
+                                      euro(abs(maior["contributo"])),
+                                      percentagem(maior["variacao"]),
+                                      help=f"A classe que mais pesou {'na descida' if _desce else 'no agravamento'}"
+                                           ", em euros, combinando a sua variação de preços com o "
+                                           f"seu peso no cabaz. {_nota_taxa}")
+            colunas[3].metric(f"Equivalente anual ({composicao})",
+                              euro(despesa_mensal * vezes_ano),
+                              help=f"Despesa mensal × {vezes_ano}. Mesma base e mesma "
+                                   f"composição: {origem}.")
+
+            # ---- esforço do agregado escolhido ----
+            # O `st.divider()` que aqui estava saiu: pertence ao mesmo bloco
+            # analítico da secção anterior (o agregado selecionado), e o filete de
+            # bloco já separa o que tem de ser separado. Dois traços seguidos a
+            # dividir níveis diferentes anulam-se um ao outro.
+            #
+            # A página dá três números que o leitor arruma todos como “peso no
+            # orçamento”, o coeficiente de Engel no topo, o peso por quintil mais
+            # abaixo, e este. Os denominadores são diferentes, e o quadro
+            # que os distingue está no separador UE-27, que pode nunca ser aberto.
+            # A distinção passa a ser feita onde a confusão acontece.
+            secao(f"Quanto pesa no orçamento ({composicao})",
+                  "<strong>Aqui o denominador é o rendimento, não a despesa.</strong> "
+                  "O coeficiente de Engel, em cima, e o peso no orçamento por quintil, "
+                  "mais abaixo, repartem o que as famílias <em>gastam</em>. Esta mede "
+                  "quanto do que <em>recebem</em> é absorvido pela alimentação, e é a única "
+                  "<strong>das três</strong> que responde à composição escolhida no topo "
+                  "deste separador.",
+                  ajuda=("Estes valores são **limites superiores**, a despesa e o rendimento "
+                         "vêm de fontes com bases estatísticas diferentes, e combiná-las "
+                         "sobrestima o esforço. Leia as **diferenças entre composições** e a "
+                         "**direção** como informativas, e o **nível** como majorante. O "
+                         "desenvolvimento está em “Pressupostos subjacentes a estes valores”, "
+                         "no separador Metodologia."))
+
+            # `rendimentos`, `sm_pt`, `sme_pt`, `tem_rend`, `indic_r`, `_eng_cn` e
+            # `_racio_cn_silc` já vêm calculados do bloco incondicional antes desta
+            # aba: a Metodologia consome-os diretamente, e não podia depender de
+            # esta vista estar aberta (é o mesmo motivo dos quintis e da
+            # acessibilidade, ver comentário acima).
+            if not tem_rend and not sm_pt and not sme_pt:
+                st.info(
+                    "Os indicadores de rendimento não estão disponíveis nesta sessão. "
+                    "Consulte o registo de ligações no separador Metodologia."
+                )
+            else:
+                # A coluna do contador estreita com ele: com o campo limitado a
+                # 9rem, um terço da largura deixava um vazio entre o contador e o
+                # texto que o qualifica, e os dois lêem-se como um só bloco.
+                #
+                # Um sexto, e não um quarto: a um quarto o vazio continuava grande
+                # de mais (Inês, 20.08.2026). Abaixo disto o rótulo do contador
+                # deixa de caber numa linha, que é o que fixa o limite.
+                ca_, cb_ = st.columns([1, 5])
+                with ca_:
+                    trabalhadores = st.number_input(
+                        "Quantos auferem rendimento", min_value=1, max_value=int(adultos),
+                        value=min(int(adultos), 2), step=1,
+                        help=("Das pessoas com 14 ou mais anos, quantas auferem "
+                              "efetivamente rendimento. Jovens dependentes, estudantes "
+                              "e pessoas sem rendimento próprio não contam, mas "
+                              "continuam a pesar na despesa alimentar."),
+                    )
+                    dependentes = int(adultos) - int(trabalhadores)
+                with cb_:
+                    st.markdown(
+                        f"<p class='sg-comp__d' style='padding-top:26px'>"
+                        f"<strong>{pessoas}</strong> pessoa{'s' if pessoas > 1 else ''} a "
+                        f"alimentar · <strong>{trabalhadores}</strong> "
+                        + ("auferem" if trabalhadores > 1 else "aufere")
+                        + " rendimento"
+                        + (f" · <strong>{dependentes}</strong> com 14+ anos sem rendimento próprio"
+                           if dependentes else "")
+                        + (f" · <strong>{criancas}</strong> com menos de 14 anos"
+                           if criancas else "")
+                        + f"<br>Despesa alimentar mensal: <strong>{euro(despesa_mensal)}</strong>."
+                        "</p>",
+                        unsafe_allow_html=True)
+
+                    if dependentes:
+                        st.warning(f"""
     **{dependentes} pessoa{'s' if dependentes > 1 else ''} com 14 ou mais anos sem rendimento
     próprio.** A escala de equivalência atribui a adolescentes, estudantes e outros dependentes
     **a mesma ponderação alimentar de um adulto**, mas estes **não auferem rendimento**. É a
     composição em que o esforço alimentar é mais elevado e a que os indicadores médios menos
     evidenciam.
-                    """)
+                        """)
 
-            # --- construir as referências disponíveis ---
-            refs = []
-            if tem_rend:
-                r = rendimentos[indic_r]["PT"]
-                ue_ocde = unidades_equivalentes(adultos, criancas, "ocde_modificada")
-                refs.append({
-                    "ref": "Rendimento das famílias (EU-SILC)",
-                    "detalhe": (f"{'Médio' if indic_r == 'MEAN_EI' else 'Mediano'} equivalente "
-                                f"{r['ano']} × {('%.2f' % ue_ocde).replace('.', ',')} unidades. "
-                                "Estatísticas do Rendimento e Condições de Vida (EU-SILC)"),
-                    "mensal": r["valor"] * ue_ocde / 12,
-                    "natureza": "líquido",
-                })
-            if sme_pt:
-                refs.append({
-                    "ref": f"{trabalhadores} × salário médio",
-                    # Sem `**`: vai para uma célula da coluna “Detalhe”, e um
-                    # quadro de dados não interpreta markdown nenhum.
-                    "detalhe": (f"Massa salarial ÷ trabalhadores por conta de outrem, "
-                                f"{sme_pt['ano']}; inclui tempo parcial, pelo que fica "
-                                "abaixo do salário de um trabalhador a tempo inteiro"),
-                    "mensal": sme_pt["valor"] * trabalhadores / 12,
-                    "natureza": "bruto",
-                })
-            if sm_pt:
-                # O Eurostat publica a RMMG em duodécimos de 14 mensalidades:
-                # o valor difundido é o legal × 14/12. Para a fatia mensal do
-                # orçamento é essa a base certa, distribui os subsídios pelos
-                # 12 meses. Mas não é o valor legal, e rotulá-lo como tal
-                # sobrestimava o rendimento em 16,7% (auditoria, A2). A RMMG é
-                # fixada em euros inteiros, daí o arredondamento.
-                rmmg_legal = round(sm_pt["valor"] * 12 / 14)
-                refs.append({
-                    "ref": f"{trabalhadores} × salário mínimo",
-                    "detalhe": (f"Média mensal bruta de 14 mensalidades, {sm_pt['periodo']}; "
-                                "o valor legal da retribuição mínima mensal garantida "
-                                f"(RMMG) é de {rmmg_legal} €/mês"),
-                    "mensal": sm_pt["valor"] * trabalhadores,
-                    "natureza": "bruto",
-                })
-
-            for r in refs:
-                r["esforco"] = despesa_mensal / r["mensal"] * 100 if r["mensal"] else None
-
-            tab_r = pd.DataFrame([{
-                "Referência": r["ref"],
-                "Rendimento mensal": euro(r["mensal"]),
-                "Esforço alimentar": (f"{r['esforco']:.1f}%".replace(".", ",")
-                                      if r["esforco"] is not None else "—"),
-                "Natureza": r["natureza"],
-                "Detalhe": r["detalhe"],
-            } for r in refs])
-
-            # A tabela dizia os mesmos três números que o gráfico logo a seguir.
-            # Fica o gráfico à vista (responde a “quanto”) e a tabela desce para
-            # um expander, porque o que ela acrescenta são as colunas “Natureza” e
-            # “Detalhe”, que respondem a “como se obteve” (Inês, 13.08.2026).
-            #
-            # O gráfico formatava `None` diretamente e rebentava com TypeError
-            # (auditoria de 12.08.2026, L14).
-            figR = go.Figure(go.Bar(
-                y=[r["ref"] for r in refs],
-                x=[r["esforco"] for r in refs], orientation="h",
-                marker_color=[VERDE if r["natureza"] == "líquido" else DOURADO
-                              for r in refs],
-                text=[percentagem(r["esforco"], sinal=False) for r in refs],
-                textposition="outside",
-                hovertemplate="%{y}: %{x:.1f}% do rendimento<extra></extra>"))
-            figR.update_layout(height=max(270, 74 * len(refs)),
-                               margin=dict(t=22, b=42, l=10, r=72),
-                               xaxis_title="Proporção do rendimento absorvida pela alimentação (%)",
-                               showlegend=False)
-            grafico(figR)
-
-            # A legenda das cores sobe para debaixo do gráfico: é a única das três
-            # que o leitor tem de ler para interpretar o que está a ver.
-            st.caption(
-                "**Verde:** rendimento **líquido**, depois de impostos e contribuições. "
-                "**Dourado:** valores **brutos**, salário médio e salário mínimo, antes de "
-                "descontos. O rendimento efetivamente disponível é inferior, pelo que o esforço "
-                "real sobre eles é **superior** ao apresentado. Verde e dourado não são "
-                "diretamente comparáveis entre si."
-            )
-
-            with st.expander("De onde vem cada referência"):
-                # A coluna “Detalhe” é um parágrafo, e com o quadro esticado à
-                # largura do contentor ela encolhia até caber, cortando o texto
-                # sem barra de deslocamento para o ver. Passa a ter largura
-                # própria: o quadro fica mais largo do que o espaço disponível,
-                # e o Streamlit desenha o deslocamento lateral (relatado pela
-                # Inês, 01.09.2026).
-                st.dataframe(
-                    tab_r, width="stretch", hide_index=True,
-                    column_config={
-                        "Referência": st.column_config.TextColumn(width="medium"),
-                        "Detalhe": st.column_config.TextColumn(width="large"),
+                # --- construir as referências disponíveis ---
+                refs = []
+                if tem_rend:
+                    r = rendimentos[indic_r]["PT"]
+                    ue_ocde = unidades_equivalentes(adultos, criancas, "ocde_modificada")
+                    refs.append({
+                        "ref": "Rendimento das famílias (EU-SILC)",
+                        "detalhe": (f"{'Médio' if indic_r == 'MEAN_EI' else 'Mediano'} equivalente "
+                                    f"{r['ano']} × {('%.2f' % ue_ocde).replace('.', ',')} unidades. "
+                                    "Estatísticas do Rendimento e Condições de Vida (EU-SILC)"),
+                        "mensal": r["valor"] * ue_ocde / 12,
+                        "natureza": "líquido",
+                    })
+                if sme_pt:
+                    refs.append({
+                        "ref": f"{trabalhadores} × salário médio",
+                        # Sem `**`: vai para uma célula da coluna “Detalhe”, e um
+                        # quadro de dados não interpreta markdown nenhum.
+                        "detalhe": (f"Massa salarial ÷ trabalhadores por conta de outrem, "
+                                    f"{sme_pt['ano']}; inclui tempo parcial, pelo que fica "
+                                    "abaixo do salário de um trabalhador a tempo inteiro"),
+                        "mensal": sme_pt["valor"] * trabalhadores / 12,
+                        "natureza": "bruto",
+                    })
+                if sm_pt:
+                    # O Eurostat publica a RMMG em duodécimos de 14 mensalidades:
+                    # o valor difundido é o legal × 14/12. Para a fatia mensal do
+                    # orçamento é essa a base certa, distribui os subsídios pelos
+                    # 12 meses. Mas não é o valor legal, e rotulá-lo como tal
+                    # sobrestimava o rendimento em 16,7% (auditoria, A2). A RMMG é
+                    # fixada em euros inteiros, daí o arredondamento.
+                    rmmg_legal = round(sm_pt["valor"] * 12 / 14)
+                    refs.append({
+                        "ref": f"{trabalhadores} × salário mínimo",
+                        "detalhe": (f"Média mensal bruta de 14 mensalidades, {sm_pt['periodo']}; "
+                                    "o valor legal da retribuição mínima mensal garantida "
+                                    f"(RMMG) é de {rmmg_legal} €/mês"),
+                        "mensal": sm_pt["valor"] * trabalhadores,
+                        "natureza": "bruto",
                     })
 
-        # ---- onde está concentrado o aumento ----
-        # “Contributo” e não “o que está a pesar mais”: é a palavra que os cartões
-        # e a tabela detalhada já usam para exatamente este número. O mesmo
-        # conceito tinha três nomes ao longo do separador (Inês, 13.08.2026).
-        #
-        # A aditividade é a propriedade central da decomposição, e continua a
-        # valer, mas a taxa que ela implica não é exatamente a oficial que está
-        # na capa. Isso tem de estar escrito onde os contributos aparecem
-        # (auditoria de 12.08.2026, K1). Estava numa legenda de treze linhas por
-        # baixo do gráfico; passa para o (i) do título, que é onde a encontra
-        # quem a procura e onde não estorva quem não a procura
-        # (decisão da Inês, 13.08.2026).
-        _ajuda_adit = None
-        if (resumo["contributo_total"] is not None
-                and resumo["variacao_implicita"] is not None
-                and dados.get("variacao_oficial") is not None):
-            _dif_k1 = dados["variacao_oficial"] - resumo["variacao_implicita"]
-            _ajuda_adit = (
-                f"**Os nove contributos somam exatamente "
-                f"{euro(resumo['contributo_total'])}**, é a propriedade que esta "
-                "decomposição garante, e está verificada por teste automático. Essa "
-                f"soma corresponde a uma {'descida' if _desce else 'subida'} de "
-                f"**{percentagem(abs(resumo['variacao_implicita']), sinal=False)}**, "
-                f"enquanto o índice oficial do agregado alimentar regista "
-                f"**{percentagem(dados['variacao_oficial'], sinal=False)}** em "
-                f"{mes_pt(dados.get('mes_variacao_oficial'))}, uma diferença de "
-                f"{pontos(abs(_dif_k1), casas=2, sinal=False)}\n\n"
-                "**Não é discrepância: são duas agregações da mesma coisa.** Para os "
-                "nove contributos somarem ao total, a taxa que deles resulta pondera "
-                "as nove classes pelos seus valores **de há um ano**; a oficial "
-                "pondera-as pelos do **período corrente**. Verificado: ponderando "
-                "pelos valores correntes obtêm-se "
-                f"{percentagem(sum(r.quota * r.variacao for r in df_decomp.itertuples() if r.variacao is not None), sinal=False)}, "
-                "que reproduz a oficial. Sobre 90 meses de série, a diferença tem "
-                "média absoluta de 0,15 p.p. e nunca chegou a 1 p.p. **A percentagem "
-                "no indicador de topo é a oficial**, para que seja verificável na "
-                "fonte; os euros são os desta decomposição."
-            )
-        # “Últimos 12 meses” não dizia de que doze meses se tratava. A janela
-        # passa a ser nomeada pelos dois extremos, aqui e no detalhe por grupo.
-        _janela = (f"de {mes_homologo(ultimo_mes)} para {mes_extenso(ultimo_mes)}"
-                   if ultimo_mes and ultimo_mes != "—" else "nos últimos 12 meses")
-        # Calculado uma vez para as duas secções que o usam, e fora do `if` do
-        # gráfico: se os contributos não tiverem dados, os cartões continuam a
-        # aparecer e a nota tem de existir na mesma.
-        _desal_nota = nota_desalinhamento(dados)
-        secao("Contributo de cada grupo para a variação homóloga",
-              f"Euros de variação <strong>{_janela}</strong> atribuíveis a cada "
-              "grupo, positivos à direita, negativos à esquerda.",
-              ajuda=_ajuda_adit, grupo="04 · Onde está a variação")
-        com_dados = df_decomp.dropna(subset=["contributo"]).sort_values("contributo")
-        if com_dados.empty:
-            st.info("Sem variações disponíveis para o período.")
-        else:
-            fig = go.Figure(go.Bar(
-                y=list(com_dados["classe"]),
-                x=com_dados["contributo"], orientation="h",
-                marker_color=[VERMELHO if v > 0 else VERDE for v in com_dados["contributo"]],
-                hovertemplate="%{y}<br>%{x:.2f} €<extra></extra>",
-            ))
-            fig.update_layout(height=max(450, 45 * len(com_dados)),
-                              margin=dict(t=12, b=42, l=10, r=20),
-                              xaxis_title="Euros por mês")
-            # O zero é a leitura central deste gráfico, separa quem agrava de
-            # quem alivia, e vinha com o mesmo peso das linhas de grelha.
-            fig.update_xaxes(zeroline=True, zerolinecolor=TEXTO_3, zerolinewidth=1.5)
-            grafico(fig, rodape=carimbo_do_grafico(dados,
-                                                   mes_indice=ancora.get("mes")))
-            st.caption("Vermelho: grupos que encareceram e agravam a despesa. "
-                       "Verde: grupos que baixaram e a aliviam. A linha vertical "
-                       "marca o zero.")
-            st.caption(base_de_calculo(dados, base_ancora,
-                                       mes_indice=ancora.get("mes")))
-            # O aviso de desalinhamento esteve aqui, e saiu a 01.09.2026. Estava
-            # a ser dito três vezes na mesma página: por inteiro no topo, com a
-            # lista das classes e os meses de cada uma, aqui, e outra vez nos
-            # cartões cinquenta linhas abaixo. Ficou o dos cartões, que é onde
-            # mais engana: ali cada classe mostra a sua taxa isolada, e uma
-            # classe de outro mês passa por comparável com as vizinhas. Nestas
-            # barras seria a terceira legenda seguida sob o mesmo gráfico
-            # (decisão da Inês).
+                for r in refs:
+                    r["esforco"] = despesa_mensal / r["mensal"] * 100 if r["mensal"] else None
 
-        # ---- composição da despesa ----
-        # A caixa que estava à direita do donut explicava os **cartões**, dizia-o
-        # ela própria, “mais abaixo”, e não o gráfico que acompanhava. O texto não
-        # se perdeu: foi reescrito para o subtítulo de “Cada grupo em detalhe”, que
-        # é o que ele sempre descreveu (relatado pela Inês, 13.08.2026).
-        #
-        # O donut deu lugar a um ranking horizontal: mesmos dados, mesmas
-        # percentagens, sem o salto entre o círculo e a legenda. Ver
-        # `grafico_composicao`. O total mensal, que estava no centro do donut,
-        # é agora o indicador de capa do separador.
-        secao("Como se distribui a despesa",
-              "Fração da despesa alimentar mensal que vai para cada grupo de produtos, "
-              "do maior para o menor. Cada barra é o <strong>peso</strong> do grupo no "
-              "cabaz, não a variação dos seus preços."
-              + (f" Repartição segundo os ponderadores oficiais de "
-                 f"<strong>{dados['ano_pesos']}</strong>."
-                 if dados.get("ano_pesos") else ""),
-              grupo="05 · Composição da despesa")
-        # Este gráfico não mostra variação nenhuma, logo a janela homóloga não é
-        # o seu período de referência. O que o data são duas outras coisas: o
-        # ano dos ponderadores, que decide a repartição, e o mês a que o nível
-        # de despesa está indexado.
-        grafico(grafico_composicao(df_decomp),
-                rodape=carimbo_do_grafico(dados, mes_indice=ancora.get("mes"),
-                                          variacao=False))
-        # Sem a base de cálculo por baixo. Era a segunda de três declarações da
-        # mesma base em cinquenta linhas, e a única que não acrescentava nada:
-        # a primeira abre o bloco, sob os contributos, a terceira fecha-o, na
-        # proveniência inteira dos cartões, e entre elas nada mudou. O ano dos
-        # ponderadores, que era a outra metade desta linha, já está no subtítulo
-        # desta secção, três elementos acima (decisão da Inês, 01.09.2026).
+                tab_r = pd.DataFrame([{
+                    "Referência": r["ref"],
+                    "Rendimento mensal": euro(r["mensal"]),
+                    "Esforço alimentar": (f"{r['esforco']:.1f}%".replace(".", ",")
+                                          if r["esforco"] is not None else "—"),
+                    "Natureza": r["natureza"],
+                    "Detalhe": r["detalhe"],
+                } for r in refs])
 
-        # ---- detalhe por grupo ----
-        secao("Cada grupo em detalhe",
-              "Para cada grupo: quanto se gasta por mês, que proporção do cabaz representa, "
-              f"quanto variaram os seus preços <strong>{_janela}</strong>, e quantos "
-              "euros da variação desse período são atribuíveis a esse grupo. Os nove "
-              "contributos somam a variação total.")
-        for inicio in range(0, len(df_decomp), 3):
-            cols = st.columns(3)
-            for col, (_, linha) in zip(cols, df_decomp.iloc[inicio:inicio + 3].iterrows()):
-                col.markdown(cartao_classe(linha), unsafe_allow_html=True)
-        # Aqui a proveniência vai inteira: são cartões, não há figura para
-        # carimbar, logo não há nada de que repartir.
-        st.caption(proveniencia(dados, base_ancora,
-                                mes_indice=ancora.get("mes")))
-        # É nos cartões que a taxa de cada classe aparece isolada, e por isso é
-        # aqui que uma classe de outro mês mais engana.
-        if _desal_nota:
-            st.caption(_desal_nota)
+                # A tabela dizia os mesmos três números que o gráfico logo a seguir.
+                # Fica o gráfico à vista (responde a “quanto”) e a tabela desce para
+                # um expander, porque o que ela acrescenta são as colunas “Natureza” e
+                # “Detalhe”, que respondem a “como se obteve” (Inês, 13.08.2026).
+                #
+                # O gráfico formatava `None` diretamente e rebentava com TypeError
+                # (auditoria de 12.08.2026, L14).
+                figR = go.Figure(go.Bar(
+                    y=[r["ref"] for r in refs],
+                    x=[r["esforco"] for r in refs], orientation="h",
+                    marker_color=[VERDE if r["natureza"] == "líquido" else DOURADO
+                                  for r in refs],
+                    text=[percentagem(r["esforco"], sinal=False) for r in refs],
+                    textposition="outside",
+                    hovertemplate="%{y}: %{x:.1f}% do rendimento<extra></extra>"))
+                figR.update_layout(height=max(270, 74 * len(refs)),
+                                   margin=dict(t=22, b=42, l=10, r=72),
+                                   xaxis_title="Proporção do rendimento absorvida pela alimentação (%)",
+                                   showlegend=False)
+                grafico(figR)
 
-        # ---- cabaz por quintil de rendimento ----
-        # O `st.divider()` que abria esta secção saiu: passou a ser um bloco
-        # analítico, e o filete do bloco faz o mesmo trabalho sem duplicar traço.
-        #
-        # O subtítulo explicava a **proveniência** dos dados, IDF contra IHPC,
-        # quadros Q.2.11, despesa de turistas, a quem só queria saber o que cada
-        # coluna mede. A proveniência desceu para a legenda da tabela, com o
-        # desenvolvimento na Metodologia (Inês, 13.08.2026).
-        # O confronto entre o peso no orçamento desta tabela e o intervalo do
-        # coeficiente de Engel lá em cima estava numa legenda por baixo da
-        # tabela, de seis linhas. É a explicação de uma aparente contradição
-        # entre dois números da mesma página: quem não a nota não precisa dela,
-        # e quem a nota vai procurá-la ao título (decisão da Inês, 13.08.2026).
-        _ajuda_engel = None
-        if not _eng["so_idf"]:
-            # `intervalo_engel` devolve min e max sem presumir qual das bases é
-            # a maior, e há um teste que o exige. A prosa presumia, e invertia-se
-            # sozinha se as Contas Nacionais alguma vez descessem abaixo do IDF
-            # (auditoria de 12.08.2026, K14). Os rótulos derivam do intervalo.
-            _idf_e_inferior = _eng["idf"] <= _eng["contas"]
-            _pos_idf = "inferior" if _idf_e_inferior else "superior"
-            _pos_cn = "superior" if _idf_e_inferior else "inferior"
-            _mais_ou_menos = "mais" if _idf_e_inferior else "menos"
-            _ajuda_engel = (
-                f"O **{percentagem(_eng['idf'], sinal=False)}** da média nacional, na coluna "
-                f"“Peso no orçamento”, é o limite **{_pos_idf}** do intervalo do coeficiente de "
-                f"Engel mostrado em cima. O limite **{_pos_cn}**, "
-                f"{percentagem(_eng['contas'], sinal=False)}, vem das Contas Nacionais: medem o "
-                f"consumo das famílias por via macroeconómica e registam, por agregado, "
-                f"**{_mais_ou_menos}** despesa alimentar do que o inquérito, e o coeficiente "
-                f"diverge porque **o numerador diverge mais do que o denominador**. Nenhuma das "
-                "duas é a resposta certa, ver Metodologia."
-            )
-        secao("Quem está mais exposto, por quintil de rendimento",
-              "Cada linha é <strong>um quinto das famílias</strong>, ordenadas do menor "
-              "para o maior rendimento. <strong>Despesa alimentar</strong> e "
-              "<strong>despesa total</strong> são valores mensais; o <strong>peso no "
-              "orçamento</strong> é a primeira dividida pela segunda. "
-              "<strong>Inflação 12m</strong> e <strong>agravamento</strong> dizem quanto "
-              "subiram os preços e quantos euros por mês isso custa. A última coluna "
-              "exprime esse custo em fração do orçamento, é a que compara o "
-              "<strong>esforço</strong> entre quintis.",
-              ajuda=_ajuda_engel, grupo="06 · Distribuição por rendimento")
+                # A legenda das cores sobe para debaixo do gráfico: é a única das três
+                # que o leitor tem de ler para interpretar o que está a ver.
+                st.caption(
+                    "**Verde:** rendimento **líquido**, depois de impostos e contribuições. "
+                    "**Dourado:** valores **brutos**, salário médio e salário mínimo, antes de "
+                    "descontos. O rendimento efetivamente disponível é inferior, pelo que o esforço "
+                    "real sobre eles é **superior** ao apresentado. Verde e dourado não são "
+                    "diretamente comparáveis entre si."
+                )
 
-        df_quintis = cabaz_quintis(dados["variacoes_classe"])
-        df_comp_q = composicao_quintis()
+                with st.expander("De onde vem cada referência"):
+                    # A coluna “Detalhe” é um parágrafo, e com o quadro esticado à
+                    # largura do contentor ela encolhia até caber, cortando o texto
+                    # sem barra de deslocamento para o ver. Passa a ter largura
+                    # própria: o quadro fica mais largo do que o espaço disponível,
+                    # e o Streamlit desenha o deslocamento lateral (relatado pela
+                    # Inês, 01.09.2026).
+                    st.dataframe(
+                        tab_r, width="stretch", hide_index=True,
+                        column_config={
+                            "Referência": st.column_config.TextColumn(width="medium"),
+                            "Detalhe": st.column_config.TextColumn(width="large"),
+                        })
 
-        # Quanto custaria compensar o agravamento. O simulador de IVA já dava a
-        # poupança agregada de uma medida e não havia com que a comparar: sem o
-        # custo do problema, o custo da solução não se lê. É a mesma conta que a
-        # tabela acima já faz por agregado, multiplicada pelo quinto dos
-        # agregados que cabe a cada quintil.
-        _custo_q1 = custo_compensacao(df_quintis, agregados, ("q1",))
-        _custo_q12 = custo_compensacao(df_quintis, agregados, ("q1", "q2"))
+            # Estava a par de “Tabela detalhada”, sob um cabeçalho partilhado de
+            # “Comparações e detalhe”. Com as duas vistas, deixaram de ter onde
+            # partilhar cabeçalho: esta fica aqui, junto do resto do que esta
+            # vista mede sobre o agregado selecionado; a outra foi para “Preços
+            # dos alimentos” (decisão da Inês, 03.09.2026).
+            with st.expander("Comparar composições"):
+                comps = [(1, 0, "1 adulto"), (2, 0, "Casal"), (1, 1, "Monoparental + 1"),
+                         (1, 2, "Monoparental + 2"), (2, 1, "Casal + 1 criança"),
+                         (2, 2, "Casal + 2 crianças"), (2, 3, "Casal + 3 crianças")]
+                dm = dim_efetiva
+                # A coluna do meio fixava a OCDE original, fosse qual fosse a escala
+                # escolhida na barra lateral, e não o dizia. Passa a usar a escala
+                # ativa e a nomeá-la no cabeçalho (auditoria de 12.08.2026, L19).
+                _rot_esc = ESCALAS[escala_chave]["nome"].split(" (")[0]
+                _col_central = f"{_rot_esc} (€)"
+                # Ordem Mín. → escala ativa → Máx., para que se veja **onde** a
+                # escolha cai dentro do intervalo. Com uma escala extrema, per
+                # capita ou OCDE modificada, a coluna coincide com um dos limites,
+                # e assim isso lê-se em vez de parecer um valor repetido.
+                linhas_c = []
+                _coincide = 0
+                for a, c, rot in comps:
+                    iv = intervalo_agregado(valor_medio_agregado, dm, a, c)
+                    _central = round(despesa_do_agregado(
+                        valor_medio_agregado, dm, a, c, escala_chave), 2)
+                    if _central in (round(iv["minimo"], 2), round(iv["maximo"], 2)):
+                        _coincide += 1
+                    linhas_c.append({
+                        "Composição": rot, "Pessoas": a + c,
+                        "Mín. (€)": round(iv["minimo"], 2),
+                        _col_central: _central,
+                        "Máx. (€)": round(iv["maximo"], 2),
+                    })
+                st.dataframe(pd.DataFrame(linhas_c), width="stretch", hide_index=True)
+                st.caption(
+                    f"Agregado médio nacional: {('%.2f' % dm).replace('.', ',')} pessoas. "
+                    f"A coluna **{_rot_esc}** usa a escala escolhida em “Despesa e composição”; o "
+                    "intervalo resulta das três escalas de equivalência."
+                    + (f" Nesta escala a coluna coincide com um dos limites em "
+                       f"{_coincide} das {len(comps)} composições, a **{_rot_esc}** é uma "
+                       "das escalas extremas." if _coincide else "")
+                    + " **Estes valores são simulados**, não observados: o confronto com "
+                      "a despesa que o inquérito mediu por tipo de agregado está em "
+                      "“Escalas de equivalência”, no separador Metodologia."
+                )
 
-        tab_q = pd.DataFrame([{
-            "Quintil": r.nome,
-            "Despesa alimentar": euro(r.despesa_mensal, 0) + "/mês",
-            "Despesa total": euro(r.despesa_total_mensal, 0) + "/mês",
-            "Peso no orçamento": f"{r.peso_orcamento:.1f}%".replace(".", ","),
-            "Inflação 12m": percentagem(r.inflacao, sinal=False) if r.inflacao is not None else "—",
-            "Agravamento": euro(r.agravamento) + "/mês" if r.agravamento is not None else "—",
-            "Agravamento / orçamento": (
-                f"{r.agravamento_orcamento:.2f}%".replace(".", ",")
-                if r.agravamento_orcamento is not None else "—"),
-        } for r in df_quintis.itertuples()])
-        st.dataframe(tab_q, width="stretch", hide_index=True)
-        st.caption(
-            "Ponderação do **IDF 2022/2023**, e não do índice harmonizado de preços no "
-            "consumidor (IHPC): é a única fonte aberta que mede agregados residentes. "
-            "Ver Metodologia."
-        )
+            # ---- cabaz por quintil de rendimento ----
+            # O `st.divider()` que abria esta secção saiu: passou a ser um bloco
+            # analítico, e o filete do bloco faz o mesmo trabalho sem duplicar traço.
+            #
+            # O subtítulo explicava a **proveniência** dos dados, IDF contra IHPC,
+            # quadros Q.2.11, despesa de turistas, a quem só queria saber o que cada
+            # coluna mede. A proveniência desceu para a legenda da tabela, com o
+            # desenvolvimento na Metodologia (Inês, 13.08.2026).
+            # O confronto entre o peso no orçamento desta tabela e o intervalo do
+            # coeficiente de Engel lá em cima estava numa legenda por baixo da
+            # tabela, de seis linhas. É a explicação de uma aparente contradição
+            # entre dois números da mesma página: quem não a nota não precisa dela,
+            # e quem a nota vai procurá-la ao título (decisão da Inês, 13.08.2026).
+            _ajuda_engel = None
+            if not _eng["so_idf"]:
+                # `intervalo_engel` devolve min e max sem presumir qual das bases é
+                # a maior, e há um teste que o exige. A prosa presumia, e invertia-se
+                # sozinha se as Contas Nacionais alguma vez descessem abaixo do IDF
+                # (auditoria de 12.08.2026, K14). Os rótulos derivam do intervalo.
+                _idf_e_inferior = _eng["idf"] <= _eng["contas"]
+                _pos_idf = "inferior" if _idf_e_inferior else "superior"
+                _pos_cn = "superior" if _idf_e_inferior else "inferior"
+                _mais_ou_menos = "mais" if _idf_e_inferior else "menos"
+                _ajuda_engel = (
+                    f"O **{percentagem(_eng['idf'], sinal=False)}** da média nacional, na coluna "
+                    f"“Peso no orçamento”, é o limite **{_pos_idf}** do intervalo do coeficiente de "
+                    f"Engel mostrado em cima. O limite **{_pos_cn}**, "
+                    f"{percentagem(_eng['contas'], sinal=False)}, vem das Contas Nacionais: medem o "
+                    f"consumo das famílias por via macroeconómica e registam, por agregado, "
+                    f"**{_mais_ou_menos}** despesa alimentar do que o inquérito, e o coeficiente "
+                    f"diverge porque **o numerador diverge mais do que o denominador**. Nenhuma das "
+                    "duas é a resposta certa, ver Metodologia."
+                )
+            secao("Quem está mais exposto, por quintil de rendimento",
+                  "Cada linha é <strong>um quinto das famílias</strong>, ordenadas do menor "
+                  "para o maior rendimento. <strong>Despesa alimentar</strong> e "
+                  "<strong>despesa total</strong> são valores mensais; o <strong>peso no "
+                  "orçamento</strong> é a primeira dividida pela segunda. "
+                  "<strong>Inflação 12m</strong> e <strong>agravamento</strong> dizem quanto "
+                  "subiram os preços e quantos euros por mês isso custa. A última coluna "
+                  "exprime esse custo em fração do orçamento, é a que compara o "
+                  "<strong>esforço</strong> entre quintis.",
+                  ajuda=_ajuda_engel, grupo="05 · Distribuição por rendimento")
 
-        # O agravamento só soma as classes com variação; o orçamento é sempre o
-        # total. Faltando classes, a coluna “Agravamento / orçamento”
-        # subestimava sem o dizer (auditoria de 11.08.2026, E11).
-        _cob_q = df_quintis.attrs.get("cobertura_minima", 1.0)
-        if _cob_q < 0.999:
-            _falta_q = df_quintis.attrs.get("classes_sem_variacao") or []
-            st.warning(
-                f"**Cobertura parcial: {percentagem(_cob_q * 100, sinal=False)} da despesa alimentar.** "
-                f"{len(_falta_q)} {'classes' if len(_falta_q) > 1 else 'classe'} sem "
-                f"variação homóloga nesta sessão, "
-                f"{_nomes_classes(_falta_q)}. As colunas **Inflação 12m** e "
-                "**Agravamento** medem só as classes cobertas, mas a coluna "
-                "**Agravamento / orçamento** divide pelo orçamento **total** do "
-                "quintil, está por isso subestimada na mesma proporção."
-            )
-
-        _q1 = df_quintis[df_quintis["quintil"] == "q1"].iloc[0]
-        _q5 = df_quintis[df_quintis["quintil"] == "q5"].iloc[0]
-        _amplitude = None
-        _infs = df_quintis[df_quintis["quintil"] != "total"]["inflacao"].dropna()
-        if not _infs.empty:
-            _amplitude = float(_infs.max() - _infs.min())
-
-        _racio = _q1.peso_orcamento / _q5.peso_orcamento
-        _frase_taxa = ""
-        if _amplitude is not None:
-            _mais_alto = _infs.idxmax()
-            _nome_alto = df_quintis.loc[_mais_alto, "nome"]
-            _frase_taxa = (
-                f"A <em>taxa</em> de inflação, essa, quase não difere entre quintis: a amplitude "
-                f"é de <strong>{numero(_amplitude, 2)} p.p.</strong>, e o valor mais alto está no "
-                f"<strong>{_nome_alto}</strong>. "
-            )
-
-        _frase_esforco = ""
-        if _q1.agravamento_orcamento is not None and _q5.agravamento_orcamento is not None:
-            _frase_esforco = (
-                f"Medido em euros, o agravamento dos últimos 12 meses é <em>maior</em> no "
-                f"quintil de rendimento mais elevado "
-                f"(<strong>{euro(_q5.agravamento)}</strong> contra "
-                f"<strong>{euro(_q1.agravamento)}</strong>), por este registar maior despesa "
-                f"alimentar. Medido contra o orçamento de cada um, a relação inverte-se: "
-                f"<strong>{numero(_q1.agravamento_orcamento, 2)}%</strong> do orçamento do "
-                f"1.º quintil contra <strong>{numero(_q5.agravamento_orcamento, 2)}%</strong> "
-                f"do 5.º. "
-            )
-
-        nota("O efeito distributivo decorre da exposição, não da taxa", f"""
-          A alimentação absorve <strong>{numero(_q1.peso_orcamento, 1)}%</strong> do orçamento do
-          quintil de menor rendimento e <strong>{numero(_q5.peso_orcamento, 1)}%</strong> do de
-          maior rendimento, um rácio de <strong>{numero(_racio, 2)}</strong>. {_frase_taxa}A
-          proximidade das taxas entre quintis não implica neutralidade distributiva: o mesmo
-          aumento percentual incide sobre uma proporção do orçamento <strong>{numero(_racio, 1)}
-          vezes maior</strong> na base da distribuição, e sobre um orçamento total que é menos de
-          metade.<br><br>{_frase_esforco}Nenhuma destas colunas deve por isso ser lida
-          isoladamente: a taxa, só por si, sugere neutralidade; os euros, só por si, sugerem o
-          inverso.""")
-
-        # ---- dimensão do problema, em euros de orçamento público ----
-        # A tabela acima dá o agravamento por agregado e por mês. Multiplicado
-        # pelo quinto dos agregados que cabe a cada quintil, dá a ordem de
-        # grandeza de **compensar** esse agravamento, que é o que permite
-        # confrontar o custo do problema com o custo de qualquer medida. Sem
-        # isto, a poupança agregada do simulador de IVA não tinha termo de
-        # comparação nenhum.
-        if _custo_q1:
-            componente(
-                "Dimensão do agravamento, em orçamento público",
-                "Custo anual de compensar integralmente o agravamento dos "
-                "últimos 12 meses, por transferência direta, sem qualquer "
-                "efeito sobre os preços.")
-            _cc1, _cc2, _cc3 = st.columns(3)
-            _cc1.metric(
-                "Compensar o 1.º quintil",
-                milhoes(_custo_q1["total_milhoes"]),
-                help=(f"{euro(_custo_q1['linhas']['agravamento_mes'].iloc[0])} por mês "
-                      f"e por agregado, sobre {numero(_custo_q1['agregados_por_quintil'])} "
-                      "agregados, durante 12 meses."))
-            if _custo_q12:
-                _cc2.metric("Compensar os dois primeiros quintis",
-                            milhoes(_custo_q12["total_milhoes"]))
-            _cc3.metric("Agregados abrangidos (1.º quintil)",
-                        numero(_custo_q1["agregados_por_quintil"]),
-                        help="Um quintil é, por construção, um quinto dos agregados.")
+            # `df_quintis` e `df_comp_q` já vêm calculados do bloco incondicional
+            # antes desta aba: a Síntese lê `df_quintis` por nome, e não podia
+            # depender de esta vista estar aberta.
+            tab_q = pd.DataFrame([{
+                "Quintil": r.nome,
+                "Despesa alimentar": euro(r.despesa_mensal, 0) + "/mês",
+                "Despesa total": euro(r.despesa_total_mensal, 0) + "/mês",
+                "Peso no orçamento": f"{r.peso_orcamento:.1f}%".replace(".", ","),
+                "Inflação 12m": percentagem(r.inflacao, sinal=False) if r.inflacao is not None else "—",
+                "Agravamento": euro(r.agravamento) + "/mês" if r.agravamento is not None else "—",
+                "Agravamento / orçamento": (
+                    f"{r.agravamento_orcamento:.2f}%".replace(".", ",")
+                    if r.agravamento_orcamento is not None else "—"),
+            } for r in df_quintis.itertuples()])
+            st.dataframe(tab_q, width="stretch", hide_index=True)
             st.caption(
-                "**É uma ordem de grandeza, não uma estimativa orçamental.** Supõe "
-                "compensação integral, universal dentro do quintil e sem custos de "
-                "administração, e assenta no agravamento medido sobre a estrutura de "
-                "consumo do IDF 2022/2023. Serve para uma coisa: dar termo de "
-                "comparação ao valor da poupança agregada que o **Simulador de IVA** "
-                "apresenta, que de outro modo se lê sem escala."
-                + ("" if _custo_q1["cobertura"] >= 0.999 else
-                   f" A cobertura desta sessão é de "
-                   f"{percentagem(_custo_q1['cobertura'] * 100, sinal=False)} da despesa "
-                   "alimentar, pelo que o valor está subestimado na mesma proporção."))
+                "Ponderação do **IDF 2022/2023**, e não do índice harmonizado de preços no "
+                "consumidor (IHPC): é a única fonte aberta que mede agregados residentes. "
+                "Ver Metodologia."
+            )
 
-        # Era [3, 2], e os dois gráficos ficavam apertados. A legenda das nove
-        # classes ocupava um terço da figura da esquerda, em coluna, e o que
-        # sobrava para as barras não chegava; à direita, os nomes das classes no
-        # eixo comiam quase toda a largura da coluna.
-        #
-        # A legenda desceu para baixo das barras, na horizontal, e essa largura
-        # voltou para a figura. As colunas ficam iguais: o gráfico da direita
-        # precisa dela para os nomes do eixo, e o da esquerda já não a gasta com
-        # a legenda (pedido da Inês, 01.09.2026).
-        cq1, cq2 = st.columns([1, 1])
-        with cq1:
-            componente("A composição muda, não só o nível",
-                       "Fração da despesa alimentar de cada quintil que vai para cada grupo.")
-            chaves_q = [k for k in IDF_QUINTIS if k != "total"]
-            figq = go.Figure()
-            for classe in CLASSES:
-                sub = df_comp_q[df_comp_q["codigo"] == classe["cod"]].set_index("quintil")
-                figq.add_trace(go.Bar(
-                    name=classe["nome"],
-                    x=[IDF_QUINTIS[k] for k in chaves_q],
-                    y=[sub.loc[k, "quota"] * 100 for k in chaves_q],
-                    marker_color=cor_classe(classe["cod"]),
-                    hovertemplate="%{x}<br>" + classe["nome"] + ": %{y:.1f}%<extra></extra>",
+            # O agravamento só soma as classes com variação; o orçamento é sempre o
+            # total. Faltando classes, a coluna “Agravamento / orçamento”
+            # subestimava sem o dizer (auditoria de 11.08.2026, E11).
+            _cob_q = df_quintis.attrs.get("cobertura_minima", 1.0)
+            if _cob_q < 0.999:
+                _falta_q = df_quintis.attrs.get("classes_sem_variacao") or []
+                st.warning(
+                    f"**Cobertura parcial: {percentagem(_cob_q * 100, sinal=False)} da despesa alimentar.** "
+                    f"{len(_falta_q)} {'classes' if len(_falta_q) > 1 else 'classe'} sem "
+                    f"variação homóloga nesta sessão, "
+                    f"{_nomes_classes(_falta_q)}. As colunas **Inflação 12m** e "
+                    "**Agravamento** medem só as classes cobertas, mas a coluna "
+                    "**Agravamento / orçamento** divide pelo orçamento **total** do "
+                    "quintil, está por isso subestimada na mesma proporção."
+                )
+
+            _q1 = df_quintis[df_quintis["quintil"] == "q1"].iloc[0]
+            _q5 = df_quintis[df_quintis["quintil"] == "q5"].iloc[0]
+            _amplitude = None
+            _infs = df_quintis[df_quintis["quintil"] != "total"]["inflacao"].dropna()
+            if not _infs.empty:
+                _amplitude = float(_infs.max() - _infs.min())
+
+            _racio = _q1.peso_orcamento / _q5.peso_orcamento
+            _frase_taxa = ""
+            if _amplitude is not None:
+                _mais_alto = _infs.idxmax()
+                _nome_alto = df_quintis.loc[_mais_alto, "nome"]
+                _frase_taxa = (
+                    f"A <em>taxa</em> de inflação, essa, quase não difere entre quintis: a amplitude "
+                    f"é de <strong>{numero(_amplitude, 2)} p.p.</strong>, e o valor mais alto está no "
+                    f"<strong>{_nome_alto}</strong>. "
+                )
+
+            _frase_esforco = ""
+            if _q1.agravamento_orcamento is not None and _q5.agravamento_orcamento is not None:
+                _frase_esforco = (
+                    f"Medido em euros, o agravamento dos últimos 12 meses é <em>maior</em> no "
+                    f"quintil de rendimento mais elevado "
+                    f"(<strong>{euro(_q5.agravamento)}</strong> contra "
+                    f"<strong>{euro(_q1.agravamento)}</strong>), por este registar maior despesa "
+                    f"alimentar. Medido contra o orçamento de cada um, a relação inverte-se: "
+                    f"<strong>{numero(_q1.agravamento_orcamento, 2)}%</strong> do orçamento do "
+                    f"1.º quintil contra <strong>{numero(_q5.agravamento_orcamento, 2)}%</strong> "
+                    f"do 5.º. "
+                )
+
+            nota("O efeito distributivo decorre da exposição, não da taxa", f"""
+              A alimentação absorve <strong>{numero(_q1.peso_orcamento, 1)}%</strong> do orçamento do
+              quintil de menor rendimento e <strong>{numero(_q5.peso_orcamento, 1)}%</strong> do de
+              maior rendimento, um rácio de <strong>{numero(_racio, 2)}</strong>. {_frase_taxa}A
+              proximidade das taxas entre quintis não implica neutralidade distributiva: o mesmo
+              aumento percentual incide sobre uma proporção do orçamento <strong>{numero(_racio, 1)}
+              vezes maior</strong> na base da distribuição, e sobre um orçamento total que é menos de
+              metade.<br><br>{_frase_esforco}Nenhuma destas colunas deve por isso ser lida
+              isoladamente: a taxa, só por si, sugere neutralidade; os euros, só por si, sugerem o
+              inverso.""")
+
+            # ---- dimensão do problema, em euros de orçamento público ----
+            # A tabela acima dá o agravamento por agregado e por mês. Multiplicado
+            # pelo quinto dos agregados que cabe a cada quintil, dá a ordem de
+            # grandeza de **compensar** esse agravamento, que é o que permite
+            # confrontar o custo do problema com o custo de qualquer medida. Sem
+            # isto, a poupança agregada do simulador de IVA não tinha termo de
+            # comparação nenhum.
+            if _custo_q1:
+                componente(
+                    "Dimensão do agravamento, em orçamento público",
+                    "Custo anual de compensar integralmente o agravamento dos "
+                    "últimos 12 meses, por transferência direta, sem qualquer "
+                    "efeito sobre os preços.")
+                _cc1, _cc2, _cc3 = st.columns(3)
+                _cc1.metric(
+                    "Compensar o 1.º quintil",
+                    milhoes(_custo_q1["total_milhoes"]),
+                    help=(f"{euro(_custo_q1['linhas']['agravamento_mes'].iloc[0])} por mês "
+                          f"e por agregado, sobre {numero(_custo_q1['agregados_por_quintil'])} "
+                          "agregados, durante 12 meses."))
+                if _custo_q12:
+                    _cc2.metric("Compensar os dois primeiros quintis",
+                                milhoes(_custo_q12["total_milhoes"]))
+                _cc3.metric("Agregados abrangidos (1.º quintil)",
+                            numero(_custo_q1["agregados_por_quintil"]),
+                            help="Um quintil é, por construção, um quinto dos agregados.")
+                st.caption(
+                    "**É uma ordem de grandeza, não uma estimativa orçamental.** Supõe "
+                    "compensação integral, universal dentro do quintil e sem custos de "
+                    "administração, e assenta no agravamento medido sobre a estrutura de "
+                    "consumo do IDF 2022/2023. Serve para uma coisa: dar termo de "
+                    "comparação ao valor da poupança agregada que o **Simulador de IVA** "
+                    "apresenta, que de outro modo se lê sem escala."
+                    + ("" if _custo_q1["cobertura"] >= 0.999 else
+                       f" A cobertura desta sessão é de "
+                       f"{percentagem(_custo_q1['cobertura'] * 100, sinal=False)} da despesa "
+                       "alimentar, pelo que o valor está subestimado na mesma proporção."))
+
+            # Era [3, 2], e os dois gráficos ficavam apertados. A legenda das nove
+            # classes ocupava um terço da figura da esquerda, em coluna, e o que
+            # sobrava para as barras não chegava; à direita, os nomes das classes no
+            # eixo comiam quase toda a largura da coluna.
+            #
+            # A legenda desceu para baixo das barras, na horizontal, e essa largura
+            # voltou para a figura. As colunas ficam iguais: o gráfico da direita
+            # precisa dela para os nomes do eixo, e o da esquerda já não a gasta com
+            # a legenda (pedido da Inês, 01.09.2026).
+            cq1, cq2 = st.columns([1, 1])
+            with cq1:
+                componente("A composição muda, não só o nível",
+                           "Fração da despesa alimentar de cada quintil que vai para cada grupo.")
+                chaves_q = [k for k in IDF_QUINTIS if k != "total"]
+                figq = go.Figure()
+                for classe in CLASSES:
+                    sub = df_comp_q[df_comp_q["codigo"] == classe["cod"]].set_index("quintil")
+                    figq.add_trace(go.Bar(
+                        name=classe["nome"],
+                        x=[IDF_QUINTIS[k] for k in chaves_q],
+                        y=[sub.loc[k, "quota"] * 100 for k in chaves_q],
+                        marker_color=cor_classe(classe["cod"]),
+                        hovertemplate="%{x}<br>" + classe["nome"] + ": %{y:.1f}%<extra></extra>",
+                    ))
+                # A legenda em baixo, na horizontal. `b` sobe de 34 para 150 para
+                # lhe abrir lugar: são nove nomes longos, e ao pé da figura eles
+                # partem-se em três ou quatro filas. A altura total sobe com ela,
+                # senão o que a legenda ganha vinha das barras.
+                figq.update_layout(barmode="stack", height=560,
+                                   margin=dict(t=12, b=150, l=10, r=10),
+                                   yaxis_title="% da despesa alimentar",
+                                   legend=dict(orientation="h", font=dict(size=10),
+                                               yanchor="top", y=-0.12,
+                                               xanchor="left", x=0,
+                                               traceorder="normal"))
+                figq.update_yaxes(range=[0, 100])
+                grafico(figq)
+            with cq2:
+                componente("Onde a diferença é maior",
+                           "Variação da quota entre o 1.º e o 5.º quintil, "
+                           "em pontos percentuais.")
+                larguras = []
+                for classe in CLASSES:
+                    sub = df_comp_q[df_comp_q["codigo"] == classe["cod"]].set_index("quintil")
+                    larguras.append({
+                        "classe": classe["nome"],
+                        "delta": (sub.loc["q5", "quota"] - sub.loc["q1", "quota"]) * 100,
+                    })
+                df_delta = pd.DataFrame(larguras).sort_values("delta")
+                figd = go.Figure(go.Bar(
+                    y=df_delta["classe"], x=df_delta["delta"], orientation="h",
+                    marker_color=[AZUL if v > 0 else DOURADO for v in df_delta["delta"]],
+                    hovertemplate="%{y}<br>%{x:+.1f} p.p.<extra></extra>",
                 ))
-            # A legenda em baixo, na horizontal. `b` sobe de 34 para 150 para
-            # lhe abrir lugar: são nove nomes longos, e ao pé da figura eles
-            # partem-se em três ou quatro filas. A altura total sobe com ela,
-            # senão o que a legenda ganha vinha das barras.
-            figq.update_layout(barmode="stack", height=560,
-                               margin=dict(t=12, b=150, l=10, r=10),
-                               yaxis_title="% da despesa alimentar",
-                               legend=dict(orientation="h", font=dict(size=10),
-                                           yanchor="top", y=-0.12,
-                                           xanchor="left", x=0,
-                                           traceorder="normal"))
-            figq.update_yaxes(range=[0, 100])
-            grafico(figq)
-        with cq2:
-            componente("Onde a diferença é maior",
-                       "Variação da quota entre o 1.º e o 5.º quintil, "
-                       "em pontos percentuais.")
-            larguras = []
-            for classe in CLASSES:
-                sub = df_comp_q[df_comp_q["codigo"] == classe["cod"]].set_index("quintil")
-                larguras.append({
-                    "classe": classe["nome"],
-                    "delta": (sub.loc["q5", "quota"] - sub.loc["q1", "quota"]) * 100,
-                })
-            df_delta = pd.DataFrame(larguras).sort_values("delta")
-            figd = go.Figure(go.Bar(
-                y=df_delta["classe"], x=df_delta["delta"], orientation="h",
-                marker_color=[AZUL if v > 0 else DOURADO for v in df_delta["delta"]],
-                hovertemplate="%{y}<br>%{x:+.1f} p.p.<extra></extra>",
-            ))
-            # A mesma altura da figura da esquerda, para as duas assentarem na
-            # mesma linha. Acompanha a subida que a legenda lá provocou.
-            figd.update_layout(height=560, margin=dict(t=12, b=34, l=10, r=10),
-                               xaxis_title="p.p. (Q5 − Q1)")
-            figd.update_xaxes(zeroline=True, zerolinecolor=TEXTO_3, zerolinewidth=1.5)
-            grafico(figd)
+                # A mesma altura da figura da esquerda, para as duas assentarem na
+                # mesma linha. Acompanha a subida que a legenda lá provocou.
+                figd.update_layout(height=560, margin=dict(t=12, b=34, l=10, r=10),
+                                   xaxis_title="p.p. (Q5 − Q1)")
+                figd.update_xaxes(zeroline=True, zerolinecolor=TEXTO_3, zerolinewidth=1.5)
+                grafico(figd)
 
-        st.caption(
-            "**Níveis do IDF tal como medidos**, não são reescalados para a base de cálculo "
-            "escolhida em “Despesa e composição”. Reescalá-los exigiria assumir que o sub-reporte do "
-            "inquérito é uniforme entre quintis, e nada o sustenta. Os quintis são de "
-            "rendimento equivalente (escala OCDE modificada), definidos pelo INE."
-        )
-        st.download_button(
-            "Descarregar cabaz por quintil (CSV)",
-            csv_com_fonte(df_quintis, "Cabaz alimentar por quintil de rendimento", dados,
-                          fonte=("INE, Inquérito às Despesas das Famílias 2022/2023 "
-                                 "(níveis e estrutura); Eurostat, IHPC (variações de preço)"),
-                          conjuntos=[eurostat.HICP_MENSAL],
-                          extra=[
-                              ("Níveis e ponderação", "INE, IDF 2022/2023, quadros Q.2.11.a e Q.2.11.b"),
-                              ("Variações de preço", "Eurostat, prc_hicp_minr (IHPC, ECOICOP v2)"),
-                              ("Nota", "Níveis do IDF tal como medidos, sem reescalamento"),
-                          ]),
-            file_name="cabaz_por_quintil.csv", mime="text/csv")
+            st.caption(
+                "**Níveis do IDF tal como medidos**, não são reescalados para a base de cálculo "
+                "escolhida em “Despesa e composição”. Reescalá-los exigiria assumir que o sub-reporte do "
+                "inquérito é uniforme entre quintis, e nada o sustenta. Os quintis são de "
+                "rendimento equivalente (escala OCDE modificada), definidos pelo INE."
+            )
+            st.download_button(
+                "Descarregar cabaz por quintil (CSV)",
+                csv_com_fonte(df_quintis, "Cabaz alimentar por quintil de rendimento", dados,
+                              fonte=("INE, Inquérito às Despesas das Famílias 2022/2023 "
+                                     "(níveis e estrutura); Eurostat, IHPC (variações de preço)"),
+                              conjuntos=[eurostat.HICP_MENSAL],
+                              extra=[
+                                  ("Níveis e ponderação", "INE, IDF 2022/2023, quadros Q.2.11.a e Q.2.11.b"),
+                                  ("Variações de preço", "Eurostat, prc_hicp_minr (IHPC, ECOICOP v2)"),
+                                  ("Nota", "Níveis do IDF tal como medidos, sem reescalamento"),
+                              ]),
+                file_name="cabaz_por_quintil.csv", mime="text/csv")
 
-        # ---- acessibilidade alimentar: os três limiares, sempre juntos ----
-        # Mesmo tratamento das anteriores: o `st.divider()` deu lugar ao filete
-        # do bloco analítico.
-        secao("Acessibilidade alimentar (três limiares, três respostas)",
-              "A capacidade para suportar a despesa alimentar não é uma grandeza única. "
-              "Consoante o limiar adotado, os resultados para Portugal variam de forma "
-              "substancial, com dados oficiais em qualquer dos casos. Os três limiares "
-              "são por isso apresentados em conjunto.",
-              grupo="07 · Acessibilidade alimentar")
+        else:
+            # ---- acessibilidade alimentar: os três limiares, sempre juntos ----
+            # Mesmo tratamento das anteriores: o `st.divider()` deu lugar ao filete
+            # do bloco analítico.
+            secao("Acessibilidade alimentar (três limiares, três respostas)",
+                  "A capacidade para suportar a despesa alimentar não é uma grandeza única. "
+                  "Consoante o limiar adotado, os resultados para Portugal variam de forma "
+                  "substancial, com dados oficiais em qualquer dos casos. Os três limiares "
+                  "são por isso apresentados em conjunto.",
+                  grupo="03 · Acessibilidade alimentar", topo=True)
 
-        _priv = dados.get("privacao", pd.DataFrame())
-        _priv_pt = pd.DataFrame()
-        if not _priv.empty:
-            _priv_pt = _priv[(_priv["geo"] == "PT")].sort_values("time")
+            # `_priv_pt`, `_sofi_pt`, `_sofi_es`, `_ano_sofi`, `_sofi_pessoas`, `_sev`,
+            # `_ano_sev` e `_sev_pobres` já vêm calculados do bloco incondicional
+            # antes desta aba, pela mesma razão dos quintis: a Síntese lê alguns
+            # deles por nome.
+            t1, t2, t3 = st.columns(3)
+            t1.metric(
+                "Privação severa" + (f" ({_ano_sev})" if _ano_sev else ""),
+                f"{_sev:.1f}%".replace(".", ",") if _sev is not None else "—",
+                help=("Não conseguir pagar uma refeição com carne, frango ou peixe, ou equivalente "
+                      "vegetariano, de dois em dois dias. Fonte: Eurostat, EU-SILC."))
+            t2.metric(
+                f"Sem capacidade para uma dieta saudável ({_ano_sofi})",
+                f"{_sofi_pt:.1f}%".replace(".", ","),
+                help=("População que não consegue suportar o custo da dieta mais barata que "
+                      "cumpre os requisitos nutricionais. Fonte: FAO, relatório The State of "
+                      f"Food Security and Nutrition in the World (SOFI), edição de {SOFI_EDICAO}."))
+            t3.metric(
+                "Peso no orçamento do 1.º quintil",
+                f"{IDF_PESO_ALIMENTAR['q1']:.1f}%".replace(".", ","),
+                help=("INE, IDF 2022/2023. Não mede privação, mede exposição da despesa "
+                      "alimentar no orçamento."))
 
-        # O ano de referência tem de existir nos **três** quadros do SOFI, que
-        # são inscritos à mão e já hoje não têm o mesmo conjunto de anos: o de
-        # incapacidade tem 2020, o de custo não. Tomar o máximo de um deles e
-        # indexar os outros por esse ano rebentaria na próxima edição em que os
-        # anexos divergissem (auditoria de 12.08.2026, L17).
-        _anos_sofi = (set(SOFI_INCAPACIDADE["Portugal"]) & set(SOFI_INCAPACIDADE["Espanha"])
-                      & set(SOFI_CUSTO["Portugal"]) & set(SOFI_CUSTO["Espanha"]))
-        _ano_sofi = max(_anos_sofi) if _anos_sofi else max(SOFI_INCAPACIDADE["Portugal"])
-        _sofi_pt = SOFI_INCAPACIDADE["Portugal"][_ano_sofi]
-        _sofi_es = SOFI_INCAPACIDADE["Espanha"][_ano_sofi]
-        _sofi_pessoas = SOFI_MILHOES.get(_ano_sofi)
+            # Sem `**`: estas duas entram na `nota`, que é HTML de bloco, e em HTML
+            # de bloco o markdown não é interpretado. Saíam ao leitor com os
+            # asteriscos à vista (relatado pela Inês, 01.09.2026). O primeiro já cai
+            # dentro de um <strong> na lista abaixo, e por isso não leva nenhum.
+            _texto_sev = (f"{('%.1f' % _sev).replace('.', ',')}%" if _sev is not None
+                          else "o indicador de privação severa")
+            _texto_milhoes = (f", cerca de <strong>{numero(_sofi_pessoas, 1)} milhões "
+                              f"de pessoas</strong>" if _sofi_pessoas else "")
+            # Em tópicos, e não em prosa corrida: são três definições paralelas, e a
+            # prosa obrigava a reconstruir a que número se referia cada frase
+            # (decisão da Inês, 13.08.2026).
+            nota("Os três indicadores não são substituíveis entre si", f"""
+              Medem exigências muito diferentes.
+              <ul>
+                <li><strong>Privação severa ({_texto_sev})</strong>, limiar <strong>muito
+                    baixo</strong>: mede uma situação próxima da carência alimentar e regista o
+                    valor mínimo da série.</li>
+                <li><strong>Dieta saudável inacessível
+                    ({('%.1f' % _sofi_pt).replace('.', ',')}%)</strong>, o nível intermédio e o mais
+                    abrangente: é a proporção da população que não consegue suportar o custo de uma
+                    dieta nutricionalmente adequada{_texto_milhoes}.</li>
+                <li><strong>Peso no orçamento do 1.º quintil</strong>, que não mede privação: mede
+                    <strong>exposição</strong>, ou seja, que proporção do orçamento dos 20% de menor
+                    rendimento é afeta à alimentação.</li>
+              </ul>
+              Apresentado isoladamente, o primeiro indicador circunscreveria a questão a
+              <strong>{percentagem(_sev, sinal=False) if _sev is not None else '≈2%'}</strong> da
+              população, quando por um limiar nutricionalmente definido a proporção é de
+              <strong>{percentagem(_sofi_pt, sinal=False)}</strong>. Os dois indicadores registam
+              evoluções distintas e devem ser lidos em conjunto.""")
 
-        _sev, _ano_sev, _sev_pobres = None, None, None
-        if not _priv_pt.empty:
-            _tot = _priv_pt[_priv_pt["rskpovth"] == "TOTAL"]
-            if not _tot.empty:
-                _sev = float(_tot.iloc[-1]["valor"])
-                _ano_sev = str(_tot.iloc[-1]["time"])
-                _pob = _priv_pt[(_priv_pt["rskpovth"] == "B_60")
-                                & (_priv_pt["time"] == _ano_sev)]
-                if not _pob.empty:
-                    _sev_pobres = float(_pob.iloc[0]["valor"])
+            ca1, ca2 = st.columns(2)
+            with ca1:
+                # O subtítulo dizia “o mesmo indicador nas três linhas, repartido por
+                # grupo de rendimento”, e “repartido” é justamente o que não é. Cada
+                # linha tem o **seu** denominador, e é por isso que as três não se
+                # somam e que a nacional não é um ponto médio (Inês, 13.08.2026).
+                # A definição do limiar saiu daqui a 01.09.2026: já estava no (i) do
+                # indicador, dois ecrãs acima, e outra vez na nota dos três
+                # indicadores, e o leitor lia a mesma frase três vezes. Fica só o
+                # que **não** está em mais lado nenhum, que é como se lê este
+                # gráfico em concreto: cada linha tem o seu próprio denominador, e é
+                # por isso que as três não se somam (pedido da Inês).
+                componente("Privação severa e quem a sofre",
+                           "<strong>Cada linha mede a percentagem dentro do seu próprio "
+                           "grupo</strong>, e não a proporção da população: por isso as "
+                           "três não se somam.")
+                if _priv_pt.empty:
+                    st.info("Série indisponível nesta sessão. Ver o registo de ligações "
+                            "no separador Metodologia.")
+                else:
+                    figp = go.Figure()
+                    _cores_p = {"TOTAL": CINZENTO, "B_60": VERMELHO, "A_60": AZUL}
+                    for nivel, rotulo in eurostat.PRIVACAO_NIVEIS.items():
+                        sub = _priv_pt[_priv_pt["rskpovth"] == nivel]
+                        if sub.empty:
+                            continue
+                        figp.add_trace(go.Scatter(
+                            x=sub["time"], y=sub["valor"], name=rotulo, mode="lines+markers",
+                            line=dict(color=_cores_p.get(nivel, CINZENTO),
+                                      width=2.8 if nivel == "TOTAL" else 2),
+                            hovertemplate="%{x}<br>%{y:.1f}%<extra>" + rotulo + "</extra>"))
+                    figp.update_layout(height=380, margin=dict(t=12, b=34, l=10, r=10),
+                                       yaxis_title="% da população",
+                                       hovermode="x unified",
+                                       legend=dict(orientation="h", y=-0.18))
+                    figp.update_yaxes(rangemode="tozero")
+                    grafico(figp)
 
-        t1, t2, t3 = st.columns(3)
-        t1.metric(
-            "Privação severa" + (f" ({_ano_sev})" if _ano_sev else ""),
-            f"{_sev:.1f}%".replace(".", ",") if _sev is not None else "—",
-            help=("Não conseguir pagar uma refeição com carne, frango ou peixe, ou equivalente "
-                  "vegetariano, de dois em dois dias. Fonte: Eurostat, EU-SILC."))
-        t2.metric(
-            f"Sem capacidade para uma dieta saudável ({_ano_sofi})",
-            f"{_sofi_pt:.1f}%".replace(".", ","),
-            help=("População que não consegue suportar o custo da dieta mais barata que "
-                  "cumpre os requisitos nutricionais. Fonte: FAO, relatório The State of "
-                  f"Food Security and Nutrition in the World (SOFI), edição de {SOFI_EDICAO}."))
-        t3.metric(
-            "Peso no orçamento do 1.º quintil",
-            f"{IDF_PESO_ALIMENTAR['q1']:.1f}%".replace(".", ","),
-            help=("INE, IDF 2022/2023. Não mede privação, mede exposição da despesa "
-                  "alimentar no orçamento."))
+                    # Três legendas seguidas por baixo do gráfico eram mais texto do
+                    # que gráfico. A que dizia que a linha do total não é um ponto
+                    # médio saiu, o subtítulo passou a dizer que cada linha tem o
+                    # seu denominador, que é a causa e não a consequência. As outras
+                    # duas recolheram-se aqui (decisão da Inês, 13.08.2026).
+                    #
+                    # Um popover e não o (i) dos títulos de secção: aquele é dado pelo
+                    # cabeçalho do Streamlit, que a esta escala, dentro de uma coluna,
+                    # sob um título de componente, sairia maior do que o título que o
+                    # encima.
+                    with st.popover("Leitura do gráfico", icon=":material/info:"):
+                        st.markdown(
+                            "**O que cada linha é.** *Em risco de pobreza:* quem tem rendimento "
+                            "equivalente **abaixo de 60% da mediana nacional**, é uma medida de "
+                            "distância à mediana do país, não de indigência. *Acima do limiar:* "
+                            "toda a restante população. Cada pessoa está numa e só numa destas "
+                            "duas. *População total:* as duas juntas, o número nacional."
+                        )
+                        if _sev_pobres is not None and _sev:
+                            # O `.replace(".", ",")` aplicava-se à cadeia inteira, as
+                            # f-strings adjacentes concatenam em tempo de compilação, e
+                            # não ao número. É o padrão que o C5 fechou em nove sítios e
+                            # que sobreviveu neste (auditoria de 11.08.2026, E8).
+                            st.markdown(
+                                f"**Leitura.** Em {_ano_sev}, "
+                                f"**{percentagem(_sev_pobres, sinal=False)}** entre a população em "
+                                f"risco de pobreza, contra **{percentagem(_sev, sinal=False)}** no "
+                                f"total, um valor **{numero(_sev_pobres / _sev, 1)}×** superior. O "
+                                "valor nacional, tomado isoladamente, não evidencia esta "
+                                "concentração."
+                            )
 
-        # Sem `**`: estas duas entram na `nota`, que é HTML de bloco, e em HTML
-        # de bloco o markdown não é interpretado. Saíam ao leitor com os
-        # asteriscos à vista (relatado pela Inês, 01.09.2026). O primeiro já cai
-        # dentro de um <strong> na lista abaixo, e por isso não leva nenhum.
-        _texto_sev = (f"{('%.1f' % _sev).replace('.', ',')}%" if _sev is not None
-                      else "o indicador de privação severa")
-        _texto_milhoes = (f", cerca de <strong>{numero(_sofi_pessoas, 1)} milhões "
-                          f"de pessoas</strong>" if _sofi_pessoas else "")
-        # Em tópicos, e não em prosa corrida: são três definições paralelas, e a
-        # prosa obrigava a reconstruir a que número se referia cada frase
-        # (decisão da Inês, 13.08.2026).
-        nota("Os três indicadores não são substituíveis entre si", f"""
-          Medem exigências muito diferentes.
-          <ul>
-            <li><strong>Privação severa ({_texto_sev})</strong>, limiar <strong>muito
-                baixo</strong>: mede uma situação próxima da carência alimentar e regista o
-                valor mínimo da série.</li>
-            <li><strong>Dieta saudável inacessível
-                ({('%.1f' % _sofi_pt).replace('.', ',')}%)</strong>, o nível intermédio e o mais
-                abrangente: é a proporção da população que não consegue suportar o custo de uma
-                dieta nutricionalmente adequada{_texto_milhoes}.</li>
-            <li><strong>Peso no orçamento do 1.º quintil</strong>, que não mede privação: mede
-                <strong>exposição</strong>, ou seja, que proporção do orçamento dos 20% de menor
-                rendimento é afeta à alimentação.</li>
-          </ul>
-          Apresentado isoladamente, o primeiro indicador circunscreveria a questão a
-          <strong>{percentagem(_sev, sinal=False) if _sev is not None else '≈2%'}</strong> da
-          população, quando por um limiar nutricionalmente definido a proporção é de
-          <strong>{percentagem(_sofi_pt, sinal=False)}</strong>. Os dois indicadores registam
-          evoluções distintas e devem ser lidos em conjunto.""")
-
-        ca1, ca2 = st.columns(2)
-        with ca1:
-            # O subtítulo dizia “o mesmo indicador nas três linhas, repartido por
-            # grupo de rendimento”, e “repartido” é justamente o que não é. Cada
-            # linha tem o **seu** denominador, e é por isso que as três não se
-            # somam e que a nacional não é um ponto médio (Inês, 13.08.2026).
-            # A definição do limiar saiu daqui a 01.09.2026: já estava no (i) do
-            # indicador, dois ecrãs acima, e outra vez na nota dos três
-            # indicadores, e o leitor lia a mesma frase três vezes. Fica só o
-            # que **não** está em mais lado nenhum, que é como se lê este
-            # gráfico em concreto: cada linha tem o seu próprio denominador, e é
-            # por isso que as três não se somam (pedido da Inês).
-            componente("Privação severa e quem a sofre",
-                       "<strong>Cada linha mede a percentagem dentro do seu próprio "
-                       "grupo</strong>, e não a proporção da população: por isso as "
-                       "três não se somam.")
-            if _priv_pt.empty:
-                st.info("Série indisponível nesta sessão. Ver o registo de ligações "
-                        "no separador Metodologia.")
-            else:
-                figp = go.Figure()
-                _cores_p = {"TOTAL": CINZENTO, "B_60": VERMELHO, "A_60": AZUL}
-                for nivel, rotulo in eurostat.PRIVACAO_NIVEIS.items():
-                    sub = _priv_pt[_priv_pt["rskpovth"] == nivel]
-                    if sub.empty:
-                        continue
-                    figp.add_trace(go.Scatter(
-                        x=sub["time"], y=sub["valor"], name=rotulo, mode="lines+markers",
-                        line=dict(color=_cores_p.get(nivel, CINZENTO),
-                                  width=2.8 if nivel == "TOTAL" else 2),
-                        hovertemplate="%{x}<br>%{y:.1f}%<extra>" + rotulo + "</extra>"))
-                figp.update_layout(height=380, margin=dict(t=12, b=34, l=10, r=10),
-                                   yaxis_title="% da população",
+            with ca2:
+                componente("Custo de uma dieta saudável",
+                           "Dólares em paridade de poder de compra (PPP$) por pessoa e por dia. "
+                           "Mínimo normativo, não despesa observada.")
+                figc = go.Figure()
+                _cores_c = {"Portugal": VERDE, "Europa": AZUL,
+                            "Europa do Sul": DOURADO, "Espanha": "#7a5ea8"}
+                for regiao, serie in SOFI_CUSTO.items():
+                    anos_c = sorted(serie)
+                    figc.add_trace(go.Scatter(
+                        x=anos_c, y=[serie[a] for a in anos_c], name=regiao,
+                        mode="lines+markers",
+                        line=dict(color=_cores_c.get(regiao, CINZENTO),
+                                  width=2.8 if regiao == "Portugal" else 1.8,
+                                  dash=None if regiao == "Portugal" else "dot"),
+                        hovertemplate="%{x}<br>%{y:.2f} PPP$<extra>" + regiao + "</extra>"))
+                figc.update_layout(height=380, margin=dict(t=12, b=34, l=10, r=10),
+                                   yaxis_title="PPP$ por pessoa e por dia",
                                    hovermode="x unified",
                                    legend=dict(orientation="h", y=-0.18))
-                figp.update_yaxes(rangemode="tozero")
-                grafico(figp)
+                figc.update_xaxes(dtick=1)
+                grafico(figc)
 
-                # Três legendas seguidas por baixo do gráfico eram mais texto do
-                # que gráfico. A que dizia que a linha do total não é um ponto
-                # médio saiu, o subtítulo passou a dizer que cada linha tem o
-                # seu denominador, que é a causa e não a consequência. As outras
-                # duas recolheram-se aqui (decisão da Inês, 13.08.2026).
-                #
-                # Um popover e não o (i) dos títulos de secção: aquele é dado pelo
-                # cabeçalho do Streamlit, que a esta escala, dentro de uma coluna,
-                # sob um título de componente, sairia maior do que o título que o
-                # encima.
-                with st.popover("Leitura do gráfico", icon=":material/info:"):
-                    st.markdown(
-                        "**O que cada linha é.** *Em risco de pobreza:* quem tem rendimento "
-                        "equivalente **abaixo de 60% da mediana nacional**, é uma medida de "
-                        "distância à mediana do país, não de indigência. *Acima do limiar:* "
-                        "toda a restante população. Cada pessoa está numa e só numa destas "
-                        "duas. *População total:* as duas juntas, o número nacional."
-                    )
-                    if _sev_pobres is not None and _sev:
-                        # O `.replace(".", ",")` aplicava-se à cadeia inteira, as
-                        # f-strings adjacentes concatenam em tempo de compilação, e
-                        # não ao número. É o padrão que o C5 fechou em nove sítios e
-                        # que sobreviveu neste (auditoria de 11.08.2026, E8).
-                        st.markdown(
-                            f"**Leitura.** Em {_ano_sev}, "
-                            f"**{percentagem(_sev_pobres, sinal=False)}** entre a população em "
-                            f"risco de pobreza, contra **{percentagem(_sev, sinal=False)}** no "
-                            f"total, um valor **{numero(_sev_pobres / _sev, 1)}×** superior. O "
-                            "valor nacional, tomado isoladamente, não evidencia esta "
-                            "concentração."
-                        )
-
-        with ca2:
-            componente("Custo de uma dieta saudável",
-                       "Dólares em paridade de poder de compra (PPP$) por pessoa e por dia. "
-                       "Mínimo normativo, não despesa observada.")
-            figc = go.Figure()
-            _cores_c = {"Portugal": VERDE, "Europa": AZUL,
-                        "Europa do Sul": DOURADO, "Espanha": "#7a5ea8"}
-            for regiao, serie in SOFI_CUSTO.items():
-                anos_c = sorted(serie)
-                figc.add_trace(go.Scatter(
-                    x=anos_c, y=[serie[a] for a in anos_c], name=regiao,
-                    mode="lines+markers",
-                    line=dict(color=_cores_c.get(regiao, CINZENTO),
-                              width=2.8 if regiao == "Portugal" else 1.8,
-                              dash=None if regiao == "Portugal" else "dot"),
-                    hovertemplate="%{x}<br>%{y:.2f} PPP$<extra>" + regiao + "</extra>"))
-            figc.update_layout(height=380, margin=dict(t=12, b=34, l=10, r=10),
-                               yaxis_title="PPP$ por pessoa e por dia",
-                               hovermode="x unified",
-                               legend=dict(orientation="h", y=-0.18))
-            figc.update_xaxes(dtick=1)
-            grafico(figc)
-
-        _custo_pt = SOFI_CUSTO["Portugal"][_ano_sofi]
-        _custo_es = SOFI_CUSTO["Espanha"][_ano_sofi]
-        st.info(f"""
+            st.info(f"""
     **Comparação com Espanha**
 
     Portugal e Espanha registam um custo da dieta saudável praticamente idêntico,
@@ -4807,112 +4949,25 @@ with aba1:
     a distinção entre um indicador de preços e um indicador de acessibilidade.
         """)
 
-        # O bloco “O que estes indicadores não são” passou para as “Limitações a
-        # declarar em qualquer uso”, no separador Metodologia, onde estão as
-        # outras nove (decisão da Inês, 13.08.2026).
-        st.caption(f"Fontes: Eurostat, EU-SILC · {SOFI_FONTE} · "
-                   "INE, IDF 2022/2023 (Q.2.11.b). Os conjuntos exatos estão no "
-                   "separador Metodologia.")
+            # O bloco “O que estes indicadores não são” passou para as “Limitações a
+            # declarar em qualquer uso”, no separador Metodologia, onde estão as
+            # outras nove (decisão da Inês, 13.08.2026).
+            st.caption(f"Fontes: Eurostat, EU-SILC · {SOFI_FONTE} · "
+                       "INE, IDF 2022/2023 (Q.2.11.b). Os conjuntos exatos estão no "
+                       "separador Metodologia.")
 
-        # Sendo inscrito à mão, o SOFI envelhece sem a aplicação dar erro
-        # (auditoria de 10.08.2026, D4). O ano é tomado como 31 de dezembro,
-        # a leitura mais favorável à fonte.
-        _idade_sofi = idade_fonte(_ano_sofi, LIMITE_ANOS_SOFI * 365)
-        if _idade_sofi["desatualizada"]:
-            _anos_sofi = _idade_sofi["dias"] / 365.25
-            st.error(
-                f"**O SOFI apresentado é de {_ano_sofi}**, há cerca de "
-                f"{numero(_anos_sofi, 1)} anos. Como é publicado em PDF e inscrito à mão em "
-                "`src/config.py`, é provável que já exista pelo menos uma edição por "
-                "incorporar. **Confirme antes de citar estes valores.**"
-            )
-
-        # ------- blocos recolhíveis lado a lado, para reduzir o deslocamento -------
-        # Eram três. Saiu o “Como é calculado”, que resumia em prosa os mesmos
-        # quatro passos que a metodologia dá por extenso, com as fórmulas e as
-        # duas bases lado a lado, em “Os quatro passos desta ferramenta”. Era
-        # metodologia fora do separador da metodologia, e nada acrescentava ao
-        # que lá está.
-        #
-        # Ficam os dois que **não** são metodologia: são valores calculados
-        # nesta sessão, para o agregado e a escala escolhidos, e não têm
-        # equivalente na metodologia (decisão da Inês, 01.09.2026).
-        bloco("07 · Comparações e detalhe")
-        e2, e3 = st.columns(2)
-
-        with e2.expander("Comparar composições"):
-            comps = [(1, 0, "1 adulto"), (2, 0, "Casal"), (1, 1, "Monoparental + 1"),
-                     (1, 2, "Monoparental + 2"), (2, 1, "Casal + 1 criança"),
-                     (2, 2, "Casal + 2 crianças"), (2, 3, "Casal + 3 crianças")]
-            dm = dim_efetiva
-            # A coluna do meio fixava a OCDE original, fosse qual fosse a escala
-            # escolhida na barra lateral, e não o dizia. Passa a usar a escala
-            # ativa e a nomeá-la no cabeçalho (auditoria de 12.08.2026, L19).
-            _rot_esc = ESCALAS[escala_chave]["nome"].split(" (")[0]
-            _col_central = f"{_rot_esc} (€)"
-            # Ordem Mín. → escala ativa → Máx., para que se veja **onde** a
-            # escolha cai dentro do intervalo. Com uma escala extrema, per
-            # capita ou OCDE modificada, a coluna coincide com um dos limites,
-            # e assim isso lê-se em vez de parecer um valor repetido.
-            linhas_c = []
-            _coincide = 0
-            for a, c, rot in comps:
-                iv = intervalo_agregado(valor_medio_agregado, dm, a, c)
-                _central = round(despesa_do_agregado(
-                    valor_medio_agregado, dm, a, c, escala_chave), 2)
-                if _central in (round(iv["minimo"], 2), round(iv["maximo"], 2)):
-                    _coincide += 1
-                linhas_c.append({
-                    "Composição": rot, "Pessoas": a + c,
-                    "Mín. (€)": round(iv["minimo"], 2),
-                    _col_central: _central,
-                    "Máx. (€)": round(iv["maximo"], 2),
-                })
-            st.dataframe(pd.DataFrame(linhas_c), width="stretch", hide_index=True)
-            st.caption(
-                f"Agregado médio nacional: {('%.2f' % dm).replace('.', ',')} pessoas. "
-                f"A coluna **{_rot_esc}** usa a escala escolhida em “Despesa e composição”; o "
-                "intervalo resulta das três escalas de equivalência."
-                + (f" Nesta escala a coluna coincide com um dos limites em "
-                   f"{_coincide} das {len(comps)} composições, a **{_rot_esc}** é uma "
-                   "das escalas extremas." if _coincide else "")
-                + " **Estes valores são simulados**, não observados: o confronto com "
-                  "a despesa que o inquérito mediu por tipo de agregado está em "
-                  "“Escalas de equivalência”, no separador Metodologia."
-            )
-
-        with e3.expander("Tabela detalhada"):
-            tabela = df_decomp[["codigo", "classe", "classe_oficial", "ponderador",
-                                "quota", "valor", "variacao", "contributo"]].copy()
-            tabela.columns = ["Código", "Grupo", "Designação oficial (INE)",
-                              "Ponderador (‰)", "Quota",
-                              "Valor (€)", "Variação (%)", "Contributo (€)"]
-            # A coluna do código sai do ecrã, é nomenclatura que só interessa a
-            # quem vai à fonte, mas fica no CSV, que circula sozinho e precisa
-            # de ser rastreável (decisão da Inês, 13.08.2026).
-            st.dataframe(tabela.drop(columns=["Código"]),
-                         width="stretch", hide_index=True,
-                         column_config={
-                             "Quota": st.column_config.ProgressColumn(
-                                 "Quota", format="%.1f%%", min_value=0, max_value=1),
-                             "Valor (€)": st.column_config.NumberColumn(format="%.2f"),
-                             "Variação (%)": st.column_config.NumberColumn(format="%.1f"),
-                             "Contributo (€)": st.column_config.NumberColumn(format="%.2f"),
-                             "Ponderador (‰)": st.column_config.NumberColumn(format="%.1f"),
-                         })
-            st.download_button(
-                "Descarregar tabela (CSV)",
-                csv_com_fonte(tabela, "Decomposição por grupo de produto", dados,
-                              # A âncora pode ser do INE (IDF) ou do Eurostat
-                              # (Contas Nacionais): o cabeçalho segue a que
-                              # estiver ativa.
-                              fonte=(f"{base_ancora['fonte']} (âncora da despesa); "
-                                     "Eurostat, IHPC (ponderadores e variações)"),
-                              extra=[("Base de cálculo", base_ancora["nome"]),
-                                     ("Composição do agregado", composicao),
-                                     ("Escala", ESCALAS[escala_chave]["nome"])]),
-                f"despesa_alimentar_decomposicao_{date.today()}.csv", "text/csv",
-                width="stretch")
+            # Sendo inscrito à mão, o SOFI envelhece sem a aplicação dar erro
+            # (auditoria de 10.08.2026, D4). O ano é tomado como 31 de dezembro,
+            # a leitura mais favorável à fonte. `_idade_sofi` já vem calculado do
+            # bloco incondicional antes desta aba.
+            if _idade_sofi["desatualizada"]:
+                _anos_sofi_aviso = _idade_sofi["dias"] / 365.25
+                st.error(
+                    f"**O SOFI apresentado é de {_ano_sofi}**, há cerca de "
+                    f"{numero(_anos_sofi_aviso, 1)} anos. Como é publicado em PDF e inscrito à mão em "
+                    "`src/config.py`, é provável que já exista pelo menos uma edição por "
+                    "incorporar. **Confirme antes de citar estes valores.**"
+                )
 
     # ==========================================================================
     # ABA 2, Histórico

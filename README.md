@@ -112,12 +112,16 @@ calculam — ver [«Despesa alimentar» e não «cabaz»](#despesa-alimentar-e-n
 
 **4 · Despesa e composição.** A despesa alimentar mensal por agregado, a partir
 de uma de **duas bases oficiais à escolha** — o IDF ou as Contas Nacionais —,
-atualizada ao mês mais recente pelo índice de preços. A aplicação reparte-a pelas
-nove classes COICOP e aplica a cada uma a sua variação homóloga, devolvendo o
-contributo de cada tipo de produto para o agravamento. Inclui o **cabaz por
-quintil de rendimento**, o **custo de compensar o agravamento** por quintil, o
-esforço face a três referências de rendimento e os **três limiares de
-acessibilidade alimentar**.
+atualizada ao mês mais recente pelo índice de preços. Desde 03.09.2026, o resto
+do separador organiza-se em **três vistas**, escolhidas por um seletor único, o
+mesmo mecanismo já usado na Comparação UE-27: *Preços dos alimentos* (onde está
+concentrada a variação, como se reparte o cabaz pelas nove classes COICOP,
+cada grupo em detalhe), *Peso da alimentação* (referência nacional, indicadores
+do agregado selecionado, esforço face a três referências de rendimento, **cabaz
+por quintil de rendimento** e **custo de compensar o agravamento** por quintil)
+e *Acessibilidade alimentar* (os **três limiares** de acessibilidade, que não
+dependem da base ou da composição escolhidas). Os parâmetros de análise e o
+indicador de capa ficam fora das três vistas, por lhes serem comuns.
 
 **5 · Histórico.** Série mensal do índice de preços alimentares e da variação
 homóloga, o **índice de difusão** por grupo, e a medição do **viés de
