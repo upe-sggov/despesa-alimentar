@@ -11,3 +11,6 @@ __pycache__/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Artefactos locais de exportacao/impressao
+Claude outputs/
