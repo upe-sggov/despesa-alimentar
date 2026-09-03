@@ -2380,22 +2380,28 @@ def test_a_base_e_o_desalinhamento_nao_se_repetem_no_mesmo_separador():
     cinquenta linhas, e o aviso de desalinhamento duas. O leitor lia os mesmos
     ponderadores e o mesmo nivel de despesa ao percorrer meio separador.
 
-    Ficaram as que fecham alguma coisa: a base abre o bloco (sob os contributos)
-    e fecha-o (na proveniencia inteira dos cartoes, que nao tem figura onde
-    carimbar a fonte); o desalinhamento fica nos cartoes, que e onde mais
-    engana, porque ali cada classe mostra a sua taxa isolada.
+    Ficaram as que fecham alguma coisa: a base vai na proveniencia inteira dos
+    cartoes, que nao tem figura onde carimbar a fonte; o desalinhamento fica nos
+    cartoes, que e onde mais engana, porque ali cada classe mostra a sua taxa
+    isolada.
 
     O topo da pagina continua a declarar o desalinhamento por inteiro, com a
     lista das classes e o mes de cada uma. Isso nao e repeticao: e a declaracao,
     e as outras eram lembretes dela (decisao da Ines, 01.09.2026).
+
+    A legenda propria da base saiu a 03.09.2026 com a seccao "Onde esta a
+    variacao", que era onde vivia. Restou a `proveniencia` dos cartoes, que ja a
+    contem: o limite passou de "uma" a "nenhuma alem dessa".
     """
     fonte = _fonte("app.py")
 
     n_base = fonte.count("st.caption(base_de_calculo(dados, base_ancora")
-    assert n_base == 1, (
-        f"a base de calculo e declarada por {n_base} legendas proprias. Uma "
-        "delas basta: a outra ponta do bloco vai na `proveniencia` dos cartoes, "
-        "que ja a contem.")
+    assert n_base == 0, (
+        f"a base de calculo voltou a ter {n_base} legendas proprias. A "
+        "`proveniencia` dos cartoes ja a declara.")
+    assert "st.caption(proveniencia(dados, base_ancora" in fonte, (
+        "a base de calculo deixou de ser declarada no separador: saiu tambem da "
+        "proveniencia dos cartoes, que era a ultima a faze-lo")
 
     n_desal = fonte.count("st.caption(_desal_nota)")
     assert n_desal == 1, (
@@ -3124,9 +3130,12 @@ def test_nao_ha_api_depreciada_do_streamlit():
     # mesmo: que a migracao nao foi desfeita por apagamento.
     #
     # Desceu de 25 para 24 a 01.09.2026: o quadro das fichas da AT passou a
-    # lista de markdown, e levou com ele o seu `width`. Foi remocao de um
-    # elemento, nao de um parametro.
-    assert fonte.count('width="stretch"') >= 24
+    # lista de markdown, e levou com ele o seu `width`. E de 24 para 23 a
+    # 03.09.2026, com o bloco "Tabela detalhada" e o seu botao de descarga, e de
+    # 23 para 22 no mesmo dia, quando o quadro "De onde vem cada referencia"
+    # deixou de ser um `st.dataframe` e passou a fichas, e para 21 com o quadro
+    # dos agregados do Historico. Sao remocoes de elementos, nao de parametros.
+    assert fonte.count('width="stretch"') >= 21
     # E que os graficos continuam a passar todos pelo ajudante, em vez de
     # voltarem a chamar o Streamlit diretamente com a API antiga.
     assert fonte.count("st.plotly_chart(") == 1, (
@@ -3707,35 +3716,37 @@ def test_a_taxa_oficial_e_do_mesmo_mes_das_variacoes_por_classe():
 def test_a_divergencia_entre_as_duas_agregacoes_esta_declarada():
     """
     A aditividade continua a valer, mas a taxa que ela implica nao e a oficial.
-    A nota que o declara tem de mostrar as **duas** taxas, e nao so a que lhe
-    convem, e tem de mostrar a conta que explica a diferenca.
+    O texto que o declara tem de mostrar as **duas** taxas, e nao so a que lhe
+    convem.
 
-    Seguia duas frases exactas, "Os nove contributos somam exatamente" e "de ha
-    um ano"/"periodo corrente". Passa a seguir o que a nota **calcula**, que sao
-    identificadores e nao redaccao: as duas taxas e a reconstituicao com os
-    valores correntes. Uma nota que perca qualquer delas deixa de declarar a
-    divergencia, escreva-se ela como se escrever (01.09.2026).
+    Seguia a nota de ajuda da seccao "Onde esta a variacao", que saiu a
+    03.09.2026 com a propria seccao. A declaracao passou a ser so uma, o tooltip
+    do cartao do agregado, e por isso o teste passou a segui-la ai. Com a nota
+    saiu tambem a reconstituicao da taxa oficial pelos valores correntes, que
+    era a conta que mostrava a equivalencia: fica guardada pelo teste
+    `test_a_reconstituida_pondera_pelos_valores_de_ha_um_ano`, que a verifica
+    nos calculos em vez de a verificar na redaccao.
     """
     vivo = _fonte_viva("app.py")
-    i = vivo.index("_ajuda_adit = (")
-    nota = vivo[i:vivo.index(")\n", vivo.index("no indicador de topo", i))]
+    i = vivo.index("_nota_capa = (")
+    nota = vivo[i:vivo.index('")', vivo.index("agregações da mesma coisa", i))]
 
-    # Qualificados, e nao os nomes soltos: `variacao_oficial` tambem casa dentro
-    # de `mes_variacao_oficial`, que esta na mesma nota e e outra coisa. Com o
-    # nome solto, apagar a taxa oficial e deixar la o mes passava sem acusar
-    # (apanhado a quebrar o teste de proposito, 01.09.2026).
-    assert "resumo['contributo_total']" in nota, (
-        "a nota deixou de dizer quanto somam os contributos, que e a "
-        "propriedade que a decomposicao garante")
+    # Qualificado, e nao o nome solto: `variacao_oficial` tambem casa dentro de
+    # `mes_variacao_oficial`, que esta na mesma nota e e outra coisa.
     assert "resumo['variacao_implicita']" in nota, (
-        "a nota deixou de mostrar a taxa que a decomposicao implica")
-    assert "dados['variacao_oficial']" in nota, (
-        "a nota deixou de mostrar a taxa oficial ao lado da implicita, e sem as "
-        "duas nao ha divergencia declarada nenhuma")
-    assert "r.quota * r.variacao" in nota, (
-        "a nota deixou de reconstituir a taxa com os valores correntes. E essa "
-        "conta que mostra que as duas agregacoes sao da mesma coisa, em vez de "
-        "o afirmar")
+        "o tooltip deixou de mostrar a taxa que a decomposicao implica, e sem "
+        "ela nao ha divergencia declarada nenhuma")
+    assert "taxa oficial" in nota, (
+        "o tooltip deixou de dizer que a percentagem de capa e a oficial")
+    assert "há um ano" in nota and "período corrente" in nota, (
+        "o tooltip deixou de dizer o que distingue as duas agregacoes, que sao "
+        "os valores pelos quais cada uma pondera as nove taxas")
+
+    # E a condicao que o produz tem de continuar a exigir as duas: sem a
+    # oficial, o tooltip afirmaria a divergencia sem mostrar de que.
+    guarda = vivo[vivo.index('_nota_capa = ""') : i]
+    assert "_var_of is not None" in guarda, (
+        "o tooltip deixou de depender da existencia da taxa oficial")
 
 
 def test_a_reconstituida_pondera_pelos_valores_de_ha_um_ano():

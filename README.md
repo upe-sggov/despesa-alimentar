@@ -38,11 +38,11 @@ tema, e o que enquadra os números que os restantes separadores calculam.
 
 Desde 02.09.2026, o seu conteúdo é o do entregável da UPE **«Contexto e perceção
 pública»**, transposto na íntegra: a síntese do varrimento mediático de **38
-casos** entre março de 2023 e agosto de 2026, organizada em **três narrativas**
-— rigor causal, estrutural e confronto político-empresarial —, o que cada um dos
-quatro órgãos mais representados fez com o tema, o alcance nas redes sociais com
-as três publicações de maior interação, e os **quatro sinais de atenção ao
-decisor**. Fecha com as **notas metodológicas** do entregável companheiro, num
+casos** entre março de 2023 e agosto de 2026, organizada em **três abordagens**
+— afirmações não fundamentadas, padronização de notícias e dualidade de posições
+—, a interação nas redes sociais com as três publicações de maior interação, e os
+**três alertas ao decisor**. A secção com os quatro órgãos mais
+representados saiu a 03.09.2026, por decisão da Inês. Fecha com as **notas metodológicas** do entregável companheiro, num
 bloco recolhível fechado por omissão.
 
 Abre com uma **nota de perímetro**, antes do conteúdo e não num expansor no fim.
@@ -118,20 +118,20 @@ Comparação UE-27, mas escolhidas por um cartão próprio com destaque visual e
 botões (`st.pills`), e não pelos pontos de rádio discretos que a UE-27 usa: o
 seletor original passava despercebido entre o número de capa e os cartões de
 produto (relatado pela Inês, 03.09.2026). As três vistas são *Preços dos
-alimentos* (onde está concentrada a variação, como se reparte o cabaz pelas
-nove classes COICOP, cada grupo em detalhe), *Peso da alimentação* (referência
+alimentos* (cada grupo em detalhe, e como se reparte o cabaz pelas nove classes
+COICOP), *Peso da alimentação* (referência
 nacional, indicadores do agregado selecionado, esforço face a três referências
-de rendimento, **cabaz por quintil de rendimento** e **custo de compensar o
-agravamento** por quintil) e *Acessibilidade alimentar* (os **três limiares**
+de rendimento e **cabaz por quintil de rendimento**) e *Acessibilidade alimentar* (os **três limiares**
 de acessibilidade, que não dependem da base ou da composição escolhidas). O
-indicador de capa abre a página, antes dos parâmetros de análise que o
-determinam; os parâmetros e o indicador ficam fora das três vistas, por lhes
-serem comuns.
+indicador de capa vem logo a seguir aos parâmetros de análise que o determinam,
+e não antes deles, para se ler como resultado da escolha e não como um dado
+fixo. Os parâmetros e o indicador ficam fora das três vistas, por lhes serem
+comuns.
 
 **5 · Histórico.** Série mensal do índice de preços alimentares e da variação
-homóloga, o **índice de difusão** por grupo, e a medição do **viés de
-substituição** — cabaz de composição fixa contra
-índice de Törnqvist.
+homóloga, a composição da variação entre **produtos não transformados e
+transformados**, e a medição do **viés de substituição** — cabaz de composição
+fixa contra índice de Törnqvist.
 
 **6 · Da produção ao consumo.** Preços do mesmo produto nas duas pontas da
 cadeia, a partir do Observatório de Preços Agroalimentar do GPP. Responde a
@@ -140,7 +140,11 @@ cadeia, a partir do Observatório de Preços Agroalimentar do GPP. Responde a
 **7 · Simulador de IVA.** Permite definir uma taxa por classe e, sobretudo,
 regular a **repercussão** — a fração da alteração de imposto que chega ao preço
 final. Mostra quanto poupa o consumidor, quanto fica na margem do operador e
-qual a variação de receita.
+qual a variação de receita. O cursor da repercussão fecha o separador, com a
+sua calibração: o valor é lido do estado da sessão no topo, onde toda a
+simulação dele depende, e escrito no fim, onde o leitor o encontra depois de
+ver o resultado. Desde 3 de setembro de 2026 o separador não extrapola o
+cenário ao país nem apresenta a redução da inflação por quintil.
 
 **8 · Comparação UE-27.** Inflação alimentar harmonizada de Portugal face à
 UE-27 e aos países selecionados, com ordenação do último mês disponível.
@@ -601,16 +605,21 @@ O Törnqvist aqui construído fica a 0,12 pontos do IHPC oficial, que é calcula
 é o melhor indício disponível de que a aproximação de ponderadores (declarada na interface) se
 comporta.
 
-### Índice de difusão: o que a variação homóloga esconde
+### Índice de difusão: calculado, não apresentado
 
 A aplicação apresenta a **variação homóloga**, que é o sinal mais lento que
 existe: cada leitura carrega onze meses de história, e por isso identifica uma
-inflexão com cinco a seis meses de atraso. O separador **Histórico** traz o
-**índice de difusão**, que a antecipa sem exigir ajustamento de sazonalidade:
-quantas das nove classes têm hoje uma variação homóloga superior à de há três
-meses. Cada classe é comparada **consigo própria**, em base homóloga nos dois
-momentos, pelo que a sazonalidade se cancela. Distingue pressão generalizada de
-choque concentrado, distinção que a aplicação afirmava em texto e não media.
+inflexão com cinco a seis meses de atraso. O **índice de difusão** antecipa-a
+sem exigir ajustamento de sazonalidade: quantas das nove classes têm hoje uma
+variação homóloga superior à de há três meses. Cada classe é comparada
+**consigo própria**, em base homóloga nos dois momentos, pelo que a
+sazonalidade se cancela. Distingue pressão generalizada de choque concentrado.
+
+A secção que o apresentava, «Quantos grupos estão a acelerar», saiu do
+separador **Histórico** a 3 de setembro de 2026, por decisão editorial de
+densidade da página. O cálculo continua em `src/calculos.py`
+(`difusao_por_classe`) e continua coberto por testes: o que saiu foi a decisão
+de o mostrar, não o método.
 
 **Porque não há uma taxa em cadeia anualizada.** Seria o indicador clássico de
 momentum e exigiria uma série corrigida de sazonalidade. O Eurostat difunde o
@@ -862,8 +871,12 @@ tributável maior (ver auditoria, ponto 2).
 
 ## Indicadores de esforço
 
-A aplicação apresenta **dois** indicadores de esforço alimentar. Ambos são percentagens sobre
-alimentação, mas têm denominadores diferentes e não se substituem.
+A aplicação apresenta **dois** indicadores de peso da alimentação. Ambos são percentagens sobre
+alimentação, mas têm denominadores diferentes e não se substituem, e só um deles é um indicador
+de **esforço**: o coeficiente de Engel tem despesa no denominador, não rendimento, pelo que
+desde 3 de setembro de 2026 a interface deixou de lhe chamar esforço alimentar e passou a
+chamar-lhe peso da alimentação no consumo. «Esforço alimentar» fica reservado ao rácio que tem
+o rendimento por denominador.
 
 ### Coeficiente de Engel — despesa sobre despesa
 
