@@ -527,9 +527,14 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
    Fica **por baixo** do número de capa desde 01.09.2026, e a margem inverteu-se
    com ele: por cima empurrava o número da página para a segunda linha. */
 [data-testid="stMarkdownContainer"] p.sg-hero__antes {{
-  font-size: .8125rem; color: var(--sg-texto-3); margin: .3rem 0 0;
+  font-size: .75rem; color: var(--sg-texto-3); margin: .45rem 0 0;
   line-height: 1.4; font-variant-numeric: tabular-nums;
 }}
+/* Filete de acento no topo do cartão de capa, quando ele mostra o **resultado
+   de uma escolha** e não uma medição: no simulador de IVA a cor diz, antes de
+   se ler o número, se o cenário alivia ou agrava a despesa. É acento e não
+   campo cheio, como no resto da aplicação (pedido da Inês, 04.09.2026). */
+.sg-hero--acento {{ border-top-width: 3px; border-top-style: solid; }}
 /* Ancorado no contentor de markdown, em (0,2,1). O Streamlit define o corpo de
    letra no próprio `stMarkdownContainer` (`fontSize: fontSizes.md`) e estilos
    de `p` em (0,1,1); uma declaração de classe simples, em (0,1,0), fica
@@ -1149,6 +1154,33 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
   line-height: 1.45;
 }}
 [data-testid="stMetricLabel"] {{ overflow: visible; }}
+/* Acento nos cartões do resultado do simulador de IVA. A cor diz a natureza do
+   número, e não a sua grandeza: verde o que o agregado poupa, dourado o que
+   fica retido na margem do operador, azul o efeito sobre a receita do Estado.
+   O cartão continua branco (pedido da Inês, 04.09.2026).
+
+   Ancorado nas `key` dos contentores, que saem no HTML como `.st-key-…`: é o
+   mesmo mecanismo de `.st-key-vista-analise` e `.st-key-aviso-deco`, e mantém
+   o efeito confinado a esta fila de quatro. */
+/* O contentor com `key` quebra a cadeia de `height: 100%` que iguala a altura
+   dos cartões de uma fila: a regra geral exige o `stMetric` como filho único
+   do contentor de elemento da coluna, e agora há um bloco pelo meio. Repõe-se
+   aqui para esta fila. */
+/* A própria coluna **não** entra nesta lista: é um item flex e estica por
+   `align-items: stretch` do bloco horizontal. Pôr-lhe `height: 100%` resolve a
+   percentagem contra um pai sem altura definida e anula o esticamento — foi o
+   que aconteceu na primeira tentativa, com os cartões a saírem 120/120/131/120
+   (verificado num Streamlit real, 04.09.2026). */
+[data-testid="stColumn"]:has([class*="st-key-iva-kpi-"]) > div,
+[data-testid="stColumn"]:has([class*="st-key-iva-kpi-"]) [data-testid="stLayoutWrapper"],
+[data-testid="stColumn"]:has([class*="st-key-iva-kpi-"]) [data-testid="stVerticalBlock"],
+[data-testid="stColumn"]:has([class*="st-key-iva-kpi-"]) [data-testid="stElementContainer"] {{
+  height: 100%;
+}}
+.st-key-iva-kpi-poupanca [data-testid="stMetric"] {{ border-top: 3px solid var(--sg-verde); }}
+.st-key-iva-kpi-ano [data-testid="stMetric"] {{ border-top: 3px solid var(--sg-verde); }}
+.st-key-iva-kpi-margem [data-testid="stMetric"] {{ border-top: 3px solid var(--sg-dourado); }}
+.st-key-iva-kpi-receita [data-testid="stMetric"] {{ border-top: 3px solid var(--sg-azul); }}
 [data-testid="stMetricLabel"] p {{
   font-size: .6875rem; font-weight: 600; letter-spacing: .06em;
   text-transform: uppercase; color: var(--sg-texto-3); line-height: 1.45;
@@ -1292,6 +1324,19 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
 /* A regra acima declara `margin` completa em (0,2,1); a variante tem de subir
    ao mesmo nível para lhe alterar o topo. */
 [data-testid="stMarkdownContainer"] p.sg-grupo--primeiro {{ margin-top: 1.15rem; }}
+/* Uma cor por parâmetro, no filete que já separava cada grupo e no rótulo que
+   o encima. Distingue os três controlos de relance sem lhes mexer, e mantém a
+   regra da casa: a cor é acento, nunca campo cheio (pedido da Inês,
+   04.09.2026). O filete sobe de 1 px para 2 px para a cor se ler. */
+[data-testid="stMarkdownContainer"] p.sg-grupo--base {{
+  border-top: 2px solid var(--sg-verde); color: var(--sg-verde);
+}}
+[data-testid="stMarkdownContainer"] p.sg-grupo--comp {{
+  border-top: 2px solid var(--sg-azul); color: var(--sg-azul);
+}}
+[data-testid="stMarkdownContainer"] p.sg-grupo--escala {{
+  border-top: 2px solid var(--sg-dourado); color: var(--sg-dourado);
+}}
 
 /* ---------- rodapé ------------------------------------------------------ */
 .sg-rodape {{ margin-top: 3.25rem; padding: 1.75rem 0 2.5rem;
@@ -1692,7 +1737,8 @@ def componente(titulo: str, descricao: str | None = None) -> None:
 
 def indicador_principal(rotulo: str, valor: str, contexto: str | None = None,
                         sec_valor: str | None = None, sec_rotulo: str | None = None,
-                        sec_cor: str | None = None, partida: str | None = None) -> None:
+                        sec_cor: str | None = None, partida: str | None = None,
+                        acento: str | None = None) -> None:
     """
     O número de capa de uma página, e só um por página.
 
@@ -1714,6 +1760,12 @@ def indicador_principal(rotulo: str, valor: str, contexto: str | None = None,
     para baixo, que é onde se lê como referência e não como resposta (pedido da
     Inês, 01.09.2026).
     """
+    # `acento` pinta o filete do topo do cartão. Só o simulador de IVA o usa,
+    # porque só ali o número de capa é o **resultado de uma escolha** e a cor
+    # pode antecipar-lhe o sentido; nos outros dois é uma medição, e um filete
+    # colorido leria como juízo sobre um facto (pedido da Inês, 04.09.2026).
+    cls = "sg-hero sg-hero--acento" if acento else "sg-hero"
+    est = f' style="border-top-color:{acento}"' if acento else ""
     part = f'<p class="sg-hero__antes">{partida}</p>' if partida else ""
     ctx = f'<p class="sg-hero__c">{contexto}</p>' if contexto else ""
     lado = ""
@@ -1723,7 +1775,7 @@ def indicador_principal(rotulo: str, valor: str, contexto: str | None = None,
                 f'<p class="sg-hero__sv"{estilo}>{_html(sec_valor)}</p>'
                 f'<p class="sg-hero__sr">{_html(sec_rotulo or "")}</p></div>')
     st.markdown(
-        f'<section class="sg-hero"><div class="sg-hero__topo">'
+        f'<section class="{cls}"{est}><div class="sg-hero__topo">'
         f'<div class="sg-hero__p">'
         f'<p class="sg-hero__r">{_html(rotulo)}</p>'
         f'<p class="sg-hero__v">{_html(valor)}</p>{part}</div>{lado}</div>'
@@ -3269,7 +3321,8 @@ with aba1:
     _c_base, _c_comp, _c_esc = st.columns([1.45, 1.15, 1.9], gap="medium")
 
     with _c_base:
-        st.markdown('<p class="sg-grupo sg-grupo--primeiro">Base de cálculo</p>',
+        st.markdown('<p class="sg-grupo sg-grupo--primeiro sg-grupo--base">'
+                    'Base de cálculo</p>',
                     unsafe_allow_html=True)
         # Lugar reservado para o (i) do grupo, preenchido no fim: o que ele diz
         # depende da base que for escolhida no seletor abaixo, e o Streamlit desenha
@@ -3331,7 +3384,7 @@ with aba1:
 
 
     with _c_comp:
-        st.markdown('<p class="sg-grupo">Composição do agregado</p>',
+        st.markdown('<p class="sg-grupo sg-grupo--comp">Composição do agregado</p>',
                     unsafe_allow_html=True)
         # A instrução vem antes dos contadores e não depois: quem não reconhece
         # os botões como controlos precisa de a ler **antes** de olhar para o
@@ -3371,7 +3424,7 @@ with aba1:
     with _c_esc:
         # A escala tinha ficado dentro do grupo da composição, sem cabeçalho
         # próprio, apesar de ser um terceiro parâmetro independente dos outros dois.
-        st.markdown('<p class="sg-grupo">Escala de equivalência</p>',
+        st.markdown('<p class="sg-grupo sg-grupo--escala">Escala de equivalência</p>',
                     unsafe_allow_html=True)
         _escala_apurada = escala_mais_proxima()
         escala_chave = st.selectbox(
@@ -6014,34 +6067,52 @@ with aba3:
         # distingue um efeito de nenhum efeito.
         _efeito = res["efetivo"]
         indicador_principal(
-            "Nova despesa alimentar mensal",
+            # “mensal” saiu do rótulo: o valor de referência logo abaixo é
+            # mensal e o contexto declara o agregado, pelo que a palavra
+            # repetia-se sem acrescentar (pedido da Inês, 04.09.2026).
+            "Nova despesa alimentar",
             euro(res["novo_valor"], casas=0),
-            partida=(f"Despesa atual <strong>{euro(despesa_mensal, casas=0)}</strong> "
-                     "por mês"),
+            # Sem negrito e com dois pontos. Em negrito, o valor de partida
+            # ficava quase com o peso do número de capa, que é precisamente o
+            # que a hierarquia deste cartão existe para evitar.
+            partida=f"Despesa atual: {euro(despesa_mensal, casas=0)}",
             contexto=(f"Cenário <strong>{CENARIOS[cenario][0]}</strong> · "
                       f"repercussão de <strong>{ao_consumidor}%</strong> · "
                       f"agregado com <strong>{composicao}</strong>"),
             sec_valor=(euro(_efeito) if abs(_efeito) > 0.005 else None),
             sec_rotulo="variação por mês",
             sec_cor=(None if abs(_efeito) <= 0.005
-                     else (VERDE if _efeito < 0 else VERMELHO)))
+                     else (VERDE if _efeito < 0 else VERMELHO)),
+            acento=(None if abs(_efeito) <= 0.005
+                    else (VERDE if _efeito < 0 else VERMELHO)))
 
+        # Cada cartão dentro do seu contentor com `key`: é por essa chave que o
+        # CSS lhe põe o filete de acento no topo, com a cor a dizer a natureza
+        # do número (pedido da Inês, 04.09.2026).
         c = st.columns(4)
-        c[0].metric(_rot_pou, euro(abs(res["poupanca_mes"])),
-                    help=f"Efeito com repercussão integral: "
-                         f"{euro(abs(res['mecanico']))}")
-        c[1].metric(_rot_pou_ano, euro(abs(res["poupanca_ano"])))
-        c[2].metric(_rot_margem, euro(abs(res["margem"])),
-                    f"{(1 - repercussao) * 100:.0f}% do efeito",
-                    delta_color="off", help=_ajuda_margem)
+        with c[0]:
+            with st.container(key="iva-kpi-poupanca"):
+                st.metric(_rot_pou, euro(abs(res["poupanca_mes"])),
+                          help=f"Efeito com repercussão integral: "
+                               f"{euro(abs(res['mecanico']))}")
+        with c[1]:
+            with st.container(key="iva-kpi-ano"):
+                st.metric(_rot_pou_ano, euro(abs(res["poupanca_ano"])))
+        with c[2]:
+            with st.container(key="iva-kpi-margem"):
+                st.metric(_rot_margem, euro(abs(res["margem"])),
+                          f"{(1 - repercussao) * 100:.0f}% do efeito",
+                          delta_color="off", help=_ajuda_margem)
         # O valor e a **variacao** da receita, nao o seu nivel. O rotulo dizia
         # “Receita de IVA por mês” e mostrava −22,24 €, o que sugeria uma receita
         # negativa. O cartão agregado, dois abaixo, já lhe chamava “Variação de
         # receita implícita” (auditoria de 12.08.2026, K9).
-        c[3].metric("Variação da receita de IVA por mês", euro(res["receita_mes"]),
-                    help=(f"Imposto contido na despesa deste agregado: "
-                          f"{euro(res['iva_antes'])} → {euro(res['iva_depois'])}. "
-                          "O valor apresentado é a diferença entre os dois."))
+        with c[3]:
+            with st.container(key="iva-kpi-receita"):
+                st.metric("Variação da receita de IVA por mês", euro(res["receita_mes"]),
+                          help=(f"Imposto contido na despesa deste agregado: "
+                                f"{euro(res['iva_antes'])} → {euro(res['iva_depois'])}. "
+                                "O valor apresentado é a diferença entre os dois."))
 
         # A secção “Como se reparte o benefício”, com as barras empilhadas por
         # grupo, saiu a 03.09.2026 (decisão da Inês). A repartição entre verde e
