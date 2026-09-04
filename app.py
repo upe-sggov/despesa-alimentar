@@ -790,17 +790,6 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
   font-size: .8125rem; line-height: 1.62; color: var(--sg-texto-3);
   max-width: 44rem; margin: .75rem 0 0;
 }}
-[data-testid="stMarkdownContainer"] p.sg-q__f {{
-  font-size: .72rem; color: var(--sg-texto-3); margin: 1.6rem 0 0;
-  line-height: 1.6; max-width: 48rem;
-  padding-top: .95rem; border-top: 1px solid var(--sg-grelha);
-}}
-.sg-q__f b {{ color: var(--sg-texto-2); font-weight: 600; }}
-.sg-q__f span + span::before {{ content: " · "; color: var(--sg-borda-2); }}
-[data-testid="stMarkdownContainer"] p.sg-q__m {{
-  font-size: .72rem; color: var(--sg-texto-3); margin: .5rem 0 0;
-  line-height: 1.6; max-width: 48rem;
-}}
 [data-testid="stMarkdownContainer"] p.sg-q__ex {{
   font-size: .78rem; font-weight: 600; color: var(--sg-verde);
   margin: 1.2rem 0 0; letter-spacing: .01em;
@@ -1915,8 +1904,7 @@ def ev_eixos(itens, complementar=None) -> str:
 
 def pergunta_editorial(numero: str, titulo: str, evidencia: str,
                        conclusao: str, ressalva: str | None = None,
-                       menor: str | None = None, fonte=None,
-                       metodo: str | None = None, explorar_em: str | None = None,
+                       menor: str | None = None, explorar_em: str | None = None,
                        primeira: bool = False) -> None:
     """
     Uma pergunta da Síntese, composta de uma só vez.
@@ -1930,6 +1918,12 @@ def pergunta_editorial(numero: str, titulo: str, evidencia: str,
     `ressalva` é a salvaguarda metodológica, e sai **abaixo e menor** do que a
     conclusão: a primeira frase diz o que os dados mostram, a segunda o que não
     se pode inferir deles, e apresentá-las com o mesmo peso confundia as duas.
+
+    Os parâmetros `fonte` (Período/Fonte/Unidade) e `metodo` (a descrição do
+    cálculo) saíram a 04.09.2026, a pedido da Inês: a Síntese é a página
+    editorial, e essa informação técnica já está declarada no separador
+    Metodologia e no que `explorar_em` aponta. As conclusões, ressalvas e o
+    ponteiro mantêm-se.
 
     `explorar_em` é um **ponteiro e não uma hiperligação**. O nome tem de
     coincidir com o rótulo da aba, e sai sem seta.
@@ -1954,12 +1948,6 @@ def pergunta_editorial(numero: str, titulo: str, evidencia: str,
     """
     res = f'<p class="sg-q__ress">{ressalva}</p>' if ressalva else ""
     men = f'<p class="sg-q__menor">{menor}</p>' if menor else ""
-    fon = ""
-    if fonte:
-        partes = "".join(f"<span><b>{_html(r)}:</b> {_html(v)}</span>"
-                         for r, v in fonte if v)
-        fon = f'<p class="sg-q__f">{partes}</p>'
-    met = f'<p class="sg-q__m">{metodo}</p>' if metodo else ""
     exp = ""
     if explorar_em:
         exp = ('<p class="sg-q__ex">Explorar em '
@@ -1970,7 +1958,7 @@ def pergunta_editorial(numero: str, titulo: str, evidencia: str,
         f'<div class="sg-q__raia"><p class="sg-q__n">{_html(numero)}</p>'
         f'<h3 class="sg-q__t">{_html(titulo)}</h3></div>'
         f'<div class="sg-q__c">{evidencia}'
-        f'<p class="sg-q__conc">{conclusao}</p>{res}{men}{fon}{met}{exp}</div>'
+        f'<p class="sg-q__conc">{conclusao}</p>{res}{men}{exp}</div>'
         "</section>",
         unsafe_allow_html=True)
 
@@ -9336,7 +9324,6 @@ with _slot_sintese:
         # ritmo recente e variação acumulada, e resolve-se por hierarquia
         # tipográfica: são a mesma grandeza medida em janelas diferentes.
         _var_of = dados.get("variacao_oficial")
-        _mes_of = dados.get("mes_variacao_oficial")
         if _var_of is not None:
             _subida_sint = _da_sessao("_subida_fixo")
             _ctx_precos = None
@@ -9369,14 +9356,6 @@ with _slot_sintese:
                        f"{percentagem(float(_subida_sint), sinal=False)} desde dezembro de "
                        f"{ANO_BASE_VIES}."
                        if _subida_sint is not None else "")),
-                fonte=[("Período", mes_extenso(_mes_of) if _mes_of else None),
-                       ("Fonte", "Eurostat, IHPC, agregado alimentar CP011"),
-                       ("Unidade", "%")],
-                metodo=("A taxa homóloga mede a variação face ao mesmo mês do ano "
-                        "anterior; a variação acumulada mostra a alteração do nível "
-                        "de preços desde uma data de referência. A variação acumulada "
-                        "é calculada por esta aplicação, com ponderadores fixos no "
-                        "ano-base, a partir do índice oficial por classe."),
                 explorar_em="Histórico", primeira=True)
 
         # ---- 02 · famílias ---------------------------------------------
@@ -9409,12 +9388,6 @@ with _slot_sintese:
                         else "<strong>Peso da alimentação no orçamento.</strong>")),
                 conclusao=("A alimentação representa uma maior parcela do "
                            "orçamento dos agregados de menor rendimento."),
-                fonte=[("Período", "IDF 2022/2023"),
-                       ("Fonte", "INE, Inquérito às Despesas das Famílias"),
-                       ("Unidade", "% do orçamento")],
-                metodo=("Os pesos de despesa utilizados são de 2022/2023, enquanto a "
-                        "evolução dos preços corresponde ao período mais recente "
-                        "disponível."),
                 explorar_em="Despesa e composição")
 
         # ---- 03 · dieta saudável ---------------------------------------
@@ -9513,11 +9486,6 @@ with _slot_sintese:
                        "um indicador de acessibilidade: o primeiro mede quanto "
                        "custa, o segundo mede quem o consegue pagar."
                        if _confronto_dieta else None),
-                fonte=[("Período", str(_ano_sofi_sint) if _ano_sofi_sint else None),
-                       ("Fonte", f"FAO, SOFI {SOFI_EDICAO}"),
-                       ("Unidade", "% da população; PPP$ por pessoa e por dia")],
-                metodo=("Os valores do SOFI são publicados em PDF e inscritos "
-                        "manualmente nesta aplicação."),
                 explorar_em="Despesa e composição, bloco da acessibilidade alimentar")
 
         # ---- 04 · cadeia -----------------------------------------------
@@ -9540,7 +9508,6 @@ with _slot_sintese:
                 _transm = int((_var_obs["padrao"] ==
                                "Choque na origem, transmitido").sum())
                 _com_duas = int(_var_obs["tem_producao"].sum())
-                _seguidos = int(_var_obs["produto"].nunique())
                 _janela = (f"{mes_extenso(_dv['inicio'].strftime('%Y-%m'))} a "
                            f"{mes_extenso(_dv['fim'].strftime('%Y-%m'))}")
                 pergunta_editorial(
@@ -9574,14 +9541,6 @@ with _slot_sintese:
                            "preço nas duas fases, e a comparação produto a "
                            "produto, estão no separador Da produção ao consumo."
                            if _com_duas > 1 else None),
-                    fonte=[("Período", _janela),
-                           ("Fonte", "GPP, Observatório de Preços Agroalimentar"),
-                           ("Unidade", "variação acumulada, %")],
-                    metodo=(f"Apenas {numero(_com_duas)} dos {numero(_seguidos)} "
-                            "produtos seguidos têm as duas fases, e a janela medida "
-                            "não é a mesma para todos, pelo que as variações não são "
-                            "comparáveis entre produtos. São variações acumuladas, e "
-                            "não homólogas."),
                     explorar_em="Da produção ao consumo")
 
         # ---- 05 · Europa -----------------------------------------------
@@ -9594,8 +9553,6 @@ with _slot_sintese:
         if _pt_e and _ue_e:
             _q_pt, _q_ue = float(_pt_e["quota"]), float(_ue_e["quota"])
             _maior_e = max(_q_pt, _q_ue) or 1.0
-            _anos_e = sorted({int(d["ano"]) for d in _engel_sint.values()
-                              if d.get("ano")})
 
             # O nível de preços vai na legenda do confronto, como contexto
             # declarado, e não como terceiro número da mesma fila.
@@ -9619,26 +9576,6 @@ with _slot_sintese:
                                f"<strong>{numero(float(_pt_pli_s.iloc[0]), 1)}</strong>"
                                f", com a média da UE-27 fixada em 100 ({_ano_pli_s}).")
 
-            _pos_txt = None
-            _linhas_e = [(g, d) for g, d in _engel_sint.items()
-                         if g in PAISES and g != "EU27_2020"]
-            if _linhas_e:
-                _postos = [g for g, _ in sorted(_linhas_e,
-                                                key=lambda x: float(x[1]["quota"]))]
-                if "PT" in _postos:
-                    # A ordenação é **crescente**, pelo que o 1.º lugar é o país
-                    # onde a alimentação pesa menos. Dito só como “3.º de 8”, o
-                    # leitor faz a leitura inversa, e faz--a numa página cuja
-                    # conclusão é que Portugal tem peso superior à UE-27
-                    # (corrigido a 03.09.2026, com a Inês).
-                    _pos_txt = (f"{numero(_postos.index('PT') + 1)}.º de "
-                                f"{numero(len(_postos))} países comparados, "
-                                "do menor para o maior peso da alimentação")
-            # Os anos vão em `str()` e não em `numero()`: o formatador põe
-            # separador de milhares, e a linha dizia “2 024”.
-            _periodo_e = (f"{min(_anos_e)}" if len(_anos_e) == 1 else
-                          f"{min(_anos_e)}, com países cuja informação mais "
-                          f"recente é de {max(_anos_e)}")
             pergunta_editorial(
                 "05", "Como se posiciona Portugal face à UE-27?",
                 ev_confronto(
@@ -9658,13 +9595,14 @@ with _slot_sintese:
                     if _tem_pli_sint else
                     "Em Portugal a alimentação pesa mais no consumo das famílias do "
                     "que na média da UE-27."),
-                fonte=[("Período", _periodo_e),
-                       ("Fonte", "Eurostat, Contas Nacionais; Eurostat-OCDE, PPP"),
-                       ("Posição", _pos_txt)],
-                metodo=("O indicador de peso da alimentação é despesa sobre consumo, "
-                        "e não despesa sobre rendimento. A posição refere-se apenas "
-                        "aos países comparados nesta aplicação, e não aos 27 "
-                        "Estados-Membros."),
+                # Salvaguarda, não descrição de método: sem ela, o leitor
+                # confunde este indicador (Engel, despesa sobre consumo) com o
+                # esforço sobre rendimento medido noutro sítio da aplicação,
+                # que é precisamente a confusão que a auditoria de 27.07.2026
+                # assinalou como grave (regra do briefing, ver
+                # test_a_sintese_respeita_as_regras_estatisticas_do_briefing).
+                ressalva=("O indicador de peso da alimentação é despesa sobre "
+                          "consumo, e não despesa sobre rendimento."),
                 explorar_em="Comparação UE-27")
 
         # ---- 06 · o que se consegue medir ------------------------------
