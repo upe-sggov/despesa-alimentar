@@ -4829,7 +4829,7 @@ with aba1:
               Medem exigências muito diferentes.
               <ul>
                 <li><strong>Privação severa ({_texto_sev})</strong>, limiar <strong>muito
-                    baixo</strong>: mede uma situação próxima da carência alimentar e regista o
+                    baixo</strong>: mede uma situação próxima da carência alimentar e regista
                     a última observação da série.</li>
                 <li><strong>Dieta saudável inacessível
                     ({('%.1f' % _sofi_pt).replace('.', ',')}%)</strong>, o nível intermédio e o mais
@@ -9154,7 +9154,7 @@ uma insígnia concreta: não há aqui o preço de nenhum supermercado em particu
        medida idêntica, no mesmo país.
        Mesmo calibrado, é o número que mais move o resultado: qualquer valor do simulador é
        condicional a ele e deve ser apresentado como intervalo. E a estimativa vem de uma medida
-       **temporária e mediática**, avaliada ao longo de quatro meses, uma alteração permanente
+       **temporária e mediática**, avaliada ao longo de quatro meses. Uma alteração permanente
        e discreta pode repercutir-se menos.
     8. **A extrapolação agregada é ilustrativa.** Não é uma estimativa de custo orçamental.
             """
