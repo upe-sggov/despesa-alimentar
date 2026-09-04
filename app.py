@@ -7213,7 +7213,7 @@ with abaM:
             'De um lado, a acusação de lucros excessivos na distribuição '
             'alimentar, sustentada por setores da sociedade civil, partidos '
             'políticos e sindicatos. Manifesta-se em ações políticas junto de '
-            'sedes empresariais. E na associação recorrente dos resultados '
+            'sedes empresariais e na associação recorrente dos resultados '
             'semestrais das empresas à subida do custo de vida. Do outro, a '
             'resposta das próprias empresas, que contestam relatórios oficiais '
             'sobre margens, rejeitam taxas sobre "lucros excedentários" e '
@@ -7245,9 +7245,9 @@ with abaM:
         # publicações únicas. Sem ela, o leitor vê os mesmos nomes com números
         # diferentes a quatro linhas de distância e conclui que há erro.
         st.markdown(
-            'O tema tem vida própria nas redes sociais, para lá dos órgãos de '
-            'comunicação social. A publicação com mais interações da janela '
-            'medida, **quase 18 mil no TikTok**, não veio de nenhum órgão de '
+            'O tema circula de forma autónoma nas redes sociais, para lá dos '
+            'órgãos de comunicação social. A publicação com mais interações da '
+            'janela medida, **quase 18 mil no TikTok**, não veio de nenhum órgão de '
             'comunicação social, mas de uma figura política, Inês Sousa Real, do '
             'PAN. Destaca-se ainda o tema "IVA zero no cabaz", que mobilizou '
             'lados opostos do espetro político: **José Luís Carneiro**, do '
