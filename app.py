@@ -5085,12 +5085,13 @@ with aba2:
                         "Não há observações destes agregados no intervalo escolhido."
                     )
 
-            so_alim = st.toggle(
-                "Mostrar também os agregados de enquadramento", value=False,
-                help=("Inflação geral e subjacente. Não são alimentação, servem para situar "
-                      "a subida alimentar no conjunto dos preços."))
-            visiveis = [a for a in AGREGADOS
-                        if so_alim or a["grupo"] == "alimentacao"]
+            # O alternador "Mostrar também os agregados de enquadramento"
+            # (inflação geral e subjacente, fora da alimentação) saiu a
+            # 04.09.2026, a pedido da Inês: não é relevante para esta secção,
+            # que é sobre a composição da variação alimentar, e sem
+            # justificação clara para estar aqui. O gráfico mostra sempre só
+            # os agregados de alimentação.
+            visiveis = [a for a in AGREGADOS if a["grupo"] == "alimentacao"]
 
             if visiveis and meses_esp:
                 figA = go.Figure()
@@ -5102,8 +5103,7 @@ with aba2:
                         x=[mes_pt(m) for m in meses_esp],
                         y=[sub.get(m) for m in meses_esp],
                         name=a["nome"],
-                        line=dict(color=a["cor"], width=a["larg"],
-                                  dash="dot" if a["grupo"] == "enquadramento" else "solid"),
+                        line=dict(color=a["cor"], width=a["larg"]),
                         hovertemplate="%{x}<br>%{y:.1f}%<extra>" + a["nome"] + "</extra>"))
                 figA.update_layout(height=460, margin=dict(t=22, b=42, l=10, r=10),
                                    yaxis_title="Variação homóloga (%)",
@@ -5111,8 +5111,6 @@ with aba2:
                                    hovermode="x unified")
                 figA.update_xaxes(showgrid=False)
                 grafico(figA)
-                if so_alim:
-                    st.caption("A tracejado, os agregados de enquadramento, não são alimentação.")
                 # A incoerência entre o total e as duas parcelas é declarada
                 # aqui, e não escondida: quem some as duas linhas não chega ao
                 # total, e tem de poder saber porquê sem sair do gráfico.
@@ -9757,7 +9755,8 @@ with _slot_sintese:
              "fixar no inquérito mais recente.", False),
             ("Melhores fontes",
              "Substituir valores publicados apenas em documento por séries acessíveis "
-             "de forma automatizada e verificável.", False),
+             "e verificáveis, e alargar a frequência e a cobertura do Observatório de "
+             "Preços Agroalimentar, hoje limitado a 39 produtos.", False),
             ("Novas dimensões",
              "Incorporar o consumo em quantidades e a alimentação fora de casa, hoje "
              "fora do âmbito das fontes utilizadas.", False),
