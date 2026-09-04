@@ -9556,12 +9556,19 @@ with _slot_sintese:
                 # comparação com o conjunto dos preços, que é a pergunta que o
                 # debate público faz. Não é: aqui só entra o agregado alimentar
                 # (pedido da Inês, 04.09.2026).
-                ressalva=("Esta conclusão diz apenas em que sentido se movem os "
-                          "preços dos alimentos. Não os compara com a inflação "
-                          "geral: saber se a alimentação sobe acima ou abaixo do "
-                          "conjunto dos preços é outra pergunta, e exige o "
-                          "agregado de todos os produtos, que esta página não "
-                          "apresenta."),
+                # “Esta conclusão” lia-se como a conclusão do trabalho, e não
+                # como o campo do componente: passa a “O indicador” (revisão do
+                # Gabinete, 04.09.2026).
+                #
+                # A segunda frase saiu. Dizia que o agregado de todos os produtos
+                # não está “nesta página”, o que sugeria que estaria noutra — e
+                # deixou de estar em lado nenhum quando os agregados de
+                # enquadramento saíram do Histórico, nesse mesmo dia. A frase
+                # envelheceu sem se dar por isso, e o que restava dela já estava
+                # dito na primeira.
+                ressalva=("O indicador diz apenas em que sentido se movem os "
+                          "preços dos alimentos, e não os compara com a inflação "
+                          "geral."),
                 explorar_em="Histórico", primeira=True)
 
         # ---- 02 · famílias ---------------------------------------------
@@ -9577,10 +9584,14 @@ with _slot_sintese:
             if (_sq1.agravamento_orcamento is not None
                     and _sq5.agravamento_orcamento is not None):
                 _meio_q = (pontos(_p1 - _p5, casas=1), "de diferença")
+            # Duas linhas em vez de um parágrafo, e cada indicador com o seu
+            # nome (revisão do Gabinete, 04.09.2026). O rótulo nomeia **as
+            # barras**, que medem o peso; a frase a seguir dá o agravamento, que
+            # é outra grandeza. Com o rótulo a servir de cabeçalho às duas, o
+            # leitor tomava uma pela outra.
             _def_quintil = (
-                "<strong>As famílias portuguesas estão ordenadas por rendimento e "
-                "divididas em cinco grupos do mesmo tamanho: o 1.º quintil é o "
-                "quinto com menos rendimento, o 5.º o quinto com mais.</strong><br>")
+                "Cinco grupos de igual tamanho, ordenados por rendimento, do "
+                "1.º quintil (menor) ao 5.º (maior).<br>")
             pergunta_editorial(
                 "02", "O aumento dos preços afeta todas as famílias da mesma forma?",
                 ev_confronto(
@@ -9594,14 +9605,16 @@ with _slot_sintese:
                         # do ramo, desaparecia nas sessões sem agravamento
                         # (pedido da Inês, 04.09.2026).
                         _def_quintil
-                        + ("<strong>Peso da alimentação no orçamento.</strong> Nos "
-                           "últimos 12 meses, o agravamento representou "
+                        + ("<strong>As barras mostram o peso da alimentação no "
+                           "orçamento.</strong> Nos últimos 12 meses, o agravamento "
+                           "dos preços consumiu "
                            f"<strong>{numero(_sq1.agravamento_orcamento, 2)}%</strong> "
                            "do orçamento do 1.º quintil e "
                            f"<strong>{numero(_sq5.agravamento_orcamento, 2)}%</strong> "
                            "do 5.º."
                            if _sq1.agravamento_orcamento is not None
-                           else "<strong>Peso da alimentação no orçamento.</strong>"))),
+                           else "<strong>As barras mostram o peso da alimentação "
+                                "no orçamento.</strong>"))),
                 conclusao=("A alimentação representa uma maior parcela do "
                            "orçamento dos agregados de menor rendimento."),
                 explorar_em="Despesa e composição")
@@ -9638,15 +9651,31 @@ with _slot_sintese:
             _confronto_dieta = _sofi_es_sint is not None
             _maior_sofi = max(_sofi_sint, _sofi_es_sint or 0) or 1.0
 
-            _leg_dieta = ("<strong>População que não consegue suportar o custo "
-                          "de uma dieta saudável.</strong>")
+            # A legenda abria pela negativa, que é o rótulo do indicador, e o
+            # custo vinha depois. Passa a abrir pelo custo — que é a condição
+            # que torna o par legível, custos iguais e resultados diferentes — e
+            # a etiqueta das barras vai para o fim, explícita (revisão do
+            # Gabinete, 04.09.2026). A negativa muda de sítio e não desaparece:
+            # é a definição do indicador do SOFI, e invertê-la no complemento
+            # (85,6% contra 90,7%) apagaria o contraste que a pergunta mostra.
+            #
+            # `ev_confronto` desenha a legenda **depois** dos dois valores, o que
+            # licencia o “acima”.
+            _rotulo_barras = ("As barras acima mostram a proporção da população "
+                              "que não consegue suportá-lo.")
             if _custo_pt_sint and _custo_es_sint:
-                _leg_dieta += (
-                    " O custo dessa dieta é praticamente o mesmo nos dois "
-                    "países: em dólares em paridade de poder de compra (PPP$), "
-                    f"<strong>{numero(_custo_pt_sint, 2)} PPP$</strong> por pessoa "
-                    "e por dia em Portugal contra "
-                    f"<strong>{numero(_custo_es_sint, 2)}</strong> em Espanha.")
+                _leg_dieta = (
+                    "<strong>O custo de uma dieta saudável é praticamente o mesmo "
+                    "nos dois países:</strong> em dólares em paridade de poder de "
+                    f"compra (PPP$), <strong>{numero(_custo_pt_sint, 2)} PPP$</strong> "
+                    "por pessoa e por dia em Portugal, contra "
+                    f"<strong>{numero(_custo_es_sint, 2)}</strong> em Espanha. "
+                    + _rotulo_barras)
+            else:
+                # Sem o valor espanhol não há par, e a legenda volta a ser só a
+                # etiqueta do indicador.
+                _leg_dieta = ("<strong>População que não consegue suportar o custo "
+                              "de uma dieta saudável.</strong>")
 
             _ctx_dieta = None
             if _custo_pt_sint:
@@ -9751,15 +9780,31 @@ with _slot_sintese:
                         "consumidor",
                         _transm / _com_duas if _com_duas else 0),
                     conclusao=("A evolução dos preços não é uniforme ao longo da cadeia de produção e consumo."),
+                    # “Custos de” explícito, e o IVA arrumado à parte: não é
+                    # um custo da cadeia, é um imposto, e a enumeração corrida
+                    # dizia-o como se fosse (revisão do Gabinete, 04.09.2026).
+                    #
+                    # Mantém-se “margens” e não “margens de lucro”: a margem
+                    # comercial é bruta e cobre os custos que a frase a seguir
+                    # enumera. O separador “Da produção ao consumo” tem uma nota
+                    # de alerta a dizer que a diferença **não deve ser lida como
+                    # lucro**, e a Síntese não pode contradizê-la.
+                    #
+                    # Mantém-se também “formas diferentes do mesmo produto”, que
+                    # é a ressalva concreta (peixe inteiro contra posta, animal
+                    # vivo contra peça desmanchada), e “produto a produto”, que
+                    # diz que a comparação é dentro de cada produto: comparar a
+                    # diferença **entre** produtos é o que a mesma nota proíbe.
                     ressalva=("Estas diferenças não permitem, por si só, inferir "
                               "margens ou responsabilidades. A diferença entre as duas "
-                              "fases incorpora transporte, transformação, embalagem, "
-                              "distribuição e IVA, e as duas fases podem referir-se a "
-                              "formas diferentes do mesmo produto."),
-                    menor=(f"Os restantes {numero(_com_duas - 1)} produtos com "
-                           "preço nas duas fases, e a comparação produto a "
-                           "produto, estão no separador Da produção ao consumo."
-                           if _com_duas > 1 else None),
+                              "fases incorpora custos de transporte, transformação, "
+                              "embalagem e distribuição, além do IVA, e as duas fases "
+                              "podem referir-se a formas diferentes do mesmo produto."),
+                    # A linha secundária, que remetia os restantes produtos e a
+                    # comparação produto a produto para “Da produção ao consumo”,
+                    # saiu a 04.09.2026 (decisão da Inês): o `explorar_em`, logo
+                    # abaixo, já aponta esse separador, e a contagem dos produtos
+                    # com as duas fases está na evidência desta mesma pergunta.
                     explorar_em="Da produção ao consumo")
 
         # ---- 05 · Europa -----------------------------------------------
