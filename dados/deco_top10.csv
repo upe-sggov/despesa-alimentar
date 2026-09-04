@@ -1,31 +1,31 @@
 tabela,produto,preco_atual,unidade_preco,aumento_valor,aumento_pct
-semanal,Atum posta em óleo vegetal,1.59,€,0.22,16.0
-semanal,Farinha para bolos,1.83,€,0.17,10.0
-semanal,Feijão-manteiga,1.5,€,0.13,10.0
-semanal,Café torrado moído,4.83,€,0.41,9.0
-semanal,Cereais integrais,4.4,€,0.32,8.0
-semanal,Queijo flamengo fatiado,2.7,€,0.19,8.0
-semanal,Dourada,9.98,€/kg,0.66,7.0
-semanal,Pescada fresca,11.09,€/kg,0.54,5.0
-semanal,Fiambre da perna extra,2.44,€,0.12,5.0
-semanal,Salsichas frankfurt,1.7,€,0.08,5.0
-desde_janeiro,Couve-coração,1.94,€/kg,0.47,32.0
-desde_janeiro,Arroz carolino,1.79,€,0.41,30.0
-desde_janeiro,Dourada,9.98,€/kg,2.28,30.0
-desde_janeiro,Peixe-espada-preto,11.43,€/kg,2.26,25.0
-desde_janeiro,Farinha para bolos,1.83,€,0.28,18.0
-desde_janeiro,Robalo,10.06,€/kg,1.4,16.0
-desde_janeiro,Perca,12.08,€/kg,1.67,16.0
-desde_janeiro,Maçã Gala,2.4,€/kg,0.31,15.0
-desde_janeiro,Bacalhau graúdo,19.56,€/kg,2.48,14.0
-desde_janeiro,Cebola,1.57,€/kg,0.18,13.0
-desde_2022,Carne de novilho para cozer,12.76,€/kg,6.94,119.0
-desde_2022,Couve-coração,1.94,€/kg,0.94,95.0
-desde_2022,Bacalhau graúdo,19.56,€/kg,8.96,85.0
-desde_2022,Ovos,2.06,€,0.91,80.0
-desde_2022,Bife de peru,9.76,€/kg,4.0,69.0
-desde_2022,Cereais integrais,4.4,€,1.8,69.0
-desde_2022,Peixe-espada-preto,11.43,€/kg,4.61,68.0
-desde_2022,Café torrado moído,4.83,€,1.84,61.0
-desde_2022,Dourada,9.98,€/kg,3.73,60.0
-desde_2022,Cebola,1.57,€/kg,0.58,59.0
+semanal,Massa em espirais,1.35,€,,22.0
+semanal,Esparguete,1.18,€,,21.0
+semanal,Pão de forma sem côdea,2.5,€,,14.0
+semanal,Iogurte líquido,2.16,€,,9.0
+semanal,Cereais de fibra,4.76,€,,9.0
+semanal,Batata-vermelha,,,,9.0
+semanal,Cenoura,,,,7.0
+semanal,Alface frisada,,,,7.0
+semanal,Salmão,,,,6.0
+semanal,Couve-flor,,,,6.0
+desde_janeiro,Arroz carolino,1.79,€,,30.0
+desde_janeiro,Couve-coração,,,,27.0
+desde_janeiro,Dourada,,,,27.0
+desde_janeiro,Esparguete,1.18,€,,25.0
+desde_janeiro,Peixe-espada-preto,,,,24.0
+desde_janeiro,Robalo,,,,18.0
+desde_janeiro,Bacalhau graúdo,,,,17.0
+desde_janeiro,Massa em espirais,1.35,€,,14.0
+desde_janeiro,Cebola,,,,13.0
+desde_janeiro,Carne de novilho para cozer,,,,11.0
+desde_2022,Carne de novilho para cozer,,,,120.0
+desde_2022,Bacalhau graúdo,,,,89.0
+desde_2022,Couve-coração,,,,88.0
+desde_2022,Ovos,2.07,€,,82.0
+desde_2022,Bife de peru,,,,71.0
+desde_2022,Peixe-espada-preto,,,,67.0
+desde_2022,Café torrado moído,4.8,€,,60.0
+desde_2022,Cebola,,,,59.0
+desde_2022,Laranja,,,,59.0
+desde_2022,Arroz carolino,1.79,€,,57.0

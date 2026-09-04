@@ -527,8 +527,8 @@ do resultado é o ciclo de atualização destas duas fontes.
 > aplicação anula-o com `!dados/`. Confirme com
 > `git add -n -- dados`, que deve listar os cinco ficheiros.
 
-Recolha de 20.08.2026: **3 125 observações, 39 produtos, 20 setores**, de
-03.01.2022 a 15.06.2026. Só **17 dos 39** têm série de produção; para os restantes
+Recolha de 04.09.2026: **3 190 observações, 39 produtos, 20 setores**, de
+03.01.2022 a 13.07.2026. Só **17 dos 39** têm série de produção; para os restantes
 o Observatório publica apenas preço ao consumidor, e a aplicação distingue-os em
 vez de os omitir.
 
