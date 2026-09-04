@@ -61,7 +61,8 @@ from src.config import (AGREGADOS, AGREGADOS_ANO, AGREGADOS_CENSOS, AGREGADOS_FO
                         COICOP_ALIMENTAR, DOURADO, ORGANISMO,
                         ICONES_CLASSE, SETORES_OBSERVATORIO,
                         PAISES, PAISES_POR_DEFEITO, POR_CODIGO, RODAPE,
-                        UNIDADE, VERDE, VERMELHO,
+                        UNIDADE, VERDE, VERMELHO, DESTINATARIO,
+                        DATA_PEDIDO, FONTES_BASE,
                         cardinal, euro, mes_extenso, mes_homologo, mes_pt,
                         milhoes, numero, percentagem, pontos)
 
@@ -379,6 +380,25 @@ hr {{ border: 0; border-top: 1px solid var(--sg-borda); margin: 2.75rem 0 2.25re
 .sg-estado__v {{
   font-size: .8125rem; font-weight: 600; color: var(--sg-texto);
   line-height: 1.35; font-variant-numeric: tabular-nums;
+}}
+/* Variante em cartão, para a faixa de identificação que abre a página. Quatro
+   campos de larguras muito diferentes: com as colunas dimensionadas pelo
+   conteúdo, o mais comprido empurrava o último para uma segunda linha, sozinho.
+   Em grelha de quatro colunas iguais, cada valor quebra dentro da sua coluna
+   (pedido da Inês, 04.09.2026). */
+.sg-estado--ident {{
+  background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
+  border-radius: var(--sg-raio); padding: 1.05rem 1.4rem 1.1rem;
+}}
+.sg-estado--ident .sg-estado__l {{
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+}}
+.sg-estado--ident .sg-estado__i {{ padding: 0 1.4rem; }}
+@media (max-width: 900px) {{
+  .sg-estado--ident .sg-estado__l {{
+    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem 0;
+  }}
+  .sg-estado--ident .sg-estado__i:nth-child(3) {{ padding-left: 0; border-left: 0; }}
 }}
 @media (max-width: 720px) {{
   .sg-estado__i {{ padding: 0 1rem; }}
@@ -1338,6 +1358,44 @@ p.sg-heranca strong {{ font-size: .8125rem; letter-spacing: 0;
   border-top: 2px solid var(--sg-dourado); color: var(--sg-dourado);
 }}
 
+/* ---------- as duas fases da cadeia, em cartão -------------------------- */
+/* Um cartão por fase do produto escolhido, em "Da produção ao consumo". A cor
+   segue o **sinal** da variação, como em toda a aplicação, e a barra dá-lhe a
+   magnitude: lado a lado, vê-se de relance a produção a descer contra o consumo
+   a subir, que é a divergência de que o separador fala. O filete do topo leva a
+   cor da família COICOP do produto, a mesma do símbolo ao lado do nome
+   (pedido da Inês, 04.09.2026). */
+.sg-fases {{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem; margin: var(--sg-e2) 0 var(--sg-e2);
+}}
+.sg-fase {{
+  background: var(--sg-superficie); border: 1px solid var(--sg-borda-1);
+  border-top-width: 3px; border-top-style: solid;
+  border-radius: var(--sg-raio); padding: 1.15rem 1.3rem 1.2rem;
+  display: flex; flex-direction: column;
+}}
+[data-testid="stMarkdownContainer"] p.sg-fase__r {{
+  font-size: .6875rem; font-weight: 600; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--sg-texto-3); margin: 0; line-height: 1.4;
+}}
+[data-testid="stMarkdownContainer"] p.sg-fase__v {{
+  font-size: 1.375rem; font-weight: 700; letter-spacing: -.025em; line-height: 1;
+  margin: .5rem 0 0; font-variant-numeric: tabular-nums;
+}}
+/* A barra é proporcional à maior das duas variações do produto, e não a uma
+   escala fixa: o que ela mede é o **contraste entre as fases**, não a posição
+   numa régua comum a todos os produtos, que teria de ser declarada. */
+.sg-fase__b {{
+  height: 3px; border-radius: 2px; margin: .65rem 0 0;
+  background: var(--sg-grelha);
+}}
+.sg-fase__b i {{ display: block; height: 100%; border-radius: 2px; }}
+[data-testid="stMarkdownContainer"] p.sg-fase__p {{
+  font-size: .75rem; color: var(--sg-texto-3); margin: auto 0 0;
+  padding-top: .9rem; line-height: 1.5; font-variant-numeric: tabular-nums;
+}}
+
 /* ---------- rodapé ------------------------------------------------------ */
 .sg-rodape {{ margin-top: 3.25rem; padding: 1.75rem 0 2.5rem;
   border-top: 1px solid var(--sg-borda-2); }}
@@ -1783,15 +1841,22 @@ def indicador_principal(rotulo: str, valor: str, contexto: str | None = None,
         unsafe_allow_html=True)
 
 
-def barra_estado(titulo: str, itens) -> None:
+def barra_estado(titulo: str | None, itens, ident: bool = False) -> None:
     """
     Metadados de publicação: período dos dados, ponderadores, âncora, momento da
     recolha. `itens` é uma sequência de pares (rótulo, valor).
+
+    `titulo` pode ser omitido quando os próprios rótulos dizem o que a faixa é,
+    e `ident` desenha-a em cartão, com colunas de largura igual: é a faixa de
+    identificação que abre a página, com quatro campos de comprimentos muito
+    diferentes (pedido da Inês, 04.09.2026).
     """
     celulas = "".join(
         f'<div class="sg-estado__i"><span class="sg-estado__r">{_html(r)}</span>'
         f'<span class="sg-estado__v">{_html(v)}</span></div>' for r, v in itens)
-    st.markdown(f'<div class="sg-estado"><p class="sg-estado__t">{_html(titulo)}</p>'
+    cab = f'<p class="sg-estado__t">{_html(titulo)}</p>' if titulo else ""
+    cls = "sg-estado sg-estado--ident" if ident else "sg-estado"
+    st.markdown(f'<div class="{cls}">{cab}'
                 f'<div class="sg-estado__l">{celulas}</div></div>',
                 unsafe_allow_html=True)
 
@@ -2994,7 +3059,7 @@ st.markdown(f"""
     {_logo_html}
     <div>
       <p class="sg-cabecalho__inst">{ORGANISMO}</p>
-      <p class="sg-cabecalho__uni">Suporte à Decisão · {UNIDADE}</p>
+      <p class="sg-cabecalho__uni">Suporte à Decisão</p>
     </div>
   </div>
   <div>
@@ -3070,6 +3135,28 @@ if ancora is None:
         "Consulte o registo de ligações no separador Metodologia."
     )
     st.stop()
+
+# --- identificação do trabalho: para quem, de quem, sobre que base, quando ---
+# O cabeçalho dizia quem faz e o quê, e não para quem. A faixa fecha essa
+# lacuna, e é o mesmo componente dos metadados de dados, em cartão (pedido da
+# Inês, 04.09.2026).
+#
+# Fica **abaixo** do cabeçalho e não dentro dele: o masthead é identidade
+# institucional, e um destinatário lá dentro transforma-o em ofício. Escrita
+# aqui, e não junto do cabeçalho, porque a data dos dados vem da sessão e o
+# cabeçalho é desenhado antes do carregamento.
+#
+# A unidade saiu do masthead com esta faixa: passou a estar no campo "De", e
+# tê-la nos dois sítios, a um centímetro de distância, era dizer o mesmo duas
+# vezes (decisão da Inês).
+_dia_dados = dados["momento"]
+barra_estado(None, [
+    ("Para", DESTINATARIO),
+    ("De", UNIDADE),
+    ("Base", FONTES_BASE),
+    ("Data", f"{DATA_PEDIDO} · dados de {_dia_dados.day} de "
+             f"{mes_extenso(_dia_dados.strftime('%Y-%m'))}"),
+], ident=True)
 
 # A hora à esquerda e o botão à direita, na mesma linha. O botão não vai a toda
 # a largura: é uma ação secundária e rara, não a chamada à ação da página.
@@ -5701,18 +5788,51 @@ with aba6:
                 f"intervalo onde caberiam {int(_linha['periodos_esperados'])}, porque o "
                 "Observatório não publicou este produto em todos os períodos."
                 if _linha["tem_falhas"] else "")
+            # As duas variações estavam em prosa, no meio da legenda metodológica
+            # que se segue: “No consumo, +38,12%; na produção, −12,40%”. São os
+            # dois números que sustentam a leitura inteira do separador, e saem
+            # da legenda para cartão próprio, um por fase, com a barra a dar o
+            # contraste entre elas (pedido da Inês, 04.09.2026).
+            _cor_fam = cor_classe(SETORES_OBSERVATORIO[_sec]["grupo"]) \
+                if _sec in SETORES_OBSERVATORIO else NEUTRO
+            _fases = [("Consumo", _linha["consumo_var"],
+                       _linha.get("consumo_inicial"), _linha.get("consumo_final"))]
+            if _linha["tem_producao"]:
+                _fases.insert(0, ("Produção", _linha["producao_var"],
+                                  _linha.get("producao_inicial"),
+                                  _linha.get("producao_final")))
+            _maior_f = max((abs(float(v)) for _r, v, _a, _b in _fases
+                            if pd.notna(v)), default=0.0)
+            _uni = _linha["unidade"] or "unidade"
+            _cartoes_f = ""
+            for _rot_f, _v_f, _p0, _p1 in _fases:
+                _tem = pd.notna(_v_f)
+                _cor_f = (NEUTRO if not _tem else
+                          (VERDE if float(_v_f) < 0 else VERMELHO))
+                _larg = (abs(float(_v_f)) / _maior_f * 100) if (_tem and _maior_f) else 0
+                _precos = (f"{euro(_p0)} → {euro(_p1)} por {_html(_uni)}"
+                           if pd.notna(_p0) and pd.notna(_p1) else "&nbsp;")
+                # A barra só entra quando há **duas** fases: com uma só, a
+                # normalização é contra ela própria, sai sempre a 100% e
+                # lê-se como um máximo que não significa nada (apanhado num
+                # Streamlit real, com o leite, 04.09.2026).
+                _barra_f = (f'<div class="sg-fase__b">'
+                            f'<i style="width:{_larg:.0f}%;background:{_cor_f}"></i>'
+                            "</div>") if len(_fases) > 1 else ""
+                _cartoes_f += (
+                    f'<div class="sg-fase" style="border-top-color:{_cor_fam}">'
+                    f'<p class="sg-fase__r">{_rot_f}</p>'
+                    f'<p class="sg-fase__v" style="color:{_cor_f}">{_pct_obs(_v_f)}</p>'
+                    f'{_barra_f}'
+                    f'<p class="sg-fase__p">{_precos}</p></div>')
+            st.markdown(f'<div class="sg-fases">{_cartoes_f}</div>',
+                        unsafe_allow_html=True)
+
             st.caption(
                 f"**{_escolhido}: {_jan_p}**, {int(_linha['n_periodos'])} observações. "
-                f"No consumo, {_pct_obs(_linha['consumo_var'])}"
-                + (f"; na produção, {_pct_obs(_linha['producao_var'])}"
-                   if _linha["tem_producao"] else "")
-                # “Variação anual” é ambíguo: tanto se lê como “face ao ano
-                # anterior” quanto como “por ano”, que aqui seria outra conta.
-                # O resto da aplicação diz sempre “variação homóloga”, e é esse
-                # o termo que tem de estar aqui (pergunta da Inês, 20.08.2026).
-                + ". É a variação **acumulada nessa janela**, ou seja, quanto o preço está "
-                  "acima do que estava no início. Não é a **variação homóloga**, a subida "
-                  "face ao mesmo mês do ano anterior, que é o que os outros separadores medem."
+                "A variação acima é a **acumulada nessa janela**, ou seja, quanto o preço "
+                "está acima do que estava no início. Não é a **variação homóloga**, a subida "
+                "face ao mesmo mês do ano anterior, que é o que os outros separadores medem."
                 + (f" A janela deste produto termina em "
                    f"{mes_extenso(_linha['fim'].strftime('%Y-%m'))}, antes da dos restantes "
                    f"({mes_extenso(_fim_geral.strftime('%Y-%m'))}), porque a sua série de "

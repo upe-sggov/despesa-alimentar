@@ -1537,6 +1537,15 @@ SOFI_MILHOES = {2017: 2.3, 2019: 1.6, 2020: 1.7, 2021: 1.6,
 # --------------------------------------------------------------------------
 ORGANISMO = "Secretaria-Geral do Governo"
 UNIDADE = "DSSD · Unidade de Pesquisa e Estatísticas"
+# Identificação do trabalho, na faixa que abre a página. `DESTINATARIO` e
+# `DATA_PEDIDO` vêm da nota técnica de enquadramento da UPE que originou este
+# trabalho, e são os únicos dois valores desta faixa que se escrevem à mão: a
+# data dos dados é a da sessão, e as fontes derivam das que a aplicação usa
+# (pedido da Inês, 04.09.2026).
+DESTINATARIO = ("Gabinete do Secretário de Estado do Turismo, Comércio e "
+                "Serviços")
+DATA_PEDIDO = "21 de julho de 2026"
+FONTES_BASE = "Eurostat, INE, DECO PROteste e GPP"
 # Reescrito em 31.08.2026. A versão anterior dizia que "o valor de referência
 # do cabaz e as taxas de IVA são parâmetros do utilizador", e nenhuma das duas
 # metades se mantinha: o valor de referência passou a vir da `ancora_oficial`
