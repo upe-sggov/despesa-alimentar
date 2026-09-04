@@ -7296,7 +7296,7 @@ with abaM:
         # título próprio: escrito nos dois sítios, o leitor lia a mesma frase
         # duas vezes em versalete, com quatro linhas de intervalo. O filete
         # vermelho da `nota --alerta` é o que assinala o registo.
-        bloco("03 · Alertas ao decisor")
+        bloco("03 · Alertas")
         _ALERTAS = (
             "A ambiguidade dos números sobre os preços alimentares é uma "
             "constante, quer nos órgãos de comunicação social, quer no debate "
