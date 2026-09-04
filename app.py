@@ -3278,7 +3278,8 @@ with aba1:
         if len(_bases_disp) == 1:
             base_chave = _bases_disp[0]
             st.info(
-                f"Só a base **{BASES_ANCORA[base_chave]['nome']}** está disponível nesta "
+                f"Só a base **{BASES_ANCORA[base_chave]['nome']} "
+                f"({BASES_ANCORA[base_chave]['organismo']})** está disponível nesta "
                 "sessão. A outra depende de uma ligação que não respondeu, ver o registo "
                 "de ligações no separador Metodologia. **Não há intervalo: o valor "
                 "apresentado é um ponto de uma só base.**"
@@ -3295,7 +3296,12 @@ with aba1:
                 options=_bases_disp,
                 index=(_bases_disp.index(BASE_POR_DEFEITO)
                        if BASE_POR_DEFEITO in _bases_disp else 0),
-                format_func=lambda k: BASES_ANCORA[k]["nome"],
+                # O organismo produtor à frente de cada opção: as duas bases
+                # são oficiais e do mesmo instituto, e o seletor não o dizia
+                # (pedido da Inês, 04.09.2026). Vai no rótulo apresentado e não
+                # no `nome`, que se mantém limpo de siglas e datas.
+                format_func=lambda k: (f"{BASES_ANCORA[k]['nome']} "
+                                       f"({BASES_ANCORA[k]['organismo']})"),
                 label_visibility="collapsed",
                 help=("As duas fontes oficiais medem grandezas diferentes e divergem, nesta "
                       f"sessão, por um fator de {numero(_rac_help, 1)}. "
@@ -5314,9 +5320,9 @@ with aba6:
             "à saída da exploração agrícola e o preço ao consumidor. Mostra assim "
             "onde os preços se moveram, uma leitura que os restantes separadores não "
             "alcançam por medirem apenas o que o consumidor paga. A fonte é o "
-            "Observatório de Preços Agroalimentar do Gabinete de Planeamento, "
-            "Políticas e Administração Geral (GPP), a única pública que acompanha as "
-            "duas fases do mesmo produto.")
+            "<strong>Observatório de Preços Agroalimentar do Gabinete de "
+            "Planeamento, Políticas e Administração Geral (GPP)</strong>, a única "
+            "pública que acompanha as duas fases do mesmo produto.")
 
         _obs, _obs_meta = observatorio.carregar()
         if _obs.empty:
@@ -9205,7 +9211,8 @@ uma insígnia concreta: não há aqui o preço de nenhum supermercado em particu
     **10 · O custo da dieta saudável não é uma âncora de despesa.** É um **mínimo normativo**, o
     preço da dieta mais barata que cumpre os requisitos nutricionais, não o que as famílias
     gastam. Compará-lo com a despesa alimentar do topo do separador Despesa e composição seria
-    confrontar objetos diferentes. Acresce que vem em **PPP$**, não em euros: converter exigiria a
+    confrontar objetos diferentes. Acresce que vem em **dólares em paridade de poder de compra
+    (PPP$)**, não em euros: converter exigiria a
     paridade de poder de compra do consumo privado, e mesmo assim não o tornaria comparável com
     despesa efetiva.
 
@@ -9354,6 +9361,16 @@ with _slot_sintese:
                        f"{percentagem(float(_subida_sint), sinal=False)} desde dezembro de "
                        f"{ANO_BASE_VIES}."
                        if _subida_sint is not None else "")),
+                # A conclusão diz o **sinal**, e um leitor pode tomá-la por uma
+                # comparação com o conjunto dos preços, que é a pergunta que o
+                # debate público faz. Não é: aqui só entra o agregado alimentar
+                # (pedido da Inês, 04.09.2026).
+                ressalva=("Esta conclusão diz apenas em que sentido se movem os "
+                          "preços dos alimentos. Não os compara com a inflação "
+                          "geral: saber se a alimentação sobe acima ou abaixo do "
+                          "conjunto dos preços é outra pergunta, e exige o "
+                          "agregado de todos os produtos, que esta página não "
+                          "apresenta."),
                 explorar_em="Histórico", primeira=True)
 
         # ---- 02 · famílias ---------------------------------------------
@@ -9369,6 +9386,10 @@ with _slot_sintese:
             if (_sq1.agravamento_orcamento is not None
                     and _sq5.agravamento_orcamento is not None):
                 _meio_q = (pontos(_p1 - _p5, casas=1), "de diferença")
+            _def_quintil = (
+                "<strong>As famílias portuguesas estão ordenadas por rendimento e "
+                "divididas em cinco grupos do mesmo tamanho: o 1.º quintil é o "
+                "quinto com menos rendimento, o 5.º o quinto com mais.</strong><br>")
             pergunta_editorial(
                 "02", "O aumento dos preços afeta todas as famílias da mesma forma?",
                 ev_confronto(
@@ -9376,14 +9397,20 @@ with _slot_sintese:
                     ("5.º quintil", percentagem(_p5, sinal=False), _p5 / _maior),
                     meio=_meio_q,
                     legenda=(
-                        "<strong>Peso da alimentação no orçamento.</strong> Nos "
-                        "últimos 12 meses, o agravamento representou "
-                        f"<strong>{numero(_sq1.agravamento_orcamento, 2)}%</strong> "
-                        "do orçamento do 1.º quintil e "
-                        f"<strong>{numero(_sq5.agravamento_orcamento, 2)}%</strong> "
-                        "do 5.º."
-                        if _sq1.agravamento_orcamento is not None
-                        else "<strong>Peso da alimentação no orçamento.</strong>")),
+                        # A definição de quintil vai **fora** do condicional: a
+                        # página usava o termo sem o explicar uma única vez, e é
+                        # dele que depende toda a leitura desta pergunta. Dentro
+                        # do ramo, desaparecia nas sessões sem agravamento
+                        # (pedido da Inês, 04.09.2026).
+                        _def_quintil
+                        + ("<strong>Peso da alimentação no orçamento.</strong> Nos "
+                           "últimos 12 meses, o agravamento representou "
+                           f"<strong>{numero(_sq1.agravamento_orcamento, 2)}%</strong> "
+                           "do orçamento do 1.º quintil e "
+                           f"<strong>{numero(_sq5.agravamento_orcamento, 2)}%</strong> "
+                           "do 5.º."
+                           if _sq1.agravamento_orcamento is not None
+                           else "<strong>Peso da alimentação no orçamento.</strong>"))),
                 conclusao=("A alimentação representa uma maior parcela do "
                            "orçamento dos agregados de menor rendimento."),
                 explorar_em="Despesa e composição")
@@ -9425,13 +9452,15 @@ with _slot_sintese:
             if _custo_pt_sint and _custo_es_sint:
                 _leg_dieta += (
                     " O custo dessa dieta é praticamente o mesmo nos dois "
-                    f"países, <strong>{numero(_custo_pt_sint, 2)} PPP$</strong> "
-                    "por pessoa e por dia em Portugal contra "
+                    "países: em dólares em paridade de poder de compra (PPP$), "
+                    f"<strong>{numero(_custo_pt_sint, 2)} PPP$</strong> por pessoa "
+                    "e por dia em Portugal contra "
                     f"<strong>{numero(_custo_es_sint, 2)}</strong> em Espanha.")
 
             _ctx_dieta = None
             if _custo_pt_sint:
-                _rot = "Custo da dieta saudável em Portugal"
+                _rot = ("Custo da dieta saudável em Portugal, em dólares em "
+                        "paridade de poder de compra")
                 if _custo_es_sint:
                     _rot += (f", contra {numero(_custo_es_sint, 2)} em Espanha")
                 _ctx_dieta = (f"{numero(_custo_pt_sint, 2)} PPP$", _rot)
@@ -9520,8 +9549,9 @@ with _slot_sintese:
                         # conclusão é sobre este produto e não sobre a cadeia
                         # (pedido da Inês, 03.09.2026).
                         detalhe=(f"<strong>{_html(_prod)}</strong> entra aqui "
-                                 "como exemplo, por ser o produto com maior "
-                                 "divergência entre as duas fases. Variação "
+                                 "como exemplo, por ser um produto comum na "
+                                 "alimentação dos portugueses e por apresentar a "
+                                 "maior divergência entre as duas fases. Variação "
                                  "acumulada na janela comum às duas fases, de "
                                  f"{_janela}."))
                     + ev_proporcao(

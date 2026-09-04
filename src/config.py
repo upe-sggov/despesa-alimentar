@@ -1195,6 +1195,10 @@ IDF_JANELA_FONTE = ("INE, Metainformação do Inquérito às Despesas das Famíl
 BASES_ANCORA = {
     "idf": {
         "nome": "Inquérito às Despesas das Famílias",
+        # O organismo que produz a base, para ir entre parênteses à frente do
+        # rótulo no seletor (pedido da Inês, 04.09.2026). Fica fora do `nome`,
+        # que é o rótulo puro e continua sem siglas nem datas.
+        "organismo": "INE",
         "fonte": IDF_FONTE,
         "porque": "Medição direta da despesa dos agregados residentes. Subestima: "
                   "é o próprio INE que declara, na metainformação das Contas "
@@ -1207,6 +1211,9 @@ BASES_ANCORA = {
         # aplicação migrou para `nama_10_cp18` a 11.08.2026 (E1/E2), esta
         # citação tinha ficado para trás, a apontar para um conjunto parado.
         "nome": "Contas Nacionais",
+        # As Contas Nacionais são elaboradas pelo INE segundo o SEC 2010; o
+        # Eurostat é a via de difusão, não o produtor.
+        "organismo": "INE",
         "fonte": "Eurostat, nama_10_cp18 (Contas Nacionais, COICOP 2018, "
                  "compiladas pelo INE), conceito **interno**: despesa no "
                  "território económico, não residentes incluídos",

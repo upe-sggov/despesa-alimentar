@@ -2952,7 +2952,14 @@ def test_os_rotulos_das_bases_nao_trazem_sigla_nem_data():
     import re
     from src.config import BASES_ANCORA
 
+    # A 04.09.2026 a Ines pediu o organismo produtor entre parenteses a frente
+    # de cada opcao do seletor. Vai numa chave propria, `organismo`, e nao no
+    # `nome`: o rotulo apresentado passa a ser "<nome> (INE)", e o `nome`
+    # continua a ser o rotulo puro que este teste guarda.
     for chave, base in BASES_ANCORA.items():
+        assert base.get("organismo"), (
+            f"a base “{chave}” ficou sem organismo produtor, e o seletor "
+            "apresenta-o a frente do rotulo")
         nome = base["nome"]
         assert not re.search(r"\d", nome), (
             f"o rotulo da base “{chave}” voltou a trazer uma data: {nome!r}. A "
